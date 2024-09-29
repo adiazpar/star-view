@@ -41,8 +41,9 @@ If you'd like to work in DevEDU, here are some instructions to get the project s
 
 OTHER NOTES:
 
-Please install Python 3.11 to work on this project.
+If you're working on this project locally, please install and use Python 3.11.
 - Check the current version of Python by running the command python3 --version in the CLI of your development environment.
  
 Please install Django 4.2
 - Check the current version of Django by running the command django-admin --version in the CLI of your virtual enviornment.
+- This should be specified in the requirements.txt, so once you pip install -r the contents there, Django 4.2 should be automatically installed.
