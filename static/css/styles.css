@@ -1,0 +1,61 @@
+/* Navigation Bar Logo Styling */
+#logo {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: inline-block;
+    filter: invert(100%);
+}
+#img {
+    width: 75px;
+}
+
+
+/* Navigation Bar Styling */
+.navbar-toggler-icon {
+    filter: invert(100%);
+}
+
+nav {
+    border: 2px solid white;
+    background-color: black;
+
+    margin: 2px;
+    margin-bottom: 20px;
+    font-family: Arial, serif;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+    display: flex;
+    justify-content: left;
+}
+ul li {
+    margin-right: 75px;
+    height: 50px;
+    line-height: 50px;
+
+    text-align: left;
+    font-size: 75%;
+}
+ul li a {
+    text-decoration: none;
+    text-transform: uppercase;
+    color: grey;
+    display: block;
+}
+ul li a:hover {
+    color: white;
+}
+
+
+/* Header & Body Styling */
+.custom-body {
+    margin-left: 25px;
+    margin-right: 25px;
+    font-size: 100%;
+}
