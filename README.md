@@ -28,10 +28,10 @@ If you'd like to work in DevEDU, here are some instructions to get the project s
         Additional notes:
         When you need to work on a different project with a different venv, be sure to deactivate this one
 
-    7. After this, go to django_project > settings.py and edit the file. You'll need to update your allowed host.
+    7. After this, go to django_project > settings.py and edit the file. You'll need to add your allowed host.
         
         - For example, mine is:
-        ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io']
+        ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io', "app-dbolding-5.devedu.io", ...]
 
     8. Finally, cd into the main project file and run the command 'python3 manage.py runserver 0.0.0.0:3000'
 
