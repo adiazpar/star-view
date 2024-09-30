@@ -1,14 +1,14 @@
 /* Navigation Bar Logo Styling */
 #logo {
-    width: 45px;
-    height: 45px;
+    width: 25px;
+    height: 25px;
     border-radius: 50%;
     overflow: hidden;
     display: inline-block;
     filter: invert(100%);
 }
 #img {
-    width: 75px;
+    width: 25px;
 }
 
 
@@ -32,7 +32,7 @@ ul {
 
     list-style: none;
     display: flex;
-    justify-content: left;
+    justify-content: center;
 }
 ul li {
     margin-right: 75px;
