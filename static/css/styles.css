@@ -60,17 +60,23 @@ ul li a:hover {
     font-size: 100%;
 }
 
-#home-header {
+ #home-header {
+    font-size: 100px;
+    font-family: 'Courier New', Courier, monospace;
     text-align: center;
     color: aliceblue;
 }
 
 #home-main {
+    font-size: 30px;
+    font-family: 'Courier New', Courier, monospace;
     text-align: center;
     color: aliceblue;
 }
 
 #home-footer {
+    font-size: 16px;
+    font-family: 'Courier New', Courier, monospace;
     color: aliceblue;
     bottom: 0px;
     text-align: center;
@@ -90,7 +96,8 @@ ul li a:hover {
     border: none;
     text-decoration: none;
     display: inline-block;
-    font-size: 16px;
-    padding: 15px 32px;
-    background-color: blue;
+    font-size: 30px;
+    padding: 20px 80px;
+    background-color: darkcyan;
+    font-family: 'Courier New', Courier, monospace;
 }
