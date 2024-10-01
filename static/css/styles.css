@@ -55,8 +55,8 @@ ul li a:hover {
 
 /* Header & Body Styling */
 .custom-body {
-    margin-left: 25px;
-    margin-right: 25px;
+    margin-left: 0px;
+    margin-right: 0px;
     font-size: 100%;
 }
 
@@ -79,9 +79,18 @@ ul li a:hover {
 }
 
 #map-button {
-    color: aliceblue;
     text-align: center;
     position: absolute;
     width: 100%;
     bottom: 50%;
+}
+
+.button {
+    color: aliceblue;
+    border: none;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    padding: 15px 32px;
+    background-color: blue;
 }
