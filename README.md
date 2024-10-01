@@ -9,10 +9,11 @@ If you'd like to work in DevEDU, here are some instructions to get the project s
 3. Here are some preliminary tasks to do to get everything properly set up.
     - In the terminal, type `cd` so that way you are in your root directory...
 
-    - Then type ```deactivate``` just in case there's other virtual environments currently running...
+    - Then type deactivate just in case there's other virtual environments currently running...
   ```
     cd && deactivate
   ```
+
 4. You are now ready to clone the repo. Type the command 
 ```
 git clone https://github.com/UCCS-CS4300-5300/Group8-fall2024.git
@@ -24,25 +25,29 @@ cd Group8-fall2024
 
 10. Once you are in the main project directory, create your own virtual environment. Here are the commands to do so:
     
-    Create the virtual env. with the name djvenv:
+Create the virtual env. with the name djvenv:
    ```
    python3 -m venv djvenv
-   ``` 
-    Activate the venv:
-   ```source djvenv/bin/activate
    ```
 
-    Download all necessary packages for the project:
+Activate the venv:
+    
+   ```
+    source djvenv/bin/activate
+   ```
+
+Download all necessary packages for the project:
+    
    ```
    pip install -r requirements.txt
    ```
 
-    Additional notes:
+Additional notes:
     When you need to work on a different project with a different venv, be sure to deactivate this one
 
 11. After this, go to django_project > settings.py and edit the file. You'll need to add your allowed host.
     
-    - For example, mine is:
+    For example, mine is:
     ```
     ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io', "app-dbolding-5.devedu.io", ...]
     ```
