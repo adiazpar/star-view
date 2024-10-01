@@ -6,6 +6,7 @@
 <html lang="en" style="height: 100%;">
 <head>
     {% bootstrap_css %}
+    {% bootstrap_javascript %}
 
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css">
@@ -22,7 +23,8 @@
             <img src="{% static 'images/stars.png' %}" id="logo" alt="SS Logo" />
         </a>
 
-        <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-expanded="false" aria-controls="navbarSupportedContent">
+        <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                aria-expanded="false" aria-controls="navbarSupportedContent">
             <span class="navbar-toggler-icon"></span>
         </button>
 
