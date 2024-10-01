@@ -1,20 +1,20 @@
 /* Navigation Bar Logo Styling */
 #logo {
-    width: 25px;
-    height: 25px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     overflow: hidden;
     display: inline-block;
     filter: invert(100%);
 }
 #img {
-    width: 25px;
+    width: 50px;
 }
 
 
 /* Navigation Bar Styling */
 .navbar-toggler-icon {
-    filter: invert(0%);
+    filter: invert(100%);
 }
 
 nav {
