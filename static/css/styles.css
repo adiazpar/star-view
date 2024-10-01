@@ -59,3 +59,21 @@ ul li a:hover {
     margin-right: 25px;
     font-size: 100%;
 }
+
+#home-header {
+    text-align: center;
+    color: aliceblue;
+}
+
+#home-main {
+    text-align: center;
+    color: aliceblue;
+}
+
+#home-footer {
+    color: aliceblue;
+    bottom: 0px;
+    text-align: center;
+    position: absolute;
+    width: 100%;
+}
