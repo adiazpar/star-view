@@ -77,3 +77,11 @@ ul li a:hover {
     position: absolute;
     width: 100%;
 }
+
+#map-button {
+    color: aliceblue;
+    text-align: center;
+    position: absolute;
+    width: 100%;
+    bottom: 50%;
+}
