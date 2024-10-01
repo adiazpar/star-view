@@ -4,17 +4,19 @@
 
 <!-- Replace block content in base_template.html -->
 {% block content %}
-<body>
-    <header>
-        <h1> Welcome to My Django Project </h1>
-    </header>
+<body class="bg-image" style="background-image: url('../../../static/images/sky.jpg'); background-position: center; background-repeat: no-repeat;">
+    <div>
+        <header>
+            <h1> Welcome to My Django Project </h1>
+        </header>
 
-    <main>
-        <p> This is a beautiful landing page. </p>
-    </main>
+        <main>
+            <p> This is a beautiful landing page. </p>
+        </main>
 
-    <footer>
-        <p> Created by Group8 - 9/26/24 </p>
-    </footer>
+        <footer>
+            <p> Created by Group8 - 9/26/24 </p>
+        </footer>
+    </div>
 </body>
 {% endblock %}
