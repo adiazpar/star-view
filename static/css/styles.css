@@ -18,10 +18,10 @@
 }
 
 nav {
-    border: 2px solid white;
+    border: 0px solid white;
     background-color: black;
 
-    margin: 2px;
+    margin: 0px;
     margin-bottom: 20px;
     font-family: Arial, serif;
 }
