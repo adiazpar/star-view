@@ -5,9 +5,6 @@
 <!DOCTYPE html>
 <html lang="en" style="height: 100%;">
 <head>
-    {% bootstrap_css %}
-    {% bootstrap_javascript %}
-
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css">
 
@@ -16,37 +13,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<!-- Navbar -->
-<nav class="navbar navbar-expand-md">
-    <div class="container-fluid">
-        <a class="navbar-brand" id="img" href="{% url 'home' %}">
-            <img src="{% static 'images/stars.png' %}" id="logo" alt="SS Logo" />
-        </a>
-
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
-                aria-expanded="false" aria-controls="navbarSupportedContent">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="collapsibleNavbar">
-            <ul class="navbar-nav">
-                <li class="nav-item active"><a href="{% url 'home' %}"> Home </a></li>
-                <li class="nav-item active"><a href="{% url 'map' %}"> Map </a></li>
-                <li class="nav-item active"><a href="#"> About Us </a></li>
-                <li class="nav-item active"><a href="#"> Login </a></li>
-
-            </ul>
-        </div>
-    </div>
-</nav>
-
 <!-- Body Content -->
 <body>
-    <div class="container-fluid">
+    <nav class="navbar">
+        <div class="logo">
+            <h2>Shooting Stars</h2>
+        </div>
+
+        <button class="hamburger" id="hamburger">
+            &#9776;
+        </button>
+
+        <ul class="nav-links" id="nav-links">
+            <li><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+            <li><a class="nav-link" href="{% url 'map' %}">Map</a></li>
+            <li><a class="nav-link" href="#">About Us</a></li>
+        </ul>
+
+        <ul class="auth-links" id="auth-links">
+            {% if user.is_authenticated %}
+                <li><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
+            {% else %}
+                <li><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                <li><a class="nav-link" href="{% url 'register' %}">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <div class="content container-fluid">
         <div class="custom-body">
             {% block content %}
             {% endblock %}
         </div>
     </div>
+
+    <script src="{% static 'js/script.js' %}"></script>
 </body>
 </html>
