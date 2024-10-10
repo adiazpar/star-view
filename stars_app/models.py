@@ -5,7 +5,7 @@ from django.utils import timezone
 # Create your models here.
 class Event(models.Model):
     name = models.CharField(max_length=30)
-    type = models.CharField(max_length=30)
+    event_type = models.CharField(max_length=30)
     viewing_radius = models.IntegerField(default=10)
     peak_time = models.DateTimeField(default=timezone.now())
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
