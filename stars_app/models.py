@@ -15,5 +15,5 @@ class Event(models.Model):
     name = models.CharField(max_length=30)
     event_type = models.CharField(max_length=30)
     viewing_radius = models.IntegerField(default=10)
-    peak_time = models.DateTimeField(default=timezone.now())
+    peak_time = models.DateTimeField(default=timezone.now)
     location = models.ForeignKey(Location, on_delete=models.CASCADE)
