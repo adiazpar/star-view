@@ -3,12 +3,12 @@
 
 
 <!DOCTYPE html>
-<html lang="en" style="height: 100%;">
+<html lang="en" style="height: 100%; overflow: hidden">
 <head>
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css">
 
-    <title>See Shooting Stars</title>
+    <title>Event Horizon</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
@@ -17,27 +17,33 @@
 <body>
     <nav class="navbar">
         <div class="logo">
-            <h2>Shooting Stars</h2>
+            <img src="/static/images/star_logo_transparent.png" alt="Shooting Stars Logo" class="logo-img">
+            <h2>Event Horizon</h2>
         </div>
 
-        <button class="hamburger" id="hamburger">
-            &#9776;
-        </button>
+        <div class="nav-container">
+            <ul class="nav-links" id="nav-links">
+                <li><a class="nav-link" href="{% url 'home' %}">HOME</a></li>
+                <li><a class="nav-link" href="{% url 'map' %}">MAP</a></li>
+                <li><a class="nav-link" href="#">ABOUT US</a></li>
+                <li><a class="nav-link" href="#">TEMP1</a></li>
+                <li><a class="nav-link" href="#">TEMP2</a></li>
+            </ul>
 
-        <ul class="nav-links" id="nav-links">
-            <li><a class="nav-link" href="{% url 'home' %}">Home</a></li>
-            <li><a class="nav-link" href="{% url 'map' %}">Map</a></li>
-            <li><a class="nav-link" href="#">About Us</a></li>
-        </ul>
+            <div class="hamburger-auth-group">
+                <ul class="auth-links" id="auth-links">
+                    {% if user.is_authenticated %}
+                        <li><a class="auth-link" href="{% url 'logout' %}">LOGOUT</a></li>
+                    {% else %}
+                        <li><a class="auth-link" href="{% url 'login' %}">LOGIN</a></li>
+                    {% endif %}
+                </ul>
 
-        <ul class="auth-links" id="auth-links">
-            {% if user.is_authenticated %}
-                <li><a class="nav-link" href="{% url 'logout' %}">Logout</a></li>
-            {% else %}
-                <li><a class="nav-link" href="{% url 'login' %}">Login</a></li>
-                <li><a class="nav-link" href="{% url 'register' %}">Register</a></li>
-            {% endif %}
-        </ul>
+                <button class="hamburger" id="hamburger">
+                    &#9776;
+                </button>
+            </div>
+        </div>
     </nav>
 
     <div class="content container-fluid">

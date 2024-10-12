@@ -2,23 +2,26 @@
 {% extends "stars_app/base.html" %}
 
 
-<!-- Replace block content in base_template.html -->
+<!-- Populates block content in base_template.html -->
 {% block content %}
-<body class="home-bg-image" style="background-image: url('../../../static/images/sky.jpg'); background-position: center; background-repeat: no-repeat; background-size: 100% 100%;">
-    <header id="home-header">
-        <p>See Shooting Stars</p>
-    </header>
+    <body class="home-bg-image" style="background-image: url('../../../static/images/sky.jpg'); background-position: center; background-repeat: no-repeat; background-size: 100% 100%;">
+    </body>
 
-    <main id="home-main">
-        <p>A Stargazing Companion</p>
-    </main>
+    <body class="home-container">
+        <header id="home-header">
+            <p>WELCOME TO THE EVENT HORIZON</p>
+        </header>
 
-    <div id="map-button" >
-        <a class="button" href="{% url 'map' %}">ENTER THE MAP</a>
-    </div>
+        <main id="home-main">
+            <p>A Stargazing Companion</p>
+        </main>
 
-    <footer id="home-footer">
-        <p>Created by Group8 - Alejandro Diaz, Daniel Bolding, Jason Cuthbert, Oscar Tinoco</p>
-    </footer>
-</body>
+        <div id="map-button" >
+            <a class="button" href="{% url 'map' %}">ENTER THE MAP</a>
+        </div>
+
+        <footer id="home-footer">
+            <p>Created by Group8 - Alejandro Diaz, Daniel Bolding, Jason Cuthbert, Oscar Tinoco</p>
+        </footer>
+    </body>
 {% endblock %}
