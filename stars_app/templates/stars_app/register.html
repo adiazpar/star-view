@@ -1,10 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
+<!-- Inherit from base.html -->
+{% extends "stars_app/base.html" %}
 
-</body>
-</html>
+<!-- Populates block content in base.html -->
+{% block content %}
+    <h2>Register</h2>
+    <form method="post" autocomplete="off">
+        {% csrf_token %}
+        <div>
+            <label for="username">New Username:
+                <input type="text" name="username" required>
+            </label>
+        </div>
+        <div>
+            <label for="email">New Email:
+                <input type="email" name="email" required>
+            </label>
+        </div>
+        <div>
+            <label for="password1">New Password:
+                <input type="password" name="password1" required>
+            </label>
+        </div>
+        <div>
+            <label for="password2">Confirm Password:
+                <input type="password" name="password2" required>
+            </label>
+        </div>
+        <button type="submit" value="Register">Register</button>
+    </form>
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+
+    <p><a href="{% url 'login' %}">Already have an account?</a></p>
+{% endblock %}
