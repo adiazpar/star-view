@@ -143,6 +143,11 @@ body {
     margin-right: 20px;
     margin-top: 80px;
 }
+.error-message {
+    color: red;
+    text-align: center;
+    margin-top: 10px;
+}
 
 
 /* ---------------------------------------------------------------- */
@@ -204,4 +209,160 @@ body {
 .button:not(:hover) {
     transform: scale(1);
     transition: transform 0.2s ease-in-out;
+}
+
+
+/* ---------------------------------------------------------------- */
+/* Login Page Styling */
+.login-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    margin-top: 30px;
+    height: 100vh;
+}
+.login-container {
+    background-color: white;
+    border-radius: 10px;
+    padding: 40px;
+    box-shadow: 0 0 20px rgba(0,0,0,1);
+    width: 300px;
+}
+.login-container .login-form h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.login-container .login-form .form-group {
+    margin-bottom: 20px;
+}
+.login-container .login-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+}
+
+.login-container .login-form input[type='text'],
+.login-container .login-form input[type='password'] {
+    width: 92%;
+    padding: 10px;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+}
+.forgot-password {
+    visibility: hidden; /* Un-hide when this has been implemented */
+    text-align: right;
+    margin-bottom: 20px;
+}
+.forgot-password a {
+    color: #666;
+    text-decoration: none;
+    font-size: 0.9em;
+}
+.login-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #5755F0;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+.social-login {
+    visibility: hidden; /* Un-hide when this has been implemented */
+    color: #666;
+    text-align: center;
+    margin-top: 30px;
+}
+.social-icons {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+.social-icons a {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 0 5px;
+    color: white;
+    text-decoration: none;
+}
+.google { background-color: #db4437; }
+.apple { background-color: #000000; }
+.instagram { background-color: #ea43b7; }
+
+.signup-link {
+    color: #666;
+    text-align: center;
+    margin-top: 30px;
+}
+.signup-link a {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+    border-bottom: 2px solid black;
+}
+
+
+/* ---------------------------------------------------------------- */
+/* Register Page Styling */
+.register-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    margin-top: 30px;
+    height: 100vh;
+}
+.register-container {
+    background-color: white;
+    border-radius: 10px;
+    padding: 40px;
+    box-shadow: 0 0 20px rgba(0,0,0,1);
+    width: 300px;
+}
+.register-container .register-form h2 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.register-container .register-form .form-group {
+    margin-bottom: 20px;
+}
+.register-container .register-form label {
+    display: block;
+    margin-bottom: 5px;
+    color: #666;
+}
+.register-container .register-form input[type='text'],
+.register-container .register-form input[type='email'],
+.register-container .register-form input[type='password'] {
+    width: 92%;
+    padding: 10px;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+}
+.register-button {
+    width: 100%;
+    padding: 10px;
+    background-color: #5755F0;
+    border: none;
+    border-radius: 20px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+.signin-link {
+    color: #666;
+    text-align: center;
+    margin-top: 30px;
+}
+.signin-link a {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+    border-bottom: 2px solid black;
 }
