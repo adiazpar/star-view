@@ -3,7 +3,7 @@
 
 
 <!DOCTYPE html>
-<html lang="en" style="height: 100%; overflow: hidden">
+<html lang="en">
 <head>
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css">
@@ -46,7 +46,7 @@
         </div>
     </nav>
 
-    <div class="content container-fluid {% block body_class %}{% endblock %}">
+    <div class="content {% block body_class %}{% endblock %}">
         {% block content %}
         {% endblock %}
     </div>

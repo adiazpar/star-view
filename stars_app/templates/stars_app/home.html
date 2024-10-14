@@ -1,27 +1,24 @@
 <!-- inherit from base.html-->
 {% extends "stars_app/base.html" %}
-
+{% block body_class %}home-page{% endblock %}
 
 <!-- Populates block content in base_template.html -->
 {% block content %}
-    <body class="home-bg-image" style="background-image: url('../../../static/images/sky.jpg'); background-position: center; background-repeat: no-repeat; background-size: 100% 100%;">
-    </body>
-
-    <body class="home-container">
-        <header id="home-header">
+    <div class="home-container">
+        <div class="home-header">
             <p>WELCOME TO THE EVENT HORIZON</p>
-        </header>
+        </div>
 
-        <main id="home-main">
+        <div class="home-main">
             <p>A Stargazing Companion</p>
-        </main>
+        </div>
 
-        <div id="map-button" >
+        <div class="map-button" >
             <a class="button" href="{% url 'map' %}">ENTER THE MAP</a>
         </div>
 
-        <footer id="home-footer">
+        <div class="home-footer">
             <p>Created by Group8 - Alejandro Diaz, Daniel Bolding, Jason Cuthbert, Oscar Tinoco</p>
-        </footer>
-    </body>
+        </div>
+    </div>
 {% endblock %}
