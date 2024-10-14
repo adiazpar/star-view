@@ -71,14 +71,14 @@ body {
 }
 .auth-links li {
     margin-right: 2rem;
-    background-color: #5755F0;
+    background-color: #5579f0;
     color: #fff;
     padding: 0.5rem 2rem;
     border-radius: 20px;
     text-decoration: none;
 }
 .navbar ul li a.active {
-    color: #5755F0;
+    color: #5579F0FF;
 }
 
 .auth-links li:hover {
@@ -208,7 +208,7 @@ body {
     text-decoration: none;
     display: inline-block;
     padding: 1.2rem 3.4rem;
-    background-color: #5755F0;
+    background-color: #5579f0;
     border-radius: 10px;
 
     font-size: medium;
@@ -280,7 +280,7 @@ body {
 .login-button {
     width: 100%;
     padding: 10px;
-    background-color: #5755F0;
+    background-color: #5579f0;
     border: none;
     border-radius: 20px;
     color: white;
@@ -371,7 +371,7 @@ body {
 .register-button {
     width: 100%;
     padding: 10px;
-    background-color: #5755F0;
+    background-color: #5579f0;
     border: none;
     border-radius: 20px;
     color: white;
