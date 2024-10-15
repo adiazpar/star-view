@@ -3,6 +3,7 @@ from django.shortcuts import render, redirect
 # Importing other things from project files. Follow the principle of least privilege
 # and only import what you NEED to use, not the whole file (like *)
 from .models import User
+from stars_app.models import Location, Event
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout
@@ -10,6 +11,10 @@ from django.contrib.auth.decorators import login_required
 
 # To display error/success messages:
 from django.contrib import messages
+
+# rest framework
+from rest_framework import viewsets
+from stars_app.serializers import LocationSerializer, EventSerializer
 
 # ---------------------------------------------------------------- #
 # Navigation Views:
@@ -96,3 +101,11 @@ def custom_login(request):
 def custom_logout(request):
     logout(request)
     return redirect('home')
+
+class LocationViewSet(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
+
+class EventViewSet(viewsets.ModelViewSet):
+    queryset = Event.objects.all()
+    serializer_class = EventSerializer

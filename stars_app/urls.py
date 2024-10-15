@@ -1,7 +1,12 @@
 from django.urls import path, include
 from django.contrib import admin
+from rest_framework.routers import DefaultRouter
 
 from . import views
+
+router = DefaultRouter()
+router.register(r'locations', views.LocationViewSet, basename='locations')
+router.register(r'events', views.EventViewSet, basename='events')
 
 urlpatterns = [
     # User authentication:
@@ -11,5 +16,8 @@ urlpatterns = [
 
     # Navigation:
     path('', views.home, name='home'),
-    path('map/', views.map, name='map')
+    path('map/', views.map, name='map'),
+
+    # API
+    path('api/', include(router.urls)),
 ]
