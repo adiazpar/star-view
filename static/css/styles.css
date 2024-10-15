@@ -72,14 +72,14 @@ body {
 }
 .auth-links li {
     margin-right: 2rem;
-    background-color: #5579f0;
+    background-color: #2b7aff;
     color: #fff;
     padding: 0.5rem 2rem;
     border-radius: 20px;
     text-decoration: none;
 }
 .navbar ul li a.active {
-    color: #5579F0FF;
+    color: #2b7aff;
 }
 
 .auth-links li:hover {
@@ -210,7 +210,7 @@ body {
     text-decoration: none;
     display: inline-block;
     padding: 1.2rem 3.4rem;
-    background-color: #5579f0;
+    background-color: #2b7aff;
     border-radius: 10px;
     box-shadow: 0 0 20px rgba(0,0,0,1);
 
@@ -219,7 +219,7 @@ body {
     font-weight: bold;
 }
 .map-button .button:hover {
-    transform: scale(1.1);
+    transform: scale(1.05);
     transition: transform 0.2s ease-in-out;
 }
 .map-button .button:not(:hover) {
@@ -283,12 +283,20 @@ body {
 .login-button {
     width: 100%;
     padding: 10px;
-    background-color: #5579f0;
+    background-color: #2b7aff;
     border: none;
     border-radius: 20px;
     color: white;
     font-weight: bold;
     cursor: pointer;
+}
+.login-button:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+}
+.login-button:not(:hover) {
+    transform: scale(1);
+    transition: transform 0.2s ease-in-out;
 }
 .social-login {
     visibility: hidden; /* Un-hide when this has been implemented */
@@ -311,6 +319,14 @@ body {
     margin: 0 5px;
     color: white;
     text-decoration: none;
+}
+.social-icons a:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+}
+.social-icons a:not(:hover) {
+    transform: scale(1);
+    transition: transform 0.2s ease-in-out;
 }
 .google { background-color: #db4437; }
 .apple { background-color: #000000; }
@@ -374,12 +390,20 @@ body {
 .register-button {
     width: 100%;
     padding: 10px;
-    background-color: #5579f0;
+    background-color: #2b7aff;
     border: none;
     border-radius: 20px;
     color: white;
     font-weight: bold;
     cursor: pointer;
+}
+.register-button:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+}
+.register-button:not(:hover) {
+    transform: scale(1);
+    transition: transform 0.2s ease-in-out;
 }
 .signin-link {
     color: #666;
