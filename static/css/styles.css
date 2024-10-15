@@ -22,6 +22,7 @@ body {
     padding: 10px 20px;
     top: 0;
     width: 100%;
+    box-shadow: 0 0 20px rgba(0,0,0,1);
 
     background-color: black;
     color: #fff;
@@ -199,6 +200,7 @@ body {
     color: white;
 }
 .map-button {
+    margin-top: 80px;
     text-align: center;
     display: flex;
     justify-content: center;
@@ -210,6 +212,7 @@ body {
     padding: 1.2rem 3.4rem;
     background-color: #5579f0;
     border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,1);
 
     font-size: medium;
     font-family: Arial, sans-serif;
