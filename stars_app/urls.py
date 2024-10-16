@@ -17,7 +17,7 @@ urlpatterns = [
     # Navigation:
     path('', views.home, name='home'),
     path('map/', views.map, name='map'),
-    path('list/', views.list, name='list'),
+    path('list/', views.event_list, name='event_list'),
 
     # API
     path('api/', include(router.urls)),

@@ -1,14 +1,27 @@
 {% extends "stars_app/base.html" %}
+{% block body_class %}list-page{% endblock %}
 
 {% block content %}
-    <h1>Current Celestial Events</h1>
-    <ul class="list-group">
-        {% for event in events %}
-            <li class="list-group-item">
-                <h5 >{{ event.name }}</h5>
-                <p >{{ event.event_type }}</p>
-                <p >{{ event.location.zip_code }}</p>
-            </li>
-        {% endfor %}
-    </ul>
+    <div class="list_container">
+        <div class="list-header">
+            <p>CURRENT CELESTIAL EVENTS</p>
+        </div>
+
+        <div class="list-group">
+            <ul>
+                {% for event in events %}
+                    <li class="list-item">
+                        {% if event.event_type == "Comet" %}
+                            <img src='/static/images/comet-pic.jpg' class="list-icon" width="100" height="100"></img>
+                        {% else %}
+                            <img src='/static/images/eclipse_icon.jpg' class="list-icon" width="100" height="100"></img>
+                        {% endif %}
+                        <h5 >Name: {{ event.name }}</h5>
+                        <p >Type: {{ event.event_type }}</p>
+                        <p >ZIP: {{ event.location.zip_code }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 {% endblock %}
