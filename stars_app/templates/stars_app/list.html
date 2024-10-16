@@ -1,0 +1,14 @@
+{% extends "stars_app/base.html" %}
+
+{% block content %}
+    <h1>Current Celestial Events</h1>
+    <ul class="list-group">
+        {% for event in events %}
+            <li class="list-group-item">
+                <h5 >{{ event.name }}</h5>
+                <p >{{ event.event_type }}</p>
+                <p >{{ event.location.zip_code }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
