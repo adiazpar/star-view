@@ -124,6 +124,7 @@ body {
         width: 100%;
 
         background-color: black;
+        box-shadow: 0 0 20px rgba(0,0,0,1);
     }
     .auth-links {
         text-decoration: none;
