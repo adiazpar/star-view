@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-=6thjzlzn*4m=b!7*s#186=prf42dn74qefi*1mcsm9^ufl&!%
 DEBUG = True
 
 ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io', 'app-dbolding-5.devedu.io', 'app-jcuthber-5.devedu.io', 'app-otinoco-5.devedu.io', '127.0.0.1', 'nyx.local', 'localhost']
-
+CSRF_TRUSTED_ORIGINS = ['https://app-adiazpar-5.devedu.io']
 
 # Application definition
 
