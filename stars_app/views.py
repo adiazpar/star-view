@@ -24,7 +24,7 @@ def home(request):
 def map(request):
     return render(request, 'stars_app/map.html')
 
-def list(request):
+def event_list(request):
     event_list = Event.objects.all()
     return render(request, 'stars_app/list.html', {'events':event_list})
 
