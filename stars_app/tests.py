@@ -1,6 +1,7 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from stars_app.models import Event, Location
 from django.utils import timezone
+from django.urls import reverse
 
 class LocationTest(TestCase):
     def setUp(self):
@@ -35,3 +36,30 @@ class EventTest(TestCase):
         assert test_event.location.latitude_direction == "N"
         assert test_event.location.longitude == 1.1
         assert test_event.location.longitude_direction == "W"
+
+class URLTest(TestCase):
+    def test_urls(self):
+
+        url = reverse("home")
+        response = self.client.get(url)
+        assert response.status_code == 200
+
+        url = reverse("map")
+        response = self.client.get(url)
+        assert response.status_code == 200
+
+        url = reverse("event_list")
+        response = self.client.get(url)
+        assert response.status_code == 200
+
+        url = reverse("register")
+        response = self.client.get(url)
+        assert response.status_code == 200
+
+        url = reverse("login")
+        response = self.client.get(url)
+        assert response.status_code == 200
+
+        url = reverse("logout")
+        response = self.client.get(url)
+        assert response.status_code == 302 # Redirects
