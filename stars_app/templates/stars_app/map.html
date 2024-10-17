@@ -10,6 +10,8 @@
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
     <style>
         html, body {
             height: 100%;
@@ -33,93 +35,154 @@
             height: calc(100vh - 60px);
             margin-top: 60px;
         }
+
+
+        .popover {
+	    position: absolute;
+	    bottom: 100%;
+	    left: -20px;
+            width: 230px;
+	    padding: 16px;
+
+            transition: opacity 0.3s ease;
+	    background: rgba(255, 255, 255, 0.3);
+	    backdrop-filter: blur(10px);
+	    -webkit-backdrop-filter: blur(10px);
+
+	    border-radius: 12px;
+	    font-size: 14px;
+        }
+	.popover .event-name {
+            font-weight: bold;
+	}
+        .popover.hide {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <script>
-    	function setupMap() {
-		mapboxgl.accessToken = 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA';
-		const map = new mapboxgl.Map({
-		    container: 'map',
-		    style: 'mapbox://styles/mapbox/streets-v9',
-		    projection: 'globe',
-		    zoom: 1,
-		    center: [-105.35, 39.113014]
-		});
+        let currentPopover = null;
 
-		map.addControl(new mapboxgl.NavigationControl());
-		map.addControl(new mapboxgl.GeolocateControl({
-		    positionOptions: {
-			enableHighAccuracy: true
-		    },
-		    trackUserLocation: true,
-		    showUserHeading: true
-		}));
-		return map;
-	}
+        function setupMap() {
+            mapboxgl.accessToken = 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA';
+            const map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/streets-v9',
+                projection: 'globe',
+                zoom: 1,
+                center: [-105.35, 39.113014]
+            });
 
-
-	async function getLocations() {
-                const response = await fetch(`/api/locations/`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRFToken': '{{ csrf_token }}'
-			}
-                });
-                if (response.ok) {
-			const result = await response.json();
-			return result;
-                } else {
-                    alert(`Failed to get locations: ${response.statusText}`);
-        	}
-	}
-	async function gatherEvents() {
-		const locations = await getLocations();
-                const response = await fetch(`/api/events/`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'X-CSRFToken': '{{ csrf_token }}'
-			}
-                });
-                if (response.ok) {
-			const result = await response.json();
-			const events = result.map(event => {
-				return {
-					...event,
-					location: locations[event.location - 1]
-				};
-			})
-			return events;
-                } else {
-                    alert(`Failed to get events: ${response.statusText}`);
-        	}
+            map.addControl(new mapboxgl.NavigationControl());
+            map.addControl(new mapboxgl.GeolocateControl({
+                positionOptions: {
+                    enableHighAccuracy: true
+                },
+                trackUserLocation: true,
+                showUserHeading: true
+            }));
+            return map;
         }
 
-	async function populateMarkers(map) {
-		const events = await gatherEvents();
-		events.forEach(event => {
-			const marker = new mapboxgl.Marker({
-			    color: "#CC00CC",
-			    draggable: false,
-			    anchor: 'center',
-			})
-			.setLngLat([event.location.longitude, event.location.latitude])
-			.addTo(map);
+        async function getLocations() {
+            const response = await fetch(`/api/locations/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                return result;
+            } else {
+                alert(`Failed to get locations: ${response.statusText}`);
+            }
+        }
 
-			var markerElement = marker.getElement();
-			markerElement.setAttribute("data-marker-id", "123");
-			markerElement.addEventListener('click', (event) => {
-			    const clickedMarkerElement = event.currentTarget;
-			    console.log(`marker ${clickedMarkerElement.getAttribute("data-marker-id")} was pressed`);
-			});
-		});
+        async function gatherEvents() {
+            const locations = await getLocations();
+            const response = await fetch(`/api/events/`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+            if (response.ok) {
+                const result = await response.json();
+                const events = result.map(event => {
+                    return {
+                        ...event,
+                        location: locations[event.location - 1]
+                    };
+                });
+                return events;
+            } else {
+                alert(`Failed to get events: ${response.statusText}`);
+            }
+        }
+
+        function showPopover(marker, event) {
+            currentPopover && removePopover(currentPopover);
+
+            const popoverContent = `
+                <div class='event-name'>${event.name}</div>
+                <div>Type: ${event.event_type}</div>
+                <div>Viewing Radius: ${event.viewing_radius} km</div>
+                <div>Peak Time: ${new Date(event.peak_time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</div>
+            `;
+
+	    const popover = document.createElement('div');
+	    popover.innerHTML = popoverContent;
+	    popover.classList.add('hide');
+	    popover.classList.add('popover');
+	    requestAnimationFrame(() => {
+		popover.classList.remove('hide');
+	    });
+
+            const markerElement = marker.getElement();
+	    markerElement.appendChild(popover);
+
+	    currentPopover = popover;
+        }
+
+	function removePopover(popover) {
+		popover.classList.add('hide');
+		setTimeout(() => {
+			popover.remove();
+		}, 1000);
 	}
-	
-	const map = setupMap();
-	populateMarkers(map);
+
+        async function populateMarkers(map) {
+            const events = await gatherEvents();
+            events.forEach(event => {
+                const marker = new mapboxgl.Marker({
+                    color: '#CC00CC',
+                    draggable: false,
+                    anchor: 'center',
+                })
+                .setLngLat([event.location.longitude, event.location.latitude])
+                .addTo(map);
+		
+		marker.getElement().classList.add('marker');
+                marker.getElement().addEventListener('click', (e) => {
+                    showPopover(marker, event);
+		    map.flyTo({
+			center: [event.location.longitude, event.location.latitude],
+			zoom: 5,
+			essential: true
+		    });
+
+		    e.stopPropagation(); // Stop click from propagating to the map
+                });
+            });
+        }
+
+        const map = setupMap();
+        populateMarkers(map);
 
         map.on('style.load', () => {
             map.setFog({});
@@ -151,6 +214,10 @@
         map.on('dragstart', () => {
             userInteracting = true;
         });
+	map.on('click', () => {
+	    currentPopover && removePopover(currentPopover);
+	    currentPopover = null;
+	});
 
         map.on('moveend', () => {
             spinGlobe();
