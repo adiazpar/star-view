@@ -20,11 +20,6 @@
 			overflow: hidden;
 		}
 
-		.content {
-			margin: 0;
-			padding: 0;
-		}
-
 		#map {
 			position: absolute;
 			top: 0;
@@ -35,195 +30,604 @@
 			height: calc(100vh - 60px);
 			margin-top: 60px;
 		}
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            border-radius: 3px;
+        }
+        .mapbox-ctrl-group button {
+            background: #fff;
+            border: none;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 3px;
+        }
+        .mapbox-ctrl-group button:hover {
+            background: #f0f0f0;
+        }
 
-		.popover {
-			position: absolute;
-			bottom: 100%;
-			left: -20px;
-			width: 230px;
-			padding: 16px;
-
-			transition: opacity 0.3s ease;
-			background: rgba(255, 255, 255, 0.3);
-			backdrop-filter: blur(10px);
+        /*.location-hover-popup, .cluster-hover-popup {
+            /* Base styles for both popup types
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
 			-webkit-backdrop-filter: blur(10px);
 
-			border-radius: 12px;
-			font-size: 14px;
-		}
-		.popover .event-name {
-			font-weight: bold;
-		}
-		.popover.hide {
-			opacity: 0;
-		}
+            border-radius: 12px;
+            padding: 4px;
+            font-size: 14px;
+            pointer-events: none;
+
+            transition: opacity 0.3s ease;
+        }*/
+
+        .location-hover-popup h4, .cluster-hover-popup h4 {
+            margin: 0 0 5px 0;
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .location-hover-popup p, .cluster-hover-popup p {
+            margin: 2px 0;
+            color: #666;
+        }
+
+        .mapboxgl-popup-content {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .mapboxgl-popup-content h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .mapboxgl-popup-content p {
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .mapboxgl-popup-content button {
+            margin-top: 10px;
+            width: 100%;
+        }
+
 	</style>
 </head>
 <body>
+    {% csrf_token %}
 	<div id="map"></div>
-	<script>
-		let currentPopover = null;
 
-		function setupMap() {
-			mapboxgl.accessToken = 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA';
-			const map = new mapboxgl.Map({
-				container: 'map',
-				style: 'mapbox://styles/mapbox/streets-v9',
-				projection: 'globe',
-				zoom: 1,
-				center: [-105.35, 39.113014]
-			});
+    <script>
+        // API Service for handling all data fetching:
+        class LocationService {
+            static getCsrfToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            }
 
-			map.addControl(new mapboxgl.NavigationControl());
-			map.addControl(new mapboxgl.GeolocateControl({
-				positionOptions: {
-					enableHighAccuracy: true
-				},
-				trackUserLocation: true,
-				showUserHeading: true
-			}));
-			return map;
-		}
+            static async getViewingLocations() {
+                const response = await fetch('/api/viewing-locations/', {
+                    headers: {
+                        'Content-Type': 'applications/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to fetch viewing locations');
+                return response.json();
+            }
 
-		async function getLocations() {
-			const response = await fetch(`/api/locations/`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-CSRFToken': '{{ csrf_token }}'
-				}
-			});
-			if (response.ok) {
-				const result = await response.json();
-				return result;
-			} else {
-				alert(`Failed to get locations: ${response.statusText}`);
-			}
-		}
+            static async getCelestialEvents() {
+                const response = await fetch('/api/celestial-events/', {
+                    headers: {
+                        'Content-Type': 'applications/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to fetch celestial events');
+                return response.json();
+            }
 
-		async function gatherEvents() {
-			const locations = await getLocations();
-			const response = await fetch(`/api/events/`, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					'X-CSRFToken': '{{ csrf_token }}'
-				}
-			});
-			if (response.ok) {
-				const result = await response.json();
-				const events = result.map(event => {
-					return {
-						...event,
-						location: locations[event.location - 1]
-					};
-				});
-				return events;
-			} else {
-				alert(`Failed to get events: ${response.statusText}`);
-			}
-		}
+            static async findOptimalLocations(bounds) {
+                const response = await fetch(`/api/viewing-locations/find_optimal/?min_lit=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lon=${bounds.getWest()}&max_lon=${bounds.getEast()}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to find optimal locations');
+                return response.json();
+            }
+        }
 
-		function showPopover(marker, event) {
-			currentPopover && removePopover(currentPopover);
+        class MapController {
+            constructor() {
+                this.map = null;
+                this.currentPopover = null;
+                this.markers = new Map();
+                this.userInteracting = false;
+                this.spinEnabled = true;
+                this.secondsPerRevolution = 180;
+                this.maxSpinZoom = 5;
+                this.slowSpinZoom = 3;
+            }
 
-			const popoverContent = `
-				<div class='event-name'>${event.name}</div>
-				<div>Type: ${event.event_type}</div>
-				<div>Viewing Radius: ${event.viewing_radius} km</div>
-				<div>Peak Time: ${new Date(event.peak_time).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}</div>
-			`;
+            initialize() {
+                mapboxgl.accessToken = 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA';
+                this.map = new mapboxgl.Map({
+                    container: 'map',
 
-			const popover = document.createElement('div');
-				popover.innerHTML = popoverContent;
-				popover.classList.add('hide');
-				popover.classList.add('popover');
-				requestAnimationFrame(() => {
-				popover.classList.remove('hide');
-			});
+                    // For other styles:
+                    // https://docs.mapbox.com/api/maps/styles/
+                    style: 'mapbox://styles/mapbox/standard',
+                    projection: 'globe',
+                    zoom: 1,
+                    center: [-105.35, 39.113014],
+                    fog: {
+                        'space-color': '#000000',
+                        'star-intensity': 0.6,
+                        'color': '#242B4B',
+                        'high-color': '#161B36',
+                        'horizon-blend': 0.02,
+                    }
+                });
 
-			const markerElement = marker.getElement();
-			markerElement.appendChild(popover);
+                this.map.on('load', () => {
+                    this.addControls();
+                    this.setupEventListeners();
+                    this.initializeDataLayers();
+                    this.setupDarkSkyLayer();
 
-			currentPopover = popover;
-		}
+                    this.map.setFog({
+                        'space-color': '#000000',
+                        'star-intensity': 1.0,
+                        'color': '#242B4B',
+                        'high-color': '#161B36',
+                        'horizon-blend': 0.02
+                    });
 
-		function removePopover(popover) {
-			popover.classList.add('hide');
-			setTimeout(() => {
-				popover.remove();
-			}, 1000);
-		}
+                    this.map.addSource('mapbox-dem', {
+                        'type': 'raster-dem',
+                        'url': 'mapbox://mapbox.terrain-rgb',
+                        'tileSize': 512,
+                        'maxzoom': 14
+                    });
+                    this.map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
 
-		async function populateMarkers(map) {
-			const events = await gatherEvents();
-			events.forEach(event => {
-				const marker = new mapboxgl.Marker({
-					color: '#CC00CC',
-					draggable: false,
-					anchor: 'center',
-				})
-				.setLngLat([event.location.longitude, event.location.latitude])
-				.addTo(map);
-		
-				marker.getElement().classList.add('marker');
-				marker.getElement().addEventListener('click', (e) => {
-					showPopover(marker, event);
-					map.flyTo({
-						center: [event.location.longitude, event.location.latitude],
-						zoom: 5,
-						essential: true
-					});
+                    this.loadLocationsAndEvents();
+                });
 
-					e.stopPropagation(); // Stop click from propagating to the map
-				});
-			});
-		}
+                this.spinGlobe();
+            }
 
-		const map = setupMap();
-		populateMarkers(map);
+            addControls() {
+                this.map.addControl(new mapboxgl.NavigationControl());
+                this.map.addControl(new mapboxgl.GeolocateControl({
+                    positionOptions: { enableHighAccuracy: true },
+                    trackUserLocation: true,
+                    showUserHeading: true
+                }));
+            }
 
-		map.on('style.load', () => {
-			map.setFog({});
-		});
+            setupEventListeners() {
+                this.map.on('mousedown', () => this.userInteracting = true);
+                this.map.on('dragstart', () => this.userInteracting = true);
+                this.map.on('click', () => this.removeCurrentPopover());
+                this.map.on('moveend', () => this.spinGlobe());
 
-		const secondsPerRevolution = 180;
-		const maxSpinZoom = 5;
-		const slowSpinZoom = 3;
-		let userInteracting = false;
-		const spinEnabled = true;
+                // Add right-click event listener:
+                this.map.on('contextmenu', (e) => {
+                    // Get coordinates from click event
+                    const coordinates = e.lngLat;
 
-		function spinGlobe() {
-			const zoom = map.getZoom();
-			if (spinEnabled && !userInteracting && zoom < maxSpinZoom) {
-				let distancePerSecond = 360 / secondsPerRevolution;
-				if (zoom > slowSpinZoom) {
-					const zoomDif = (maxSpinZoom - zoom) / (maxSpinZoom - slowSpinZoom);
-					distancePerSecond *= zoomDif;
-				}
-				const center = map.getCenter();
-				center.lng -= distancePerSecond;
-				map.easeTo({ center, duration: 1000, easing: (n) => n });
-			}
-		}
+                    // Create popup content with coordinates and quality score
+                    const popupContent = `
+                        <div style="padding: 10px;">
+                            <h4>Location Info</h4>
+                            <p>Longitude: ${coordinates.lng.toFixed(6)}</p>
+                            <p>Latitude: ${coordinates.lat.toFixed(6)}</p>
+                            <button onclick="addLocation(${coordinates.lng}, ${coordinates.lat})"
+                                    class="btn btn-sm btn-primary">
+                                Add Location
+                            </button>
+                        </div>
+                    `;
 
-		map.on('mousedown', () => {
-			userInteracting = true;
-		});
-		map.on('dragstart', () => {
-			userInteracting = true;
-		});
-		map.on('click', () => {
-			currentPopover && removePopover(currentPopover);
-			currentPopover = null;
-		});
+                    // Create and show popup
+                    new mapboxgl.Popup()
+                        .setLngLat(coordinates)
+                        .setHTML(popupContent)
+                        .addTo(this.map);
+                });
+            }
 
-		map.on('moveend', () => {
-			spinGlobe();
-		});
+            initializeDataLayers() {
+                console.log('Initializing data layers...');
 
-		spinGlobe();
-	</script>
+                // Add viewing locations source:
+                this.map.addSource('viewing-locations', {
+                    type: 'geojson',
+                    data: {
+                        type: 'FeatureCollection',
+                        features: []
+                    },
+                    cluster: true,
+                    clusterMaxZoom: 14,
+                    clusterRadius: 50
+                });
+
+                // Add clusters layer:
+                console.log('Adding clusters layer...');
+                this.map.addLayer({
+                    id: 'location-clusters',
+                    type: 'circle',
+                    source: 'viewing-locations',
+                    filter: ['has', 'point_count'],
+                    paint: {
+                        'circle-color': [
+                            'step',
+                            ['get', 'point_count'],
+                            '#51bbd6',
+                            100, '#f1f075',
+                            750, '#f28cb1',
+                        ],
+                        'circle-radius': [
+                            'step',
+                            ['get', 'point_count'],
+                            20, 100, 30, 750, 40
+                        ]
+                    }
+                });
+
+                // Add individual locations layer:
+                console.log('Adding individual locations layer...');
+                this.map.addLayer({
+                    id: 'viewing-locations',
+                    type: 'circle',
+                    source: 'viewing-locations',
+                    filter: ['!', ['has', 'point_count']],
+                    paint: {
+                        'circle-color': [
+                            'interpolate',
+                            ['linear'],
+                            ['get', 'quality_score'],
+                            0, '#ff0000',
+                            50, '#ffff00',
+                            100, '#00ff00',
+                        ],
+                        'circle-radius': 8
+                    }
+                });
+
+                // Add hover interaction for individual locations:
+                this.map.on('mouseenter', 'viewing-locations', (e) => {
+                    this.map.getCanvas().style.cursor = 'pointer';
+
+                    // Get the location data from the feature:
+                    const coordinates = e.features[0].geometry.coordinates.slice();
+                    const properties = e.features[0].properties;
+
+                    const getQualityClass = (score) => {
+                        if (score >= 75) return 'quality-high';
+                        if (score >= 50) return 'quality-medium';
+                        return 'quality-low';
+                    };
+
+                    // Create popup content:
+                    const popupContent = `
+                        <div class="location-popup">
+                            <h4>${properties.name}</h4>
+                            <p>Quality Score: ${properties.quality_score}</p>
+                            <p>Elevation: ${properties.elevation} m</p>
+                            ${properties.light_pollution_value ?
+                                `<p>Light Pollution: ${properties.light_pollution_value}</p>` :
+                                ''}
+                        </div>
+                    `;
+
+                    // Create and show the popup:
+                    new mapboxgl.Popup({
+                        closeButton: false,
+                        className: 'location-hover-popup'
+                    })
+                    .setLngLat(coordinates)
+                    .setHTML(popupContent)
+                    .addTo(this.map);
+                });
+
+                // Remove popup when mouse leaves the loation:
+                this.map.on('mouseleave', 'viewing-locations', () => {
+                    this.map.getCanvas().style.cursor = '';
+                    const popups = document.getElementsByClassName('location-hover-popup');
+                    if (popups[0]) popups[0].remove();
+                });
+
+                // Add hover interactions for clusters
+                this.map.on('mouseenter', 'location-clusters', (e) => {
+                    this.map.getCanvas().style.cursor = 'pointer';
+
+                    const coordinates = e.features[0].geometry.coordinates.slice();
+                    const pointCount = e.features[0].properties.point_count;
+
+                    // Create popup content for clusters
+                    const popupContent = `
+                        <div class="cluster-popup">
+                            <h4>Location Cluster</h4>
+                            <p>${pointCount} locations in this area</p>
+                        </div>
+                    `;
+
+                    new mapboxgl.Popup({
+                        closeButton: false,
+                        className: 'cluster-hover-popup'
+                    })
+                    .setLngLat(coordinates)
+                    .setHTML(popupContent)
+                    .addTo(this.map);
+                });
+
+                // Remove cluster popup on mouseleave
+                this.map.on('mouseleave', 'location-clusters', () => {
+                    this.map.getCanvas().style.cursor = '';
+                    const popups = document.getElementsByClassName('cluster-hover-popup');
+                    if (popups[0]) popups[0].remove();
+                });
+            }
+
+            setupDarkSkyLayer() {
+                // Add dark sky source and layer:
+                this.map.addSource('dark-sky', {
+                    type: 'raster',
+                    tiles: ['/tiles/{z}/{x}/{y}.png'],
+                    tileSize: 256,
+                    attribution: 'Dark Sky Data © NASA Earth Observatory',
+                    bounds: [-180, -85.0511, 180, 85.0511],
+                    minzoom: 0,
+                    maxzoom: 8
+                });
+
+                this.map.addLayer({
+                    id: 'dark-sky-layer',
+                    type: 'raster',
+                    source: 'dark-sky',
+                    paint: {
+                        'raster-opacity': 0.7,
+                        'raster-fade-duration': 0
+                    }
+                });
+
+                this.addDarkSkyControls();
+            }
+
+            addDarkSkyControls() {
+                // Add toggle button
+                const toggleButton = this.createControl('Toggle Dark Sky', () => {
+                    const visibility = this.map.getLayoutProperty('dark-sky-layer', 'visibility');
+                    this.map.setLayoutProperty(
+                        'dark-sky-layer',
+                        'visibility',
+                        visibility === 'visible' ? 'none' : 'visible'
+                    );
+                    toggleButton.style.backgroundColor = visibility === 'visible' ? '#ccc' : '#fff';
+                });
+
+                // Add find optimal locations button
+                const findOptimalButton = this.createControl('Find Best Viewing Locations', async () => {
+                    try {
+                        const bounds = this.map.getBounds();
+                        const locations = await LocationService.findOptimalLocations(bounds);
+                        this.displayOptimalLocations(locations);
+                    } catch (error) {
+                        console.error('Error finding optimal locations:', error);
+                    }
+                });
+
+                // Add legend
+                this.addLegend();
+            }
+
+            createControl(text, onClick) {
+                const button = document.createElement('button');
+                button.className = 'mapboxgl-ctrl-group mapboxgl-ctrl';
+                button.innerHTML = text;
+                button.style.margin = '10px';
+                button.onclick = onClick;
+                this.map.getContainer().appendChild(button);
+                return button;
+            }
+
+            addLegend() {
+                const legend = document.createElement('div');
+                legend.className = 'mapboxgl-ctrl-group mapboxgl-ctrl legend';
+                legend.style.padding = '10px';
+                legend.innerHTML = `
+                    <h4>Dark Sky Levels</h4>
+                    <div style="display: flex; align-items: center; margin: 5px 0;">
+                        <div style="background: linear-gradient(to right, #000, #fff); width: 100px; height: 20px;"></div>
+                        <span style="margin-left: 10px;">Light Pollution Scale</span>
+                    </div>
+                `;
+                this.map.getContainer().appendChild(legend);
+            }
+
+            async loadLocationsAndEvents() {
+                try {
+                    console.log('Starting to load locations and events...');
+
+                    const [locations, events] = await Promise.all([
+                        LocationService.getViewingLocations(),
+                        //LocationService.getCelestialEvents()
+                    ]);
+                    console.log('Locations fetched:', locations);
+
+
+                    if (locations && locations.length > 0) {
+                        console.log(`Found ${locations.length} locations to display`);
+                        this.displayLocations(locations);
+                    } else {
+                        console.log('No locations received');
+                    }
+
+                    if (events && events.length > 0) {
+                        console.log(`Found ${events.length} events to display`);
+                        this.displayEvents(events);
+                    } else {
+                        console.log('No events received');
+                    }
+
+
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                }
+            }
+
+            displayLocations(locations) {
+                console.log('Attempting to display locations:', locations);
+
+                try {
+                    const features = locations.map(location => ({
+                        type: 'Feature',
+                        geometry: {
+                            type: 'Point',
+                            coordinates: [location.longitude, location.latitude]
+                        },
+                        properties: {
+                            id: location.id,
+                            name: location.name || 'Unnamed Location',
+                            elevation: parseFloat(location.elevation) || 0,
+
+                            quality_score: parseFloat(location.quality_score) || 0,
+                            light_pollution_value: parseFloat(location.light_pollution_value) || 0
+                        }
+                    }));
+
+                    const source = this.map.getSource('viewing-locations');
+                    if (!source) {
+                        console.error('Source "viewing-locations" not found');
+                        return;
+                    }
+                    console.log('Setting data with features:', features);
+
+                    source.setData({
+                        type: 'FeatureCollection',
+                        features
+                    });
+
+                } catch (error) {
+                    console.error('Error displaying locations:', error);
+                }
+            }
+
+            displayEvents(events) {
+                events.forEach(event => {
+                    const marker = new mapboxgl.Marker({
+                        color: '#CC00CC',
+                        draggable: false
+                    })
+                    .setLngLat([
+                        parseFloat(event.location.longitude),
+                        parseFloat(event.location.latitude)
+                    ])
+                    .addTo(this.map);
+
+                    marker.getElement().addEventListener('click', (e) => {
+                        this.showEventPopover(marker, event);
+                        e.stopPropagation();
+                    });
+
+                    this.markers.set(event.id, marker);
+                });
+            }
+
+            showEventPopover(marker, event) {
+                this.removeCurrentPopover();
+
+                const popover = document.createElement('div');
+                popover.className = 'popover hide';
+
+                popover.innerHTML = `
+                    <div class='event-name'>${event.name}</div>
+                    <div>Type: ${event.event_type}</div>
+                    <div>Viewing Radius: ${event.viewing_radius} km</div>
+                    <div>Peak Time: ${new Date(event.start_time).toLocaleString()}</div>
+                `;
+
+                marker.getElement().appendChild(popover);
+                requestAnimationFrame(() => popover.classList.remove('hide'));
+                this.currentPopover = popover;
+
+                this.map.flyTo({
+                    center: [event.location.longitude, event.location.latitude],
+                    zoom: 5,
+                    essential: true
+                });
+            }
+
+            removeCurrentPopover() {
+                if (this.currentPopover) {
+                    this.currentPopover.classList.add('hide');
+                    setTimeout(() => this.currentPopover.remove(), 300);
+                    this.currentPopover = null;
+                }
+            }
+
+            spinGlobe() {
+                const zoom = this.map.getZoom();
+                if (this.spinEnabled && !this.userInteracting && zoom < this.maxSpinZoom) {
+                    let distancePerSecond = 360 / this.secondsPerRevolution;
+                    if (zoom > this.slowSpinZoom) {
+                        const zoomDif = (this.maxSpinZoom - zoom) / (this.maxSpinZoom - this.slowSpinZoom);
+                        distancePerSecond *= zoomDif;
+                    }
+                    const center = this.map.getCenter();
+                    center.lng -= distancePerSecond;
+                    this.map.easeTo({ center, duration: 1000, easing: (n) => n });
+                }
+            }
+        }
+
+        async function addLocation(longitude, latitude) {
+             try {
+                const response = await fetch('/api/viewing-locations/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({
+                        name: `Location at ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
+                        latitude: latitude,
+                        longitude: longitude,
+                        elevation: 0  // You could fetch actual elevation data here
+                    })
+                });
+
+                if (response.ok) {
+                    // Refresh the locations on the map
+                    const mapController = window.mapController;  // We'll need to make this accessible
+                    await mapController.loadLocationsAndEvents();
+
+                    // Close any open popups
+                    const popups = document.getElementsByClassName('mapboxgl-popup');
+                    if (popups.length) {
+                        popups[0].remove();
+                    }
+                } else {
+                    console.error('Failed to add location');
+                }
+            } catch (error) {
+                console.error('Error adding location:', error);
+            }
+        }
+
+        // Initialize the map when the document is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            window.mapController = new MapController();
+            window.mapController.initialize();
+        });
+    </script>
 </body>
 {% endblock %}
 

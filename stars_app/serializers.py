@@ -1,12 +1,27 @@
 from rest_framework import serializers
-from .models import Location, Event
+from .models import ViewingLocation, CelestialEvent, EventLocation
 
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = ['location_name', 'zip_code', 'latitude', 'latitude_direction', 'longitude', 'longitude_direction']
+class ViewingLocationSerializer(serializers.ModelSerializer):
+    added_by = serializers.ReadOnlyField(source='added_by.username')
 
-class EventSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Event
-        fields = ['name', 'event_type', 'viewing_radius', 'peak_time', 'location']
+        model = ViewingLocation
+        fields = ['id', 'name', 'latitude', 'longitude', 'elevation',
+                 'light_pollution_value', 'quality_score', 'added_by', 'created_at']
+        read_only_fields = ['light_pollution_value', 'quality_score', 'added_by', 'created_at']
+
+
+class CelestialEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CelestialEvent
+        fields = ['id', 'name', 'event_type', 'start_time', 'end_time',
+                 'description', 'viewing_radius']
+
+
+class EventLocationSerializer(serializers.ModelSerializer):
+    location = ViewingLocationSerializer(read_only=True)
+    event = CelestialEventSerializer(read_only=True)
+
+    class Meta:
+        model = EventLocation
+        fields = ['id', 'event', 'location', 'notes']

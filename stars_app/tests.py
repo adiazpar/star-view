@@ -1,5 +1,5 @@
 from django.test import TestCase, Client
-from stars_app.models import Event, Location
+from stars_app.models import CelestialEvent as Event, ViewingLocation as Location
 from django.utils import timezone
 from django.urls import reverse
 
