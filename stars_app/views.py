@@ -51,12 +51,12 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         elevation = serializer.validated_data.get('elevation', 0)
 
         # Calculate values:
-        pollution_value = calculator.calculate_light_pollution(latitude, longitude)
+        pollution_value = calculator.calculate_light_pollution(latitude, longitude, radius_km=1)
         quality_score = calculator.calculate_quality_score(
             latitude=latitude,
             longitude=longitude,
             elevation=elevation,
-            viewing_radius_km=10
+            viewing_radius_km=1
         )
         serializer.save(
             added_by=self.request.user,
