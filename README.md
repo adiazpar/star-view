@@ -70,3 +70,22 @@ KEY NOTES related to this section:
 
 
 ## How to Upload a Tileset for GDAL parsing:
+We have decided to excluded the /media/ directory from our repository since it ends up being a fairly large folder in size after GDAL parsing.
+
+1. Be sure the app is running correctly in your environment. If you haven't done so already, be sure to follow the steps in the previous section to correctly set up the app.
+
+2. Be sure to start the app and make sure it is running on a working server.
+
+3. Log into the admin account. The credentials should be...
+Username: group8
+Password: A092320d@
+
+4. Navigate to the app's '/upload' extension. Once there, you should see a button to upload a .tif file. I have provided a .tif file in our project's root directory downloaded from this link:
+
+https://earthobservatory.nasa.gov/features/NightLights/page3.php
+
+5. Take a look at the command line tool where you are running the server. You should see activity there while the .tif is being uploaded and parsed into tiles.
+
+6. Once this process is finished, you have successfully uploaded and processed the .tif data into a tiled mesh for our map.
+
+7. Our 'map' page should now include a dark sky layer, where light pollution activity is clearly visible on all parts of the globe.
