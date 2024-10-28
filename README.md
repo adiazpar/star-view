@@ -1,5 +1,6 @@
-#GROUP 8 FALL 2024:
+# GROUP 8 FALL 2024:
 
+## Project Initial Setup
 If you'd like to work in DevEDU, here are some instructions to get the project started and ready for development:
 
 1. Navigate to DevEdu. Enter your container, make sure you click "Start" if it isn't started already.
@@ -58,11 +59,12 @@ Additional notes:
 ```
 11. Go to the DevEdu container menu and click on 'App'. You should see the main page of our app.
 
-OTHER NOTES:
-
+### OTHER NOTES
 If you're working on this project locally, please install and use Python 3.11.
 - Check the current version of Python by running the command python3 --version in the CLI of your development environment.
- 
-Please install Django 4.2
+- Please install Django 4.2
 - Check the current version of Django by running the command django-admin --version in the CLI of your virtual enviornment.
 - This should be specified in the requirements.txt, so once you pip install -r the contents there, Django 4.2 should be automatically installed.
+
+
+## How to Upload a Tileset for GDAL parsing:
