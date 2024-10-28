@@ -71,6 +71,8 @@ KEY NOTES related to this section:
 ## How to Switch to a remote branch if it isn't showing up in your local environment:
 Use the commands below:
 
+    git branch -a                          # Get the name of the remote branch you want to switch to
+    
     git fetch
     git checkout {branchname}
     
