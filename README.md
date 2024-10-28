@@ -59,6 +59,7 @@ Additional notes:
 ```
 11. Go to the DevEdu container menu and click on 'App'. You should see the main page of our app.
 
+###### You have now successfully setup the project on DevEDU
 
 KEY NOTES related to this section:
 - If you're working on this project locally, please install and use Python 3.11.
