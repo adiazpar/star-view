@@ -59,8 +59,9 @@ Additional notes:
 ```
 11. Go to the DevEdu container menu and click on 'App'. You should see the main page of our app.
 
-### OTHER NOTES
-If you're working on this project locally, please install and use Python 3.11.
+
+KEY NOTES related to this section:
+- If you're working on this project locally, please install and use Python 3.11.
 - Check the current version of Python by running the command python3 --version in the CLI of your development environment.
 - Please install Django 4.2
 - Check the current version of Django by running the command django-admin --version in the CLI of your virtual enviornment.
