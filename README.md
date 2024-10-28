@@ -68,6 +68,15 @@ KEY NOTES related to this section:
 - Check the current version of Django by running the command django-admin --version in the CLI of your virtual enviornment.
 - This should be specified in the requirements.txt, so once you pip install -r the contents there, Django 4.2 should be automatically installed.
 
+## How to Switch to a remote branch if it isn't showing up in your local environment:
+Use the commands below:
+
+    git branch -a                          # Get the name of the remote branch you want to switch to
+    
+    git fetch
+    git checkout {branchname}
+    
+    git reset --hard origin/{branchname}   # removes staged and working directory changes
 
 ## How to Upload a Tileset for GDAL parsing:
 We have decided to excluded the /media/ directory from our repository since it ends up being a fairly large folder in size after GDAL parsing.
