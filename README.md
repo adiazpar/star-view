@@ -83,6 +83,7 @@ Password: A092320d@
 4. Navigate to the app's '/upload' extension. Once there, you should see a button to upload a .tif file. I have provided a .tif file in our project's root directory downloaded from this link:
 
 https://earthobservatory.nasa.gov/features/NightLights/page3.php
+https://www.reddit.com/r/mapbox/comments/ufgst3/how_to_create_a_dark_sky_map/
 
 5. Take a look at the command line tool where you are running the server. You should see activity there while the .tif is being uploaded and parsed into tiles.
 
