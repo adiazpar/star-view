@@ -1,4 +1,4 @@
-GROUP 8 FALL 2024:
+#GROUP 8 FALL 2024:
 
 If you'd like to work in DevEDU, here are some instructions to get the project started and ready for development:
 
