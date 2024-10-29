@@ -15,7 +15,7 @@ class CelestialEventSerializer(serializers.ModelSerializer):
     class Meta:
         model = CelestialEvent
         fields = ['id', 'name', 'event_type', 'start_time', 'end_time',
-                 'description', 'viewing_radius']
+                 'description', 'viewing_radius', 'location']
 
 
 class EventLocationSerializer(serializers.ModelSerializer):

@@ -8,7 +8,8 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
-#router.register(r'celestial-events', views.CelestialEventViewSet, basename='celestial-events')
+router.register(r'celestial-events', views.CelestialEventViewSet, basename='celestial-events')
+router.register(r'event-locations', views.EventLocationViewSet, basename='event-locations')
 
 urlpatterns = [
     # User authentication:
@@ -20,6 +21,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('map/', views.map, name='map'),
     path('list/', views.event_list, name='event_list'),
+    path('list/<event_id>', views.details, name='details'),
 
     # Map Tiles:
     path('upload/', views.upload_and_process_tif, name='upload_and_process_tif'),

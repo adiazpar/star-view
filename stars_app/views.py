@@ -24,7 +24,7 @@ import os
 from django.conf import settings
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
-from osgeo import gdal
+#from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
 
@@ -36,6 +36,15 @@ from rest_framework.permissions import IsAuthenticated
 
 # ---------------------------------------------------------------- #
 # Location Management Views:
+
+class CelestialEventViewSet(viewsets.ModelViewSet):
+    queryset = CelestialEvent.objects.all()
+    serializer_class = CelestialEventSerializer
+
+class EventLocationViewSet(viewsets.ModelViewSet):
+    queryset = EventLocation.objects.all()
+    serializer_class = EventLocationSerializer
+
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
     serializer_class = ViewingLocationSerializer
@@ -207,6 +216,12 @@ def map(request):
 def event_list(request):
     event_list = CelestialEvent.objects.all()
     return render(request, 'stars_app/list.html', {'events':event_list})
+
+def details(request, event_id):
+    current_data = {
+        'event': CelestialEvent.objects.get(pk=event_id)
+    }
+    return render(request, 'stars_app/details.html', current_data)
 
 
 # ---------------------------------------------------------------- #

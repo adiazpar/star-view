@@ -34,13 +34,8 @@ class CelestialEvent(models.Model):
     end_time = models.DateTimeField()
     description = models.TextField()
     viewing_radius = models.FloatField(help_text="Optimal viewing radius in km")
-
-    recommended_locations = models.ManyToManyField(
-        ViewingLocation,
-        through='EventLocation',
-        blank=True
-    )
-
+    location = models.ForeignKey(ViewingLocation, on_delete=models.CASCADE)
+    
     def __str__(self):
         return f'{self.name} ({self.start_time.date()})'
 

@@ -10,6 +10,7 @@ __pycache__/
 *.so
 
 # Distribution / packaging
+db.sqlite3
 .Python
 build/
 develop-eggs/
