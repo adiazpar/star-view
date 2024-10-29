@@ -55,7 +55,6 @@
             background: #ffebee;
             color: #ff0000;
         }
-
         .legend {
             position: absolute;
             padding-left: 10px;
@@ -66,7 +65,6 @@
             background: rgba(255, 255, 255, 0.7);
         }
 
-
         .location-marker, .event-marker {
             cursor: pointer;
         }
@@ -74,6 +72,7 @@
         .event-marker:hover .event-marker-icon {
             transform: scale(1.1) !important;
         }
+
         .location-marker .marker-icon {
             width: 14px;
             height: 14px;
@@ -88,20 +87,6 @@
         .marker-icon i {
             color: white;
             font-size: 7px;
-        }
-
-        /* Popup context menu Styling */
-        .popup {
-            max-width: 200px;
-        }
-        .popup h4 {
-            margin: 0 0 5px 0;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .popup p {
-            margin: 3px 0;
-            font-size: 12px;
         }
 
         .event-marker-icon {
@@ -119,7 +104,6 @@
             color: white;
             font-size: 16px;
         }
-
         .event-marker-radius {
             position: absolute;
             top: 50%;
@@ -134,36 +118,22 @@
             z-index: 1;
         }
 
-        .event-popup {
-            padding: 10px;
+        /* Popup context menu Styling */
+        .popup {
             max-width: 200px;
         }
-
-        .event-detail-popup {
-            padding: 15px;
-            max-width: 300px;
-        }
-
-        .event-popup h4,
-        .event-detail-popup h4 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
+        .popup h4 {
+            margin: 0 0 5px 0;
+            font-size: 14px;
             font-weight: bold;
         }
-
-        .event-type-badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 12px;
-            color: white;
+        .popup p {
+            margin: 3px 0;
             font-size: 12px;
-            margin-bottom: 10px;
         }
-
-        .event-popup p,
-        .event-detail-popup p {
-            margin: 5px 0;
-            font-size: 13px;
+        .popup .btn {
+            padding: 8px 8px;
+            font-size: 12px;
         }
 
         .popup .form-group {
@@ -190,11 +160,6 @@
 
         .popup select.form-control {
             height: 34px;
-        }
-
-        .popup .btn {
-            padding: 8px 16px;
-            font-size: 14px;
         }
 	</style>
 </head>
@@ -666,7 +631,7 @@
                                     </button>
                                 </div>
                                 <div class="coordinates-display">
-                                    <small>Longitude: ${coordinates.lng.toFixed(6)}</small>
+                                    <small>Longitude: ${coordinates.lng.toFixed(6)}</small><br>
                                     <small>Latitude: ${coordinates.lat.toFixed(6)}</small>
                                 </div>
                             </div>
@@ -734,7 +699,10 @@
                 });
 
                 // Add dark sky layer toggle button:
-                const toggleButton = this.createControl('Toggle Dark Sky', () => {
+                const button = document.createElement('button');
+                button.className = 'mapboxgl-ctrl-group mapboxgl-ctrl control';
+                button.innerText = 'Toggle Dark Sky';
+                button.onclick = () => {
                     const visibility = this.map.getLayoutProperty('dark-sky-layer', 'visibility');
                     this.map.setLayoutProperty(
                         'dark-sky-layer',
@@ -742,11 +710,12 @@
                         visibility === 'visible' ? 'none' : 'visible'
                     );
                     // Update button state
-                    toggleButton.classList.toggle('active', visibility !== 'visible');
-                });
+                    button.classList.toggle('active', visibility !== 'visible');
+                };
+                this.map.getContainer().appendChild(button);
 
                 // Since layer starts hidden, remove active class initially
-                toggleButton.classList.remove('active');
+                button.classList.remove('active');
 
                 // Adding the legend:
                 const legend = document.createElement('div');
@@ -761,41 +730,7 @@
                 this.map.getContainer().appendChild(legend);
             }
 
-            createControl(text, onClick) {
-                const button = document.createElement('button');
-                button.className = 'mapboxgl-ctrl-group mapboxgl-ctrl control';
-                button.innerHTML = text;
-                button.onclick = onClick;
-                this.map.getContainer().appendChild(button);
-                return button;
-            }
-
-            async loadLocationsAndEvents() {
-                try {
-                    console.log('Starting to load locations and events...');
-
-                    const [locations, events] = await Promise.all([
-                        LocationService.getViewingLocations(),
-                        LocationService.getCelestialEvents()
-                    ]);
-                    console.log('Locations fetched:', locations);
-
-
-                    if (locations?.length > 0) {
-                        this.displayLocations(locations);
-                    }
-
-                    if (events?.length > 0) {
-                        this.displayEvents(events);
-                    }
-                } catch (error) {
-                    console.error('Error loading data:', error);
-                }
-            }
-
             displayLocations(locations) {
-                console.log('Attempting to display locations:', locations);
-
                 try {
                     // Clear existing markers:
                     this.locationMarkers.forEach(marker => marker.remove());
@@ -870,26 +805,52 @@
             }
 
             displayEvents(events) {
-                console.log('Attempting to display events:', events);
-
                 try {
                     // Clear existing event markers:
                     this.eventMarkers.forEach(marker => marker.remove());
                     this.eventMarkers.clear();
 
+                    // Event type configurations
+                    const eventConfigs = {
+                        'METEOR': {
+                            color: '#FF6B6B',
+                            icon: '<i class="fas fa-meteor"></i>'
+                        },
+                        'ECLIPSE': {
+                            color: '#4ECDC4',
+                            icon: '<i class="fas fa-moon"></i>'
+                        },
+                        'PLANET': {
+                            color: '#45B7D1',
+                            icon: '<i class="fas fa-globe"></i>'
+                        },
+                        'AURORA': {
+                            color: '#96CEB4',
+                            icon: '<i class="fas fa-sparkles"></i>'
+                        },
+                        'COMET': {
+                            color: '#FFEEAD',
+                            icon: '<i class="fas fa-star"></i>'
+                        },
+                        'OTHER': {
+                            color: '#CC00CC',
+                            icon: '<i class="fas fa-star-shooting"></i>'
+                        }
+                    };
+
                     events.forEach(event => {
                         const el = document.createElement('div');
                         el.className = 'event-marker';
 
-                        // Get color based on event type
-                        const color = this.getEventTypeColor(event.event_type);
+                        // Get event styling configuration, fallback to OTHER if type not found
+                        const config = eventConfigs[event.event_type] || eventConfigs['OTHER'];
 
                         // Create marker HTML with event-specific icon
                         el.innerHTML = `
-                            <div class="event-marker-icon" style="background-color: ${color}">
-                                ${this.getEventTypeIcon(event.event_type)}
+                            <div class="event-marker-icon" style="background-color: ${config.color}">
+                                ${config.icon}
                             </div>
-                            <div class="event-marker-radius" style="border-color: ${color}"></div>
+                            <div class="event-marker-radius" style="border-color: ${config.color}"></div>
                         `;
 
                         // Create and add marker
@@ -903,7 +864,7 @@
                         // Add hover functionality
                         el.addEventListener('mouseenter', () => {
                             const popupContent = `
-                                <div class="event-popup">
+                                <div class="popup">
                                     <h4>${event.name}</h4>
                                     <p>Type: ${event.event_type}</p>
                                     <p>Start: ${new Date(event.start_time).toLocaleString()}</p>
@@ -914,7 +875,7 @@
 
                             const popup = new mapboxgl.Popup({
                                 closeButton: false,
-                                className: 'event-hover-popup',
+                                className: 'popup',
                                 offset: [0, -10]
                             })
                             .setLngLat([event.longitude, event.latitude])
@@ -939,28 +900,6 @@
                                 zoom: 8,
                                 essential: true
                             });
-
-                            const detailPopupContent = `
-                                <div class="event-detail-popup">
-                                    <h4>${event.name}</h4>
-                                    <div class="event-type-badge" style="background-color: ${color}">
-                                        ${event.event_type}
-                                    </div>
-                                    <p><strong>Start:</strong> ${new Date(event.start_time).toLocaleString()}</p>
-                                    <p><strong>End:</strong> ${new Date(event.end_time).toLocaleString()}</p>
-                                    <p><strong>Viewing Radius:</strong> ${event.viewing_radius} km</p>
-                                    <p>${event.description}</p>
-                                </div>
-                            `;
-
-                            new mapboxgl.Popup({
-                                closeButton: true,
-                                className: 'event-detail-popup',
-                                maxWidth: '300px'
-                            })
-                            .setLngLat([event.longitude, event.latitude])
-                            .setHTML(detailPopupContent)
-                            .addTo(this.map);
                         });
 
                         this.eventMarkers.set(event.id, marker);
@@ -971,30 +910,29 @@
                 }
             }
 
-            getEventTypeColor(eventType) {
-                const colors = {
-                    'METEOR': '#FF6B6B',
-                    'ECLIPSE': '#4ECDC4',
-                    'PLANET': '#45B7D1',
-                    'AURORA': '#96CEB4',
-                    'COMET': '#FFEEAD',
-                    'OTHER': '#CC00CC'
-                };
-                return colors[eventType] || colors['OTHER'];
-            }
+            async loadLocationsAndEvents() {
+                try {
+                    console.log('Starting to load locations and events...');
 
-            getEventTypeIcon(eventType) {
-                const icons = {
-                    'METEOR': '<i class="fas fa-meteor"></i>',
-                    'ECLIPSE': '<i class="fas fa-moon"></i>',
-                    'PLANET': '<i class="fas fa-globe"></i>',
-                    'AURORA': '<i class="fas fa-sparkles"></i>',
-                    'COMET': '<i class="fas fa-star"></i>',
-                    'OTHER': '<i class="fas fa-star-shooting"></i>'
-                };
-                return icons[eventType] || icons['OTHER'];
-            }
+                    const [locations, events] = await Promise.all([
+                        LocationService.getViewingLocations(),
+                        LocationService.getCelestialEvents()
+                    ]);
+                    console.log('Locations fetched:', locations);
 
+
+                    if (locations?.length > 0) {
+                        this.displayLocations(locations);
+                    }
+
+                    if (events?.length > 0) {
+                        this.displayEvents(events);
+                    }
+                } catch (error) {
+                    console.error('Error loading data:', error);
+                }
+            }
+            
             spinGlobe() {
                 const zoom = this.map.getZoom();
                 if (this.spinEnabled && !this.userInteracting && zoom < this.maxSpinZoom) {
@@ -1131,6 +1069,7 @@
             .addTo(window.mapController.map);
         }
 
+        // Function to submit an event form to the API:
         async function submitEventForm(longitude, latitude) {
             event.preventDefault();  // Add this line
 
