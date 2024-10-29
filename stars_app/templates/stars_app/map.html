@@ -132,34 +132,24 @@
             font-size: 12px;
         }
         .popup .btn {
-            padding: 8px 8px;
+            padding: 8px;
             font-size: 12px;
-        }
-
-        .popup .form-group {
-            margin-bottom: 10px;
+            width: 100%;
         }
 
         .popup .form-control {
-            width: 100%;
-            padding: 6px 12px;
-            font-size: 14px;
-            border: 1px solid #ced4da;
+            width: 90%;
+            padding: 8px;
+            margin-bottom: 10px;
+
+            font-size: 12px;
+            border: 1px solid darkgrey;
             border-radius: 4px;
         }
 
-        .popup textarea.form-control {
-            resize: vertical;
-            min-height: 60px;
-        }
-
         .popup small.text-muted {
-            color: #6c757d;
-            font-size: 12px;
-        }
-
-        .popup select.form-control {
-            height: 34px;
+            color: gray;
+            font-size: 10px;
         }
 	</style>
 </head>
@@ -609,8 +599,21 @@
                     this.map.on('dragstart', () => this.userInteracting = true);
                     this.map.on('moveend', () => this.spinGlobe());
 
+                    this.map.on('click', () => {
+                        const existingPopups = document.getElementsByClassName('mapboxgl-popup');
+                        while (existingPopups[0]) {
+                            existingPopups[0].remove();
+                        }
+                    });
+
                     // Add right-click event listener:
                     this.map.on('contextmenu', (e) => {
+                        // First, close all existing popups
+                        const existingPopups = document.getElementsByClassName('mapboxgl-popup');
+                        while (existingPopups[0]) {
+                            existingPopups[0].remove();
+                        }
+
                         // Get coordinates from click event
                         const coordinates = e.lngLat;
 
@@ -620,12 +623,12 @@
                                 <h4>Add New Point</h4>
                                 <div class="context-menu-buttons">
                                     <button onclick="addLocation(${coordinates.lng}, ${coordinates.lat})"
-                                            class="btn btn-sm btn-primary context-menu-btn">
+                                            class="btn">
                                         <i class="fas fa-location-dot"></i>
                                         Add Viewing Location
                                     </button>
                                     <button onclick="addEvent(${coordinates.lng}, ${coordinates.lat})"
-                                            class="btn btn-sm btn-success context-menu-btn">
+                                            class="btn">
                                         <i class="fas fa-star"></i>
                                         Add Celestial Event
                                     </button>
@@ -932,7 +935,7 @@
                     console.error('Error loading data:', error);
                 }
             }
-            
+
             spinGlobe() {
                 const zoom = this.map.getZoom();
                 if (this.spinEnabled && !this.userInteracting && zoom < this.maxSpinZoom) {
@@ -1015,10 +1018,10 @@
                 <div class="popup">
                     <h4>Add Celestial Event</h4>
                     <form id="eventForm" onsubmit="return submitEventForm(${longitude}, ${latitude})">
-                        <div class="form-group mb-2">
+                        <div class="form-group">
                             <input type="text" class="form-control" id="eventName" placeholder="Event Name" required>
                         </div>
-                        <div class="form-group mb-2">
+                        <div class="form-group">
                             <select class="form-control" id="eventType" required>
                                 <option value="">Select Event Type</option>
                                 <option value="METEOR">Meteor Shower</option>
@@ -1029,24 +1032,24 @@
                                 <option value="OTHER">Other</option>
                             </select>
                         </div>
-                        <div class="form-group mb-2">
+                        <div class="form-group">
                             <input type="datetime-local" class="form-control" id="startTime" required>
                             <small class="text-muted">Start Time</small>
                         </div>
-                        <div class="form-group mb-2">
+                        <div class="form-group">
                             <input type="datetime-local" class="form-control" id="endTime" required>
                             <small class="text-muted">End Time</small>
                         </div>
-                        <div class="form-group mb-2">
+                        <div class="form-group">
                             <input type="number" class="form-control" id="viewingRadius"
                                    placeholder="Viewing Radius (km)" required min="0">
                         </div>
-                        <div class="form-group mb-2">
+                        <div class="form-group">
                             <textarea class="form-control" id="description"
-                                      placeholder="Description" rows="3" required></textarea>
+                                      placeholder="Description" required></textarea>
                         </div>
-                        <div class="form-group mt-3">
-                            <button type="submit" class="btn btn-success w-100">Add Event</button>
+                        <div class="form-group">
+                            <button type="submit" class="btn">Add Event</button>
                         </div>
                     </form>
                 </div>
@@ -1062,7 +1065,6 @@
             new mapboxgl.Popup({
                 closeButton: true,
                 closeOnClick: false,
-                maxWidth: '400px'
             })
             .setLngLat([longitude, latitude])
             .setHTML(formPopupContent)
