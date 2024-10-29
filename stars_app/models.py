@@ -26,6 +26,7 @@ class CelestialEvent(models.Model):
         ('PLANET', 'Planetary Event'),
         ('AURORA', 'Aurora'),
         ('OTHER', 'Other'),
+        ('COMET', 'Comet'),
     ]
 
     name = models.CharField(max_length=200)

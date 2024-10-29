@@ -2,7 +2,7 @@
 {% block body_class %}list-page{% endblock %}
 
 {% block content %}
-    <div class="list_container">
+    <div class="list-container">
         <div class="list-header">
             <p>CURRENT CELESTIAL EVENTS</p>
         </div>
@@ -15,10 +15,16 @@
                             <img src='/static/images/comet-pic.jpg' class="list-icon" width="100" height="100"></img>
                         {% elif event.event_type == "ECLIPSE" %}
                             <img src='/static/images/eclipse_icon.jpg' class="list-icon" width="100" height="100"></img>
+                        {% elif event.event_type == "METEOR" %}
+                            <img src='/static/images/meteor-icon.jpg' class="list-icon" width="100" height="100"></img>
+                        {% elif event.event_type == "PLANET" %}
+                            <img src='/static/images/planet-icon.jpg' class="list-icon" width="100" height="100"></img>
+                        {% elif event.event_type == "AURORA" %}
+                            <img src='/static/images/aurora-icon.jpg' class="list-icon" width="100" height="100"></img>
                         {% endif %}
                         <h5 >Name: {{ event.name }}</h5>
                         <p >Type: {{ event.event_type }}</p>
-                        <a href="{% url 'details' event.id %}" class="btn btn-primary">Learn More!</a>
+                        <a href="{% url 'details' event.id %}" class="btn btn-primary ">Learn More!</a>
                     </li>
                 {% endfor %}
             </ul>

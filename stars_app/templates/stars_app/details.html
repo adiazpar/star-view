@@ -1,13 +1,24 @@
 {% extends "stars_app/base.html" %}
-{% block body_class %}list-page{% endblock %}
+{% block body_class %}details-page{% endblock %}
 
 {% block content %}
-    <div class="list_container">
-        <div class="list-header">
+    <div class="details-container">
+        <div class="details-header">
             <p>{{ event.name }}</p>
         </div>
 
-        <div>
+        <div class="details-item">
+            {% if event.event_type == "COMET" %}
+                <img src='/static/images/comet-pic.jpg' class="list-icon" width="100" height="100"></img>
+            {% elif event.event_type == "ECLIPSE" %}
+                <img src='/static/images/eclipse_icon.jpg' class="list-icon" width="100" height="100"></img>
+            {% elif event.event_type == "METEOR" %}
+                <img src='/static/images/meteor-icon.jpg' class="list-icon" width="100" height="100"></img>
+            {% elif event.event_type == "PLANET" %}
+                <img src='/static/images/planet-icon.jpg' class="list-icon" width="100" height="100"></img>
+            {% elif event.event_type == "AURORA" %}
+                <img src='/static/images/aurora-icon.jpg' class="list-icon" width="100" height="100"></img>
+            {% endif %}
             <p>{{ event.event_type }}</p>
             <p>Start Time: {{ event.start_time }}</p>
             <p>End Time: {{ event.end_time }}</p>
@@ -16,5 +27,7 @@
             <p>Longitude: {{ event.location.longitude }} degrees</p>
             <p>Elevation: {{ event.location.elevation }} meters</p>
         </div>
+
+        <p class="details-description">{{ event.description }}</p>
     </div>
 {% endblock %}
