@@ -9,7 +9,6 @@ from . import views
 router = DefaultRouter()
 router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
 router.register(r'celestial-events', views.CelestialEventViewSet, basename='celestial-events')
-router.register(r'event-locations', views.EventLocationViewSet, basename='event-locations')
 
 urlpatterns = [
     # User authentication:

@@ -8,18 +8,25 @@
 	<meta charset="utf-8">
 	<title>Guides</title>
 	<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-	<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+
+    <!-- Mapbox -->
+    ]<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
 	<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
-	<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
 	<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-	<style>
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
 		html, body {
 			height: 100%;
 			margin: 0;
 			padding: 0;
 			overflow: hidden;
 		}
-
 		#map {
 			position: absolute;
 			top: 0;
@@ -30,44 +37,6 @@
 			height: calc(100vh - 60px);
 			margin-top: 60px;
 		}
-        .legend {
-            position: absolute;
-            padding-left: 10px;
-            padding-right: 10px;
-            bottom: 35px;
-            right: 10px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        .location-hover-popup h4, .cluster-hover-popup h4 {
-            margin: 0 0 5px 0;
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        .location-hover-popup p, .cluster-hover-popup p {
-            margin: 2px 0;
-            color: #666;
-        }
-
-        .mapboxgl-popup-content h4 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .mapboxgl-popup-content p {
-            margin: 5px 0;
-            font-size: 14px;
-        }
-
-        .mapboxgl-popup-content button {
-            margin-top: 10px;
-            width: 100%;
-        }
-
         /* Button Styling */
         .debug-control, .control {
             background: white;
@@ -79,42 +48,153 @@
             font-weight: bold;
             color: #333;
         }
-
         .debug-control:hover, .control:hover {
             background: #d7d7d7;
         }
-
         .debug-control.active, .control.active {
             background: #ffebee;
             color: #ff0000;
         }
 
-        /*.location-hover-popup, .cluster-hover-popup {
-            /* Base styles for both popup types
-            background: rgba(255, 255, 255, 0.3);
-            backdrop-filter: blur(10px);
-			-webkit-backdrop-filter: blur(10px);
-
-            border-radius: 12px;
-            padding: 4px;
-            font-size: 14px;
-            pointer-events: none;
-
-            transition: opacity 0.3s ease;
-        }*/
-
-        .tile-coordinates {
-            border-radius: 8px;
-            padding: 4px;
-            font-size: 12px;
-            pointer-events: none;
-
-            transition: opacity 0.3s ease;
+        .legend {
+            position: absolute;
+            padding-left: 10px;
+            padding-right: 10px;
+            bottom: 35px;
+            right: 10px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.7);
         }
 
-        .tile-coordinates strong {
+
+        .location-marker, .event-marker {
+            cursor: pointer;
+        }
+        .location-marker:hover .marker-icon,
+        .event-marker:hover .event-marker-icon {
+            transform: scale(1.1) !important;
+        }
+        .location-marker .marker-icon {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 1px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            transform-origin: center center;
+        }
+        .marker-icon i {
+            color: white;
+            font-size: 7px;
+        }
+
+        /* Popup context menu Styling */
+        .popup {
+            max-width: 200px;
+        }
+        .popup h4 {
+            margin: 0 0 5px 0;
             font-size: 14px;
             font-weight: bold;
+        }
+        .popup p {
+            margin: 3px 0;
+            font-size: 12px;
+        }
+
+        .event-marker-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            transform-origin: center center;
+        }
+        .event-marker-icon i {
+            color: white;
+            font-size: 16px;
+        }
+
+        .event-marker-radius {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 2px dashed;
+            border-radius: 50%;
+            opacity: 0.3;
+            pointer-events: none;
+            width: 60px;
+            height: 60px;
+            z-index: 1;
+        }
+
+        .event-popup {
+            padding: 10px;
+            max-width: 200px;
+        }
+
+        .event-detail-popup {
+            padding: 15px;
+            max-width: 300px;
+        }
+
+        .event-popup h4,
+        .event-detail-popup h4 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .event-type-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .event-popup p,
+        .event-detail-popup p {
+            margin: 5px 0;
+            font-size: 13px;
+        }
+
+        .popup .form-group {
+            margin-bottom: 10px;
+        }
+
+        .popup .form-control {
+            width: 100%;
+            padding: 6px 12px;
+            font-size: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+
+        .popup textarea.form-control {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .popup small.text-muted {
+            color: #6c757d;
+            font-size: 12px;
+        }
+
+        .popup select.form-control {
+            height: 34px;
+        }
+
+        .popup .btn {
+            padding: 8px 16px;
+            font-size: 14px;
         }
 	</style>
 </head>
@@ -123,46 +203,6 @@
 	<div id="map"></div>
 
     <script>
-        // API Service for handling all data fetching:
-        class LocationService {
-            static getCsrfToken() {
-                return document.querySelector('[name=csrfmiddlewaretoken]').value;
-            }
-
-            static async getViewingLocations() {
-                const response = await fetch('/api/viewing-locations/', {
-                    headers: {
-                        'Content-Type': 'applications/json',
-                        'X-CSRFToken': this.getCsrfToken()
-                    }
-                });
-                if (!response.ok) throw new Error('Failed to fetch viewing locations');
-                return response.json();
-            }
-
-            static async getCelestialEvents() {
-                const response = await fetch('/api/celestial-events/', {
-                    headers: {
-                        'Content-Type': 'applications/json',
-                        'X-CSRFToken': this.getCsrfToken()
-                    }
-                });
-                if (!response.ok) throw new Error('Failed to fetch celestial events');
-                return response.json();
-            }
-
-            static async findOptimalLocations(bounds) {
-                const response = await fetch(`/api/viewing-locations/find_optimal/?min_lit=${bounds.getSouth()}&max_lat=${bounds.getNorth()}&min_lon=${bounds.getWest()}&max_lon=${bounds.getEast()}`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': this.getCsrfToken()
-                    }
-                });
-                if (!response.ok) throw new Error('Failed to find optimal locations');
-                return response.json();
-            }
-        }
-
         // Class for debugging map features:
         class MapDebugger {
             constructor(map) {
@@ -536,16 +576,16 @@
                         const tile = this.getTileCoordinates(e.lngLat.lng, e.lngLat.lat, zoom);
 
                         new mapboxgl.Popup({
-                            closeButton: false,
-                            className: 'tile-debug-popup',
+                            closeButton: true,
+                            className: 'hint',
                         })
                         .setLngLat(e.lngLat)
                         .setHTML(`
-                            <div class="tile-coordinates">
-                                <strong>Tile Information</strong><br>
-                                X: ${tile.x}<br>
-                                Y: ${tile.y}<br>
-                                Zoom: ${zoom}<br>
+                            <div class="popup">
+                                <h4>Tile Information</h4>
+                                <p>X: ${tile.x}</p>
+                                <p>Y: ${tile.y}</p>
+                                <p>Zoom: ${zoom}</p>
                             </div>
                         `)
                         .addTo(this.map);
@@ -566,15 +606,14 @@
         class MapController {
             constructor() {
                 this.map = null;
-                this.currentPopover = null;
-                this.markers = new Map();
                 this.userInteracting = false;
                 this.spinEnabled = true;
-                this.secondsPerRevolution = 180;
-                this.maxSpinZoom = 5;
-                this.slowSpinZoom = 3;
-
+                this.secondsPerRevolution = 720;
+                this.maxSpinZoom = 3;
                 this.debugger = null;
+
+                this.locationMarkers = new Map();
+                this.eventMarkers = new Map();
             }
 
             initialize() {
@@ -586,21 +625,61 @@
                     // https://docs.mapbox.com/api/maps/styles/
                     style: 'mapbox://styles/mapbox/standard',
                     projection: 'globe',
-                    zoom: 1,
+                    zoom: 2,
                     center: [-105.35, 39.113014],
-                    fog: {
-                        'space-color': '#000000',
-                        'star-intensity': 0.6,
-                        'color': '#242B4B',
-                        'high-color': '#161B36',
-                        'horizon-blend': 0.02,
-                    }
                 });
 
                 this.map.on('load', () => {
-                    this.addControls();
-                    this.setupEventListeners();
-                    this.initializeDataLayers();
+
+                    // Adding controls: ----------------------------- //
+                    this.map.addControl(new mapboxgl.NavigationControl());
+                    this.map.addControl(new mapboxgl.GeolocateControl({
+                        positionOptions: { enableHighAccuracy: true },
+                        trackUserLocation: true,
+                        showUserHeading: true
+                    }));
+
+                    // Setting up event listeners: ------------------ //
+                    this.map.on('mousedown', () => this.userInteracting = true);
+                    this.map.on('dragstart', () => this.userInteracting = true);
+                    this.map.on('moveend', () => this.spinGlobe());
+
+                    // Add right-click event listener:
+                    this.map.on('contextmenu', (e) => {
+                        // Get coordinates from click event
+                        const coordinates = e.lngLat;
+
+                        // Create popup content with coordinates and quality score
+                        const popupContent = `
+                            <div class="popup">
+                                <h4>Add New Point</h4>
+                                <div class="context-menu-buttons">
+                                    <button onclick="addLocation(${coordinates.lng}, ${coordinates.lat})"
+                                            class="btn btn-sm btn-primary context-menu-btn">
+                                        <i class="fas fa-location-dot"></i>
+                                        Add Viewing Location
+                                    </button>
+                                    <button onclick="addEvent(${coordinates.lng}, ${coordinates.lat})"
+                                            class="btn btn-sm btn-success context-menu-btn">
+                                        <i class="fas fa-star"></i>
+                                        Add Celestial Event
+                                    </button>
+                                </div>
+                                <div class="coordinates-display">
+                                    <small>Longitude: ${coordinates.lng.toFixed(6)}</small>
+                                    <small>Latitude: ${coordinates.lat.toFixed(6)}</small>
+                                </div>
+                            </div>
+                        `;
+
+                        // Create and show popup
+                        new mapboxgl.Popup()
+                            .setLngLat(coordinates)
+                            .setHTML(popupContent)
+                            .addTo(this.map);
+                    });
+
+                    // Adding Dark Sky Layer & Controls: ------------ //
                     this.setupDarkSkyLayer();
 
                     // Initialize the debugger after dark sky layer:
@@ -612,7 +691,7 @@
                         'star-intensity': 1.0,
                         'color': '#242B4B',
                         'high-color': '#161B36',
-                        'horizon-blend': 0.02
+                        'horizon-blend': 0.05
                     });
 
                     this.map.addSource('mapbox-dem', {
@@ -627,180 +706,6 @@
                 });
 
                 this.spinGlobe();
-            }
-
-            addControls() {
-                this.map.addControl(new mapboxgl.NavigationControl());
-                this.map.addControl(new mapboxgl.GeolocateControl({
-                    positionOptions: { enableHighAccuracy: true },
-                    trackUserLocation: true,
-                    showUserHeading: true
-                }));
-            }
-
-            setupEventListeners() {
-                this.map.on('mousedown', () => this.userInteracting = true);
-                this.map.on('dragstart', () => this.userInteracting = true);
-                this.map.on('click', () => this.removeCurrentPopover());
-                this.map.on('moveend', () => this.spinGlobe());
-
-                // Add right-click event listener:
-                this.map.on('contextmenu', (e) => {
-                    // Get coordinates from click event
-                    const coordinates = e.lngLat;
-
-                    // Create popup content with coordinates and quality score
-                    const popupContent = `
-                        <div style="padding: 10px;">
-                            <h4>Location Info</h4>
-                            <p>Longitude: ${coordinates.lng.toFixed(6)}</p>
-                            <p>Latitude: ${coordinates.lat.toFixed(6)}</p>
-                            <button onclick="addLocation(${coordinates.lng}, ${coordinates.lat})"
-                                    class="btn btn-sm btn-primary">
-                                Add Location
-                            </button>
-                        </div>
-                    `;
-
-                    // Create and show popup
-                    new mapboxgl.Popup()
-                        .setLngLat(coordinates)
-                        .setHTML(popupContent)
-                        .addTo(this.map);
-                });
-            }
-
-            initializeDataLayers() {
-                console.log('Initializing data layers...');
-
-                // Add viewing locations source:
-                this.map.addSource('viewing-locations', {
-                    type: 'geojson',
-                    data: {
-                        type: 'FeatureCollection',
-                        features: []
-                    },
-                    cluster: true,
-                    clusterMaxZoom: 14,
-                    clusterRadius: 50
-                });
-
-                // Add clusters layer:
-                console.log('Adding clusters layer...');
-                this.map.addLayer({
-                    id: 'location-clusters',
-                    type: 'circle',
-                    source: 'viewing-locations',
-                    filter: ['has', 'point_count'],
-                    paint: {
-                        'circle-color': [
-                            'step',
-                            ['get', 'point_count'],
-                            '#51bbd6',
-                            100, '#f1f075',
-                            750, '#f28cb1',
-                        ],
-                        'circle-radius': [
-                            'step',
-                            ['get', 'point_count'],
-                            20, 100, 30, 750, 40
-                        ]
-                    }
-                });
-
-                // Add individual locations layer:
-                console.log('Adding individual locations layer...');
-                this.map.addLayer({
-                    id: 'viewing-locations',
-                    type: 'circle',
-                    source: 'viewing-locations',
-                    filter: ['!', ['has', 'point_count']],
-                    paint: {
-                        'circle-color': [
-                            'interpolate',
-                            ['linear'],
-                            ['get', 'quality_score'],
-                            0, '#ff0000',
-                            50, '#ffff00',
-                            100, '#00ff00',
-                        ],
-                        'circle-radius': 8
-                    }
-                });
-
-                // Add hover interaction for individual locations:
-                this.map.on('mouseenter', 'viewing-locations', (e) => {
-                    this.map.getCanvas().style.cursor = 'pointer';
-
-                    // Get the location data from the feature:
-                    const coordinates = e.features[0].geometry.coordinates.slice();
-                    const properties = e.features[0].properties;
-
-                    const getQualityClass = (score) => {
-                        if (score >= 75) return 'quality-high';
-                        if (score >= 50) return 'quality-medium';
-                        return 'quality-low';
-                    };
-
-                    // Create popup content:
-                    const popupContent = `
-                        <div class="location-popup">
-                            <h4>${properties.name}</h4>
-                            <p>Quality Score: ${properties.quality_score}</p>
-                            <p>Elevation: ${properties.elevation} m</p>
-                            ${properties.light_pollution_value ?
-                                `<p>Light Pollution: ${properties.light_pollution_value}</p>` :
-                                ''}
-                        </div>
-                    `;
-
-                    // Create and show the popup:
-                    new mapboxgl.Popup({
-                        closeButton: false,
-                        className: 'location-hover-popup'
-                    })
-                    .setLngLat(coordinates)
-                    .setHTML(popupContent)
-                    .addTo(this.map);
-                });
-
-                // Remove popup when mouse leaves the loation:
-                this.map.on('mouseleave', 'viewing-locations', () => {
-                    this.map.getCanvas().style.cursor = '';
-                    const popups = document.getElementsByClassName('location-hover-popup');
-                    if (popups[0]) popups[0].remove();
-                });
-
-                // Add hover interactions for clusters
-                this.map.on('mouseenter', 'location-clusters', (e) => {
-                    this.map.getCanvas().style.cursor = 'pointer';
-
-                    const coordinates = e.features[0].geometry.coordinates.slice();
-                    const pointCount = e.features[0].properties.point_count;
-
-                    // Create popup content for clusters
-                    const popupContent = `
-                        <div class="cluster-popup">
-                            <h4>Location Cluster</h4>
-                            <p>${pointCount} locations in this area</p>
-                        </div>
-                    `;
-
-                    new mapboxgl.Popup({
-                        closeButton: false,
-                        className: 'cluster-hover-popup'
-                    })
-                    .setLngLat(coordinates)
-                    .setHTML(popupContent)
-                    .addTo(this.map);
-                });
-
-                // Remove cluster popup on mouseleave
-                this.map.on('mouseleave', 'location-clusters', () => {
-                    this.map.getCanvas().style.cursor = '';
-                    const popups = document.getElementsByClassName('cluster-hover-popup');
-                    if (popups[0]) popups[0].remove();
-                });
             }
 
             setupDarkSkyLayer() {
@@ -819,17 +724,16 @@
                     id: 'dark-sky-layer',
                     type: 'raster',
                     source: 'dark-sky',
+                    layout: {
+                        'visibility': 'none',
+                    },
                     paint: {
                         'raster-opacity': 0.7,
                         'raster-fade-duration': 0
                     }
                 });
 
-                this.addDarkSkyControls();
-            }
-
-            addDarkSkyControls() {
-                // Add toggle button
+                // Add dark sky layer toggle button:
                 const toggleButton = this.createControl('Toggle Dark Sky', () => {
                     const visibility = this.map.getLayoutProperty('dark-sky-layer', 'visibility');
                     this.map.setLayoutProperty(
@@ -837,33 +741,14 @@
                         'visibility',
                         visibility === 'visible' ? 'none' : 'visible'
                     );
+                    // Update button state
+                    toggleButton.classList.toggle('active', visibility !== 'visible');
                 });
 
-                // Add find optimal locations button
-                const findOptimalButton = this.createControl('Find Best Viewing Locations', async () => {
-                    try {
-                        const bounds = this.map.getBounds();
-                        const locations = await LocationService.findOptimalLocations(bounds);
-                        this.displayOptimalLocations(locations);
-                    } catch (error) {
-                        console.error('Error finding optimal locations:', error);
-                    }
-                });
+                // Since layer starts hidden, remove active class initially
+                toggleButton.classList.remove('active');
 
-                // Add legend
-                this.addLegend();
-            }
-
-            createControl(text, onClick) {
-                const button = document.createElement('button');
-                button.className = 'mapboxgl-ctrl-group mapboxgl-ctrl control';
-                button.innerHTML = text;
-                button.onclick = onClick;
-                this.map.getContainer().appendChild(button);
-                return button;
-            }
-
-            addLegend() {
+                // Adding the legend:
                 const legend = document.createElement('div');
                 legend.className = 'mapboxgl-ctrl-group mapboxgl-ctrl legend';
                 legend.innerHTML = `
@@ -874,6 +759,15 @@
                     </div>
                 `;
                 this.map.getContainer().appendChild(legend);
+            }
+
+            createControl(text, onClick) {
+                const button = document.createElement('button');
+                button.className = 'mapboxgl-ctrl-group mapboxgl-ctrl control';
+                button.innerHTML = text;
+                button.onclick = onClick;
+                this.map.getContainer().appendChild(button);
+                return button;
             }
 
             async loadLocationsAndEvents() {
@@ -887,21 +781,13 @@
                     console.log('Locations fetched:', locations);
 
 
-                    if (locations && locations.length > 0) {
-                        console.log(`Found ${locations.length} locations to display`);
+                    if (locations?.length > 0) {
                         this.displayLocations(locations);
-                    } else {
-                        console.log('No locations received');
                     }
 
-                    if (events && events.length > 0) {
-                        console.log(`Found ${events.length} events to display`);
+                    if (events?.length > 0) {
                         this.displayEvents(events);
-                    } else {
-                        console.log('No events received');
                     }
-
-
                 } catch (error) {
                     console.error('Error loading data:', error);
                 }
@@ -911,32 +797,71 @@
                 console.log('Attempting to display locations:', locations);
 
                 try {
-                    const features = locations.map(location => ({
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [location.longitude, location.latitude]
-                        },
-                        properties: {
-                            id: location.id,
-                            name: location.name || 'Unnamed Location',
-                            elevation: parseFloat(location.elevation) || 0,
+                    // Clear existing markers:
+                    this.locationMarkers.forEach(marker => marker.remove());
+                    this.locationMarkers.clear();
 
-                            quality_score: parseFloat(location.quality_score) || 0,
-                            light_pollution_value: parseFloat(location.light_pollution_value) || 0
-                        }
-                    }));
+                    locations.forEach(location => {
+                        // Create marker element
+                        const el = document.createElement('div');
+                        el.className = 'location-marker';
 
-                    const source = this.map.getSource('viewing-locations');
-                    if (!source) {
-                        console.error('Source "viewing-locations" not found');
-                        return;
-                    }
-                    console.log('Setting data with features:', features);
+                        // Set marker color based on quality score
+                        const qualityScore = parseFloat(location.quality_score) || 0;
+                        const color = qualityScore >= 75 ? '#00ff00' :
+                            qualityScore >= 50 ? '#ffff00' :
+                                '#ff0000';
 
-                    source.setData({
-                        type: 'FeatureCollection',
-                        features
+                        // Create marker HTML
+                        el.innerHTML = `
+                            <div class="marker-icon" style="background-color: ${color}">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                        `;
+
+                        // Create and add the marker
+                        const marker = new mapboxgl.Marker({
+                            element: el,
+                            anchor: 'bottom'
+                        })
+                        .setLngLat([location.longitude, location.latitude])
+                        .addTo(this.map);
+
+                        // Add hover popup
+                        el.addEventListener('mouseenter', () => {
+                            const popupContent = `
+                                <div class='popup'>
+                                    <h4>${location.name}</h4>
+                                    <p>Quality Score: ${location.quality_score}</p>
+                                    <p>Elevation: ${location.elevation} m</p>
+                                    ${location.light_pollution_value ?
+                                        `<p>Light Pollution: ${location.light_pollution_value}</p>` :
+                                        ''}
+                                </div>
+                            `;
+
+                            const popup = new mapboxgl.Popup({
+                                closeButton: false,
+                                offset: [0, -10]
+                            })
+                            .setLngLat([location.longitude, location.latitude])
+                            .setHTML(popupContent)
+                            .addTo(this.map);
+
+                            // Store popup reference on marker element
+                            el.popup = popup;
+                        });
+
+                        // Remove popup on mouseleave
+                        el.addEventListener('mouseleave', () => {
+                            if (el.popup) {
+                                el.popup.remove();
+                                el.popup = null;
+                            }
+                        });
+
+                        // Store marker reference
+                        this.locationMarkers.set(location.id, marker);
                     });
 
                 } catch (error) {
@@ -945,66 +870,135 @@
             }
 
             displayEvents(events) {
-                events.forEach(event => {
-                    const marker = new mapboxgl.Marker({
-                        color: '#CC00CC',
-                        draggable: false
-                    })
-                    .setLngLat([
-                        parseFloat(event.location.longitude),
-                        parseFloat(event.location.latitude)
-                    ])
-                    .addTo(this.map);
+                console.log('Attempting to display events:', events);
 
-                    marker.getElement().addEventListener('click', (e) => {
-                        this.showEventPopover(marker, event);
-                        e.stopPropagation();
+                try {
+                    // Clear existing event markers:
+                    this.eventMarkers.forEach(marker => marker.remove());
+                    this.eventMarkers.clear();
+
+                    events.forEach(event => {
+                        const el = document.createElement('div');
+                        el.className = 'event-marker';
+
+                        // Get color based on event type
+                        const color = this.getEventTypeColor(event.event_type);
+
+                        // Create marker HTML with event-specific icon
+                        el.innerHTML = `
+                            <div class="event-marker-icon" style="background-color: ${color}">
+                                ${this.getEventTypeIcon(event.event_type)}
+                            </div>
+                            <div class="event-marker-radius" style="border-color: ${color}"></div>
+                        `;
+
+                        // Create and add marker
+                        const marker = new mapboxgl.Marker({
+                            element: el,
+                            anchor: 'center'
+                        })
+                        .setLngLat([event.longitude, event.latitude])
+                        .addTo(this.map);
+
+                        // Add hover functionality
+                        el.addEventListener('mouseenter', () => {
+                            const popupContent = `
+                                <div class="event-popup">
+                                    <h4>${event.name}</h4>
+                                    <p>Type: ${event.event_type}</p>
+                                    <p>Start: ${new Date(event.start_time).toLocaleString()}</p>
+                                    <p>End: ${new Date(event.end_time).toLocaleString()}</p>
+                                    <p>Viewing Radius: ${event.viewing_radius} km</p>
+                                </div>
+                            `;
+
+                            const popup = new mapboxgl.Popup({
+                                closeButton: false,
+                                className: 'event-hover-popup',
+                                offset: [0, -10]
+                            })
+                            .setLngLat([event.longitude, event.latitude])
+                            .setHTML(popupContent)
+                            .addTo(this.map);
+
+                            el.popup = popup;
+                        });
+
+                        el.addEventListener('mouseleave', () => {
+                            if (el.popup) {
+                                el.popup.remove();
+                                el.popup = null;
+                            }
+                        });
+
+                        // Click event for more details
+                        el.addEventListener('click', () => {
+                            // Fly to event location
+                            this.map.flyTo({
+                                center: [event.longitude, event.latitude],
+                                zoom: 8,
+                                essential: true
+                            });
+
+                            const detailPopupContent = `
+                                <div class="event-detail-popup">
+                                    <h4>${event.name}</h4>
+                                    <div class="event-type-badge" style="background-color: ${color}">
+                                        ${event.event_type}
+                                    </div>
+                                    <p><strong>Start:</strong> ${new Date(event.start_time).toLocaleString()}</p>
+                                    <p><strong>End:</strong> ${new Date(event.end_time).toLocaleString()}</p>
+                                    <p><strong>Viewing Radius:</strong> ${event.viewing_radius} km</p>
+                                    <p>${event.description}</p>
+                                </div>
+                            `;
+
+                            new mapboxgl.Popup({
+                                closeButton: true,
+                                className: 'event-detail-popup',
+                                maxWidth: '300px'
+                            })
+                            .setLngLat([event.longitude, event.latitude])
+                            .setHTML(detailPopupContent)
+                            .addTo(this.map);
+                        });
+
+                        this.eventMarkers.set(event.id, marker);
                     });
 
-                    this.markers.set(event.id, marker);
-                });
-            }
-
-            showEventPopover(marker, event) {
-                this.removeCurrentPopover();
-
-                const popover = document.createElement('div');
-                popover.className = 'popover hide';
-
-                popover.innerHTML = `
-                    <div class='event-name'>${event.name}</div>
-                    <div>Type: ${event.event_type}</div>
-                    <div>Viewing Radius: ${event.viewing_radius} km</div>
-                    <div>Peak Time: ${new Date(event.start_time).toLocaleString()}</div>
-                `;
-
-                marker.getElement().appendChild(popover);
-                requestAnimationFrame(() => popover.classList.remove('hide'));
-                this.currentPopover = popover;
-
-                this.map.flyTo({
-                    center: [event.location.longitude, event.location.latitude],
-                    zoom: 5,
-                    essential: true
-                });
-            }
-
-            removeCurrentPopover() {
-                if (this.currentPopover) {
-                    this.currentPopover.classList.add('hide');
-                    setTimeout(() => this.currentPopover.remove(), 300);
-                    this.currentPopover = null;
+                } catch (error) {
+                    console.error('Error displaying events:', error);
                 }
+            }
+
+            getEventTypeColor(eventType) {
+                const colors = {
+                    'METEOR': '#FF6B6B',
+                    'ECLIPSE': '#4ECDC4',
+                    'PLANET': '#45B7D1',
+                    'AURORA': '#96CEB4',
+                    'COMET': '#FFEEAD',
+                    'OTHER': '#CC00CC'
+                };
+                return colors[eventType] || colors['OTHER'];
+            }
+
+            getEventTypeIcon(eventType) {
+                const icons = {
+                    'METEOR': '<i class="fas fa-meteor"></i>',
+                    'ECLIPSE': '<i class="fas fa-moon"></i>',
+                    'PLANET': '<i class="fas fa-globe"></i>',
+                    'AURORA': '<i class="fas fa-sparkles"></i>',
+                    'COMET': '<i class="fas fa-star"></i>',
+                    'OTHER': '<i class="fas fa-star-shooting"></i>'
+                };
+                return icons[eventType] || icons['OTHER'];
             }
 
             spinGlobe() {
                 const zoom = this.map.getZoom();
                 if (this.spinEnabled && !this.userInteracting && zoom < this.maxSpinZoom) {
                     let distancePerSecond = 360 / this.secondsPerRevolution;
-                    if (zoom > this.slowSpinZoom) {
-                        const zoomDif = (this.maxSpinZoom - zoom) / (this.maxSpinZoom - this.slowSpinZoom);
-                        distancePerSecond *= zoomDif;
-                    }
                     const center = this.map.getCenter();
                     center.lng -= distancePerSecond;
                     this.map.easeTo({ center, duration: 1000, easing: (n) => n });
@@ -1012,7 +1006,36 @@
             }
         }
 
-        // Function to add a location when right clicking:
+        // API Service for handling all data fetching:
+        class LocationService {
+            static getCsrfToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            }
+
+            static async getViewingLocations() {
+                const response = await fetch('/api/viewing-locations/', {
+                    headers: {
+                        'Content-Type': 'applications/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to fetch viewing locations');
+                return response.json();
+            }
+
+            static async getCelestialEvents() {
+                const response = await fetch('/api/celestial-events/', {
+                    headers: {
+                        'Content-Type': 'applications/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to fetch celestial events');
+                return response.json();
+            }
+        }
+
+        // Function to add a location when right-clicking:
         async function addLocation(longitude, latitude) {
              try {
                 const response = await fetch('/api/viewing-locations/', {
@@ -1045,6 +1068,113 @@
             } catch (error) {
                 console.error('Error adding location:', error);
             }
+        }
+
+        // Function to add an event when right-clicking:
+        async function addEvent(longitude, latitude) {
+            // Create a form popup for event details
+            const formPopupContent = `
+                <div class="popup">
+                    <h4>Add Celestial Event</h4>
+                    <form id="eventForm" onsubmit="return submitEventForm(${longitude}, ${latitude})">
+                        <div class="form-group mb-2">
+                            <input type="text" class="form-control" id="eventName" placeholder="Event Name" required>
+                        </div>
+                        <div class="form-group mb-2">
+                            <select class="form-control" id="eventType" required>
+                                <option value="">Select Event Type</option>
+                                <option value="METEOR">Meteor Shower</option>
+                                <option value="ECLIPSE">Eclipse</option>
+                                <option value="PLANET">Planetary Event</option>
+                                <option value="AURORA">Aurora</option>
+                                <option value="COMET">Comet</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-2">
+                            <input type="datetime-local" class="form-control" id="startTime" required>
+                            <small class="text-muted">Start Time</small>
+                        </div>
+                        <div class="form-group mb-2">
+                            <input type="datetime-local" class="form-control" id="endTime" required>
+                            <small class="text-muted">End Time</small>
+                        </div>
+                        <div class="form-group mb-2">
+                            <input type="number" class="form-control" id="viewingRadius"
+                                   placeholder="Viewing Radius (km)" required min="0">
+                        </div>
+                        <div class="form-group mb-2">
+                            <textarea class="form-control" id="description"
+                                      placeholder="Description" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group mt-3">
+                            <button type="submit" class="btn btn-success w-100">Add Event</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            // Remove any existing popups
+            const popups = document.getElementsByClassName('mapboxgl-popup');
+            while(popups[0]) {
+                popups[0].remove();
+            }
+
+            // Show the form popup
+            new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: false,
+                maxWidth: '400px'
+            })
+            .setLngLat([longitude, latitude])
+            .setHTML(formPopupContent)
+            .addTo(window.mapController.map);
+        }
+
+        async function submitEventForm(longitude, latitude) {
+            event.preventDefault();  // Add this line
+
+            const formData = {
+                name: document.getElementById('eventName').value,
+                event_type: document.getElementById('eventType').value,
+                start_time: document.getElementById('startTime').value,
+                end_time: document.getElementById('endTime').value,
+                viewing_radius: document.getElementById('viewingRadius').value,
+                description: document.getElementById('description').value,
+                longitude: longitude,
+                latitude: latitude,
+                elevation: 0
+            };
+
+            try {
+                const response = await fetch('/api/celestial-events/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    // Refresh the events on the map
+                    await window.mapController.loadLocationsAndEvents();
+
+                    // Close any open popups
+                    const popups = document.getElementsByClassName('mapboxgl-popup');
+                    while(popups[0]) {
+                        popups[0].remove();
+                    }
+                } else {
+                    console.error('Failed to add event', response);
+                    alert('Failed to add event. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error adding event:', error);
+                alert('Error adding event. Please try again.');
+            }
+
+            return false; // Prevent form submission
         }
 
         // Initialize the map when the document is ready

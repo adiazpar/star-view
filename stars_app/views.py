@@ -1,11 +1,8 @@
-# views.py
-
 from django.shortcuts import render, redirect
 
-# Importing other things from project files. Follow the principle of least privilege
-# and only import what you NEED to use, not the whole file (like *)
+# Importing other things from project files:
 from .models import User
-from stars_app.models import ViewingLocation, CelestialEvent, EventLocation
+from stars_app.models import ViewingLocation, CelestialEvent
 from stars_app.utils import LightPollutionCalculator
 
 # Authentication libraries:
@@ -16,34 +13,33 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 # Rest Framework:
-#from rest_framework import viewsets
-from stars_app.serializers import ViewingLocationSerializer, CelestialEventSerializer, EventLocationSerializer
+from rest_framework import viewsets
+from stars_app.serializers import ViewingLocationSerializer, CelestialEventSerializer
 
 # Tile libraries:
 import os
 from django.conf import settings
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
-#from osgeo import gdal
+from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
 
-# Location Management Libraries:
-from rest_framework import viewsets, status
-from rest_framework.decorators import api_view, action
-from rest_framework.response import Response
+
 from rest_framework.permissions import IsAuthenticated
+
 
 # ---------------------------------------------------------------- #
 # Location Management Views:
-
 class CelestialEventViewSet(viewsets.ModelViewSet):
     queryset = CelestialEvent.objects.all()
     serializer_class = CelestialEventSerializer
+    permission_classes = [IsAuthenticated]
 
-class EventLocationViewSet(viewsets.ModelViewSet):
-    queryset = EventLocation.objects.all()
-    serializer_class = EventLocationSerializer
+    def perform_create(self, serializer):
+        # Set elevation to 0 if not provided
+        serializer.save(elevation=serializer.validated_data.get('elevation', 0))
+
 
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
@@ -72,46 +68,6 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             light_pollution_value=pollution_value,
             quality_score=quality_score
         )
-
-    @action(detail=False, methods=['get'])
-    def find_optimal(self, request):
-        """Find optimal viewing locations in the specified bounds"""
-        try:
-            bounds = {
-                'min_lat': float(request.query_params.get('min_lat')),
-                'max_lat': float(request.query_params.get('max_lat')),
-                'min_lon': float(request.query_params.get('min_lon')),
-                'max_lon': float(request.query_params.get('max_lon'))
-            }
-
-            viewing_radius = float(request.query_params.get('radius_km', 10))
-
-        except (TypeError, ValueError):
-            return Response(
-                {'error': 'Invalid bounds parameters'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        calculator = LightPollutionCalculator()
-        optimal_locations = calculator.find_optimal_locations(
-            (bounds['min_lat'], bounds['max_lat'],
-             bounds['min_lon'], bounds['max_lon'])
-        )
-
-        # Add quality scores to the optimal locations:
-        for location in optimal_locations:
-            location['quality_score'] = calculator.calculate_quality_score(
-                latitude=location['lat'],
-                longitude=location['lon'],
-                elevation=0,  # You could fetch elevation data here if needed
-                viewing_radius_km=viewing_radius
-            )
-
-        # Sort by quality score (higher is better)
-        optimal_locations.sort(key=lambda x: x['quality_score'], reverse=True)
-
-        return Response(optimal_locations[:10])
-
 
 # ---------------------------------------------------------------- #
 # Tile Views:
