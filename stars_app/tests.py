@@ -1,41 +1,46 @@
 from django.test import TestCase, Client
-from stars_app.models import CelestialEvent as Event, ViewingLocation as Location
+from stars_app.models import CelestialEvent, ViewingLocation
 from django.utils import timezone
 from django.urls import reverse
+from .models import User
 
-class LocationTest(TestCase):
+class ViewingLocationTest(TestCase):
     def setUp(self):
-        Location.objects.create(location_name="Test Location", zip_code=80808, latitude=1.1, latitude_direction="N", longitude=1.1, longitude_direction="W")
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        login = self.client.login(username='testuser', password='12345')
+        ViewingLocation.objects.create(name="Test Location", latitude=1.1, longitude=1.1, elevation=1.1, light_pollution_value=1.1,quality_score=1.1,added_by=self.user,created_at=timezone.now())
     
     def test_Location(self):
-        test_location = Location.objects.get(location_name="Test Location")
+        test_location = ViewingLocation.objects.get(name="Test Location")
 
-        assert test_location.location_name == "Test Location"
-        assert test_location.zip_code == 80808
+        assert test_location.name == "Test Location"
         assert test_location.latitude == 1.1
-        assert test_location.latitude_direction == "N"
         assert test_location.longitude == 1.1
-        assert test_location.longitude_direction == "W"
+        assert test_location.elevation == 1.1
+        assert test_location.light_pollution_value == 1.1
+        assert test_location.quality_score == 1.1
+        assert test_location.added_by == self.user
 
-class EventTest(TestCase):
-    peak = timezone.now()
+class CelestialEventTest(TestCase):
     def setUp(self):
-        event_location = Location.objects.create(location_name="Test Location", zip_code=80808, latitude=1.1, latitude_direction="N", longitude=1.1, longitude_direction="W")
-        event = Event.objects.create(name="Test Comet", event_type="Comet", viewing_radius=100, peak_time=self.peak, location=event_location)
+        self.test_time = timezone.now()
+        self.user = User.objects.create_user(username='testuser', password='12345')
+        login = self.client.login(username='testuser', password='12345')
+        ViewingLocation.objects.create(name="Test Location", latitude=1.1, longitude=1.1, elevation=1.1, light_pollution_value=1.1,quality_score=1.1,added_by=self.user,created_at=timezone.now())
+        event = CelestialEvent.objects.create(name="Test Comet", event_type="Comet", description="Test", latitude=1.1, longitude=1.1, elevation=1.1, start_time=self.test_time, end_time=self.test_time, viewing_radius=100)
 
     def test_Event(self):
-        test_event = Event.objects.get(name="Test Comet")
+        test_event = CelestialEvent.objects.get(name="Test Comet")
 
         assert test_event.name == "Test Comet"
         assert test_event.event_type == "Comet"
+        assert test_event.description == "Test"
+        assert test_event.latitude == 1.1
+        assert test_event.longitude == 1.1
+        assert test_event.elevation == 1.1
+        assert test_event.start_time == self.test_time
+        assert test_event.end_time == self.test_time
         assert test_event.viewing_radius == 100
-        assert test_event.peak_time == self.peak
-        assert test_event.location.location_name == "Test Location"
-        assert test_event.location.zip_code == 80808
-        assert test_event.location.latitude == 1.1
-        assert test_event.location.latitude_direction == "N"
-        assert test_event.location.longitude == 1.1
-        assert test_event.location.longitude_direction == "W"
 
 class URLTest(TestCase):
     def test_urls(self):
