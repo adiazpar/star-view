@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 
 # Create your models here.
+
+# Viewing Location Model -------------------------------------------- #
 class ViewingLocation(models.Model):
     name = models.CharField(max_length=200)
     latitude = models.FloatField()
@@ -17,6 +19,22 @@ class ViewingLocation(models.Model):
     def __str__(self):
         return f"{self.name} ({self.latitude}, {self.longitude})"
 
+
+# Favorite Location Model ------------------------------------------- #
+class FavoriteLocation(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_locations')
+    location = models.ForeignKey(ViewingLocation, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # This makes sure a user can't favorite the same location multiple times:
+        unique_together = ['user', 'location']
+
+    def __str__(self):
+        return f'{self.user.username} - {self.location.name}'
+
+
+# Celestial Event Model --------------------------------------------- #
 class CelestialEvent(models.Model):
     EVENT_TYPES = [
         ('METEOR', 'Meteor Shower'),

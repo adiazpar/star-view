@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 
 # Importing other things from project files:
-from .models import User
+from .models import User, FavoriteLocation
 from stars_app.models import ViewingLocation, CelestialEvent
 from stars_app.utils import LightPollutionCalculator
 
@@ -13,7 +13,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 # Rest Framework:
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from stars_app.serializers import ViewingLocationSerializer, CelestialEventSerializer
 
 # Tile libraries:
@@ -24,9 +27,6 @@ from django.views.decorators.cache import cache_control
 from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
-
-
-from rest_framework.permissions import IsAuthenticated
 
 
 # ---------------------------------------------------------------- #
@@ -45,6 +45,13 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
     serializer_class = ViewingLocationSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = ViewingLocation.objects.all()
+        favorites_only = self.request.query_params.get('favorites_only', 'false')
+        if favorites_only.lower() == 'true':
+            queryset = queryset.filter(favorited_by__user=self.request.user)
+        return queryset
 
     def perform_create(self, serializer):
         # Calculate light pollution before saving
@@ -68,6 +75,76 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             light_pollution_value=pollution_value,
             quality_score=quality_score
         )
+
+    @action(detail=True, methods=['POST', 'GET'])
+    def favorite(self, request, pk=None):
+        location = self.get_object()
+
+        # Handle GET request case:
+        if request.method == "GET":
+            is_favorited = FavoriteLocation.objects.filter(
+                user=request.user,
+                location=location
+            ).exists()
+            return Response({
+                'is_favorited': is_favorited,
+                'detail': 'Location is favorited' if is_favorited else 'Location is not favorited'
+            })
+
+
+        # Check if already favorited:
+        existing_favorite = FavoriteLocation.objects.filter(
+            user=request.user,
+            location=location
+        ).first()
+
+        if existing_favorite:
+            return Response(
+                {'detail': 'Location already favorited'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create a new favorite:
+        FavoriteLocation.objects.create(
+            user=request.user,
+            location=location
+        )
+        serializer = self.get_serializer(location)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['POST', 'GET'])
+    def unfavorite(self, request, pk=None):
+        location = self.get_object()
+
+        # If it's a GET request, just return the current status
+        if request.method == 'GET':
+            is_favorited = FavoriteLocation.objects.filter(
+                user=request.user,
+                location=location
+            ).exists()
+            return Response({
+                'is_favorited': is_favorited,
+                'detail': 'Location is favorited' if is_favorited else 'Location is not favorited'
+            })
+
+        deleted_count, _ = FavoriteLocation.objects.filter(
+            user=request.user,
+            location=location
+        ).delete()
+
+        if deleted_count:
+            serializer = self.get_serializer(location)
+            return Response(serializer.data)
+        return Response(
+            {'detail': 'Location was not favorited'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    @action(detail=True, methods=['GET'])
+    def favorites(self, request):
+        favorites = self.get_queryset().filter(favorited_by__user=request.user)
+        serializer = self.get_serializer(favorites, many=True)
+        return Response(serializer.data)
 
 # ---------------------------------------------------------------- #
 # Tile Views:

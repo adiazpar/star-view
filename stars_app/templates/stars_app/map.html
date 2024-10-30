@@ -765,36 +765,75 @@
                         .setLngLat([location.longitude, location.latitude])
                         .addTo(this.map);
 
-                        // Add hover popup
+                        // Viewing Location Popup:
+                        const createPopupContent = (location, isFavorited) => `
+                            <div class='popup'>
+                                <h4>${location.name}</h4>
+                                <p>Quality Score: ${location.quality_score}</p>
+                                <p>Elevation: ${location.elevation} m</p>
+                                ${location.light_pollution_value ?
+                                    `<p>Light Pollution: ${location.light_pollution_value}</p>` :
+                                    ''}
+                                <button
+                                    onclick="window.mapController.toggleLocationFavorite(${location.id}, this)"
+                                    class="btn favorite-btn ${isFavorited ? 'favorited' : ''}"
+                                >
+                                    <i class="fas ${isFavorited ? 'fa-heart' : 'fa-heart-o'}"></i>
+                                    ${isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                                </button>
+                            </div>
+                        `;
+
+                        // Handle hover events:
+                        let hoverPopup = null;
                         el.addEventListener('mouseenter', () => {
-                            const popupContent = `
-                                <div class='popup'>
-                                    <h4>${location.name}</h4>
-                                    <p>Quality Score: ${location.quality_score}</p>
-                                    <p>Elevation: ${location.elevation} m</p>
-                                    ${location.light_pollution_value ?
-                                        `<p>Light Pollution: ${location.light_pollution_value}</p>` :
-                                        ''}
-                                </div>
-                            `;
-
-                            const popup = new mapboxgl.Popup({
-                                closeButton: false,
-                                offset: [0, -10]
-                            })
-                            .setLngLat([location.longitude, location.latitude])
-                            .setHTML(popupContent)
-                            .addTo(this.map);
-
-                            // Store popup reference on marker element
-                            el.popup = popup;
+                            if (!el.clickPopup) { // Only show hover popup if no click popup exists
+                                hoverPopup = new mapboxgl.Popup({
+                                    closeButton: false,
+                                    offset: [0, -10]
+                                })
+                                .setLngLat([location.longitude, location.latitude])
+                                .setHTML(createPopupContent(location, location.is_favorited))
+                                .addTo(this.map);
+                            }
                         });
 
-                        // Remove popup on mouseleave
+                        // Remove popup on mouseleave:
                         el.addEventListener('mouseleave', () => {
-                            if (el.popup) {
-                                el.popup.remove();
-                                el.popup = null;
+                            if (hoverPopup) {
+                                hoverPopup.remove();
+                                hoverPopup = null;
+                            }
+                        });
+
+                        // Handle click events:
+                        el.addEventListener('click', (e) => {
+                            // Preventing map click from closing popup:
+                            e.stopPropagation();
+
+                            // Remove hover popup if it exists:
+                            if (hoverPopup) {
+                                hoverPopup.remove();
+                                hoverPopup = null;
+                            }
+
+                            // Create or remove click popup:
+                            if (el.clickPopup) {
+                                el.clickPopup.remove();
+                                el.clickPopup = null;
+                            } else {
+                                el.clickPopup = new mapboxgl.Popup({
+                                    closeButton: true,
+                                    offset: [0, -10]
+                                })
+                                .setLngLat([location.longitude, location.latitude])
+                                .setHTML(createPopupContent(location, location.is_favorited))
+                                .addTo(this.map);
+
+                                // Remove reference when popup is closed
+                                el.clickPopup.on('close', () => {
+                                    el.clickPopup = null;
+                                });
                             }
                         });
 
@@ -804,6 +843,23 @@
 
                 } catch (error) {
                     console.error('Error displaying locations:', error);
+                }
+            }
+
+            async toggleLocationFavorite(locationID, button) {
+                try {
+                    const currentlyFavorited = button.classList.contains('favorited');
+                    const response = await LocationService.toggleFavorite(locationID, currentlyFavorited);
+
+                    // Toggle button state based on response:
+                    const isFavorited = !currentlyFavorited;
+                    button.classList.toggle('favorited', isFavorited);
+                    button.innerHTML = `
+                        <i class="fas ${isFavorited ? 'fa-heart' : 'fa-heart-o'}"></i>
+                        ${isFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                    `;
+                } catch (error) {
+                    console.error('Error toggling favorite:', error);
                 }
             }
 
@@ -951,6 +1007,19 @@
         class LocationService {
             static getCsrfToken() {
                 return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            }
+
+            static async toggleFavorite(locationID, currentlyFavorited) {
+                const endpoint = currentlyFavorited ? 'unfavorite' : 'favorite';
+                const response = await fetch(`/api/viewing-locations/${locationID}/${endpoint}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'applications/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error(`Failed to ${endpoint} location`);
+                return response.json();
             }
 
             static async getViewingLocations() {
