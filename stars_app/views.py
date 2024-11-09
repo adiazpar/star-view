@@ -28,6 +28,9 @@ from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
 
+# Distance
+from geopy.distance import geodesic
+
 
 # ---------------------------------------------------------------- #
 # Location Management Views:
@@ -251,8 +254,23 @@ def event_list(request):
     return render(request, 'stars_app/list.html', {'events':event_list})
 
 def details(request, event_id):
+    event = CelestialEvent.objects.get(pk=event_id)
+    viewing_locations = ViewingLocation.objects.all()
+
+    closet_loc = viewing_locations[0]
+    for loc in viewing_locations:
+        event_point = (event.latitude, event.longitude)
+        closest_point = (closet_loc.latitude, closet_loc.longitude)
+        current_point = (loc.latitude, loc.longitude)
+
+        closest_distance = geodesic(event_point, closest_point).kilometers
+        current_distance = geodesic(event_point, current_point).kilometers
+        if current_distance < closest_distance:
+            closet_loc = loc
+
     current_data = {
-        'event': CelestialEvent.objects.get(pk=event_id)
+        'event': event,
+        'view_loc': closet_loc
     }
     return render(request, 'stars_app/details.html', current_data)
 

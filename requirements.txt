@@ -9,3 +9,4 @@ GDAL==3.8.4
 pillow==11.0.0
 soupsieve==2.6
 sqlparse==0.5.1
+geopy==2.4.1
