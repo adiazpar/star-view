@@ -9,23 +9,27 @@
 
         <div class="details-item">
             {% if event.event_type == "COMET" %}
-                <img src='/static/images/comet-pic.jpg' class="list-icon" width="100" height="100"></img>
+                <img src='/static/images/comet-pic.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "ECLIPSE" %}
-                <img src='/static/images/eclipse_icon.jpg' class="list-icon" width="100" height="100"></img>
+                <img src='/static/images/eclipse_icon.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "METEOR" %}
-                <img src='/static/images/meteor-icon.jpg' class="list-icon" width="100" height="100"></img>
+                <img src='/static/images/meteor-icon.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "PLANET" %}
-                <img src='/static/images/planet-icon.jpg' class="list-icon" width="100" height="100"></img>
+                <img src='/static/images/planet-icon.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "AURORA" %}
-                <img src='/static/images/aurora-icon.jpg' class="list-icon" width="100" height="100"></img>
+                <img src='/static/images/aurora-icon.jpg' class="details-icon" width="100" height="100"></img>
             {% endif %}
             <p>{{ event.event_type }}</p>
             <p>Start Time: {{ event.start_time }}</p>
             <p>End Time: {{ event.end_time }}</p>
             <p>Viewing Radius: {{ event.viewing_radius }} kilometers</p>
-            <button class="directions-button" onclick="window.location.href='https://www.google.com/maps/dir/?api=1&origin=current+location&destination={{ view_loc.latitude }},{{ view_loc.longitude }}'">Get directions!</button>
+            <div class="directions-button">
+                <a class="button" href='https://www.google.com/maps/dir/?api=1&origin=current+location&destination={{ view_loc.latitude }},{{ view_loc.longitude }}'">Get directions!</a>
+            </div>
         </div>
-
-        <p class="details-description">{{ event.description }}</p>
+        
+        <div class="description-container">
+            <p class="details-description">{{ event.description }}</p>
+        </div>
     </div>
 {% endblock %}

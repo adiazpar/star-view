@@ -7,10 +7,10 @@
             <p>CURRENT CELESTIAL EVENTS</p>
         </div>
 
-        <div class="list-group">
-            <ul>
+        <div>
+            <ul class="list-grid">
                 {% for event in events %}
-                    <li class="list-item">
+                    <li class="grid-item">
                         {% if event.event_type == "COMET" %}
                             <img src='/static/images/comet-pic.jpg' class="list-icon" width="100" height="100"></img>
                         {% elif event.event_type == "ECLIPSE" %}
@@ -24,7 +24,9 @@
                         {% endif %}
                         <h5 >Name: {{ event.name }}</h5>
                         <p >Type: {{ event.event_type }}</p>
-                        <a href="{% url 'details' event.id %}" class="btn btn-primary ">Learn More!</a>
+                        <div class="list-button">
+                            <a class="button" href="{% url 'details' event.id %}" class="btn btn-primary ">Learn More!</a>
+                        </div>
                     </li>
                 {% endfor %}
             </ul>
