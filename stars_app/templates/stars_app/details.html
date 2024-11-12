@@ -24,7 +24,7 @@
             <p>End Time: {{ event.end_time }}</p>
             <p>Viewing Radius: {{ event.viewing_radius }} kilometers</p>
             <div class="directions-button">
-                <a class="button" href='https://www.google.com/maps/dir/?api=1&origin=current+location&destination={{ view_loc.latitude }},{{ view_loc.longitude }}'">Get directions!</a>
+                <a class="button" href='https://www.google.com/maps/dir/?api=1&destination={{ view_loc.latitude }},{{ view_loc.longitude }}'">Get directions!</a>
             </div>
         </div>
         
