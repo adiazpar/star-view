@@ -808,6 +808,7 @@
                         <h4>${location.name}</h4>
                         <p>Quality Score: ${location.quality_score}</p>
                         <p>Elevation: ${location.elevation} m</p>
+                        <p>Cloud Cover: ${location.cloudCoverPercentage}%</p>
                         ${location.light_pollution_value ?
                             `<p>Light Pollution: ${location.light_pollution_value}</p>` :
                             ''}

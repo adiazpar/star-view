@@ -150,6 +150,17 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 # ---------------------------------------------------------------- #
+# Update All Forecasts Button on Upload Page
+@staff_member_required
+def update_forecast(request):
+    locations = ViewingLocation.objects.all()
+
+    for loc in locations:
+        loc.updateForecast()
+
+    return render(request, 'stars_app/upload_tif.html')
+
+# ---------------------------------------------------------------- #
 # Tile Views:
 @staff_member_required
 def upload_and_process_tif(request):

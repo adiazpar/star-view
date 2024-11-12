@@ -78,7 +78,7 @@ class ViewingLocation(models.Model):
 		beginTime = self.forecast.createTime
 		dateDelta = currentTime - beginTime
 		days, seconds = dateDelta.days, dateDelta.seconds
-		hours = int(days * 24 + seconds // 3600)
+		hours = int(days * 24 + seconds / 3600)
 		if hours >= len(self.forecast.forecast):
 			forecast_data = self.getForecast()
 			if not forecast_data:

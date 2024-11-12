@@ -9,7 +9,8 @@ GDAL==3.8.4
 pillow==11.0.0
 soupsieve==2.6
 sqlparse==0.5.1
-geopy==2.4.1asgiref==3.8.1
+geopy==2.4.1
+asgiref==3.8.1
 beautifulsoup4==4.12.3
 certifi==2024.8.30
 charset-normalizer==3.4.0
