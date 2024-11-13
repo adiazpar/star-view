@@ -1,0 +1,35 @@
+{% extends "stars_app/base.html" %}
+{% block content %}
+
+<body style="background-image: url('/static/images/account_bg.jpeg'); display: flex; background-size: cover; justify-content: center; align-items: center; background-repeat: no-repeat; background-position: center;">
+
+    <div class="account-profile">    
+        <h2 style="text-align: left;">{{user.username}}'s Account</h2>
+        <img src='/static/images/default_profile_pic.jpg' class="img-fluid" width="350" height="350"></img>
+        <br></br>
+        <h3 style="text-align: center;">Account Email: {{user.email}}</h3>
+        <br></br>
+        <h2 style="text-align: center;">Account Settings</h2>
+        <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="{% url 'change_password' %}" role="button">Change Password</a>
+        <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="#" role="button">Update Email</a>
+        <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="#" role="button">Notifications</a>
+    </div>
+
+    {% if favorites %}
+    <h2 style="text-align: center; color: white;">Favorited Locations</h2>
+    <div class="list-group">
+      <ul>
+        {% for favorite in favorites %}
+          <li class="list-item">
+            <h5>Location Name: {{favorite.location.name}}</h5>
+            <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="#" role="button">View Location</a>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% endif %}
+
+</body>
+
+{% endblock %}

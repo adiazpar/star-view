@@ -1,13 +1,17 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 
 # Importing other things from project files:
 from .models import User, FavoriteLocation
 from stars_app.models import ViewingLocation, CelestialEvent
 from stars_app.utils import LightPollutionCalculator
+from .forms import ChangePasswordForm
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.views import PasswordChangeView
 
 # To display error/success messages:
 from django.contrib import messages
@@ -24,7 +28,7 @@ import os
 from django.conf import settings
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
-from osgeo import gdal
+# from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
 
@@ -255,6 +259,16 @@ def details(request, event_id):
         'event': CelestialEvent.objects.get(pk=event_id)
     }
     return render(request, 'stars_app/details.html', current_data)
+
+@login_required(login_url='/login/')
+def account(request, pk):
+    favorites = FavoriteLocation.objects.filter(user=pk)
+    return render(request, 'stars_app/account.html', {'favorites':favorites})
+
+class ChangePasswordView(PasswordChangeView):
+    form_class = PasswordChangeForm
+    success_url = reverse_lazy('home')
+    template_name = 'stars_app/change_password.html'
 
 
 # ---------------------------------------------------------------- #
