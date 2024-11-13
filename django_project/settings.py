@@ -28,7 +28,7 @@ NASA_API_KEY = 'iCT06JGwZ8Q8RjtFsbh7s4auDj01Iwuat6xFgVVO'
 DEBUG = True
 
 ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io', 'app-dbolding-5.devedu.io', 'app-jcuthber-5.devedu.io', 'app-otinoco-5.devedu.io', '127.0.0.1', 'nyx.local', 'localhost']
-CSRF_TRUSTED_ORIGINS = ['https://app-adiazpar-5.devedu.io', 'https://app-dbolding-5.devedu.io']
+CSRF_TRUSTED_ORIGINS = ['https://app-adiazpar-5.devedu.io', 'https://app-dbolding-5.devedu.io', 'https://app-otinoco-5.devedu.io']
 
 # Application definition
 
