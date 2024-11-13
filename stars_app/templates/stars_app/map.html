@@ -739,6 +739,9 @@
                     this.locationMarkers.forEach(marker => marker.remove());
                     this.locationMarkers.clear();
 
+                    // Store locations data with markers for state management:
+                    this.locationsData = new Map(locations.map(loc => [loc.id, loc]))
+
                     locations.forEach(location => {
                         // Create marker element
                         const el = document.createElement('div');
@@ -765,36 +768,28 @@
                         .setLngLat([location.longitude, location.latitude])
                         .addTo(this.map);
 
-                        // Add hover popup
-                        el.addEventListener('mouseenter', () => {
-                            const popupContent = `
-                                <div class='popup'>
-                                    <h4>${location.name}</h4>
-                                    <p>Quality Score: ${location.quality_score}</p>
-                                    <p>Elevation: ${location.elevation} m</p>
-                                    ${location.light_pollution_value ?
-                                        `<p>Light Pollution: ${location.light_pollution_value}</p>` :
-                                        ''}
-                                </div>
-                            `;
+                        // Handle click events:
+                        el.addEventListener('click', (e) => {
+                            // Preventing map click from closing popup:
+                            e.stopPropagation();
 
-                            const popup = new mapboxgl.Popup({
-                                closeButton: false,
-                                offset: [0, -10]
-                            })
-                            .setLngLat([location.longitude, location.latitude])
-                            .setHTML(popupContent)
-                            .addTo(this.map);
+                            // Create or remove click popup:
+                            if (el.clickPopup) {
+                                el.clickPopup.remove();
+                                el.clickPopup = null;
+                            } else {
+                                const currentLocation = this.locationsData.get(location.id);
+                                el.clickPopup = new mapboxgl.Popup({
+                                    closeButton: true,
+                                    offset: [0, -10]
+                                })
+                                .setLngLat([location.longitude, location.latitude])
+                                .setHTML(this.createPopupContent(currentLocation))
+                                .addTo(this.map);
 
-                            // Store popup reference on marker element
-                            el.popup = popup;
-                        });
-
-                        // Remove popup on mouseleave
-                        el.addEventListener('mouseleave', () => {
-                            if (el.popup) {
-                                el.popup.remove();
-                                el.popup = null;
+                                el.clickPopup.on('close', () => {
+                                    el.clickPopup = null;
+                                });
                             }
                         });
 
@@ -804,6 +799,51 @@
 
                 } catch (error) {
                     console.error('Error displaying locations:', error);
+                }
+            }
+
+            createPopupContent(location) {
+                return `
+                    <div class='popup'>
+                        <h4>${location.name}</h4>
+                        <p>Quality Score: ${location.quality_score}</p>
+                        <p>Elevation: ${location.elevation} m</p>
+                        <p>Cloud Cover: ${location.cloudCoverPercentage}%</p>
+                        ${location.light_pollution_value ?
+                            `<p>Light Pollution: ${location.light_pollution_value}</p>` :
+                            ''}
+                        <button
+                            onclick="window.mapController.toggleLocationFavorite(${location.id}, this)"
+                            class="btn favorite-btn ${location.is_favorited ? 'favorited' : ''}"
+                        >
+                            <i class="fas ${location.is_favorited ? 'fa-heart' : 'fa-heart-o'}"></i>
+                            ${location.is_favorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                        </button>
+                        <button class="btn favorite-button" onclick="window.location.href='https://www.google.com/maps/dir/?api=1&destination=${location.latitude },${ location.longitude }'">Get directions!</a>
+                    </div>
+                `;
+            }
+
+            async toggleLocationFavorite(locationId, button) {
+                try {
+                    const location = this.locationsData.get(locationId);
+                    const currentlyFavorited = location.is_favorited;
+
+                    await LocationService.toggleFavorite(locationId, currentlyFavorited);
+
+                    // Update the stored location data
+                    location.is_favorited = !currentlyFavorited;
+                    this.locationsData.set(locationId, location);
+
+                    // Toggle button state immediately after successful API call
+                    button.classList.toggle('favorited');
+                    button.innerHTML = `
+                        <i class="fas ${!currentlyFavorited ? 'fa-heart' : 'fa-heart-o'}"></i>
+                        ${!currentlyFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
+                    `;
+                } catch (error) {
+                    console.error('Error toggling favorite:', error);
+                    alert('Failed to update favorite status. Please try again.');
                 }
             }
 
@@ -840,6 +880,8 @@
                             icon: '<i class="fas fa-star-shooting"></i>'
                         }
                     };
+
+                    console.log('Events received:', events);
 
                     events.forEach(event => {
                         const el = document.createElement('div');
@@ -951,6 +993,30 @@
         class LocationService {
             static getCsrfToken() {
                 return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            }
+
+            static async getLocationStatus(locationId) {
+                const response = await fetch(`/api/viewing-locations/${locationId}/favorite/`, {
+                    headers: {
+                        'Content-Type': 'applications/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error('Failed to get location status');
+                return response.json();
+            }
+
+            static async toggleFavorite(locationID, currentlyFavorited) {
+                const endpoint = currentlyFavorited ? 'unfavorite' : 'favorite';
+                const response = await fetch(`/api/viewing-locations/${locationID}/${endpoint}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'applications/json',
+                        'X-CSRFToken': this.getCsrfToken()
+                    }
+                });
+                if (!response.ok) throw new Error(`Failed to ${endpoint} location`);
+                return response.json();
             }
 
             static async getViewingLocations() {

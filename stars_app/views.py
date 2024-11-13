@@ -1,19 +1,26 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse_lazy
 
 # Importing other things from project files:
-from .models import User
+from .models import User, FavoriteLocation
 from stars_app.models import ViewingLocation, CelestialEvent
 from stars_app.utils import LightPollutionCalculator
+from .forms import ChangePasswordForm
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import PasswordChangeForm
+from django.contrib.auth.views import PasswordChangeView
 
 # To display error/success messages:
 from django.contrib import messages
 
 # Rest Framework:
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from stars_app.serializers import ViewingLocationSerializer, CelestialEventSerializer
 
 # Tile libraries:
@@ -25,8 +32,8 @@ from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
 
-
-from rest_framework.permissions import IsAuthenticated
+# Distance
+from geopy.distance import geodesic
 
 
 # ---------------------------------------------------------------- #
@@ -45,6 +52,13 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
     serializer_class = ViewingLocationSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        queryset = ViewingLocation.objects.all()
+        favorites_only = self.request.query_params.get('favorites_only', 'false')
+        if favorites_only.lower() == 'true':
+            queryset = queryset.filter(favorited_by__user=self.request.user)
+        return queryset
 
     def perform_create(self, serializer):
         # Calculate light pollution before saving
@@ -68,6 +82,87 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             light_pollution_value=pollution_value,
             quality_score=quality_score
         )
+
+    @action(detail=True, methods=['POST', 'GET'])
+    def favorite(self, request, pk=None):
+        location = self.get_object()
+
+        # Handle GET request case:
+        if request.method == "GET":
+            is_favorited = FavoriteLocation.objects.filter(
+                user=request.user,
+                location=location
+            ).exists()
+            return Response({
+                'is_favorited': is_favorited,
+                'detail': 'Location is favorited' if is_favorited else 'Location is not favorited'
+            })
+
+
+        # Check if already favorited:
+        existing_favorite = FavoriteLocation.objects.filter(
+            user=request.user,
+            location=location
+        ).first()
+
+        if existing_favorite:
+            return Response(
+                {'detail': 'Location already favorited'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create a new favorite:
+        FavoriteLocation.objects.create(
+            user=request.user,
+            location=location
+        )
+        serializer = self.get_serializer(location)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['POST', 'GET'])
+    def unfavorite(self, request, pk=None):
+        location = self.get_object()
+
+        # If it's a GET request, just return the current status
+        if request.method == 'GET':
+            is_favorited = FavoriteLocation.objects.filter(
+                user=request.user,
+                location=location
+            ).exists()
+            return Response({
+                'is_favorited': is_favorited,
+                'detail': 'Location is favorited' if is_favorited else 'Location is not favorited'
+            })
+
+        deleted_count, _ = FavoriteLocation.objects.filter(
+            user=request.user,
+            location=location
+        ).delete()
+
+        if deleted_count:
+            serializer = self.get_serializer(location)
+            return Response(serializer.data)
+        return Response(
+            {'detail': 'Location was not favorited'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    @action(detail=True, methods=['GET'])
+    def favorites(self, request):
+        favorites = self.get_queryset().filter(favorited_by__user=request.user)
+        serializer = self.get_serializer(favorites, many=True)
+        return Response(serializer.data)
+
+# ---------------------------------------------------------------- #
+# Update All Forecasts Button on Upload Page
+@staff_member_required
+def update_forecast(request):
+    locations = ViewingLocation.objects.all()
+
+    for loc in locations:
+        loc.updateForecast()
+
+    return render(request, 'stars_app/upload_tif.html')
 
 # ---------------------------------------------------------------- #
 # Tile Views:
@@ -174,10 +269,35 @@ def event_list(request):
     return render(request, 'stars_app/list.html', {'events':event_list})
 
 def details(request, event_id):
+    event = CelestialEvent.objects.get(pk=event_id)
+    viewing_locations = ViewingLocation.objects.all()
+
+    closet_loc = viewing_locations[0]
+    for loc in viewing_locations:
+        event_point = (event.latitude, event.longitude)
+        closest_point = (closet_loc.latitude, closet_loc.longitude)
+        current_point = (loc.latitude, loc.longitude)
+
+        closest_distance = geodesic(event_point, closest_point).kilometers
+        current_distance = geodesic(event_point, current_point).kilometers
+        if current_distance < closest_distance:
+            closet_loc = loc
+
     current_data = {
-        'event': CelestialEvent.objects.get(pk=event_id)
+        'event': event,
+        'view_loc': closet_loc
     }
     return render(request, 'stars_app/details.html', current_data)
+
+@login_required(login_url='/login/')
+def account(request, pk):
+    favorites = FavoriteLocation.objects.filter(user=pk)
+    return render(request, 'stars_app/account.html', {'favorites':favorites})
+
+class ChangePasswordView(PasswordChangeView):
+    form_class = PasswordChangeForm
+    success_url = reverse_lazy('home')
+    template_name = 'stars_app/change_password.html'
 
 
 # ---------------------------------------------------------------- #

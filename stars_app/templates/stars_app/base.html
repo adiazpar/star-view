@@ -27,7 +27,11 @@
                 <li><a class="nav-link" href="{% url 'map' %}">MAP</a></li>
                 <li><a class="nav-link" href="{% url 'event_list' %}">EVENT LIST</a></li>
                 <li><a class="nav-link" href="#">ABOUT US</a></li>
-                <li><a class="nav-link" href="#">ACCOUNT</a></li>
+                {% if user.is_authenticated %}
+                    <li><a class="nav-link" href="{% url 'account' user.id %}">ACCOUNT</a></li>
+                {% else %}
+                    <li><a class="nav-link" href="{% url 'login' %}">ACCOUNT</a></li>
+                {% endif %}
             </ul>
 
             <div class="hamburger-auth-group">

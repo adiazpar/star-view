@@ -432,8 +432,7 @@ body {
 }
 
 .list-container {
-    padding: 40px;
-    width: auto;
+    width: 100%;
 }
 
 .list-header {
@@ -447,17 +446,19 @@ body {
     color: white;
 }
 
-.list-item {
+.list-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.grid-item {
     font-size: large;
     font-family: Arial, sans-serif;
     list-style-type: none;
     text-shadow: 0 10px 4px black;
     text-align: center;
     color: white;
-    display: inline-grid;
-    margin-left: 50px;
-    margin-right: 50px;
-    margin-top: 50px;
     padding-left: 25px;
     padding-right: 25px;
     border: 15px solid aliceblue;
@@ -476,6 +477,33 @@ body {
     width: 99%;
 }
 
+.list-button {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+.list-button .button {
+    color: white;
+    text-decoration: none;
+    padding: 0.2rem 0.8rem;
+    margin-bottom: 10px;
+    background-color: #2b7aff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,1);
+
+    font-size: medium;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+}
+.list-button .button:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+}
+.list-button .button:not(:hover) {
+    transform: scale(1);
+    transition: transform 0.2s ease-in-out;
+}
+
 /* ---------------------------------------------------------------- */
 /* Event Details Page Styling */
 .details-page {
@@ -489,20 +517,17 @@ body {
     background-repeat: no-repeat;
 }
 
-.details-container {
-    padding: 40px;
-    width: 500px;
-}
 
 .details-header {
     display: flex;
     font-size: xx-large;
     font-family: Arial, sans-serif;
-    padding: 100px;
+    padding-top: 100px;
     text-shadow: 0 10px 4px black;
     text-decoration: none;
     text-align: center;
     color: white;
+    justify-content: center;
 }
 
 .details-item {
@@ -512,7 +537,6 @@ body {
     text-shadow: 0 10px 4px black;
     text-align: center;
     color: white;
-    display: inline-block;
     margin-left: 50px;
     margin-right: 50px;
     padding-left: 25px;
@@ -521,16 +545,33 @@ body {
     background: cornflowerblue;
     background-position: center;
     background-size:cover;
+    justify-content: center;
+    height: 50%;
+}
+
+.details-icon {
+    margin: 5px;
+    border: 5px solid aliceblue;
+    object-fit: cover;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+    height: 50%;
+}
+
+.description-container {
+    justify-content: center;
+    display: flex;
 }
 
 .details-description {
     font-size: large;
     font-family: Arial, sans-serif;
-    list-style-type: none;
     text-shadow: 0 10px 4px black;
     text-align: center;
     color: white;
-    display: inline-block;
+    display: flex;
     margin-left: 50px;
     margin-right: 50px;
     margin-top: 50px;
@@ -540,4 +581,52 @@ body {
     background: cornflowerblue;
     background-position: center;
     background-size:cover;
+    justify-content: center;
+    width: 100vh;
+}
+
+.directions-button {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+}
+
+.directions-button .button {
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    padding: 0.2rem 0.8rem;
+    margin-bottom: 10px;
+    background-color: #2b7aff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,1);
+
+    font-size: medium;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+}
+.directions-button .button:hover {
+    transform: scale(1.05);
+    transition: transform 0.2s ease-in-out;
+}
+.directions-button .button:not(:hover) {
+    transform: scale(1);
+    transition: transform 0.2s ease-in-out;
+}
+
+.account-profile {
+    font-size: large;
+    font-family: Arial, sans-serif;
+    list-style-type: none;
+    text-shadow: 0 10px 4px black;
+    text-align: center;
+    color: white;
+    display: inline-block;
+    padding-left: 25px;
+    padding-right: 25px;
+    border: 15px solid aliceblue;
+    background: cornflowerblue;
+    background-position: center;
+    background-size: cover;
+    margin: auto;
 }
