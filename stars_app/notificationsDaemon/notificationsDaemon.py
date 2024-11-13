@@ -69,7 +69,7 @@ def get_favorites_and_events():
 			print("  No favorite locations.")
 
 def send_event_notification(user, recipient_email, upcoming_matching_events):
-	recipient_email = "jason@fastmail.org"
+	#recipient_email = "jason@fastmail.org" #for testing 
 	try:
 		subject = "Upcoming Celestial Events at Your Favorite Locations"
 		
