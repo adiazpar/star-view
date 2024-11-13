@@ -28,7 +28,7 @@ import os
 from django.conf import settings
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
-# from osgeo import gdal
+from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
 
