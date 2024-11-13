@@ -14,7 +14,6 @@ pillow==11.0.0
 requests==2.32.3
 soupsieve==2.6
 sqlparse==0.5.1
-<<<<<<< HEAD
 geopy==2.4.1
 asgiref==3.8.1
 beautifulsoup4==4.12.3
@@ -33,6 +32,4 @@ pillow==11.0.0
 requests==2.32.3
 soupsieve==2.6
 sqlparse==0.5.1
-=======
->>>>>>> 82c480ab3582aaf103bdf01b36a50b40d15fe60b
 urllib3==2.2.3
