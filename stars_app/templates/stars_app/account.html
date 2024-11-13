@@ -4,11 +4,13 @@
 <body style="background-image: url('/static/images/account_bg.jpeg'); display: flex; background-size: cover; justify-content: center; align-items: center; background-repeat: no-repeat; background-position: center;">
 
     <div class="account-profile">    
-        <h2 style="text-align: left;">{{user.username}}'s Account</h2>
+        <h2 style="text-align: center;">{{user.username}}'s Account</h2>
         <img src='/static/images/default_profile_pic.jpg' class="img-fluid" width="350" height="350"></img>
+        <br>
+        <a class="btn" style="background-color: white; padding: 5px; cursor: pointer; color: black" href="#" role="button">Upload Profile Picture</a>
         <br></br>
         <h3 style="text-align: center;">Account Email: {{user.email}}</h3>
-        <br></br>
+        <br>
         <h2 style="text-align: center;">Account Settings</h2>
         <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="{% url 'change_password' %}" role="button">Change Password</a>
         <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="#" role="button">Update Email</a>
