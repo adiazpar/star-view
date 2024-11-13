@@ -808,6 +808,7 @@
                         <h4>${location.name}</h4>
                         <p>Quality Score: ${location.quality_score}</p>
                         <p>Elevation: ${location.elevation} m</p>
+                        <p>Cloud Cover: ${location.cloudCoverPercentage}%</p>
                         ${location.light_pollution_value ?
                             `<p>Light Pollution: ${location.light_pollution_value}</p>` :
                             ''}
@@ -818,6 +819,7 @@
                             <i class="fas ${location.is_favorited ? 'fa-heart' : 'fa-heart-o'}"></i>
                             ${location.is_favorited ? 'Remove from Favorites' : 'Add to Favorites'}
                         </button>
+                        <button class="btn favorite-button" onclick="window.location.href='https://www.google.com/maps/dir/?api=1&destination=${location.latitude },${ location.longitude }'">Get directions!</a>
                     </div>
                 `;
             }

@@ -37,6 +37,11 @@
                             </div>
                             <button type="submit" class="btn btn-primary">Upload and Process</button>
                         </form>
+
+                        <form method="post" action="{% url 'update_forecast' %}">
+                            {% csrf_token %}
+                            <button type="submit">Update Forecasts for All Viewing Locations</button>
+                        </form>
                     </div>
                 </div>
             </div>

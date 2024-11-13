@@ -29,4 +29,7 @@ urlpatterns = [
     # Django Rest Framework:
     path('api/', include(router.urls)),
 
+    # Update Forecasts
+    path('update/', views.update_forecast, name='update_forecast'),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
