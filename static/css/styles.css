@@ -29,6 +29,8 @@ body {
     font-weight: bold;
     font-size: small;
     text-decoration: none;
+
+    z-index: 1000;
 }
 .navbar .logo {
     display: flex;
