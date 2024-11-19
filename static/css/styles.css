@@ -1,13 +1,290 @@
+/* Design System - Event Horizon */
+
+/* ---------------------------------------------------------------- */
+/* Core Design Variables */
+:root {
+    /* Colors */
+    --primary: #2b7aff;
+    --primary-light: #4d8fff;
+    --primary-dark: #1a66e0;
+    --background: black;
+
+    --surface: rgba(255, 255, 255, 0.1);
+    --text-primary: white;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+
+    /* Typography */
+    --font-primary: Tahoma, sans-serif;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.25rem;
+    --font-size-xl: 1.50rem;
+    --font-size-2xl: 2.00rem;
+    --font-size-3xl: 2.50rem;
+
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.50rem;
+    --space-md: 1.00rem;
+    --space-lg: 1.50rem;
+    --space-xl: 2.00rem;
+
+    /* Effects */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-lg: 0 0px 20px rgba(0,0,0,1);
+    --text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+
+    /* Animations */
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
+
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 16px;
+    --radius-full: 9999px;
+
+    /* Responsive Cutoff */
+    --pixel-cutoff: 1070px;
+}
+
+/* ---------------------------------------------------------------- */
+/* ---------- Global Styles ---------- */
 html {
     height: 100%;
-    overflow: hidden;
+    overflow-x: hidden;
 }
 
 body {
-    font-family: Tahoma, sans-serif;
+    font-family: var(--font-primary);
+    color: var(--text-primary);
+    background-color: var(--background);
+    line-height: 1.5;
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
+    min-height: 100vh;
+}
+
+/* ---------- Typography ---------- */
+h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 var(--space-md);
+    line-height: 1.2;
+    text-shadow: var(--text-shadow);
+}
+
+h1 { font-size: var(--font-size-3xl); }
+h2 { font-size: var(--font-size-2xl); }
+h3 { font-size: var(--font-size-xl); }
+h4 { font-size: var(--font-size-lg); }
+
+/* ---------- Components ---------- */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-sm) var(--space-lg);
+    background-color: var(--primary);
+    color: var(--text-primary);
+    border: none;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform var(--transition-base), background-color var(--transition-base);
+    box-shadow: var(--shadow-lg);
+}
+
+.button:hover {
+    background-color: var(--primary-light);
+    transform: scale(1.05);
+}
+
+.card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ---------- Layout Utilities ---------- */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 var(--space-md);
+}
+
+.grid {
+    display: grid;
+    gap: var(--space-md);
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+/* ---------- Background Utilities ---------- */
+.bg-stars {
+    background-image: url('/static/images/night_sky.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+/* ---------- Animation Utilities ---------- */
+.hover-scale {
+    transition: transform var(--transition-base);
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+/* ---------- Responsive Design ---------- */
+@media (max-width: 1080px) {
+    :root {
+        --font-size-3xl: 2rem;
+        --font-size-2xl: 1.75rem;
+        --space-xl: 1.5rem;
+    }
+}
+
+/* ---------------------------------------------------------------- */
+/* Account Page Styling */
+.account-page {
+    min-height: 100vh;
+    padding: var(--space-xl) var(--space-md);
+    background-image: url('/static/images/account_bg.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.account-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.profile-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-xl);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-image-container {
+    width: 200px;
+    height: 200px;
+    position: relative;
+    margin: var(--space-md) auto;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    margin: var(--space-md) auto;
+    object-fit: cover;
+    border: 1px solid var(--background);
+}
+
+.profile-name {
+    font-size: var(--font-size-2xl);
+    margin-bottom: var(--space-sm);
+    text-align: center;
+}
+
+.profile-email {
+    color: var(--text-secondary);
+    margin: var(--space-md) 0;
+    text-align: center;
+}
+
+.settings-header {
+    text-align: center;
+    margin: var(--space-xl) 0 var(--space-xs);
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+    width: 100%;
+    max-width: 400px;
+    align-items: center;
+}
+
+.settings-group a {
+    text-decoration: none;
+    color: var(--text-secondary);
+}
+
+.settings-button {
+    width: 100%;
+    background-color: var(--surface);
+    border: 1px solid var(--background);
+    color: var(--text-primary);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-base);
+    text-align: center;
+}
+
+.settings-button:hover {
+    background-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.upload-button {
+    margin: var(--space-lg) 0;
+    padding: var(--space-sm) var(--space-lg);
+    background-color: var(--primary);
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--text-primary);
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform var(--transition-base);
+}
+
+.upload-button:hover {
+    transform: scale(1.05);
+}
+
+.favorites-card {
+    margin: var(--space-lg) 0;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: var(--space-lg);
+    box-shadow: var(--shadow-lg);
+    backdrop-filter: blur(8px);
+}
+
+.favorites-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.favorite-item {
+    padding: var(--space-md);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.favorite-item:last-child {
+    border-bottom: none;
 }
 
 /* ---------------------------------------------------------------- */
@@ -43,7 +320,6 @@ body {
     margin-left: -10px;
 }
 .navbar .logo h2 {
-    color: white;
     margin: 0;
 }
 .hamburger {
@@ -94,11 +370,8 @@ body {
 }
 
 /* Navigation Bar Shrunk Styling */
-@media (max-width: 960px) {
-    .navbar {
-        height: 40px;
-        padding: 10px 20px;
-    }
+@media (max-width: 1080px) {
+
     .hamburger-auth-group {
         display: flex;
         justify-content: space-between;
@@ -274,7 +547,6 @@ body {
     border-radius: 5px;
 }
 .forgot-password {
-    visibility: hidden; /* Un-hide when this has been implemented */
     text-align: right;
     margin-bottom: 20px;
 }

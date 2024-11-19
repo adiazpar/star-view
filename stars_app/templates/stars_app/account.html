@@ -1,37 +1,41 @@
 {% extends "stars_app/base.html" %}
+{% block body_class %}account-page{% endblock %}
+
 {% block content %}
 
-<body style="background-image: url('/static/images/account_bg.jpeg'); display: flex; background-size: cover; justify-content: center; align-items: center; background-repeat: no-repeat; background-position: center;">
+<div class="account-container">
+    <!-- Profile Section -->
+    <div class="profile-card">
+        <h3 class="profile-name">{{user.username}}'s Account</h3>
+        <div class="profile-image-container">
+            <img src='/static/images/default_profile_pic.jpg' alt="Profile Picture" class="profile-image">
+        </div>
+        <button class="upload-button">Upload Profile Picture</button>
 
-    <div class="account-profile">    
-        <h2 style="text-align: center;">{{user.username}}'s Account</h2>
-        <img src='/static/images/default_profile_pic.jpg' class="img-fluid" width="350" height="350"></img>
-        <br>
-        <a class="btn" style="background-color: white; padding: 5px; cursor: pointer; color: black" href="#" role="button">Upload Profile Picture</a>
-        <br></br>
-        <h3 style="text-align: center;">Account Email: {{user.email}}</h3>
-        <br>
-        <h2 style="text-align: center;">Account Settings</h2>
-        <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="{% url 'change_password' %}" role="button">Change Password</a>
-        <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="#" role="button">Update Email</a>
-        <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="#" role="button">Notifications</a>
+        <p class="profile-email">{{user.email}}</p>
+
+        <h4 class="settings-header">Account Settings</h4>
+        <div class="settings-group">
+            <a href="{% url 'change_password' %}" class="settings-button">Change Password</a>
+            <a href="#" class="settings-button">Update Email</a>
+            <a href="#" class="settings-button">Notifications</a>
+        </div>
     </div>
 
+    <!-- Favorites Section -->
     {% if favorites %}
-    <h2 style="text-align: center; color: white;">Favorited Locations</h2>
-    <div class="list-group">
-      <ul>
-        {% for favorite in favorites %}
-          <li class="list-item">
-            <h5>Location Name: {{favorite.location.name}}</h5>
-            <a class="btn" style="background-color: cornflowerblue; padding: 5px; cursor: pointer; color: white" href="#" role="button">View Location</a>
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-
+        <div class="favorites-card">
+            <h3>Favorited Locations</h3>
+            <ul class="favorites-list">
+                {% for favorite in favorites %}
+                    <li class="favorite-item">
+                        <h4>{{favorite.location.name}}</h4>
+                        <a href="#" class="button">View Location</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
     {% endif %}
-
-</body>
+</div>
 
 {% endblock %}
