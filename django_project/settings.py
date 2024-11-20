@@ -162,3 +162,6 @@ TILES_DIR = os.path.join(MEDIA_ROOT, 'tiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'
+
+# Default profile picture
+DEFAULT_PROFILE_PICTURE = os.path.join(MEDIA_URL, 'profile_pics/default_profile_pic.jpg')

@@ -2,16 +2,16 @@ from django.shortcuts import render, redirect
 from django.urls import reverse_lazy
 
 # Importing other things from project files:
-from .models import User, FavoriteLocation
-from stars_app.models import ViewingLocation, CelestialEvent
+from stars_app.models import *
 from stars_app.utils import LightPollutionCalculator
-from .forms import ChangePasswordForm
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.views import PasswordChangeView
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 # To display error/success messages:
 from django.contrib import messages
@@ -21,7 +21,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from stars_app.serializers import ViewingLocationSerializer, CelestialEventSerializer
+from stars_app.serializers import *
 
 # Tile libraries:
 import os
@@ -46,7 +46,6 @@ class CelestialEventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Set elevation to 0 if not provided
         serializer.save(elevation=serializer.validated_data.get('elevation', 0))
-
 
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
@@ -153,6 +152,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(favorites, many=True)
         return Response(serializer.data)
 
+
 # ---------------------------------------------------------------- #
 # Update All Forecasts Button on Upload Page
 @staff_member_required
@@ -163,6 +163,7 @@ def update_forecast(request):
         loc.updateForecast()
 
     return render(request, 'stars_app/upload_tif.html')
+
 
 # ---------------------------------------------------------------- #
 # Tile Views:
@@ -236,7 +237,6 @@ def upload_and_process_tif(request):
 
     return render(request, 'stars_app/upload_tif.html')
 
-
 @cache_control(max_age=86400)
 def serve_tile(request, z, x, y):
     # Mapbox uses XYZ coordinates, whereas GDAL uses TMZ coordinates.
@@ -291,8 +291,73 @@ def details(request, event_id):
 
 @login_required(login_url='/login/')
 def account(request, pk):
+    user = User.objects.get(pk=pk)
+
+    # Ensure the logged-in user can only view their own profile
+    if request.user.pk != pk:
+        messages.error(request, 'You can only view your own profile')
+        return redirect('account', pk=request.user.pk)
+
+    profile, created = UserProfile.objects.get_or_create(user=user)
     favorites = FavoriteLocation.objects.filter(user=pk)
-    return render(request, 'stars_app/account.html', {'favorites':favorites})
+
+    return render(request, 'stars_app/account.html', {
+        'favorites': favorites,
+        'user_profile': profile
+    })
+
+@login_required
+@require_POST
+def upload_profile_picture(request):
+    try:
+        if 'profile_picture' not in request.FILES:
+            return JsonResponse({'error': 'No image file provided'}, status=400)
+
+        profile_picture = request.FILES['profile_picture']
+        user_profile = request.user.userprofile
+
+        # Delete old profile picture if it exists and isn't the default
+        if user_profile.profile_picture and 'defaults/' not in user_profile.profile_picture.name:
+            if os.path.isfile(user_profile.profile_picture.path):
+                os.remove(user_profile.profile_picture.path)
+
+        # Save the file using default storage
+        user_profile.profile_picture = profile_picture
+        user_profile.save()
+
+        # Return the complete URL
+        return JsonResponse({
+            'success': True,
+            'message': 'Profile picture updated successfully',
+            'image_url': user_profile.profile_picture.url
+        })
+    except Exception as e:
+        print(f"Error in upload_profile_picture: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+@require_POST
+def remove_profile_picture(request):
+    try:
+        user_profile = request.user.userprofile
+
+        # Delete the current profile picture if it exists
+        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
+            if os.path.isfile(user_profile.profile_picture.path):
+                os.remove(user_profile.profile_picture.path)
+
+        # Reset to default
+        user_profile.profile_picture = None
+        user_profile.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Profile picture removed successfully',
+            'default_image_url': '/static/images/default_profile_pic.jpg'
+        })
+    except Exception as e:
+        print(f"Error removing profile picture: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
 
 class ChangePasswordView(PasswordChangeView):
     form_class = PasswordChangeForm
@@ -307,14 +372,13 @@ def register(request):
         try:
             username = request.POST.get('username')
             email = request.POST.get('email')
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
             pass1 = request.POST.get('password1')
             pass2 = request.POST.get('password2')
 
-            # We are going to define a user filter to check for existing usernames:
-            user = User.objects.filter(username=username.lower())
-
             # Check if the username already exists in our database:
-            if user.exists():
+            if User.objects.filter(username=username.lower()).exists():
                 messages.error(request, 'Username already exists...')
                 return redirect('register')
 
@@ -324,9 +388,18 @@ def register(request):
                 return redirect('register')
 
             # We are creating a user after verifying everything is correct:
-            user = User.objects.create(username=username.lower(), email=email)
-            user.set_password(pass1)
-            user.save()
+            user = User.objects.create(
+                username=username.lower(),
+                email=email,
+                password=pass1,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+            # Create default profile picture directory if it doesn't exist:
+            profile_pics_dir = os.path.join(settings.MEDIA_ROOT, 'profile_pics')
+            if not os.path.exists(profile_pics_dir):
+                os.makedirs(profile_pics_dir)
 
             # Notify the user that their account has been created successfully:
             messages.success(request, 'Account created successfully')
@@ -351,7 +424,7 @@ def custom_login(request):
 
             # Check for the case that the user doesn't exist in our database:
             if not user.exists():
-                messages.error(request, 'Username not found')
+                print('Username not found')
                 return redirect('login')
 
             # Check for matching username & password:
@@ -361,12 +434,12 @@ def custom_login(request):
                 return redirect('home')     # Low-key I hate this shit can we redirect it to user's previous page?
 
             # If user couldn't authenticate above, display wrong password message:
-            messages.error(request, 'Wrong password...')
+            print('Wrong password...')
             return redirect('login')
 
         except Exception as e:
             # Display a message to the user that login was unsuccessful:
-            messages.error(request, 'Something went wrong...')
+            print(f'Something went wrong... {(e)}')
             return redirect('home')
 
     # If we didn't call a post method, direct user to login page:

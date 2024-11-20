@@ -7,9 +7,11 @@
     --primary: #2b7aff;
     --primary-light: #4d8fff;
     --primary-dark: #1a66e0;
-    --background: black;
 
-    --surface: rgba(255, 255, 255, 0.1);
+    --background: black;
+    --background-dark: #181818;
+    --surface: #FFFFFF19;
+    
     --text-primary: white;
     --text-secondary: rgba(255, 255, 255, 0.7);
 
@@ -81,6 +83,10 @@ h3 { font-size: var(--font-size-xl); }
 h4 { font-size: var(--font-size-lg); }
 
 /* ---------- Components ---------- */
+.content {
+    margin-top: 60px;
+}
+
 .button {
     display: inline-flex;
     align-items: center;
@@ -93,12 +99,10 @@ h4 { font-size: var(--font-size-lg); }
     font-weight: 600;
     text-decoration: none;
     transition: transform var(--transition-base), background-color var(--transition-base);
-    box-shadow: var(--shadow-lg);
 }
 
 .button:hover {
     background-color: var(--primary-light);
-    transform: scale(1.05);
 }
 
 .card {
@@ -153,13 +157,9 @@ h4 { font-size: var(--font-size-lg); }
 /* ---------------------------------------------------------------- */
 /* Account Page Styling */
 .account-page {
-    min-height: 100vh;
     padding: var(--space-xl) var(--space-md);
-    background-image: url('/static/images/account_bg.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    display: flex;
+    background-color: var(--background-dark);
+
     justify-content: center;
     align-items: flex-start;
 }
@@ -172,11 +172,9 @@ h4 { font-size: var(--font-size-lg); }
 
 .profile-card {
     background: var(--surface);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: var(--space-xl);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -184,19 +182,89 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 .profile-image-container {
-    width: 200px;
-    height: 200px;
+    width: 250px;
+    height: 250px;
     position: relative;
     margin: var(--space-md) auto;
+    background-color: var(--surface);
+    border-radius: 50%;
 }
 
 .profile-image {
+    cursor: pointer;
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    margin: var(--space-md) auto;
     object-fit: cover;
     border: 1px solid var(--background);
+    background-color: var(--surface);
+}
+
+.edit-icon {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: var(--primary);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform var(--transition-base), background-color var(--transition-base);
+    z-index: 10;
+}
+.edit-icon:hover {
+    background-color: var(--primary-light);
+}
+
+.edit-icon svg {
+    width: 25px;
+    height: 25px;
+}
+
+.edit-dropdown {
+    position: relative;
+    align-items: center;
+    background: var(--background);
+    border-radius: var(--radius-md);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 8px;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 160px;
+    z-index: 20;
+}
+
+.edit-dropdown.active {
+    display: flex;
+}
+
+.dropdown-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-base);
+    width: 100%;
+    text-align: left;
+}
+
+.dropdown-option:hover {
+    color: var(--text-primary);
+    background-color: var(--primary);
+}
+
+.dropdown-option svg {
+    flex-shrink: 0;
 }
 
 .profile-name {
@@ -235,7 +303,7 @@ h4 { font-size: var(--font-size-lg); }
     width: 100%;
     background-color: var(--surface);
     border: 1px solid var(--background);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     padding: var(--space-sm) var(--space-md);
     border-radius: var(--radius-md);
     transition: background-color var(--transition-base);
@@ -247,29 +315,11 @@ h4 { font-size: var(--font-size-lg); }
     color: var(--text-primary);
 }
 
-.upload-button {
-    margin: var(--space-lg) 0;
-    padding: var(--space-sm) var(--space-lg);
-    background-color: var(--primary);
-    border: none;
-    border-radius: var(--radius-full);
-    color: var(--text-primary);
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform var(--transition-base);
-}
-
-.upload-button:hover {
-    transform: scale(1.05);
-}
-
 .favorites-card {
     margin: var(--space-lg) 0;
     background: var(--surface);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-md);
     padding: var(--space-lg);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(8px);
 }
 
 .favorites-list {
@@ -301,8 +351,8 @@ h4 { font-size: var(--font-size-lg); }
     width: 100%;
     box-shadow: 0 0 20px rgba(0,0,0,1);
 
-    background-color: black;
-    color: #fff;
+    background-color: var(--background);
+    color: var(--text-primary);
     font-weight: bold;
     font-size: small;
     text-decoration: none;
@@ -341,23 +391,30 @@ h4 { font-size: var(--font-size-lg); }
     display: flex;
     list-style-type: none;
 }
+
 .nav-links li {
     margin-right: 3.5rem;
 }
-.nav-links li a , .auth-links li a {
-    color: white;
+.nav-links li a {
+    color: var(--text-secondary);
     text-decoration: none;
+}
+.nav-links li a:hover {
+    color: var(--text-primary);
 }
 .auth-links li {
     margin-right: 2rem;
-    background-color: #2b7aff;
-    color: #fff;
+    background-color: var(--primary);
     padding: 0.5rem 2rem;
     border-radius: 20px;
     text-decoration: none;
 }
+.auth-links li a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
 .navbar ul li a.active {
-    color: #2b7aff;
+    color: var(--primary-light);
 }
 
 .auth-links li:hover {
@@ -371,7 +428,6 @@ h4 { font-size: var(--font-size-lg); }
 
 /* Navigation Bar Shrunk Styling */
 @media (max-width: 1080px) {
-
     .hamburger-auth-group {
         display: flex;
         justify-content: space-between;
@@ -416,21 +472,6 @@ h4 { font-size: var(--font-size-lg); }
         display: block;
     }
 }
-
-
-/* ---------------------------------------------------------------- */
-/* Setting Initial Styling for Content Container */
-.content {
-    margin-left: 20px;
-    margin-right: 20px;
-    margin-top: 80px;
-}
-.error-message {
-    color: red;
-    text-align: center;
-    margin-top: 10px;
-}
-
 
 /* ---------------------------------------------------------------- */
 /* Home Page Styling */

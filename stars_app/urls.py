@@ -16,6 +16,8 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.custom_login, name='login'),
     path('logout/', views.custom_logout, name='logout'),
+    path('upload-profile-picture/', views.upload_profile_picture, name='upload_profile_picture'),
+    path('remove-profile-picture/', views.remove_profile_picture, name='remove_profile_picture'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
 
     # Navigation:
@@ -35,4 +37,4 @@ urlpatterns = [
     # Update Forecasts
     path('update/', views.update_forecast, name='update_forecast'),
 
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

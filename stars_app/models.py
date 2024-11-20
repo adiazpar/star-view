@@ -4,21 +4,22 @@ from django.utils import timezone
 import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
-import os
+
+# User profile packages:
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # Create your models here.
 
-
-
-
-
+# Forecast Models --------------------------------------------------- #
 class Forecast(models.Model):
-    createTime = models.DateTimeField(auto_now=True) #when model is created or updated get new time 
-    forecast = models.JSONField(default=list, null=True)
+	createTime = models.DateTimeField(auto_now=True) #when model is created or updated get new time
+	forecast = models.JSONField(default=list, null=True)
 
 def defaultforecast():
-    tmp = Forecast.objects.create()
-    return tmp.id
+	tmp = Forecast.objects.create()
+	return tmp.id
+
 
 # Viewing Location Model -------------------------------------------- #
 class ViewingLocation(models.Model):
@@ -102,43 +103,73 @@ class ViewingLocation(models.Model):
 		self.updateForecast() 
 
 # Favorite Location Model ------------------------------------------- #
+
+
+# Favorite Location Model ------------------------------------------- #
 class FavoriteLocation(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_locations')
-    location = models.ForeignKey(ViewingLocation, on_delete=models.CASCADE, related_name='favorited_by')
-    created_at = models.DateTimeField(auto_now_add=True)
+	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='favorite_locations')
+	location = models.ForeignKey(ViewingLocation, on_delete=models.CASCADE, related_name='favorited_by')
+	created_at = models.DateTimeField(auto_now_add=True)
 
-    class Meta:
-        # This makes sure a user can't favorite the same location multiple times:
-        unique_together = ['user', 'location']
+	class Meta:
+		# This makes sure a user can't favorite the same location multiple times:
+		unique_together = ['user', 'location']
 
-    def __str__(self):
-        return f'{self.user.username} - {self.location.name}'
+	def __str__(self):
+		return f'{self.user.username} - {self.location.name}'
 
 
 # Celestial Event Model --------------------------------------------- #
 class CelestialEvent(models.Model):
-    EVENT_TYPES = [
-        ('METEOR', 'Meteor Shower'),
-        ('ECLIPSE', 'Eclipse'),
-        ('PLANET', 'Planetary Event'),
-        ('AURORA', 'Aurora'),
-        ('OTHER', 'Other'),
-        ('COMET', 'Comet'),
-    ]
+	EVENT_TYPES = [
+		('METEOR', 'Meteor Shower'),
+		('ECLIPSE', 'Eclipse'),
+		('PLANET', 'Planetary Event'),
+		('AURORA', 'Aurora'),
+		('OTHER', 'Other'),
+		('COMET', 'Comet'),
+	]
 
-    name = models.CharField(max_length=200)
-    event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
-    description = models.TextField()
+	name = models.CharField(max_length=200)
+	event_type = models.CharField(max_length=10, choices=EVENT_TYPES)
+	description = models.TextField()
 
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    elevation = models.FloatField(help_text="Elevation in meters")
+	latitude = models.FloatField()
+	longitude = models.FloatField()
+	elevation = models.FloatField(help_text="Elevation in meters")
 
-    start_time = models.DateTimeField()
-    end_time = models.DateTimeField()
+	start_time = models.DateTimeField()
+	end_time = models.DateTimeField()
 
-    viewing_radius = models.FloatField(help_text="Optimal viewing radius in km")
+	viewing_radius = models.FloatField(help_text="Optimal viewing radius in km")
 
-    def __str__(self):
-        return f'{self.name} ({self.start_time.date()})'
+	def __str__(self):
+		return f'{self.name} ({self.start_time.date()})'
 
+
+# User Profile Model ------------------------------------------------ #
+class UserProfile(models.Model):
+	user = models.OneToOneField(User, on_delete=models.CASCADE)
+	profile_picture = models.ImageField(
+		upload_to='profile_pics/',
+		null=True,
+		blank=True
+	)
+
+	@property
+	def get_profile_picture_url(self):
+		if self.profile_picture and hasattr(self.profile_picture, 'url'):
+			return self.profile_picture.url
+		return '/static/images/default_profile_pic.jpg'
+
+	def __str__(self):
+		return f'{self.user.username} Profile'
+
+# Signal to automatically create/update UserProfile when User is created/updated
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+    else:
+        # Get or create profile if it doesn't exist for existing users
+        UserProfile.objects.get_or_create(user=instance)

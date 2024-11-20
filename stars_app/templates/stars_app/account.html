@@ -6,11 +6,40 @@
 <div class="account-container">
     <!-- Profile Section -->
     <div class="profile-card">
-        <h3 class="profile-name">{{user.username}}'s Account</h3>
-        <div class="profile-image-container">
-            <img src='/static/images/default_profile_pic.jpg' alt="Profile Picture" class="profile-image">
-        </div>
-        <button class="upload-button">Upload Profile Picture</button>
+        <h3 class="profile-name">{{user.first_name}} {{user.last_name}}</h3>
+        <h4 class="profile-email">{{user.username}}</h4>
+
+        <form id="profile-picture-form" class="profile-image-container">
+            {% csrf_token %}
+            <input type="file" id="profile-upload" name="profile_picture" accept="image/*" style="display: none">
+            <label for="profile-upload">
+                <img src='{{ user_profile.get_profile_picture_url }}'
+                     alt="Profile Picture"
+                     class="profile-image"
+                     onerror="this.src='/static/images/default_profile_pic.jpg'">
+                <div class="edit-icon" id="edit-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                    </svg>
+                </div>
+                <div class="edit-dropdown" id="edit-dropdown">
+                    <button type="button" class="dropdown-option" id="change-photo">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        Change Photo
+                    </button>
+                    <button type="button" class="dropdown-option" id="remove-photo">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"/>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                        </svg>
+                        Remove Photo
+                    </button>
+                </div>
+            </label>
+        </form>
 
         <p class="profile-email">{{user.email}}</p>
 
@@ -37,5 +66,91 @@
         </div>
     {% endif %}
 </div>
+
+<script>
+// Handle dropdown toggle
+const editIcon = document.getElementById('edit-icon');
+const dropdown = document.getElementById('edit-dropdown');
+const changePhotoBtn = document.getElementById('change-photo');
+const removePhotoBtn = document.getElementById('remove-photo');
+const profileUpload = document.getElementById('profile-upload');
+
+// Toggle dropdown when clicking edit icon
+editIcon.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropdown.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    if (!editIcon.contains(e.target)) {
+        dropdown.classList.remove('active');
+    }
+});
+
+// Handle change photo
+changePhotoBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    profileUpload.click();
+    dropdown.classList.remove('active');
+});
+
+// Handle remove photo
+removePhotoBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (confirm('Are you sure you want to remove your profile picture?')) {
+        fetch('{% url "remove_profile_picture" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('.profile-image').src = data.default_image_url;
+                dropdown.classList.remove('active');
+            } else {
+                alert('Error removing profile picture: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing profile picture');
+        });
+    }
+    dropdown.classList.remove('active');
+});
+
+// Handle profile picture upload
+profileUpload.addEventListener('change', function(e) {
+    if (this.files && this.files[0]) {
+        const formData = new FormData();
+        formData.append('profile_picture', this.files[0]);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+        fetch('{% url "upload_profile_picture" %}', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('.profile-image').src = data.image_url + '?t=' + new Date().getTime();
+                dropdown.classList.remove('active');
+            } else {
+                alert('Error uploading image: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error uploading image');
+        });
+    }
+});
+</script>
 
 {% endblock %}
