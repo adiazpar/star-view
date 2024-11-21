@@ -3,7 +3,7 @@ from django.urls import reverse_lazy
 
 # Importing other things from project files:
 from stars_app.models import *
-from stars_app.utils import LightPollutionCalculator
+from stars_app.utils import LightPollutionCalculator, is_valid_email
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout
@@ -359,6 +359,42 @@ def remove_profile_picture(request):
         print(f"Error removing profile picture: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
 
+
+@login_required
+def change_email(request):
+    try:
+        new_email = request.POST.get('new_email')
+
+        # Validate the new email:
+        if not is_valid_email(new_email):
+            return JsonResponse({
+                'success': False,
+                'message': 'Please enter a valid email address.'
+            }, status=400)
+
+        # Check if email is already taken
+        if User.objects.filter(email=new_email.lower()).exclude(id=request.user.id).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'This email address is already registered.'
+            }, status=400)
+
+        # Update the email
+        request.user.email = new_email.lower()
+        request.user.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Email updated successfully.',
+            'new_email': new_email
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating email: {str(e)}'
+        }, status=400)
+
 class ChangePasswordView(PasswordChangeView):
     form_class = PasswordChangeForm
     success_url = reverse_lazy('home')
@@ -380,6 +416,16 @@ def register(request):
             # Check if the username already exists in our database:
             if User.objects.filter(username=username.lower()).exists():
                 messages.error(request, 'Username already exists...')
+                return redirect('register')
+
+            # Check if the email already exists:
+            if User.objects.filter(email=email.lower()).exists():
+                messages.error(request, 'Email is already registered.')
+                return redirect('register')
+
+            # Validate email format:
+            if not is_valid_email(email):
+                messages.error(request, 'Please enter a valid email address.')
                 return redirect('register')
 
             # Check if the password confirmation doesn't match:
@@ -407,7 +453,7 @@ def register(request):
 
         except Exception as e:
             # Display a message to the user that registration was unsuccessful:
-            messages.error(request, 'Something went wrong...')
+            messages.error(request, f'Registration failed: {str(e)}')
             return redirect('register')
 
     # If we didn't call a post method, direct user to register page:

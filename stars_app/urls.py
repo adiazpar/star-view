@@ -18,6 +18,7 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='logout'),
     path('upload-profile-picture/', views.upload_profile_picture, name='upload_profile_picture'),
     path('remove-profile-picture/', views.remove_profile_picture, name='remove_profile_picture'),
+    path('change-email/', views.change_email, name='change_email'),
     path('change-password/', ChangePasswordView.as_view(), name='change_password'),
 
     # Navigation:

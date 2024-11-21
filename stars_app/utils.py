@@ -4,15 +4,22 @@ from django.conf import settings
 import os
 import math
 import ephem
-from datetime import datetime, timedelta
+from datetime import datetime
 from django.utils import timezone
+
+# Email validation:
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+import re
 
 import logging
 logger = logging.getLogger('stars_app')
 
 
 # LIGHT POLLUTION --------------------------------------------------- #
-
 class LightPollutionCalculator:
     def __init__(self, tiles_dir=settings.TILES_DIR):
         self.tiles_dir = tiles_dir
@@ -438,3 +445,21 @@ class AstronomicalCoordinates:
             'max_altitude': best_altitude,
             'visibility_score': min(100, max(0, best_altitude * 2))  # 0-100 score
         }
+
+
+# EMAIL VERIFICATION ------------------------------------------------ #
+def is_valid_email(email):
+    # Validate email format and domain:
+    try:
+        # Basic Django email validation
+        validate_email(email)
+
+        # Additional checks
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(pattern, email):
+            return False
+
+        return True
+
+    except ValidationError:
+        return False
