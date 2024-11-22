@@ -332,7 +332,7 @@ h4 { font-size: var(--font-size-lg); }
 .input-icon {
     position: absolute;
     left: 12px;
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     pointer-events: none;
 }
 
@@ -354,7 +354,7 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 .eye-icon {
-    color: var(--text-tertiary);
+    color: var(--text-secondary);
     transition: color 0.2s;
 }
 
@@ -365,15 +365,72 @@ h4 { font-size: var(--font-size-lg); }
 .form-input {
     width: 100%;
     padding: var(--space-sm) var(--space-sm);
-    border: 1px solid var(--text-primary);
+    border: 1px solid var(--text-tertiary);
     border-radius: var(--radius-sm);
+    background: var(--surface);
     font-size: var(--font-size-sm);
-    color: black;
+    color: var(--text-primary);
 }
 
 .form-input:focus {
     outline: none;
     border-color: var(--primary-light);
+}
+
+.form-actions {
+    margin-top: var(--space-sm);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.save-button {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
+    border: 1px solid var(--text-primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+}
+
+.save-button:hover {
+    background-color: var(--primary-light);
+}
+
+.messages {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1000;
+}
+
+.message {
+    margin-bottom: 10px;
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    animation: slideIn 0.3s ease-out;
+}
+
+.success {
+    background-color: #2ecc71;
+}
+
+.error {
+    background-color: var(--negate);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* Password Input Container */
@@ -422,6 +479,12 @@ h4 { font-size: var(--font-size-lg); }
 
     .btn-upload, .btn-delete {
         flex: 1;
+    }
+
+    .form-actions {
+        margin-top: var(--space-sm);
+        display: flex;
+        justify-content: flex-start;
     }
 }
 

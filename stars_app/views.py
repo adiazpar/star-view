@@ -1,15 +1,12 @@
 from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
 
 # Importing other things from project files:
 from stars_app.models import *
 from stars_app.utils import LightPollutionCalculator, is_valid_email
 
 # Authentication libraries:
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth.views import PasswordChangeView
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -359,6 +356,29 @@ def remove_profile_picture(request):
         print(f"Error removing profile picture: {str(e)}")
         return JsonResponse({'error': str(e)}, status=400)
 
+@login_required
+@require_POST
+def update_name(request):
+    try:
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+
+        user = request.user
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Name updated successfully.',
+            'first_name': first_name,
+            'last_name': last_name
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating name: {str(e)}'
+        }, status=400)
 
 @login_required
 def change_email(request):
@@ -366,6 +386,12 @@ def change_email(request):
         new_email = request.POST.get('new_email')
 
         # Validate the new email:
+        if not new_email:
+            return JsonResponse({
+                'success': False,
+                'message': 'Email address is required.'
+            }, status=400)
+
         if not is_valid_email(new_email):
             return JsonResponse({
                 'success': False,
@@ -395,10 +421,46 @@ def change_email(request):
             'message': f'Error updating email: {str(e)}'
         }, status=400)
 
-class ChangePasswordView(PasswordChangeView):
-    form_class = PasswordChangeForm
-    success_url = reverse_lazy('home')
-    template_name = 'stars_app/change_password.html'
+@login_required
+@require_POST
+def change_password(request):
+    try:
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+
+        print(f"cur: {current_password}")  # Debug print
+        print(f"new: {new_password}")  # Debug print
+
+        # Validate inputs
+        if not current_password or not new_password:
+            return JsonResponse({
+                'success': False,
+                'message': 'Both current and new passwords are required.'
+            }, status=400)
+
+        # Verify current password
+        if not request.user.check_password(current_password):
+            return JsonResponse({
+                'success': False,
+                'message': 'Current password is incorrect.'
+            }, status=400)
+
+        # Set the new password
+        request.user.set_password(new_password)
+        request.user.save()
+
+        # Update session to prevent logout
+        update_session_auth_hash(request, request.user)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Password updated successfully.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating password: {str(e)}'
+        }, status=400)
 
 
 # ---------------------------------------------------------------- #

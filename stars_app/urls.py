@@ -1,11 +1,9 @@
 from django.urls import path, include
-from django.contrib import admin
 from rest_framework.routers import DefaultRouter
 
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
-from .views import ChangePasswordView
 
 router = DefaultRouter()
 router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
@@ -18,8 +16,9 @@ urlpatterns = [
     path('logout/', views.custom_logout, name='logout'),
     path('upload-profile-picture/', views.upload_profile_picture, name='upload_profile_picture'),
     path('remove-profile-picture/', views.remove_profile_picture, name='remove_profile_picture'),
+    path('update-name/', views.update_name, name='update_name'),
     path('change-email/', views.change_email, name='change_email'),
-    path('change-password/', ChangePasswordView.as_view(), name='change_password'),
+    path('change-password/', views.change_password, name='change_password'),
 
     # Navigation:
     path('', views.home, name='home'),

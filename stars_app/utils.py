@@ -450,16 +450,9 @@ class AstronomicalCoordinates:
 # EMAIL VERIFICATION ------------------------------------------------ #
 def is_valid_email(email):
     # Validate email format and domain:
-    try:
-        # Basic Django email validation
-        validate_email(email)
-
-        # Additional checks
-        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(pattern, email):
-            return False
-
-        return True
-
-    except ValidationError:
+    if not email:
         return False
+
+    # Basic email validation pattern
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))

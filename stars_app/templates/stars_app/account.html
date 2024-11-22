@@ -11,9 +11,10 @@
             <p class="subtitle">Real-time information and activities of your property.</p>
         </div>
 
+        {% csrf_token %}
+
         <!-- Profile Picture Section -->
         <form id="profile-picture-form" class="profile-picture-section">
-            {% csrf_token %}
             <input type="file" id="profile-upload" name="profile_picture" accept="image/*" style="display: none">
             <label for="profile-upload">
                 <div class="profile-picture-container">
@@ -34,7 +35,8 @@
         </form>
 
         <!-- Full Name Section -->
-        <div class="form-section">
+        <form id="nameForm" class="form-section">
+            {% csrf_token %}
             <div class="section-header">
                 <h5>Full name</h5>
                 <p>Manage your first and last name.</p>
@@ -47,6 +49,7 @@
                         <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" class="form-input">
                     </div>
                 </div>
+
                 <div class="input-group">
                     <label for="last_name">Last name</label>
                     <div class="input-with-icon">
@@ -54,10 +57,15 @@
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="form-actions">
+                <button type="submit" class="save-button">Save Name</button>
+            </div>
+        </form>
 
         <!-- Contact Email Section -->
-        <div class="form-section">
+        <form id="emailForm" class="form-section" method="POST">
+            {% csrf_token %}
             <div class="section-header">
                 <h5>Contact email</h5>
                 <p>Edit your primary contact email address.</p>
@@ -65,20 +73,25 @@
 
             <div class="email-container">
                 <div class="input-group">
-                    <label for="email">Email</label>
+                    <label for="new_email">Email</label>
                     <div class="input-with-icon">
                         <svg class="input-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
                             <polyline points="22,6 12,13 2,6"/>
                         </svg>
-                        <input type="email" id="email" name="email" value="{{ user.email }}" class="form-input with-icon">
+                        <input type="email" id="new_email" name="new_email" value="{{ user.email }}" class="form-input with-icon" required>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="form-actions">
+                <button type="submit" class="save-button">Save Email</button>
+            </div>
+        </form>
 
         <!-- Password Section -->
-        <div class="form-section">
+        <form id="passwordForm" class="form-section" method="POST">
+            {% csrf_token %}
             <div class="section-header">
                 <h5>Password</h5>
                 <p>Update your current password.</p>
@@ -93,7 +106,7 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                             </svg>
-                            <input type="password" id="current_password" class="form-input with-icon">
+                            <input type="password" id="current_password" name="current_password" class="form-input with-icon" required>
                             <button type="button" class="password-toggle" onclick="togglePassword('current_password')">
                                 <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -103,6 +116,7 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="input-group">
                     <label for="new_password">New password</label>
                     <div class="password-input-container">
@@ -111,7 +125,7 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                             </svg>
-                            <input type="password" id="new_password" class="form-input with-icon">
+                            <input type="password" id="new_password" name="new_password" class="form-input with-icon" required>
                             <button type="button" class="password-toggle" onclick="togglePassword('new_password')">
                                 <svg class="eye-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -122,9 +136,29 @@
                     </div>
                 </div>
             </div>
-        </div>
+
+            <div class="form-actions">
+                <button type="submit" class="save-button">Save Password</button>
+            </div>
+        </form>
     </div>
 </div>
+
+    <!-- Favorites Section
+    {% if favorites %}
+        <div class="favorites-card">
+            <h3>Favorited Locations</h3>
+            <ul class="favorites-list">
+                {% for favorite in favorites %}
+                    <li class="favorite-item">
+                        <h4>{{favorite.location.name}}</h4>
+                        <a href="#" class="button">View Location</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    -->
 
 <script>
     function togglePassword(inputId) {
@@ -146,82 +180,7 @@
             `;
         }
     }
-</script>
 
-
-    <!-- Profile Section
-    <div class="profile-card">
-        <h3 class="profile-name">{{user.first_name}} {{user.last_name}}</h3>
-        <h4 class="profile-email">{{user.username}}</h4>
-
-        <form id="profile-picture-form" class="profile-image-container">
-            {% csrf_token %}
-            <input type="file" id="profile-upload" name="profile_picture" accept="image/*" style="display: none">
-            <label for="profile-upload">
-                <img src='{{ user_profile.get_profile_picture_url }}'
-                     alt="Profile Picture"
-                     class="profile-image"
-                     onerror="this.src='/static/images/default_profile_pic.jpg'">
-                <div class="edit-icon" id="edit-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
-                    </svg>
-                </div>
-                <div class="edit-dropdown" id="edit-dropdown">
-                    <button type="button" class="dropdown-option" id="change-photo">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                            <circle cx="12" cy="13" r="4"/>
-                        </svg>
-                        Change Photo
-                    </button>
-                    <button type="button" class="dropdown-option" id="remove-photo">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M3 6h18"/>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                        </svg>
-                        Remove Photo
-                    </button>
-                </div>
-            </label>
-        </form>
-
-        <p class="profile-email">{{user.email}}</p>
-
-        <h4 class="settings-header">Account Settings</h4>
-        <div class="settings-group">
-            <a href="{% url 'change_password' %}" class="settings-button">Change Password</a>
-            <a href="#" class="settings-button">Update Email</a>
-            <a href="#" class="settings-button">Notifications</a>
-        </div>
-    </div>
-    -->
-
-
-
-
-
-
-
-
-    <!-- Favorites Section
-    {% if favorites %}
-        <div class="favorites-card">
-            <h3>Favorited Locations</h3>
-            <ul class="favorites-list">
-                {% for favorite in favorites %}
-                    <li class="favorite-item">
-                        <h4>{{favorite.location.name}}</h4>
-                        <a href="#" class="button">View Location</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
-    -->
-</div>
-
-<script>
     // Handle dropdown toggle
     const changePhotoBtn = document.getElementById('change-photo');
     const removePhotoBtn = document.getElementById('remove-photo');
@@ -285,6 +244,71 @@
             });
         }
     });
+
+    // Form submissions:
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formId = form.id;
+            let url = '';
+
+            const formData = new FormData(form);
+
+            switch(formId) {
+                case 'nameForm':
+                    url = '/update-name/';
+                    break;
+                case 'emailForm':
+                    url = '/change-email/';
+                    break;
+                case 'passwordForm':
+                    url = '/change-password/'
+                    break;
+                default:
+                    return;
+            }
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if(data.success) {
+                    showMessage(data.message);
+                    if(formId === 'passwordForm') form.reset();
+                }
+                else {
+                    showMessage(data.message || 'An error occurred', true);
+                }
+            }
+            catch (error) {
+                showMessage('An error occurred while saving changes', true);
+            }
+        });
+    });
+
+    // Function to show messages
+    function showMessage(message, isError = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isError ? 'error' : 'success'}`;
+        messageDiv.textContent = message;
+
+        const messagesContainer = document.querySelector('.messages');
+        if (!messagesContainer) {
+            const container = document.createElement('div');
+            container.className = 'messages';
+            document.body.appendChild(container);
+        }
+
+        document.querySelector('.messages').appendChild(messageDiv);
+        setTimeout(() => messageDiv.remove(), 3000);
+    }
+
 </script>
 
 {% endblock %}
