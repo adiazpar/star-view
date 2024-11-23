@@ -1,0 +1,55 @@
+{% extends "stars_app/account_base.html" %}
+
+{% block settings_content %}
+
+<div class="account-header">
+    <h3>Favorited Locations</h3>
+    <p class="subtitle">Manage your saved viewing locations.</p>
+</div>
+
+{% if favorites %}
+    <div class="favorites-list">
+        {% for favorite in favorites %}
+            <div class="favorite-item">
+                <div class="favorite-info">
+                    <h4>{{ favorite.location.name }}</h4>
+                    <p class="favorite-details">
+                        Quality Score: {{ favorite.location.quality_score }}
+                    </p>
+                </div>
+                <div class="favorite-actions">
+                    <a href="#" class="btn-view">View Location</a>
+                    <button class="btn-delete" onclick="unfavoriteLocation('{{ favorite.location.id }}')">Remove</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="empty-state">
+        <p>You haven't favorited any locations yet.</p>
+    </div>
+{% endif %}
+
+<script>
+function unfavoriteLocation(locationId) {
+    if (confirm('Are you sure you want to remove this location from your favorites?')) {
+        fetch(`/api/viewing-locations/${locationId}/unfavorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing favorite');
+        });
+    }
+}
+</script>
+
+{% endblock %}

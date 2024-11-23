@@ -14,21 +14,40 @@ function initNavbar() {
     newHamburger.addEventListener('click', () => {
         navLinks.classList.toggle('active');
         authLinks.classList.toggle('active');
-        console.log('ping');
     });
 
     // Change the nav-item color based on the current URL:
     const links = document.querySelectorAll('.nav-link');
     const currentLocation = location.href;
+
     links.forEach(link => {
-        if (link.href === currentLocation) {
+        // Skip links with href="#"
+        if (link.getAttribute('href') === '#') {
+            return;
+        }
+
+        // Get the base URL without query parameters for both current location and link:
+        const currentBasePath = currentLocation.split('?')[0];
+        const linkBasePath = link.href.split('?')[0];
+
+        // Check if the base paths match:
+        if (currentBasePath === linkBasePath ||
+            (link.href.includes('/account/') && currentLocation.includes('/account/'))) {
             link.classList.add('active');
+        }
+        else {
+            link.classList.remove('active');
         }
     });
 }
 
 // Call initNavbar when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    initNavbar();
+});
+
+// Also call initNavbar when the URL changes without a page reload:
+window.addEventListener('popstate', () => {
     initNavbar();
 });
 

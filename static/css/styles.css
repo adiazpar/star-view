@@ -10,6 +10,7 @@
 
     --negate: #ff2b2b;
     --negate-light: #ff4d4d;
+    --negate-dark: #e01a1a;
 
     --background: black;
     --background-dark: #181818;
@@ -105,78 +106,87 @@ h4 { font-size: var(--font-size-lg); }
     color: var(--text-secondary);
 }
 
-.button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: var(--space-sm) var(--space-lg);
-    background-color: var(--primary);
-    color: var(--text-primary);
-    border: none;
-    border-radius: var(--radius-full);
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform var(--transition-base), background-color var(--transition-base);
-}
-
-.button:hover {
-    background-color: var(--primary-light);
-}
-
-.card {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-lg);
-    box-shadow: var(--shadow-lg);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* ---------- Layout Utilities ---------- */
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 var(--space-md);
-}
-
-.grid {
-    display: grid;
-    gap: var(--space-md);
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-}
-
-/* ---------- Background Utilities ---------- */
-.bg-stars {
-    background-image: url('/static/images/night_sky.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
-
-/* ---------- Animation Utilities ---------- */
-.hover-scale {
-    transition: transform var(--transition-base);
-}
-
-.hover-scale:hover {
-    transform: scale(1.05);
-}
-
-/* ---------- Responsive Design ---------- */
-@media (max-width: 1080px) {
-    :root {
-        --font-size-3xl: 2rem;
-        --font-size-2xl: 1.75rem;
-        --space-xl: 1.5rem;
-    }
-}
-
 /* ---------------------------------------------------------------- */
-/* Account Page Styling */
+/* Base Account Styling */
 .account-page {
-    padding: var(--space-xl) var(--space-md);
+    padding: var(--space-md) var(--space-md);
     background-color: var(--background-dark);
+    min-height: 100vh;
+}
+
+.page-container {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.settings-sidebar {
+    flex: 0 0 200px;
+    background: #000000;
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+    padding: var(--space-md);
+    min-height: 100vh;
+}
+
+.sidebar-section {
+    margin-bottom: var(--space-xl);
+}
+
+.sidebar-section:last-child {
+    margin-bottom: 0;
+}
+
+.sidebar-title {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    margin-bottom: var(--space-md);
+    padding-top: var(--space-sm);
+    padding-left: var(--space-sm);
+    letter-spacing: 0.05em;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 5px;
+    margin: 0;
+}
+
+.sidebar-item {
+    margin-bottom: var(--space-sm);
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    font-size: var(--font-size-sm);
+    gap: var(--space-sm);
+    padding: var(--space-sm);
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+}
+
+.sidebar-link:hover {
+    background: var(--background);
+    color: var(--text-primary);
+}
+
+.sidebar-item.active .sidebar-link {
+    background: var(--primary);
+    color: var(--text-primary);
+}
+
+.sidebar-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.settings-content {
+    flex: 1;
+    min-width: 0;
 }
 
 .account-settings-container {
@@ -185,10 +195,62 @@ h4 { font-size: var(--font-size-lg); }
 
 .settings-panel {
     background-color: var(--surface);
-    border-radius: var(--radius-sm);
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
     padding: var(--space-lg);
+    min-height: 100vh;
 }
 
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .settings-sidebar {
+        flex: 0 0 60px;
+        padding: var(--space-xs);
+    }
+
+    .sidebar-title {
+        opacity: 0;
+        height: 0;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .sidebar-link {
+        justify-content: center;
+        width: 25px;  /* Fixed width for consistent icon placement */
+        padding: var(--space-sm);
+        margin: 0 auto;
+    }
+
+    .sidebar-link span {
+        display: none;  /* Hide text */
+    }
+
+    /* Add tooltips for icon-only view */
+    .sidebar-link {
+        position: relative;
+    }
+
+    .sidebar-link:hover:after {
+        content: attr(data-tooltip);
+        position: absolute;
+        left: 100%;
+        top: 50%;
+        transform: translateY(-50%);
+        background: var(--background);
+        color: var(--text-primary);
+        padding: var(--space-xs) var(--space-sm);
+        border-radius: var(--radius-sm);
+        font-size: var(--font-size-sm);
+        white-space: nowrap;
+        margin-left: var(--space-sm);
+        z-index: 1000;
+    }
+}
+
+
+/* ---------------------------------------------------------------- */
+/* Account Page Styling */
 .account-header {
     margin-bottom: var(--space-xl);
     border-bottom: 1px solid var(--text-tertiary);
@@ -519,7 +581,7 @@ h4 { font-size: var(--font-size-lg); }
     margin-right: 0;
     margin-left: -10px;
 }
-.navbar .logo h2 {
+.navbar .logo h3 {
     margin: 0;
 }
 .hamburger {

@@ -295,13 +295,26 @@ def account(request, pk):
         messages.error(request, 'You can only view your own profile')
         return redirect('account', pk=request.user.pk)
 
+    active_tab = request.GET.get('tab', 'account')
+
     profile, created = UserProfile.objects.get_or_create(user=user)
     favorites = FavoriteLocation.objects.filter(user=pk)
 
-    return render(request, 'stars_app/account.html', {
+    context = {
         'favorites': favorites,
-        'user_profile': profile
-    })
+        'user_profile': profile,
+        'active_tab': active_tab,
+    }
+
+    # Return the appropriate template based on the active tab
+    template_mapping = {
+        'profile': 'stars_app/account_profile.html',
+        'favorites': 'stars_app/account_favorites.html',
+        'notifications': 'stars_app/account_notifications.html',
+        'preferences': 'stars_app/account_preferences.html'
+    }
+
+    return render(request, template_mapping.get(active_tab, 'stars_app/account_profile.html'), context)
 
 @login_required
 @require_POST
@@ -381,6 +394,7 @@ def update_name(request):
         }, status=400)
 
 @login_required
+@require_POST
 def change_email(request):
     try:
         new_email = request.POST.get('new_email')

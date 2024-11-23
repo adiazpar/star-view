@@ -1,0 +1,84 @@
+{% extends "stars_app/base.html" %}
+{% block body_class %}account-page{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+    <!-- Sidebar -->
+    <div class="settings-sidebar">
+        <!-- General Section -->
+        <div class="sidebar-section">
+            <h4 class="sidebar-title">ACCOUNT</h4>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item {% if active_tab == 'profile' or not active_tab %}active{% endif %}">
+                    <a href="{% url 'account' user.pk %}?tab=profile" class="sidebar-link" data-tooltip="Profile">
+                        <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        <span>Profile</span>
+                    </a>
+                </li>
+                <li class="sidebar-item {% if active_tab == 'favorites' %}active{% endif %}">
+                    <a href="{% url 'account' user.pk %}?tab=favorites" class="sidebar-link" data-tooltip="Favorites">
+                        <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        </svg>
+                        <span>Favorite Locations</span>
+                    </a>
+                </li>
+                <li class="sidebar-item {% if active_tab == 'notifications' %}active{% endif %}">
+                    <a href="{% url 'account' user.pk %}?tab=notifications" class="sidebar-link" data-tooltip="Notifications">
+                        <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span>Notifications</span>
+                    </a>
+                </li>
+                <li class="sidebar-item {% if active_tab == 'preferences' %}active{% endif %}">
+                    <a href="{% url 'account' user.pk %}?tab=preferences" class="sidebar-link" data-tooltip="Preferences">
+                        <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                        <span>Preferences</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="settings-content">
+        <div class="account-settings-container">
+            <div class="settings-panel">
+                {% block settings_content %}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Add this to your account_base.html or a separate JS file
+document.addEventListener('DOMContentLoaded', () => {
+    // Get the current tab from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentTab = urlParams.get('tab') || 'profile';  // Default to profile if no tab
+
+    // Add active class to the current tab
+    const sidebarItems = document.querySelectorAll('.sidebar-item');
+    sidebarItems.forEach(item => {
+        const link = item.querySelector('.sidebar-link');
+        const linkTab = new URLSearchParams(link.href.split('?')[1]).get('tab');
+
+        if (linkTab === currentTab) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+});
+</script>
+{% endblock %}
