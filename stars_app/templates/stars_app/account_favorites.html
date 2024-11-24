@@ -8,9 +8,24 @@
 </div>
 
 {% if favorites %}
-    <div class="favorites-grid">
+
+    <div class="search-section">
+        <div class="search-container">
+            <input
+                type="text"
+                id="favorites-search"
+                class="search-input"
+                placeholder="Search your favorite locations..."
+            >
+            <span class="search-icon">
+                <i class="fas fa-search"></i>
+            </span>
+        </div>
+    </div>
+
+    <div class="favorites-grid" id="favorites-grid">
         {% for favorite in favorites %}
-            <div class="favorite-card">
+            <div class="favorite-card" data-search-text="{{ favorite.get_display_name|lower }} {{ favorite.location.latitude }} {{ favorite.location.longitude }}">
                 <div class="favorite-header">
                     <div class="favorite-title">
                         <h4 class="display-name" data-location-id="{{ favorite.location.id }}">
@@ -67,6 +82,10 @@
             </div>
         {% endfor %}
     </div>
+
+    <div class="no-results" style="display: none;">
+        <p>No locations match your search.</p>
+    </div>
 {% else %}
     <div class="empty-state">
         <p>You haven't favorited any locations yet.</p>
@@ -75,6 +94,44 @@
 {% endif %}
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('favorites-search');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            filterFavorites(this.value);
+        });
+    }
+});
+
+function filterFavorites(searchTerm) {
+    const cards = document.querySelectorAll('.favorite-card');
+    const noResults = document.querySelector('.no-results');
+
+    if (!cards.length) return;
+
+    searchTerm = searchTerm.toLowerCase().trim();
+    let hasVisibleCards = false;
+
+    cards.forEach(card => {
+        if (!card) return;  // Skip if card is null
+
+        const searchText = card.getAttribute('data-search-text');
+        if (!searchText) return;  // Skip if no search text
+
+        if (searchText.includes(searchTerm)) {
+            card.style.display = '';  // Use default display value
+            hasVisibleCards = true;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+
+    // Show/hide no results message
+    if (noResults) {
+        noResults.style.display = hasVisibleCards ? 'none' : 'block';
+    }
+}
+
 function toggleNicknameEdit(locationId) {
     const editContainer = document.getElementById(`nickname-edit-${locationId}`);
 
