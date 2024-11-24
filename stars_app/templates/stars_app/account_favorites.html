@@ -4,22 +4,65 @@
 
 <div class="account-header">
     <h3>Favorited Locations</h3>
-    <p class="subtitle">Manage your saved viewing locations.</p>
+    <p class="subtitle">Manage your saved viewing locations and personalize them with nicknames.</p>
 </div>
 
 {% if favorites %}
-    <div class="favorites-list">
+    <div class="favorites-grid">
         {% for favorite in favorites %}
-            <div class="favorite-item">
-                <div class="favorite-info">
-                    <h4>{{ favorite.location.name }}</h4>
-                    <p class="favorite-details">
-                        Quality Score: {{ favorite.location.quality_score }}
-                    </p>
+            <div class="favorite-card">
+                <div class="favorite-header">
+                    <div class="favorite-title">
+                        <h4 class="display-name" data-location-id="{{ favorite.location.id }}">
+                            {{ favorite.get_display_name }}
+                        </h4>
+                        <button class="edit-nickname-btn" onclick="toggleNicknameEdit({{ favorite.location.id }})">
+                            <span class="edit-icon">✎</span>
+                        </button>
+                    </div>
+                    {% if favorite.nickname %}
+                        <div class="original-name" title="{{ favorite.location.name }}">
+                            Originally: {{ favorite.location.name }}
+                        </div>
+                    {% endif %}
+                    <div class="nickname-edit-container" id="nickname-edit-{{ favorite.location.id }}" style="display: none;">
+                        <input type="text"
+                               class="form-input nickname-input"
+                               value="{{ favorite.nickname|default:'' }}"
+                               placeholder="{{ favorite.location.name }}">
+                        <button class="save-nickname-btn" onclick="saveNickname({{ favorite.location.id }})">Save</button>
+                    </div>
                 </div>
+
+                <div class="favorite-content">
+                    <div class="location-info">
+                        <div class="info-item">
+                            <span class="label">Quality Score:</span>
+                            <span class="value">{{ favorite.location.quality_score|floatformat:1 }}/10</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Current Cloud Cover:</span>
+                            <span class="value">{{ favorite.location.cloudCoverPercentage|floatformat:0 }}%</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Coordinates:</span>
+                            <span class="value">{{ favorite.location.latitude|floatformat:4 }}, {{ favorite.location.longitude|floatformat:4 }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">Elevation:</span>
+                            <span class="value">{{ favorite.location.elevation|floatformat:0 }}m</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="favorite-actions">
-                    <a href="#" class="btn-view">View Location</a>
-                    <button class="btn-delete" onclick="unfavoriteLocation('{{ favorite.location.id }}')">Remove</button>
+                     <a href="{% url 'map' %}?lat={{ favorite.location.latitude }}&lng={{ favorite.location.longitude }}&zoom=12"
+                       class="btn-view">
+                        View on Map
+                    </a>
+                    <button class="btn-unfavorite" onclick="unfavoriteLocation({{ favorite.location.id }})">
+                        Remove
+                    </button>
                 </div>
             </div>
         {% endfor %}
@@ -27,28 +70,108 @@
 {% else %}
     <div class="empty-state">
         <p>You haven't favorited any locations yet.</p>
+        <a href="{% url 'map' %}" class="btn-primary">Explore Locations</a>
     </div>
 {% endif %}
 
 <script>
-function unfavoriteLocation(locationId) {
-    if (confirm('Are you sure you want to remove this location from your favorites?')) {
-        fetch(`/api/viewing-locations/${locationId}/unfavorite/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error removing favorite');
-        });
+function toggleNicknameEdit(locationId) {
+    const editContainer = document.getElementById(`nickname-edit-${locationId}`);
+
+    if (editContainer.style.display === 'none') {
+        editContainer.style.display = 'flex';
+        editContainer.querySelector('input').focus();
+    } else {
+        editContainer.style.display = 'none';
     }
+}
+
+function saveNickname(locationId) {
+    const input = document.querySelector(`#nickname-edit-${locationId} input`);
+    const nickname = input.value.trim();
+    const csrftoken = getCookie('csrftoken');
+
+    fetch(`/api/viewing-locations/${locationId}/update-nickname/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+            'Accept': 'applications/json, text/plain, */*'
+        },
+        body: JSON.stringify({ nickname: nickname })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(data => {
+                throw new Error(data.detail || 'An error occurred');
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            const cardHeader = document.querySelector(`#nickname-edit-${locationId}`).closest('.favorite-header');
+            const displayElement = cardHeader.querySelector('.display-name');
+            displayElement.textContent = data.display_name;
+
+            // Handle original name display
+            let originalNameElement = cardHeader.querySelector('.original-name');
+            if (!originalNameElement && nickname) {
+                originalNameElement = document.createElement('div');
+                originalNameElement.className = 'original-name';
+                cardHeader.insertBefore(originalNameElement, cardHeader.querySelector('.nickname-edit-container'));
+            }
+
+            if (originalNameElement) {
+                if (nickname) {
+                    originalNameElement.textContent = `Originally: ${data.original_name}`;
+                    originalNameElement.style.display = 'block';
+                } else {
+                    originalNameElement.style.display = 'none';
+                }
+            }
+
+            toggleNicknameEdit(locationId);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert(error.message);
+    });
+}
+
+function unfavoriteLocation(locationId) {
+    if (!confirm('Are you sure you want to remove this location from your favorites?')) return;
+
+    const apiUrl = `/api/viewing-locations/${locationId}/unfavorite/`;
+
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.reload();
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }
 </script>
 

@@ -149,6 +149,67 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(favorites, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['POST'], url_path='update-nickname', url_name='update-nickname')
+    def update_nickname(self, request, pk=None):
+        try:
+            # Print debug information
+            print("Request headers:", request.headers)
+            print("Request data:", request.data)
+
+            location = self.get_object()
+            favorite = FavoriteLocation.objects.get(
+                user=request.user,
+                location=location
+            )
+
+            if not request.data:
+                return Response(
+                    {'success': False, 'detail': 'No data provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            nickname = request.data.get('nickname', '').strip()
+            favorite.nickname = nickname if nickname else None
+            favorite.save()
+
+            return Response({
+                'success': True,
+                'display_name': favorite.get_display_name(),
+                'original_name': location.name,
+                'defail': 'Nickname updated successfully'
+            }, content_type='application/json')
+
+        except Exception as e:
+            print("Error:", str(e))  # Debug print
+            return Response(
+                {'success': False, 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content_type='application/json'
+            )
+
+
+@login_required
+@require_POST
+def update_viewing_nickname(request, favorite_id):
+    try:
+        favorite = FavoriteLocation.objects.get(id=favorite_id, user=request.user)
+        nickname = request.POST.get('nickname')
+
+        favorite.nickname = nickname
+        favorite.save()
+
+    except FavoriteLocation.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Favorite location not found'
+        }, status=404)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
 
 # ---------------------------------------------------------------- #
 # Update All Forecasts Button on Upload Page

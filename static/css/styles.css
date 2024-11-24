@@ -551,6 +551,200 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 /* ---------------------------------------------------------------- */
+/* Favorites Page Styling */
+.favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-lg);
+}
+
+/* Favorite Card Styling */
+.favorite-card {
+    background: var(--background-dark);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--text-tertiary);
+    padding: var(--space-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+/* Original Name Styling */
+.original-name {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    margin-top: var(--space-xs);
+    font-style: italic;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Favorite Card Header */
+.favorite-header {
+    border-bottom: 1px solid var(--text-tertiary);
+    padding-bottom: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.favorite-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.favorite-title h4 {
+    margin: 0;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 40px);
+}
+
+.edit-nickname-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    transition: color var(--transition-base);
+}
+
+.edit-nickname-btn:hover {
+    color: var(--primary);
+}
+
+/* Nickname Edit Container */
+.nickname-edit-container {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.nickname-input {
+    width: 100%;
+    max-width: calc(100% - 70px); /* Leave space for save button */
+}
+
+.save-nickname-btn {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
+    border: 1px solid var(--text-primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+    transition: background-color var(--transition-base);
+}
+
+.save-nickname-btn:hover {
+    background-color: var(--primary-light);
+}
+
+/* Location Information */
+.location-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.info-item .label {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+}
+
+.info-item .value {
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+}
+
+/* Favorite Actions */
+.favorite-actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: auto;
+}
+
+.btn-view {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
+    border: 1px solid var(--text-primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    text-decoration: none;
+    text-align: center;
+    transition: background-color var(--transition-base);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+}
+
+.btn-view:hover {
+    background-color: var(--primary-light);
+}
+
+.btn-unfavorite {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--negate);
+    border: 1px solid var(--text-primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background-color var(--transition-base);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+}
+
+.btn-unfavorite:hover {
+    background-color: var(--negate-light);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--space-xl);
+    color: var(--text-secondary);
+}
+
+.empty-state .btn-primary {
+    display: inline-block;
+    margin-top: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--text-primary);
+    background-color: var(--primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: background-color var(--transition-base);
+    cursor: pointer;
+    text-align: center;
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+}
+
+.empty-state .btn-primary:hover {
+    background-color: var(--primary-light);
+}
+
+
+
+
+/* ---------------------------------------------------------------- */
 /* Navigation Bar Styling */
 .navbar {
     position: fixed;
