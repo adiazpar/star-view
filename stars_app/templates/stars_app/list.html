@@ -2,34 +2,83 @@
 {% block body_class %}list-page{% endblock %}
 
 {% block content %}
-    <div class="list-container">
-        <div class="list-header">
-            <p>CURRENT CELESTIAL EVENTS</p>
+    <div class="events-container">
+        <div class="events-header">
+            <h3>Celestial Events</h3>
+            <p class="subtitle">Discover upcoming astronomical events in your area</p>
         </div>
 
-        <div>
-            <ul class="list-grid">
+        {% if events %}
+            <div class="events-grid">
                 {% for event in events %}
-                    <li class="grid-item">
-                        {% if event.event_type == "COMET" %}
-                            <img src='/static/images/comet-pic.jpg' class="list-icon" width="100" height="100"></img>
-                        {% elif event.event_type == "ECLIPSE" %}
-                            <img src='/static/images/eclipse_icon.jpg' class="list-icon" width="100" height="100"></img>
-                        {% elif event.event_type == "METEOR" %}
-                            <img src='/static/images/meteor-icon.jpg' class="list-icon" width="100" height="100"></img>
-                        {% elif event.event_type == "PLANET" %}
-                            <img src='/static/images/planet-icon.jpg' class="list-icon" width="100" height="100"></img>
-                        {% elif event.event_type == "AURORA" %}
-                            <img src='/static/images/aurora-icon.jpg' class="list-icon" width="100" height="100"></img>
-                        {% endif %}
-                        <h5 >Name: {{ event.name }}</h5>
-                        <p >Type: {{ event.event_type }}</p>
-                        <div class="list-button">
-                            <a class="button" href="{% url 'details' event.id %}" class="btn btn-primary ">Learn More!</a>
+                    <div class="event-card" data-event-type="{{ event.event_type }}">
+                        <div class="event-banner">
+                            {% if event.event_type == "COMET" %}
+                                <img src="/static/images/comet-banner.jpg" alt="Comet event banner">
+                            {% elif event.event_type == "ECLIPSE" %}
+                                <img src="/static/images/eclipse-banner.jpg" alt="Eclipse event banner">
+                            {% elif event.event_type == "METEOR" %}
+                                <img src="/static/images/meteor-banner.jpg" alt="Meteor shower event banner">
+                            {% elif event.event_type == "PLANET" %}
+                                <img src="/static/images/planet-banner.jpg" alt="Planetary event banner">
+                            {% elif event.event_type == "AURORA" %}
+                                <img src="/static/images/aurora-banner.jpg" alt="Aurora event banner">
+                            {% else %}
+                                <img src="/static/images/default-banner.jpg" alt="Celestial event banner">
+                            {% endif %}
+
+                            <div class="event-header">
+                                <div class="event-icon">
+                                    {% if event.event_type == "COMET" %}
+                                        <i class="fas fa-star"></i>
+                                    {% elif event.event_type == "ECLIPSE" %}
+                                        <i class="fas fa-moon"></i>
+                                    {% elif event.event_type == "METEOR" %}
+                                        <i class="fas fa-meteor"></i>
+                                    {% elif event.event_type == "PLANET" %}
+                                        <i class="fas fa-globe"></i>
+                                    {% elif event.event_type == "AURORA" %}
+                                        <i class="fas fa-sparkles"></i>
+                                    {% else %}
+                                        <i class="fas fa-star-shooting"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="event-type">{{ event.event_type }}</div>
+                            </div>
                         </div>
-                    </li>
+
+                        <div class="event-content">
+                            <h4>{{ event.name }}</h4>
+
+                            <div class="event-info">
+                                <div class="info-item">
+                                    <span class="label">Start Time:</span>
+                                    <span class="value">{{ event.start_time|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">End Time:</span>
+                                    <span class="value">{{ event.end_time|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="label">Viewing Radius:</span>
+                                    <span class="value">{{ event.viewing_radius }}km</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="event-actions">
+                            <a href="{% url 'details' event.id %}" class="btn-view">View Details</a>
+                            <a href="{% url 'map' %}?lat={{ event.latitude }}&lng={{ event.longitude }}&zoom=12"
+                               class="btn-map">View on Map</a>
+                        </div>
+                    </div>
                 {% endfor %}
-            </ul>
-        </div>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <p>No celestial events are currently scheduled.</p>
+                <a href="{% url 'map' %}" class="btn-primary">Explore Map</a>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

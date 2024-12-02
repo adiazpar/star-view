@@ -113,7 +113,6 @@ class ViewingLocationViewSetTest(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['name'], 'Mountain Peak')
 
-
 class CelestialEventViewSetTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="password")
