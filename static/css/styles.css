@@ -1006,7 +1006,7 @@ h4 { font-size: var(--font-size-lg); }
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: var(--space-sm);
+    padding: var(--space-xl);
     background-color: var(--background-dark);
     min-height: 100vh;
 }
@@ -1017,6 +1017,7 @@ h4 { font-size: var(--font-size-lg); }
     width: 100%;
     max-width: 300px;
     box-shadow: var(--shadow-lg);
+
 }
 .login-form {
     width: 100%;
@@ -1103,70 +1104,52 @@ h4 { font-size: var(--font-size-lg); }
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 0;
-    margin-top: 30px;
-    height: 100vh;
-
-    background-image: url('/static/images/login_bkg.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    padding: var(--space-xl);
+    min-height: 100vh;
+    background-color: var(--background-dark);
 }
 .register-container {
-    background-color: white;
-    border-radius: 10px;
-    padding: 40px;
-    box-shadow: 0 0 20px rgba(0,0,0,1);
-    width: 300px;
-}
-.register-container .register-form h2 {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.register-container .register-form .form-group {
-    margin-bottom: 20px;
-}
-.register-container .register-form label {
-    display: block;
-    margin-bottom: 5px;
-    color: #666;
-}
-.register-container .register-form input[type='text'],
-.register-container .register-form input[type='email'],
-.register-container .register-form input[type='password'] {
-    width: 92%;
-    padding: 10px;
-    border: 1px solid lightgray;
-    border-radius: 5px;
-}
-.register-button {
+    background-color: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xl);
     width: 100%;
-    padding: 10px;
-    background-color: #2b7aff;
-    border: none;
-    border-radius: 20px;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
+    max-width: 300px;
+    box-shadow: var(--shadow-lg);
 }
-.register-button:hover {
-    transform: scale(1.05);
-    transition: transform 0.2s ease-in-out;
+.register-form {
+    width: 100%;
 }
-.register-button:not(:hover) {
-    transform: scale(1);
-    transition: transform 0.2s ease-in-out;
-}
-.signin-link {
-    color: #666;
+.register-form h3 {
     text-align: center;
-    margin-top: 30px;
+    margin-bottom: var(--space-xl);
+    color: var(--text-primary);
+}
+
+.name-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+.signin-link {
+    border-top: 1px solid var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-top: var(--space-xl);
+    padding-top: var(--space-lg);
 }
 .signin-link a {
-    color: black;
+    color: var(--text-primary);
     text-decoration: none;
     font-weight: bold;
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid var(--text-primary);
+    transition: opacity var(--transition-base);
+}
+
+.signin-link a:hover {
+    opacity: 0.8;
 }
 
 /* ---------------------------------------------------------------- */
