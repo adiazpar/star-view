@@ -39,13 +39,13 @@
             </ul>
 
             <div class="hamburger-auth-group">
-                <ul class="auth-links" id="auth-links">
+                <div class="auth-links" id="auth-links">
                     {% if user.is_authenticated %}
-                        <li><a class="auth-link" href="{% url 'logout' %}">LOGOUT</a></li>
+                        <a href="{% url 'logout' %}" class="save-button">LOGOUT</a>
                     {% else %}
-                        <li><a class="auth-link" href="{% url 'login' %}">LOGIN</a></li>
+                        <a href="{% url 'login' %}" class="save-button">LOGIN</a>
                     {% endif %}
-                </ul>
+                </div>
 
                 <button class="hamburger" id="hamburger">
                     &#9776;

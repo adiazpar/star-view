@@ -94,10 +94,6 @@ h3 { font-size: var(--font-size-xl); }
 h4 { font-size: var(--font-size-lg); }
 
 /* ---------- Components ---------- */
-.content {
-    margin-top: 60px;
-}
-
 .footer {
     bottom: 0;
     width: 100%;
@@ -725,26 +721,6 @@ h4 { font-size: var(--font-size-lg); }
     margin-top: auto;
 }
 
-.btn-view,
-.btn-map {
-    flex: 1;
-    padding: var(--space-sm) var(--space-md);
-    background-color: var(--primary);
-    border: 1px solid var(--text-primary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    text-decoration: none;
-    text-align: center;
-    transition: background-color var(--transition-base);
-    font-size: var(--font-size-sm);
-    font-weight: normal;
-}
-
-.btn-view:hover,
-.btn-map:hover {
-    background-color: var(--primary-light);
-}
-
 .btn-unfavorite {
     padding: var(--space-sm) var(--space-md);
     background-color: var(--negate);
@@ -796,7 +772,7 @@ h4 { font-size: var(--font-size-lg); }
 /* ---------------------------------------------------------------- */
 /* Navigation Bar Styling */
 .navbar {
-    position: fixed;
+    position: sticky;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -834,7 +810,6 @@ h4 { font-size: var(--font-size-lg); }
     background: none;
     border: none;
     cursor: pointer;
-    transition: color 0.3s;
     margin-right: 10px;
 }
 .nav-container {
@@ -857,28 +832,17 @@ h4 { font-size: var(--font-size-lg); }
 .nav-links li a:hover {
     color: var(--text-primary);
 }
-.auth-links li {
+.auth-links a {
     margin-right: 2rem;
-    background-color: var(--primary);
-    padding: 0.5rem 2rem;
-    border-radius: 20px;
+    padding: 0.35rem 1.7rem;
+    border-radius: var(--radius-md);
+    font-weight: bold;
+
     text-decoration: none;
-}
-.auth-links li a {
-    color: var(--text-primary);
-    text-decoration: none;
-}
-.navbar ul li a.active {
-    color: var(--primary-light);
 }
 
-.auth-links li:hover {
-    transform: scale(1.05);
-    transition: transform 0.2s ease-in-out;
-}
-.auth-links li:not(:hover) {
-    transform: scale(1);
-    transition: transform 0.2s ease-in-out;
+.navbar ul li a.active {
+    color: var(--primary-light);
 }
 
 /* Navigation Bar Shrunk Styling */
@@ -890,14 +854,10 @@ h4 { font-size: var(--font-size-lg); }
     }
     .hamburger {
         display: flex;
+        transition: opacity var(--transition-base);
     }
     .hamburger:hover {
-        transform: scale(1.1);
-        transition: transform 0.2s ease-in-out;
-    }
-    .hamburger:not(:hover) {
-        transform: scale(1);
-        transition: transform 0.2s ease-in-out;
+        opacity: 0.8;
     }
 
     .nav-links {
@@ -910,13 +870,6 @@ h4 { font-size: var(--font-size-lg); }
         width: 100%;
 
         background-color: black;
-        box-shadow: 0 0 20px rgba(0,0,0,1);
-    }
-    .auth-links {
-        text-decoration: none;
-    }
-    .auth-links li {
-        padding: 0.5rem 1rem;
     }
     .nav-links li {
         text-align: left;
@@ -1017,6 +970,7 @@ h4 { font-size: var(--font-size-lg); }
     width: 100%;
     max-width: 300px;
     box-shadow: var(--shadow-lg);
+    min-height: 650px;
 
 }
 .login-form {
@@ -1115,6 +1069,7 @@ h4 { font-size: var(--font-size-lg); }
     width: 100%;
     max-width: 300px;
     box-shadow: var(--shadow-lg);
+    min-height: 650px;
 }
 .register-form {
     width: 100%;
@@ -1158,7 +1113,6 @@ h4 { font-size: var(--font-size-lg); }
     padding: var(--space-md);
     background-color: var(--surface);
     min-height: 100vh;
-    margin-top: 60px;
 }
 
 .events-container {

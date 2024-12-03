@@ -67,9 +67,9 @@
                         </div>
 
                         <div class="event-actions">
-                            <a href="{% url 'details' event.id %}" class="btn-view">View Details</a>
-                            <a href="{% url 'map' %}?lat={{ event.latitude }}&lng={{ event.longitude }}&zoom=12"
-                               class="btn-map">View on Map</a>
+                            <button href="{% url 'details' event.id %}" class="save-button">View Details</button>
+                            <button href="{% url 'map' %}?lat={{ event.latitude }}&lng={{ event.longitude }}&zoom=12"
+                               class="save-button">View on Map</button>
                         </div>
                     </div>
                 {% endfor %}
