@@ -984,7 +984,6 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 .forgot-password {
-    visibility: hidden;
     text-align: right;
     margin: var(--space-sm) 0 var(--space-lg);
 }
