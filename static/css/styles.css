@@ -45,8 +45,8 @@
     --space-xl: 2.00rem;
 
     /* Effects */
-    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
-    --shadow-md: 0 4px 6px rgba(0,0,0,0.1);
+    --shadow-sm: 0 0px 10px rgba(0,0,0,0.1);
+    --shadow-md: 0 0px 15px rgba(0,0,0,0.1);
     --shadow-lg: 0 0px 20px rgba(0,0,0,1);
     --text-shadow: 0 2px 4px rgba(0,0,0,0.5);
 
@@ -111,6 +111,38 @@ h4 { font-size: var(--font-size-lg); }
 .footer p {
     margin-left: 20px;
     color: var(--text-secondary);
+}
+
+/* Buttons */
+.save-button {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
+    border: 1px solid var(--background);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+}
+
+.save-button:hover {
+    background-color: var(--primary-light);
+}
+
+.delete-button {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--negate);
+    border: 1px solid var(--background);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+}
+.delete-button:hover {
+    background-color: var(--negate-light);
 }
 
 /* ---------------------------------------------------------------- */
@@ -313,37 +345,6 @@ h4 { font-size: var(--font-size-lg); }
     gap: 0.75rem;
 }
 
-/* Buttons */
-.btn-upload {
-    padding: var(--space-sm) var(--space-md);
-    background-color: var(--primary);
-    border: 1px solid var(--text-primary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-    font-weight: normal;
-    cursor: pointer;
-    transition: background-color var(--transition-base);
-}
-.btn-upload:hover {
-    background-color: var(--primary-light);
-}
-
-.btn-delete {
-    padding: var(--space-sm) var(--space-md);
-    background-color: var(--negate);
-    border: 1px solid var(--text-primary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-    font-weight: normal;
-    cursor: pointer;
-    transition: background-color var(--transition-base);
-}
-.btn-delete:hover {
-    background-color: var(--negate-light);
-}
-
 /* Form Sections */
 .form-section {
     max-width: 100%;
@@ -438,7 +439,7 @@ h4 { font-size: var(--font-size-lg); }
     padding: var(--space-sm) var(--space-sm);
     border: 1px solid var(--text-tertiary);
     border-radius: var(--radius-sm);
-    background: var(--surface);
+    background: var(--background-dark);
     font-size: var(--font-size-sm);
     color: var(--text-primary);
 }
@@ -452,22 +453,6 @@ h4 { font-size: var(--font-size-lg); }
     margin-top: var(--space-sm);
     display: flex;
     justify-content: flex-end;
-}
-
-.save-button {
-    padding: var(--space-sm) var(--space-md);
-    background-color: var(--primary);
-    border: 1px solid var(--text-primary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-    font-weight: normal;
-    cursor: pointer;
-    transition: background-color var(--transition-base);
-}
-
-.save-button:hover {
-    background-color: var(--primary-light);
 }
 
 .messages {
@@ -1021,74 +1006,51 @@ h4 { font-size: var(--font-size-lg); }
     display: flex;
     justify-content: center;
     align-items: center;
-    margin: 0;
-    margin-top: 30px;
-    height: 100vh;
-
-    background-image: url('/static/images/login_bkg.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
+    padding: var(--space-sm);
+    background-color: var(--background-dark);
+    min-height: 100vh;
 }
 .login-container {
-    background-color: white;
-    border-radius: 10px;
-    padding: 40px;
-    box-shadow: 0 0 20px rgba(0,0,0,1);
-    width: 300px;
+    background-color: var(--surface);
+    border-radius: var(--radius-sm);
+    padding: var(--space-xl);
+    width: 100%;
+    max-width: 300px;
+    box-shadow: var(--shadow-lg);
 }
-.login-container .login-form h2 {
-    text-align: center;
-    margin-bottom: 30px;
-}
-.login-container .login-form .form-group {
-    margin-bottom: 20px;
-}
-.login-container .login-form label {
-    display: block;
-    margin-bottom: 5px;
-    color: #666;
+.login-form {
+    width: 100%;
 }
 
-.login-container .login-form input[type='text'],
-.login-container .login-form input[type='password'] {
-    width: 92%;
-    padding: 10px;
-    border: 1px solid lightgray;
-    border-radius: 5px;
+.login-form h3 {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    color: var(--text-primary);
 }
+
 .forgot-password {
+    visibility: hidden;
     text-align: right;
-    margin-bottom: 20px;
+    margin: var(--space-sm) 0 var(--space-lg);
 }
 .forgot-password a {
-    color: #666;
+    color: var(--text-secondary);
     text-decoration: none;
-    font-size: 0.9em;
+    font-size: var(--font-size-sm);
+    transition: color var(--transition-base);
 }
-.login-button {
-    width: 100%;
-    padding: 10px;
-    background-color: #2b7aff;
-    border: none;
-    border-radius: 20px;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
+.forgot-password a:hover {
+    color: var(--text-primary);
 }
-.login-button:hover {
-    transform: scale(1.05);
-    transition: transform 0.2s ease-in-out;
-}
-.login-button:not(:hover) {
-    transform: scale(1);
-    transition: transform 0.2s ease-in-out;
-}
+
 .social-login {
-    visibility: hidden; /* Un-hide when this has been implemented */
-    color: #666;
+    visibility: hidden;
+    border-top: 1px solid var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
     text-align: center;
-    margin-top: 30px;
+    margin-top: var(--space-xl);
+    font-weight: normal;
 }
 .social-icons {
     display: flex;
@@ -1099,35 +1061,39 @@ h4 { font-size: var(--font-size-lg); }
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 40px;
-    height: 40px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     margin: 0 5px;
     color: white;
     text-decoration: none;
+    transition: transform var(--transition-base);
 }
 .social-icons a:hover {
     transform: scale(1.05);
-    transition: transform 0.2s ease-in-out;
 }
-.social-icons a:not(:hover) {
-    transform: scale(1);
-    transition: transform 0.2s ease-in-out;
-}
+
 .google { background-color: #db4437; }
 .apple { background-color: #000000; }
-.instagram { background-color: #ea43b7; }
+.facebook { background-color: #316FF6; }
 
 .signup-link {
-    color: #666;
+    border-top: 1px solid var(--text-tertiary);
+    font-size: var(--font-size-sm);
+    font-weight: normal;
+    color: var(--text-secondary);
     text-align: center;
-    margin-top: 30px;
+    margin-top: var(--space-xl);
 }
 .signup-link a {
-    color: black;
+    color: var(--text-primary);
     text-decoration: none;
     font-weight: bold;
-    border-bottom: 2px solid black;
+    border-bottom: 2px solid var(--text-primary);
+    transition: opacity var(--transition-base);
+}
+.signup-link a:hover {
+    opacity: 0.8;
 }
 
 
@@ -1357,7 +1323,6 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 .event-actions {
-    border-top: 1px solid var(--text-tertiary);
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-sm);
