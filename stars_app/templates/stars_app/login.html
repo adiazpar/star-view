@@ -18,8 +18,9 @@
         </div>
         {% endif %}
 
-        <form method="POST">
+        <form method="POST" action="{% url 'login' %}">
             {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next|default:'' }}">
 
             <div class="input-group">
                 <label for="username">Username</label>

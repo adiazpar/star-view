@@ -347,7 +347,7 @@ def details(request, event_id):
     }
     return render(request, 'stars_app/details.html', current_data)
 
-@login_required(login_url='/login/')
+@login_required(login_url='login')
 def account(request, pk):
     user = User.objects.get(pk=pk)
 
@@ -601,6 +601,7 @@ def custom_login(request):
         try:
             username = request.POST.get('username')
             password = request.POST.get('password')
+            next_url = request.POST.get('next', '')
 
             # We are getting the user model from an imported library in models.py:
             user = User.objects.filter(username=username.lower())
@@ -614,7 +615,11 @@ def custom_login(request):
             user = authenticate(request, username=username.lower(), password=password)
             if user is not None:
                 login(request, user)
-                return redirect('home')     # Low-key I hate this shit can we redirect it to user's previous page?
+
+                if next_url and next_url.strip() and not next_url.startswith('/login/'):
+                    return redirect(next_url)
+
+                return redirect('home')
 
             # If user couldn't authenticate above, display wrong password message:
             print('Wrong password...')
@@ -626,9 +631,14 @@ def custom_login(request):
             return redirect('home')
 
     # If we didn't call a post method, direct user to login page:
-    return render(request, 'stars_app/login.html')
+    next_url = request.GET.get('next', '')
 
-@login_required(login_url='/login/')
+    if next_url.startswith('/login/'):
+        next_url = ''
+
+    return render(request, 'stars_app/login.html', {'next': next_url})
+
+@login_required(login_url='login')
 def custom_logout(request):
     logout(request)
     return redirect('home')
