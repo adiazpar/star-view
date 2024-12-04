@@ -187,7 +187,6 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 content_type='application/json'
             )
 
-
 @login_required
 @require_POST
 def update_viewing_nickname(request, favorite_id):
@@ -642,3 +641,29 @@ def custom_login(request):
 def custom_logout(request):
     logout(request)
     return redirect('home')
+
+
+# ---------------------------------------------------------------- #
+# Password Reset Views:
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView,
+)
+from django.urls import reverse_lazy
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'stars_app/password_reset.html'
+    email_template_name = 'stars_app/password_reset_email.html'
+    success_url = reverse_lazy('password_reset_done')
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'stars_app/password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'stars_app/password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'stars_app/password_reset_complete.html'

@@ -5,6 +5,13 @@ from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 
+from .views import (
+    CustomPasswordResetView,
+    CustomPasswordResetDoneView,
+    CustomPasswordResetConfirmView,
+    CustomPasswordResetCompleteView
+)
+
 router = DefaultRouter()
 router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
 router.register(r'celestial-events', views.CelestialEventViewSet, basename='celestial-events')
@@ -19,6 +26,20 @@ urlpatterns = [
     path('update-name/', views.update_name, name='update_name'),
     path('change-email/', views.change_email, name='change_email'),
     path('change-password/', views.change_password, name='change_password'),
+
+    # Password Change Views:
+    path('password-reset/',
+         CustomPasswordResetView.as_view(),
+         name='password_reset'),
+    path('password-reset/done/',
+         CustomPasswordResetDoneView.as_view(),
+         name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/',
+         CustomPasswordResetConfirmView.as_view(),
+         name='password_reset_confirm'),
+    path('password-reset-complete/',
+         CustomPasswordResetCompleteView.as_view(),
+         name='password_reset_complete'),
 
     # Navigation:
     path('', views.home, name='home'),

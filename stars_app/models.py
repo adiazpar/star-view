@@ -1,9 +1,10 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.utils import timezone
+from datetime import timezone
 import requests
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 # User profile packages:
 from django.db.models.signals import post_save
@@ -36,6 +37,7 @@ class ViewingLocation(models.Model):
 
 	added_by = models.ForeignKey(User, on_delete=models.CASCADE)
 	created_at = models.DateTimeField(auto_now_add=True)
+
 	def getForecast(self, hours=10): #gets the forcasted cloud cover with 10 or the maximum the api will supply XXX will only work for the US
 		base_url = "https://graphical.weather.gov/xml/sample_products/browser_interface/ndfdXMLclient.php"
 		start_time = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
@@ -75,7 +77,7 @@ class ViewingLocation(models.Model):
 			self.forecast.save()
 		if self.cloudCoverPercentage == -1: #if it is outside the US / NDF grid
 			return
-		currentTime = timezone.make_aware(datetime.now())
+		currentTime = datetime.now().replace(tzinfo=ZoneInfo("America/Denver"))
 		beginTime = self.forecast.createTime
 		dateDelta = currentTime - beginTime
 		days, seconds = dateDelta.days, dateDelta.seconds

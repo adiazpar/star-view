@@ -72,10 +72,10 @@
 
                 <div class="favorite-actions">
                      <a href="{% url 'map' %}?lat={{ favorite.location.latitude }}&lng={{ favorite.location.longitude }}&zoom=12"
-                       class="btn-view">
+                       class="save-button">
                         View on Map
                     </a>
-                    <button class="btn-unfavorite" onclick="unfavoriteLocation({{ favorite.location.id }})">
+                    <button class="delete-button" onclick="unfavoriteLocation({{ favorite.location.id }})">
                         Remove
                     </button>
                 </div>
@@ -89,7 +89,7 @@
 {% else %}
     <div class="empty-state">
         <p>You haven't favorited any locations yet.</p>
-        <a href="{% url 'map' %}" class="btn-primary">Explore Locations</a>
+        <a href="{% url 'map' %}" class="save-button">Explore Locations</a>
     </div>
 {% endif %}
 

@@ -118,6 +118,7 @@ h4 { font-size: var(--font-size-lg); }
     color: var(--text-primary);
     font-size: var(--font-size-sm);
     font-weight: normal;
+    text-decoration: none;
     cursor: pointer;
     transition: background-color var(--transition-base);
 }
@@ -721,54 +722,6 @@ h4 { font-size: var(--font-size-lg); }
     margin-top: auto;
 }
 
-.btn-unfavorite {
-    padding: var(--space-sm) var(--space-md);
-    background-color: var(--negate);
-    border: 1px solid var(--text-primary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    cursor: pointer;
-    text-decoration: none;
-    text-align: center;
-    transition: background-color var(--transition-base);
-    font-size: var(--font-size-sm);
-    font-weight: normal;
-}
-
-.btn-unfavorite:hover {
-    background-color: var(--negate-light);
-}
-
-/* Empty State */
-.empty-state {
-    text-align: center;
-    padding: var(--space-xl);
-    color: var(--text-secondary);
-}
-
-.empty-state .btn-primary {
-    display: inline-block;
-    margin-top: var(--space-md);
-    padding: var(--space-sm) var(--space-md);
-    border: 1px solid var(--text-primary);
-    background-color: var(--primary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    text-decoration: none;
-    transition: background-color var(--transition-base);
-    cursor: pointer;
-    text-align: center;
-    font-size: var(--font-size-sm);
-    font-weight: normal;
-}
-
-.empty-state .btn-primary:hover {
-    background-color: var(--primary-light);
-}
-
-
-
-
 /* ---------------------------------------------------------------- */
 /* Navigation Bar Styling */
 .navbar {
@@ -982,6 +935,38 @@ h4 { font-size: var(--font-size-lg); }
     margin-bottom: var(--space-xl);
     color: var(--text-primary);
 }
+.login-form .extra-desc {
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.success-icon {
+    display: flex;
+    justify-content: center;
+    margin: var(--space-xl) 0;
+}
+
+.success-icon svg {
+    width: 64px;
+    height: 64px;
+    animation: checkmarkAppear 0.5s ease-out forwards;
+}
+
+@keyframes checkmarkAppear {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
 
 .forgot-password {
     text-align: right;
@@ -1092,7 +1077,6 @@ h4 { font-size: var(--font-size-lg); }
     color: var(--text-secondary);
     text-align: center;
     margin-top: var(--space-xl);
-    padding-top: var(--space-lg);
 }
 .signin-link a {
     color: var(--text-primary);
@@ -1268,27 +1252,24 @@ h4 { font-size: var(--font-size-lg); }
 
 /* Empty State */
 .empty-state {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px;  /* Give it some minimum height */
     text-align: center;
     padding: var(--space-xl);
     color: var(--text-secondary);
     background: var(--surface);
-    border-radius: var(--radius-md);
-    margin: var(--space-lg) 0;
-}
-
-.empty-state .btn-primary {
-    display: inline-block;
-    margin-top: var(--space-md);
-    padding: var(--space-sm) var(--space-lg);
-    background-color: var(--primary);
     border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    text-decoration: none;
-    transition: background-color var(--transition-base);
-}
+    gap: var(--space-md);  /* Add space between elements */
 
-.empty-state .btn-primary:hover {
-    background-color: var(--primary-light);
+}
+.empty-state p {
+    text-align: center;
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
 }
 
 /* Responsive adjustments */
