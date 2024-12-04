@@ -1,17 +1,14 @@
 from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
 
 # Importing other things from project files:
-from .models import User, FavoriteLocation
-from stars_app.models import ViewingLocation, CelestialEvent
-from stars_app.utils import LightPollutionCalculator
-from .forms import ChangePasswordForm
+from stars_app.models import *
+from stars_app.utils import LightPollutionCalculator, is_valid_email
 
 # Authentication libraries:
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
-from django.contrib.auth.views import PasswordChangeView
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 # To display error/success messages:
 from django.contrib import messages
@@ -21,7 +18,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from stars_app.serializers import ViewingLocationSerializer, CelestialEventSerializer
+from stars_app.serializers import *
 
 # Tile libraries:
 import os
@@ -46,7 +43,6 @@ class CelestialEventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Set elevation to 0 if not provided
         serializer.save(elevation=serializer.validated_data.get('elevation', 0))
-
 
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
@@ -153,6 +149,67 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(favorites, many=True)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['POST'], url_path='update-nickname', url_name='update-nickname')
+    def update_nickname(self, request, pk=None):
+        try:
+            # Print debug information
+            print("Request headers:", request.headers)
+            print("Request data:", request.data)
+
+            location = self.get_object()
+            favorite = FavoriteLocation.objects.get(
+                user=request.user,
+                location=location
+            )
+
+            if not request.data:
+                return Response(
+                    {'success': False, 'detail': 'No data provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            nickname = request.data.get('nickname', '').strip()
+            favorite.nickname = nickname if nickname else None
+            favorite.save()
+
+            return Response({
+                'success': True,
+                'display_name': favorite.get_display_name(),
+                'original_name': location.name,
+                'defail': 'Nickname updated successfully'
+            }, content_type='application/json')
+
+        except Exception as e:
+            print("Error:", str(e))  # Debug print
+            return Response(
+                {'success': False, 'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content_type='application/json'
+            )
+
+@login_required
+@require_POST
+def update_viewing_nickname(request, favorite_id):
+    try:
+        favorite = FavoriteLocation.objects.get(id=favorite_id, user=request.user)
+        nickname = request.POST.get('nickname')
+
+        favorite.nickname = nickname
+        favorite.save()
+
+    except FavoriteLocation.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'message': 'Favorite location not found'
+        }, status=404)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': str(e)
+        }, status=400)
+
+
 # ---------------------------------------------------------------- #
 # Update All Forecasts Button on Upload Page
 @staff_member_required
@@ -163,6 +220,7 @@ def update_forecast(request):
         loc.updateForecast()
 
     return render(request, 'stars_app/upload_tif.html')
+
 
 # ---------------------------------------------------------------- #
 # Tile Views:
@@ -236,7 +294,6 @@ def upload_and_process_tif(request):
 
     return render(request, 'stars_app/upload_tif.html')
 
-
 @cache_control(max_age=86400)
 def serve_tile(request, z, x, y):
     # Mapbox uses XYZ coordinates, whereas GDAL uses TMZ coordinates.
@@ -289,15 +346,195 @@ def details(request, event_id):
     }
     return render(request, 'stars_app/details.html', current_data)
 
-@login_required(login_url='/login/')
+@login_required(login_url='login')
 def account(request, pk):
-    favorites = FavoriteLocation.objects.filter(user=pk)
-    return render(request, 'stars_app/account.html', {'favorites':favorites})
+    user = User.objects.get(pk=pk)
 
-class ChangePasswordView(PasswordChangeView):
-    form_class = PasswordChangeForm
-    success_url = reverse_lazy('home')
-    template_name = 'stars_app/change_password.html'
+    # Ensure the logged-in user can only view their own profile
+    if request.user.pk != pk:
+        messages.error(request, 'You can only view your own profile')
+        return redirect('account', pk=request.user.pk)
+
+    active_tab = request.GET.get('tab', 'account')
+
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    favorites = FavoriteLocation.objects.filter(user=pk)
+
+    context = {
+        'favorites': favorites,
+        'user_profile': profile,
+        'active_tab': active_tab,
+    }
+
+    # Return the appropriate template based on the active tab
+    template_mapping = {
+        'profile': 'stars_app/account_profile.html',
+        'favorites': 'stars_app/account_favorites.html',
+        'notifications': 'stars_app/account_notifications.html',
+        'preferences': 'stars_app/account_preferences.html'
+    }
+
+    return render(request, template_mapping.get(active_tab, 'stars_app/account_profile.html'), context)
+
+@login_required
+@require_POST
+def upload_profile_picture(request):
+    try:
+        if 'profile_picture' not in request.FILES:
+            return JsonResponse({'error': 'No image file provided'}, status=400)
+
+        profile_picture = request.FILES['profile_picture']
+        user_profile = request.user.userprofile
+
+        # Delete old profile picture if it exists and isn't the default
+        if user_profile.profile_picture and 'defaults/' not in user_profile.profile_picture.name:
+            if os.path.isfile(user_profile.profile_picture.path):
+                os.remove(user_profile.profile_picture.path)
+
+        # Save the file using default storage
+        user_profile.profile_picture = profile_picture
+        user_profile.save()
+
+        # Return the complete URL
+        return JsonResponse({
+            'success': True,
+            'message': 'Profile picture updated successfully',
+            'image_url': user_profile.profile_picture.url
+        })
+    except Exception as e:
+        print(f"Error in upload_profile_picture: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+@require_POST
+def remove_profile_picture(request):
+    try:
+        user_profile = request.user.userprofile
+
+        # Delete the current profile picture if it exists
+        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
+            if os.path.isfile(user_profile.profile_picture.path):
+                os.remove(user_profile.profile_picture.path)
+
+        # Reset to default
+        user_profile.profile_picture = None
+        user_profile.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Profile picture removed successfully',
+            'default_image_url': '/static/images/default_profile_pic.jpg'
+        })
+    except Exception as e:
+        print(f"Error removing profile picture: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+@require_POST
+def update_name(request):
+    try:
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+
+        user = request.user
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Name updated successfully.',
+            'first_name': first_name,
+            'last_name': last_name
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating name: {str(e)}'
+        }, status=400)
+
+@login_required
+@require_POST
+def change_email(request):
+    try:
+        new_email = request.POST.get('new_email')
+
+        # Validate the new email:
+        if not new_email:
+            return JsonResponse({
+                'success': False,
+                'message': 'Email address is required.'
+            }, status=400)
+
+        if not is_valid_email(new_email):
+            return JsonResponse({
+                'success': False,
+                'message': 'Please enter a valid email address.'
+            }, status=400)
+
+        # Check if email is already taken
+        if User.objects.filter(email=new_email.lower()).exclude(id=request.user.id).exists():
+            return JsonResponse({
+                'success': False,
+                'message': 'This email address is already registered.'
+            }, status=400)
+
+        # Update the email
+        request.user.email = new_email.lower()
+        request.user.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Email updated successfully.',
+            'new_email': new_email
+        })
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating email: {str(e)}'
+        }, status=400)
+
+@login_required
+@require_POST
+def change_password(request):
+    try:
+        current_password = request.POST.get('current_password')
+        new_password = request.POST.get('new_password')
+
+        print(f"cur: {current_password}")  # Debug print
+        print(f"new: {new_password}")  # Debug print
+
+        # Validate inputs
+        if not current_password or not new_password:
+            return JsonResponse({
+                'success': False,
+                'message': 'Both current and new passwords are required.'
+            }, status=400)
+
+        # Verify current password
+        if not request.user.check_password(current_password):
+            return JsonResponse({
+                'success': False,
+                'message': 'Current password is incorrect.'
+            }, status=400)
+
+        # Set the new password
+        request.user.set_password(new_password)
+        request.user.save()
+
+        # Update session to prevent logout
+        update_session_auth_hash(request, request.user)
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Password updated successfully.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error updating password: {str(e)}'
+        }, status=400)
 
 
 # ---------------------------------------------------------------- #
@@ -307,15 +544,24 @@ def register(request):
         try:
             username = request.POST.get('username')
             email = request.POST.get('email')
+            first_name = request.POST.get('first_name')
+            last_name = request.POST.get('last_name')
             pass1 = request.POST.get('password1')
             pass2 = request.POST.get('password2')
 
-            # We are going to define a user filter to check for existing usernames:
-            user = User.objects.filter(username=username.lower())
-
             # Check if the username already exists in our database:
-            if user.exists():
+            if User.objects.filter(username=username.lower()).exists():
                 messages.error(request, 'Username already exists...')
+                return redirect('register')
+
+            # Check if the email already exists:
+            if User.objects.filter(email=email.lower()).exists():
+                messages.error(request, 'Email is already registered.')
+                return redirect('register')
+
+            # Validate email format:
+            if not is_valid_email(email):
+                messages.error(request, 'Please enter a valid email address.')
                 return redirect('register')
 
             # Check if the password confirmation doesn't match:
@@ -324,9 +570,18 @@ def register(request):
                 return redirect('register')
 
             # We are creating a user after verifying everything is correct:
-            user = User.objects.create(username=username.lower(), email=email)
-            user.set_password(pass1)
-            user.save()
+            user = User.objects.create(
+                username=username.lower(),
+                email=email,
+                password=pass1,
+                first_name=first_name,
+                last_name=last_name
+            )
+
+            # Create default profile picture directory if it doesn't exist:
+            profile_pics_dir = os.path.join(settings.MEDIA_ROOT, 'profile_pics')
+            if not os.path.exists(profile_pics_dir):
+                os.makedirs(profile_pics_dir)
 
             # Notify the user that their account has been created successfully:
             messages.success(request, 'Account created successfully')
@@ -334,7 +589,7 @@ def register(request):
 
         except Exception as e:
             # Display a message to the user that registration was unsuccessful:
-            messages.error(request, 'Something went wrong...')
+            messages.error(request, f'Registration failed: {str(e)}')
             return redirect('register')
 
     # If we didn't call a post method, direct user to register page:
@@ -345,34 +600,70 @@ def custom_login(request):
         try:
             username = request.POST.get('username')
             password = request.POST.get('password')
+            next_url = request.POST.get('next', '')
 
             # We are getting the user model from an imported library in models.py:
             user = User.objects.filter(username=username.lower())
 
             # Check for the case that the user doesn't exist in our database:
             if not user.exists():
-                messages.error(request, 'Username not found')
+                print('Username not found')
                 return redirect('login')
 
             # Check for matching username & password:
             user = authenticate(request, username=username.lower(), password=password)
             if user is not None:
                 login(request, user)
-                return redirect('home')     # Low-key I hate this shit can we redirect it to user's previous page?
+
+                if next_url and next_url.strip() and not next_url.startswith('/login/'):
+                    return redirect(next_url)
+
+                return redirect('home')
 
             # If user couldn't authenticate above, display wrong password message:
-            messages.error(request, 'Wrong password...')
+            print('Wrong password...')
             return redirect('login')
 
         except Exception as e:
             # Display a message to the user that login was unsuccessful:
-            messages.error(request, 'Something went wrong...')
+            print(f'Something went wrong... {(e)}')
             return redirect('home')
 
     # If we didn't call a post method, direct user to login page:
-    return render(request, 'stars_app/login.html')
+    next_url = request.GET.get('next', '')
 
-@login_required(login_url='/login/')
+    if next_url.startswith('/login/'):
+        next_url = ''
+
+    return render(request, 'stars_app/login.html', {'next': next_url})
+
+@login_required(login_url='login')
 def custom_logout(request):
     logout(request)
     return redirect('home')
+
+
+# ---------------------------------------------------------------- #
+# Password Reset Views:
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView,
+)
+from django.urls import reverse_lazy
+
+class CustomPasswordResetView(PasswordResetView):
+    template_name = 'stars_app/password_reset.html'
+    email_template_name = 'stars_app/password_reset_email.html'
+    success_url = reverse_lazy('password_reset_done')
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    template_name = 'stars_app/password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    template_name = 'stars_app/password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    template_name = 'stars_app/password_reset_complete.html'

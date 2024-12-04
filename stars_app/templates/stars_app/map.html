@@ -1,24 +1,12 @@
 <!-- inherit from base.html-->
 {% extends "stars_app/base.html" %}
+{% block body_class %}map-page{% endblock %}
 
-<!-- Replace block content in base_template.html -->
-{% block content %}
-
-<head>
-	<meta charset="utf-8">
-	<title>Guides</title>
-	<meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-
+<!-- Extra header content -->
+{% block extra_head %}
     <!-- Mapbox -->
-    ]<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
 	<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
-
-    <!-- Bootstrap -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
-	<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
 		html, body {
@@ -152,11 +140,18 @@
             font-size: 10px;
         }
 	</style>
-</head>
-<body>
+{% endblock %}
+
+<!-- Replace block content in base_template.html -->
+{% block content %}
+<div class="map-container">
     {% csrf_token %}
 	<div id="map"></div>
+</div>
+{% endblock %}
 
+<!-- Extra JS content -->
+{% block extra_scripts %}
     <script>
         // Class for debugging map features:
         class MapDebugger {
@@ -315,7 +310,6 @@
                             }
                         } catch (e) {
                             console.warn('Skipping invalid latitude calculation');
-                            continue;
                         }
                     }
                 } catch (e) {
@@ -585,6 +579,20 @@
                 });
 
                 this.map.on('load', () => {
+
+                    // Check URL parameters for location to focus --- //
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const lat = parseFloat(urlParams.get('lat'));
+                    const lng = parseFloat(urlParams.get('lng'));
+                    const zoom = parseFloat(urlParams.get('zoom')) || 12;
+
+                    if (lat && lng) {
+                        this.map.flyTo({
+                            center: [lng, lat],
+                            zoom: zoom,
+                            essential: true
+                        });
+                    }
 
                     // Adding controls: ----------------------------- //
                     this.map.addControl(new mapboxgl.NavigationControl());
@@ -872,7 +880,7 @@
                             icon: '<i class="fas fa-sparkles"></i>'
                         },
                         'COMET': {
-                            color: '#FFEEAD',
+                            color: '#F0ADFFFF',
                             icon: '<i class="fas fa-star"></i>'
                         },
                         'OTHER': {
@@ -1184,12 +1192,16 @@
             return false; // Prevent form submission
         }
 
-        // Initialize the map when the document is ready
-        document.addEventListener('DOMContentLoaded', () => {
+        function initializePage() {
+            if (typeof initNavbar === 'function') {
+                initNavbar();
+            }
+
             window.mapController = new MapController();
             window.mapController.initialize();
-        });
-    </script>
-</body>
-{% endblock %}
+        }
 
+        setTimeout(initializePage, 10);
+
+    </script>
+{% endblock %}

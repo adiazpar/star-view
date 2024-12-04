@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ViewingLocation, FavoriteLocation, CelestialEvent
+from .models import ViewingLocation, FavoriteLocation, CelestialEvent, UserProfile
 
 
 # Viewing Location Serializer --------------------------------------- #

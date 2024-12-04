@@ -9,15 +9,15 @@
 
         <div class="details-item">
             {% if event.event_type == "COMET" %}
-                <img src='/static/images/comet-pic.jpg' class="details-icon" width="100" height="100"></img>
+                <img src='/images/comet-banner.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "ECLIPSE" %}
                 <img src='/static/images/eclipse_icon.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "METEOR" %}
-                <img src='/static/images/meteor-icon.jpg' class="details-icon" width="100" height="100"></img>
+                <img src='/images/meteor-banner.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "PLANET" %}
                 <img src='/static/images/planet-icon.jpg' class="details-icon" width="100" height="100"></img>
             {% elif event.event_type == "AURORA" %}
-                <img src='/static/images/aurora-icon.jpg' class="details-icon" width="100" height="100"></img>
+                <img src='/images/aurora-banner.jpg' class="details-icon" width="100" height="100"></img>
             {% endif %}
             <p>{{ event.event_type }}</p>
             <p>Start Time: {{ event.start_time }}</p>

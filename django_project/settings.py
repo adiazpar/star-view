@@ -13,6 +13,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+import os
+import certifi
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -30,8 +33,26 @@ DEBUG = True
 ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io', 'app-dbolding-5.devedu.io', 'app-jcuthber-5.devedu.io', 'app-otinoco-5.devedu.io', '127.0.0.1', 'nyx.local', 'localhost']
 CSRF_TRUSTED_ORIGINS = ['https://app-adiazpar-5.devedu.io', 'https://app-dbolding-5.devedu.io', 'https://app-otinoco-5.devedu.io']
 
-# Application definition
 
+# Email Configuration
+SITE_ID = 1
+SITE_NAME = "Event Horizon"
+DOMAIN = "127.0.0.1:8000"
+EMAIL_DEBUG = True
+
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+os.environ['SSL_CERT_FILE'] = certifi.where()
+
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+SENDGRID_API_KEY = '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'
+SENDGRID_SANDBOX_MODE_IN_DEBUG = False  # Set to True to test without actually sending
+DEFAULT_FROM_EMAIL = 'eventhorizonnotifications@gmail.com'
+
+# Add these debug settings
+SENDGRID_TRACK_EMAIL_OPENS = True
+SENDGRID_TRACK_CLICKS = True
+
+# Application definition
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,8 +61,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'stars_app',
-    'bootstrap5',
     'rest_framework',
+    'django.contrib.sites',
 ]
 
 LOGGING = {
@@ -162,3 +183,6 @@ TILES_DIR = os.path.join(MEDIA_ROOT, 'tiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'
+
+# Default profile picture
+DEFAULT_PROFILE_PICTURE = os.path.join(MEDIA_URL, 'profile_pics/default_profile_pic.jpg')
