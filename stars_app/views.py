@@ -1,7 +1,12 @@
 from django.shortcuts import render, redirect
 
 # Importing other things from project files:
-from stars_app.models import *
+from stars_app.models.userprofile import UserProfile
+from stars_app.models.celestialevent import CelestialEvent
+from stars_app.models.favoritelocation import FavoriteLocation
+from stars_app.models.viewinglocation import ViewingLocation
+from stars_app.models.forecast import Forecast
+from django.contrib.auth.models import User
 from stars_app.utils import LightPollutionCalculator, is_valid_email
 
 # Authentication libraries:
