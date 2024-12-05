@@ -7,6 +7,7 @@ from stars_app.models.celestialevent import CelestialEvent
 from stars_app.models.favoritelocation import FavoriteLocation
 from stars_app.models.viewinglocation import ViewingLocation
 from stars_app.models.forecast import Forecast
+from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.test import APITestCase
 from datetime import timedelta
