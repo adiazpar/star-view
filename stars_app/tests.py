@@ -2,7 +2,11 @@ from django.test import TestCase, Client
 from stars_app.models import CelestialEvent, ViewingLocation
 from django.utils import timezone
 from django.urls import reverse
-from .models import User, ViewingLocation, CelestialEvent
+from stars_app.models.userprofile import UserProfile
+from stars_app.models.celestialevent import CelestialEvent
+from stars_app.models.favoritelocation import FavoriteLocation
+from stars_app.models.viewinglocation import ViewingLocation
+from stars_app.models.forecast import Forecast
 from rest_framework import status
 from rest_framework.test import APITestCase
 from datetime import timedelta

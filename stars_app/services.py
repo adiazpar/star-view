@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.utils import timezone
-from .models import CelestialEvent
+from stars_app.models.celestialevent import CelestialEvent
 import re
 from .utils import AstronomicalCoordinates
 
