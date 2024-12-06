@@ -42,7 +42,7 @@ class Command(BaseCommand):
         if event_type == 'all':
             # Clear all event types
             deleted_count = CelestialEvent.objects.all().delete()
-            self.stdout.write(f"Cleared all existing events")
+            self.stdout.write("Cleared all existing events")
         else:
             # Clear only specified event type
             deleted_count = CelestialEvent.objects.filter(event_type=event_type.upper()).delete()
