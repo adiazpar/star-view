@@ -608,10 +608,11 @@ h4 { font-size: var(--font-size-lg); }
     background: var(--background-dark);
     border-radius: var(--radius-sm);
     border: 1px solid var(--text-tertiary);
-    padding: var(--space-lg);
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+    overflow: hidden;
+    padding: 0;
 }
 
 /* Original Name Styling */
@@ -626,12 +627,43 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 /* Favorite Card Header */
+.favorite-banner {
+    width: 100%;
+    height: 150px;
+    overflow: hidden;
+    border-top-left-radius: var(--radius-sm);
+    border-top-right-radius: var(--radius-sm);
+}
+
+.favorite-banner .location-map {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 .favorite-header {
-    border-bottom: 1px solid var(--text-tertiary);
-    padding-bottom: var(--space-md);
+    padding: 0 var(--space-md);
+    margin-bottom: var(--space-sm);
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
+}
+
+.favorite-content {
+    border-top: 1px solid var(--text-tertiary);
+    padding: var(--space-md);
+}
+
+.info-item .label i {
+    margin-right: var(--space-sm);
+    width: 16px;
+}
+
+.favorite-actions {
+    padding: 0 var(--space-md);
+    padding-bottom: var(--space-md);
+    display: grid;
+    margin-top: auto;
 }
 
 .favorite-title {
@@ -731,8 +763,7 @@ h4 { font-size: var(--font-size-lg); }
     justify-content: space-between;
     align-items: center;
 
-    height: 40px;
-    padding: 10px 20px;
+    padding: var(--space-sm) var(--space-lg);
     top: 0;
     width: 100%;
 
@@ -747,12 +778,15 @@ h4 { font-size: var(--font-size-lg); }
 .navbar .logo {
     display: flex;
     align-items: center;
+    gap: var(--space-md);
 }
 .navbar .logo .logo-img {
     height: 50px;
     width: auto;
     margin-right: 0;
     margin-left: -10px;
+    filter: invert(100%);
+    -webkit-filter: invert(100%);
 }
 .navbar .logo h3 {
     margin: 0;
@@ -1101,15 +1135,16 @@ h4 { font-size: var(--font-size-lg); }
 
 .events-container {
     border-radius: var(--radius-sm);
+    padding: var(--space-lg);
     margin: 0 auto;
-    padding: var(--space-md);
+
     max-width: 1200px;
-    box-shadow: var(--shadow-lg);
-    background-color: var(--surface);
 }
 
 .events-header {
     margin-bottom: var(--space-xl);
+    border-top-left-radius: var(--radius-sm);
+    border-top-right-radius: var(--radius-sm);
     border-bottom: 1px solid var(--text-tertiary);
 }
 
