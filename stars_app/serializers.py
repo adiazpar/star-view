@@ -1,5 +1,9 @@
 from rest_framework import serializers
-from .models import ViewingLocation, FavoriteLocation, CelestialEvent, UserProfile
+
+from stars_app.models.userprofile import UserProfile
+from stars_app.models.celestialevent import CelestialEvent
+from stars_app.models.favoritelocation import FavoriteLocation
+from stars_app.models.viewinglocation import ViewingLocation
 
 
 # Viewing Location Serializer --------------------------------------- #
