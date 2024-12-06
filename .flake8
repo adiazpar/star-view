@@ -1,0 +1,2 @@
+[flake8]
+exclude = ./djvenv/*, ./stars_app/migrations/*

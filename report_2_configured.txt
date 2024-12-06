@@ -1,0 +1,465 @@
+
+Flake8 found 462 findings. 20% = 462 / 5 = 92.4
+
+./django_project/settings.py:16:1: F811 redefinition of unused 'os' from line 13
+./django_project/settings.py:27:80: E501 line too long (81 > 79 characters)
+./django_project/settings.py:33:80: E501 line too long (166 > 79 characters)
+./django_project/settings.py:34:80: E501 line too long (130 > 79 characters)
+./django_project/settings.py:47:80: E501 line too long (90 > 79 characters)
+./django_project/settings.py:48:80: E501 line too long (86 > 79 characters)
+./django_project/settings.py:77:80: E501 line too long (99 > 79 characters)
+./django_project/settings.py:140:80: E501 line too long (91 > 79 characters)
+./django_project/settings.py:143:80: E501 line too long (81 > 79 characters)
+./django_project/settings.py:146:80: E501 line too long (82 > 79 characters)
+./django_project/settings.py:149:80: E501 line too long (83 > 79 characters)
+./django_project/settings.py:188:80: E501 line too long (89 > 79 characters)
+./stars_app/admin.py:14:30: W292 no newline at end of file
+./stars_app/management/commands/create_user_profiles.py:5:1: E302 expected 2 blank lines, found 1
+./stars_app/management/commands/create_user_profiles.py:12:76: W292 no newline at end of file
+./stars_app/management/commands/update_events.py:2:80: E501 line too long (95 > 79 characters)
+./stars_app/management/commands/update_events.py:15:80: E501 line too long (97 > 79 characters)
+./stars_app/management/commands/update_events.py:45:31: F541 f-string is missing placeholders
+./stars_app/management/commands/update_events.py:48:13: F841 local variable 'deleted_count' is assigned to but never used
+./stars_app/management/commands/update_events.py:48:80: E501 line too long (97 > 79 characters)
+./stars_app/management/commands/update_events.py:93:80: E501 line too long (81 > 79 characters)
+./stars_app/management/commands/update_events.py:94:80: E501 line too long (81 > 79 characters)
+./stars_app/management/commands/update_events.py:96:80: E501 line too long (83 > 79 characters)
+./stars_app/management/commands/update_events.py:105:80: E501 line too long (92 > 79 characters)
+./stars_app/management/commands/update_events.py:107:10: W292 no newline at end of file
+./stars_app/models/celestialevent.py:4:1: E302 expected 2 blank lines, found 1
+./stars_app/models/celestialevent.py:5:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:6:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:7:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:8:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:9:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:10:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:11:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:12:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:14:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:15:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:16:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:18:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:19:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:20:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:22:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:23:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:25:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:27:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:28:1: W191 indentation contains tabs
+./stars_app/models/celestialevent.py:28:51: W292 no newline at end of file
+./stars_app/models/defaultforecast.py:1:1: F401 'django.db.models' imported but unused
+./stars_app/models/defaultforecast.py:5:1: E302 expected 2 blank lines, found 1
+./stars_app/models/defaultforecast.py:6:1: W191 indentation contains tabs
+./stars_app/models/defaultforecast.py:7:1: W191 indentation contains tabs
+./stars_app/models/defaultforecast.py:7:15: W292 no newline at end of file
+./stars_app/models/favoritelocation.py:7:1: E302 expected 2 blank lines, found 1
+./stars_app/models/favoritelocation.py:8:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:8:80: E501 line too long (92 > 79 characters)
+./stars_app/models/favoritelocation.py:9:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:9:80: E501 line too long (101 > 79 characters)
+./stars_app/models/favoritelocation.py:10:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:11:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:13:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:14:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:15:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:17:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:18:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:19:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:20:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:21:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:23:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:24:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:25:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:26:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:27:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:29:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:30:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:31:1: W191 indentation contains tabs
+./stars_app/models/favoritelocation.py:31:50: W292 no newline at end of file
+./stars_app/models/forecast.py:4:1: E302 expected 2 blank lines, found 1
+./stars_app/models/forecast.py:5:1: W191 indentation contains tabs
+./stars_app/models/forecast.py:5:50: E261 at least two spaces before inline comment
+./stars_app/models/forecast.py:5:51: E262 inline comment should start with '# '
+./stars_app/models/forecast.py:5:80: E501 line too long (96 > 79 characters)
+./stars_app/models/forecast.py:6:1: W191 indentation contains tabs
+./stars_app/models/forecast.py:6:54: W292 no newline at end of file
+./stars_app/models/userprofile.py:8:1: E302 expected 2 blank lines, found 1
+./stars_app/models/userprofile.py:9:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:10:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:11:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:12:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:13:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:14:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:16:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:17:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:18:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:19:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:20:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:22:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:23:1: W191 indentation contains tabs
+./stars_app/models/userprofile.py:25:80: E501 line too long (80 > 79 characters)
+./stars_app/models/userprofile.py:26:1: E302 expected 2 blank lines, found 1
+./stars_app/models/userprofile.py:28:1: E101 indentation contains mixed spaces and tabs
+./stars_app/models/userprofile.py:29:1: E101 indentation contains mixed spaces and tabs
+./stars_app/models/userprofile.py:30:1: E101 indentation contains mixed spaces and tabs
+./stars_app/models/userprofile.py:31:1: E101 indentation contains mixed spaces and tabs
+./stars_app/models/userprofile.py:32:1: E101 indentation contains mixed spaces and tabs
+./stars_app/models/userprofile.py:32:57: W292 no newline at end of file
+./stars_app/models/viewinglocation.py:13:1: E302 expected 2 blank lines, found 1
+./stars_app/models/viewinglocation.py:14:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:15:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:16:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:17:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:19:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:19:80: E501 line too long (90 > 79 characters)
+./stars_app/models/viewinglocation.py:19:91: W291 trailing whitespace
+./stars_app/models/viewinglocation.py:20:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:22:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:22:80: E501 line too long (122 > 79 characters)
+./stars_app/models/viewinglocation.py:23:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:25:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:26:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:28:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:28:34: E261 at least two spaces before inline comment
+./stars_app/models/viewinglocation.py:28:35: E262 inline comment should start with '# '
+./stars_app/models/viewinglocation.py:28:80: E501 line too long (138 > 79 characters)
+./stars_app/models/viewinglocation.py:29:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:29:80: E501 line too long (100 > 79 characters)
+./stars_app/models/viewinglocation.py:30:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:31:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:31:80: E501 line too long (96 > 79 characters)
+./stars_app/models/viewinglocation.py:33:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:34:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:34:3: E122 continuation line missing indentation or outdented
+./stars_app/models/viewinglocation.py:35:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:35:3: E122 continuation line missing indentation or outdented
+./stars_app/models/viewinglocation.py:36:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:36:3: E122 continuation line missing indentation or outdented
+./stars_app/models/viewinglocation.py:37:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:37:3: E122 continuation line missing indentation or outdented
+./stars_app/models/viewinglocation.py:38:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:38:3: E122 continuation line missing indentation or outdented
+./stars_app/models/viewinglocation.py:39:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:39:3: E122 continuation line missing indentation or outdented
+./stars_app/models/viewinglocation.py:40:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:41:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:42:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:43:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:44:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:44:4: E265 block comment should start with '# '
+./stars_app/models/viewinglocation.py:45:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:45:4: E265 block comment should start with '# '
+./stars_app/models/viewinglocation.py:46:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:47:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:48:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:49:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:50:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:51:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:52:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:53:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:54:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:55:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:55:2: E301 expected 1 blank line, found 0
+./stars_app/models/viewinglocation.py:56:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:57:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:58:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:59:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:60:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:60:32: W291 trailing whitespace
+./stars_app/models/viewinglocation.py:61:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:62:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:63:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:64:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:65:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:65:38: E261 at least two spaces before inline comment
+./stars_app/models/viewinglocation.py:65:39: E262 inline comment should start with '# '
+./stars_app/models/viewinglocation.py:66:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:67:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:68:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:69:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:70:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:71:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:72:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:73:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:74:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:75:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:76:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:76:32: W291 trailing whitespace
+./stars_app/models/viewinglocation.py:77:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:78:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:79:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:80:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:81:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:82:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:83:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:84:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:84:34: W291 trailing whitespace
+./stars_app/models/viewinglocation.py:85:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:87:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:88:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:90:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:91:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:92:1: W191 indentation contains tabs
+./stars_app/models/viewinglocation.py:92:24: W292 no newline at end of file
+./stars_app/notificationsDaemon/notificationsDaemon.py:15:1: E402 module level import not at top of file
+./stars_app/notificationsDaemon/notificationsDaemon.py:16:1: E402 module level import not at top of file
+./stars_app/notificationsDaemon/notificationsDaemon.py:18:38: W291 trailing whitespace
+./stars_app/notificationsDaemon/notificationsDaemon.py:20:25: W291 trailing whitespace
+./stars_app/notificationsDaemon/notificationsDaemon.py:22:20: W291 trailing whitespace
+./stars_app/notificationsDaemon/notificationsDaemon.py:26:1: E302 expected 2 blank lines, found 1
+./stars_app/notificationsDaemon/notificationsDaemon.py:27:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:28:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:29:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:30:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:31:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:32:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:33:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:34:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:35:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:35:80: E501 line too long (112 > 79 characters)
+./stars_app/notificationsDaemon/notificationsDaemon.py:36:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:37:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:38:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:39:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:40:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:40:80: E501 line too long (91 > 79 characters)
+./stars_app/notificationsDaemon/notificationsDaemon.py:41:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:42:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:43:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:44:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:45:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:46:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:47:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:48:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:49:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:50:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:51:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:52:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:53:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:54:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:55:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:55:80: E501 line too long (80 > 79 characters)
+./stars_app/notificationsDaemon/notificationsDaemon.py:56:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:57:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:58:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:58:80: E501 line too long (118 > 79 characters)
+./stars_app/notificationsDaemon/notificationsDaemon.py:59:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:60:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:62:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:63:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:64:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:65:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:65:80: E501 line too long (118 > 79 characters)
+./stars_app/notificationsDaemon/notificationsDaemon.py:66:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:67:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:68:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:69:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:71:1: E302 expected 2 blank lines, found 1
+./stars_app/notificationsDaemon/notificationsDaemon.py:72:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:72:2: E265 block comment should start with '# '
+./stars_app/notificationsDaemon/notificationsDaemon.py:72:54: W291 trailing whitespace
+./stars_app/notificationsDaemon/notificationsDaemon.py:73:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:74:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:75:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:75:1: W293 blank line contains whitespace
+./stars_app/notificationsDaemon/notificationsDaemon.py:76:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:77:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:77:80: E501 line too long (99 > 79 characters)
+./stars_app/notificationsDaemon/notificationsDaemon.py:78:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:79:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:79:80: E501 line too long (128 > 79 characters)
+./stars_app/notificationsDaemon/notificationsDaemon.py:80:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:81:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:82:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:83:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:84:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:85:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:86:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:88:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:89:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:90:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:91:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:92:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:93:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:94:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:95:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:96:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:97:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:98:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:100:1: E305 expected 2 blank lines after class or function definition, found 1
+./stars_app/notificationsDaemon/notificationsDaemon.py:101:1: W191 indentation contains tabs
+./stars_app/notificationsDaemon/notificationsDaemon.py:102:1: W391 blank line at end of file
+./stars_app/serializers.py:3:1: F401 'stars_app.models.userprofile.UserProfile' imported but unused
+./stars_app/serializers.py:17:18: E128 continuation line under-indented for visual indent
+./stars_app/serializers.py:18:80: E501 line too long (83 > 79 characters)
+./stars_app/serializers.py:19:80: E501 line too long (95 > 79 characters)
+./stars_app/services.py:43:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:49:80: E501 line too long (80 > 79 characters)
+./stars_app/services.py:114:80: E501 line too long (80 > 79 characters)
+./stars_app/services.py:130:80: E501 line too long (92 > 79 characters)
+./stars_app/services.py:143:80: E501 line too long (95 > 79 characters)
+./stars_app/services.py:151:80: E501 line too long (148 > 79 characters)
+./stars_app/services.py:152:80: E501 line too long (103 > 79 characters)
+./stars_app/services.py:214:80: E501 line too long (80 > 79 characters)
+./stars_app/services.py:216:80: E501 line too long (108 > 79 characters)
+./stars_app/services.py:222:80: E501 line too long (130 > 79 characters)
+./stars_app/services.py:231:80: E501 line too long (97 > 79 characters)
+./stars_app/services.py:233:80: E501 line too long (123 > 79 characters)
+./stars_app/services.py:266:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:279:80: E501 line too long (85 > 79 characters)
+./stars_app/services.py:283:80: E501 line too long (89 > 79 characters)
+./stars_app/services.py:293:80: E501 line too long (81 > 79 characters)
+./stars_app/services.py:296:80: E501 line too long (88 > 79 characters)
+./stars_app/services.py:301:80: E501 line too long (97 > 79 characters)
+./stars_app/services.py:302:80: E501 line too long (95 > 79 characters)
+./stars_app/services.py:303:80: E501 line too long (93 > 79 characters)
+./stars_app/services.py:306:80: E501 line too long (85 > 79 characters)
+./stars_app/services.py:325:80: E501 line too long (84 > 79 characters)
+./stars_app/services.py:332:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:333:80: E501 line too long (84 > 79 characters)
+./stars_app/services.py:334:80: E501 line too long (81 > 79 characters)
+./stars_app/services.py:357:80: E501 line too long (100 > 79 characters)
+./stars_app/services.py:377:80: E501 line too long (80 > 79 characters)
+./stars_app/services.py:422:80: E501 line too long (95 > 79 characters)
+./stars_app/services.py:449:80: E501 line too long (85 > 79 characters)
+./stars_app/services.py:450:80: E501 line too long (89 > 79 characters)
+./stars_app/services.py:463:34: E261 at least two spaces before inline comment
+./stars_app/services.py:465:80: E501 line too long (86 > 79 characters)
+./stars_app/services.py:495:80: E501 line too long (98 > 79 characters)
+./stars_app/services.py:514:17: F541 f-string is missing placeholders
+./stars_app/services.py:585:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:600:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:645:34: E261 at least two spaces before inline comment
+./stars_app/services.py:668:1: W293 blank line contains whitespace
+./stars_app/services.py:673:1: W293 blank line contains whitespace
+./stars_app/services.py:675:80: E501 line too long (106 > 79 characters)
+./stars_app/services.py:676:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:677:1: W293 blank line contains whitespace
+./stars_app/services.py:680:1: W293 blank line contains whitespace
+./stars_app/services.py:682:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:691:1: W293 blank line contains whitespace
+./stars_app/services.py:696:1: W293 blank line contains whitespace
+./stars_app/services.py:701:1: W293 blank line contains whitespace
+./stars_app/services.py:703:80: E501 line too long (83 > 79 characters)
+./stars_app/services.py:734:80: E501 line too long (81 > 79 characters)
+./stars_app/services.py:735:55: W292 no newline at end of file
+./stars_app/tests.py:1:1: F401 'django.test.Client' imported but unused
+./stars_app/tests.py:5:1: F401 'stars_app.models.userprofile.UserProfile' imported but unused
+./stars_app/tests.py:6:1: F811 redefinition of unused 'CelestialEvent' from line 2
+./stars_app/tests.py:7:1: F401 'stars_app.models.favoritelocation.FavoriteLocation' imported but unused
+./stars_app/tests.py:8:1: F811 redefinition of unused 'ViewingLocation' from line 2
+./stars_app/tests.py:9:1: F401 'stars_app.models.forecast.Forecast' imported but unused
+./stars_app/tests.py:18:80: E501 line too long (83 > 79 characters)
+./stars_app/tests.py:19:9: F841 local variable 'login' is assigned to but never used
+./stars_app/tests.py:20:80: E501 line too long (194 > 79 characters)
+./stars_app/tests.py:20:131: E231 missing whitespace after ','
+./stars_app/tests.py:20:149: E231 missing whitespace after ','
+./stars_app/tests.py:20:168: E231 missing whitespace after ','
+./stars_app/tests.py:21:1: W293 blank line contains whitespace
+./stars_app/tests.py:33:1: E302 expected 2 blank lines, found 1
+./stars_app/tests.py:36:80: E501 line too long (83 > 79 characters)
+./stars_app/tests.py:37:9: F841 local variable 'login' is assigned to but never used
+./stars_app/tests.py:38:80: E501 line too long (194 > 79 characters)
+./stars_app/tests.py:38:131: E231 missing whitespace after ','
+./stars_app/tests.py:38:149: E231 missing whitespace after ','
+./stars_app/tests.py:38:168: E231 missing whitespace after ','
+./stars_app/tests.py:39:9: F841 local variable 'event' is assigned to but never used
+./stars_app/tests.py:39:80: E501 line too long (220 > 79 characters)
+./stars_app/tests.py:54:1: E302 expected 2 blank lines, found 1
+./stars_app/tests.py:79:43: E261 at least two spaces before inline comment
+./stars_app/tests.py:81:1: E302 expected 2 blank lines, found 1
+./stars_app/tests.py:83:80: E501 line too long (86 > 79 characters)
+./stars_app/tests.py:85:1: W293 blank line contains whitespace
+./stars_app/tests.py:116:80: E501 line too long (82 > 79 characters)
+./stars_app/tests.py:121:1: E302 expected 2 blank lines, found 1
+./stars_app/tests.py:123:80: E501 line too long (86 > 79 characters)
+./stars_app/tests.py:125:1: W293 blank line contains whitespace
+./stars_app/tests.py:155:80: E501 line too long (82 > 79 characters)
+./stars_app/tests.py:167:1: W391 blank line at end of file
+./stars_app/urls.py:16:80: E501 line too long (97 > 79 characters)
+./stars_app/urls.py:17:80: E501 line too long (94 > 79 characters)
+./stars_app/urls.py:24:80: E501 line too long (97 > 79 characters)
+./stars_app/urls.py:25:80: E501 line too long (97 > 79 characters)
+./stars_app/urls.py:52:80: E501 line too long (81 > 79 characters)
+./stars_app/urls.py:53:80: E501 line too long (83 > 79 characters)
+./stars_app/urls.py:61:80: E501 line too long (131 > 79 characters)
+./stars_app/urls.py:61:132: W292 no newline at end of file
+./stars_app/utils.py:1:1: F401 'PIL.Image' imported but unused
+./stars_app/utils.py:2:1: F401 'numpy as np' imported but unused
+./stars_app/utils.py:3:1: F401 'django.conf.settings' imported but unused
+./stars_app/utils.py:4:1: F401 'os' imported but unused
+./stars_app/utils.py:11:1: F401 'django.core.mail.send_mail' imported but unused
+./stars_app/utils.py:12:1: F401 'django.template.loader.render_to_string' imported but unused
+./stars_app/utils.py:13:1: F401 'django.utils.html.strip_tags' imported but unused
+./stars_app/utils.py:14:1: F401 'django.core.validators.validate_email' imported but unused
+./stars_app/utils.py:15:1: F401 'django.core.exceptions.ValidationError' imported but unused
+./stars_app/utils.py:18:1: F401 'logging' imported but unused
+./stars_app/utils.py:21:1: E302 expected 2 blank lines, found 1
+./stars_app/utils.py:110:80: E501 line too long (93 > 79 characters)
+./stars_app/utils.py:125:80: E501 line too long (92 > 79 characters)
+./stars_app/utils.py:135:9: F841 local variable 'horizontal' is assigned to but never used
+./stars_app/utils.py:144:80: E501 line too long (82 > 79 characters)
+./stars_app/utils.py:154:80: E501 line too long (95 > 79 characters)
+./stars_app/utils.py:159:80: E501 line too long (83 > 79 characters)
+./stars_app/utils.py:167:80: E501 line too long (82 > 79 characters)
+./stars_app/utils.py:196:80: E501 line too long (90 > 79 characters)
+./stars_app/utils.py:205:80: E501 line too long (82 > 79 characters)
+./stars_app/views.py:8:1: F401 'stars_app.models.forecast.Forecast' imported but unused
+./stars_app/views.py:13:80: E501 line too long (85 > 79 characters)
+./stars_app/views.py:32:1: F401 'rest_framework.permissions.IsAuthenticated' imported but unused
+./stars_app/views.py:32:80: E501 line too long (81 > 79 characters)
+./stars_app/views.py:33:1: F403 'from stars_app.serializers import *' used; unable to detect undefined names
+./stars_app/views.py:55:24: F405 'CelestialEventSerializer' may be undefined, or defined from star imports: stars_app.serializers
+./stars_app/views.py:60:80: E501 line too long (80 > 79 characters)
+./stars_app/views.py:62:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:64:24: F405 'ViewingLocationSerializer' may be undefined, or defined from star imports: stars_app.serializers
+./stars_app/views.py:69:80: E501 line too long (81 > 79 characters)
+./stars_app/views.py:70:80: E501 line too long (83 > 79 characters)
+./stars_app/views.py:76:9: F841 local variable 'latitude' is assigned to but never used
+./stars_app/views.py:77:9: F841 local variable 'longitude' is assigned to but never used
+./stars_app/views.py:78:9: F841 local variable 'elevation' is assigned to but never used
+./stars_app/views.py:96:80: E501 line too long (98 > 79 characters)
+./stars_app/views.py:100:9: E303 too many blank lines (2)
+./stars_app/views.py:132:80: E501 line too long (98 > 79 characters)
+./stars_app/views.py:154:80: E501 line too long (98 > 79 characters)
+./stars_app/views.py:192:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:196:80: E501 line too long (82 > 79 characters)
+./stars_app/views.py:246:80: E501 line too long (81 > 79 characters)
+./stars_app/views.py:252:80: E501 line too long (89 > 79 characters)
+./stars_app/views.py:272:80: E501 line too long (90 > 79 characters)
+./stars_app/views.py:284:80: E501 line too long (82 > 79 characters)
+./stars_app/views.py:286:80: E501 line too long (88 > 79 characters)
+./stars_app/views.py:299:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:303:18: E225 missing whitespace around operator
+./stars_app/views.py:303:26: E225 missing whitespace around operator
+./stars_app/views.py:306:80: E501 line too long (80 > 79 characters)
+./stars_app/views.py:309:80: E501 line too long (80 > 79 characters)
+./stars_app/views.py:323:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:336:80: E501 line too long (120 > 79 characters)
+./stars_app/views.py:340:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:342:60: E231 missing whitespace after ':'
+./stars_app/views.py:344:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:367:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:385:80: E501 line too long (121 > 79 characters)
+./stars_app/views.py:396:80: E501 line too long (103 > 79 characters)
+./stars_app/views.py:398:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:403:80: E501 line too long (80 > 79 characters)
+./stars_app/views.py:409:80: E501 line too long (97 > 79 characters)
+./stars_app/views.py:427:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:434:80: E501 line too long (90 > 79 characters)
+./stars_app/views.py:451:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:475:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:495:80: E501 line too long (93 > 79 characters)
+./stars_app/views.py:517:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:592:13: F841 local variable 'user' is assigned to but never used
+./stars_app/views.py:601:80: E501 line too long (80 > 79 characters)
+./stars_app/views.py:617:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:624:80: E501 line too long (82 > 79 characters)
+./stars_app/views.py:633:80: E501 line too long (86 > 79 characters)
+./stars_app/views.py:637:80: E501 line too long (88 > 79 characters)
+./stars_app/views.py:642:80: E501 line too long (82 > 79 characters)
+./stars_app/views.py:659:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:672:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:675:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:679:1: E302 expected 2 blank lines, found 1
+./stars_app/views.py:680:61: W292 no newline at end of file
