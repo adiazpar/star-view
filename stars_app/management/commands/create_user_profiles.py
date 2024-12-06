@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 from stars_app.models import UserProfile
 
+
 class Command(BaseCommand):
     help = 'Creates UserProfile objects for users that don\'t have them'
 
