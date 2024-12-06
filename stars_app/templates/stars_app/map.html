@@ -21,17 +21,22 @@
     <div class="locations-panel">
         <!-- New: Filtering tabs -->
         <div class="panel-tabs">
-            <div class="panel-tab active" data-tab="all">All</div>
-            <div class="panel-tab" data-tab="locations">Locations</div>
-            <div class="panel-tab" data-tab="events">Events</div>
+            <div class="panel-tab active" data-tab="all">ALL</div>
+            <div class="panel-tab" data-tab="locations">LOCATIONS</div>
+            <div class="panel-tab" data-tab="events">EVENTS</div>
         </div>
 
         <!-- Enhanced search with filters -->
-        <div class="search-container">
-            <input type="text"
-                   class="search-input"
-                   placeholder="Search locations or events..."
-                   id="location-search">
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text"
+                       class="search-input"
+                       placeholder="Search locations or events..."
+                       id="location-search">
+                <span class="search-icon">
+                    <i class="fas fa-search"></i>
+                </span>
+            </div>
 
             <!-- NEW: Added event type filters -->
             <div class="event-type-filter">

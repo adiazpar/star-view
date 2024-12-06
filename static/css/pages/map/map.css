@@ -1,9 +1,29 @@
 
 /* Map Page Styles */
-.map-container {
-    display: flex;
-    height: calc(100vh - 60px);
+.map-page {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: var(--space-md);
     background-color: var(--background-dark);
+    overflow: hidden;
+}
+
+.map-container {
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-dark);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    position: relative;
+}
+
+.map-page .footer {
+    display: none;
 }
 
 .locations-panel {
@@ -11,7 +31,6 @@
     background-color: var(--surface);
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--text-tertiary);
 }
 
 /* Tabs for filtering content */
@@ -25,6 +44,8 @@
     flex: 1;
     padding: var(--space-sm);
     text-align: center;
+    font-weight: bold;
+    font-size: var(--font-size-xs);
     color: var(--text-secondary);
     cursor: pointer;
     border-bottom: 2px solid transparent;
@@ -37,25 +58,102 @@
 }
 
 /* Search container */
+.search-section {
+    padding: var(--space-md) var(--space-md) 0 var(--space-md);
+    margin-bottom: var(--space-xs);
+    width: 100%;
+    box-sizing: border-box;
+}
+
 .search-container {
-    padding: var(--space-md);
-    border-bottom: 1px solid var(--text-tertiary);
+    display: flex;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: var(--space-sm);
 }
 
 .search-input {
     width: 100%;
+    box-sizing: border-box;
     padding: var(--space-sm) var(--space-md);
+    padding-left: calc(var(--space-lg) + 20px); /* Space for the icon */
     background: var(--background-dark);
     border: 1px solid var(--text-tertiary);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.search-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.event-type-filter {
+    display: flex;
+    gap: var(--space-xs);
+    padding-bottom: var(--space-sm);
+    overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.event-type-filter::-webkit-scrollbar {
+    display: none;
+}
+
+.event-type-btn {
+    padding: var(--space-xs) var(--space-sm);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    background: var(--background-dark);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition-base);
+    flex-shrink: 0; /* Prevent buttons from shrinking */
+}
+
+.event-type-btn:hover {
+    border-color: var(--primary);
+}
+
+.event-type-btn.active {
+    color: var(--text-primary);
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+/* New: Weather condition icon */
+.weather-icon {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
 }
 
 /* Enhanced Location/Event Items */
 .location-list {
+    background-color: var(--background-dark);
     flex: 1;
     overflow-y: auto;
     padding: var(--space-md);
+
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.location-list::-webkit-scrollbar {
+    display: none;
 }
 
 .location-item {
@@ -67,39 +165,6 @@
     cursor: pointer;
     transition: all var(--transition-base);
     position: relative; /* Added for new features */
-}
-
-/* Enhanced event type styling */
-.event-type-filter {
-    display: flex;
-    gap: var(--space-sm);
-    padding: var(--space-sm);
-    overflow-x: auto;
-}
-
-.event-type-btn {
-    padding: var(--space-xs) var(--space-sm);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    color: var(--text-primary);
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all var(--transition-base);
-}
-
-.event-type-btn.active {
-    background: var(--primary);
-    border-color: var(--primary);
-}
-
-/* New: Weather condition icon */
-.weather-icon {
-    position: absolute;
-    top: var(--space-sm);
-    right: calc(var(--space-sm) + 20px);
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
 }
 
 .location-item:hover {
@@ -165,8 +230,7 @@
     display: flex;
     justify-content: center;
     gap: var(--space-sm);
-    padding: var(--space-md);
-    border-top: 1px solid var(--text-tertiary);
+    padding: var(--space-sm);
 }
 
 .page-item {
