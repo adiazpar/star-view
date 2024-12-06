@@ -1,5 +1,6 @@
 
 Flake8 found 336 findings, excluding E501s (line length). 20% = 336 / 5 = 67.2
+W/ E501s, found 462. 20% = 462 / 5 = 92.4
 
 ./stars_app/admin.py:14:30: W292 no newline at end of file
 ./stars_app/management/commands/create_user_profiles.py:5:1: E302 expected 2 blank lines, found 1
