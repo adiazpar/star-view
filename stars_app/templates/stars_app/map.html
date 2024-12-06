@@ -2,1206 +2,134 @@
 {% extends "stars_app/base.html" %}
 {% block body_class %}map-page{% endblock %}
 
+{% load static %}
+
 <!-- Extra header content -->
 {% block extra_head %}
     <!-- Mapbox -->
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
 	<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-    <style>
-		html, body {
-			height: 100%;
-			margin: 0;
-			padding: 0;
-			overflow: hidden;
-		}
-		#map {
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			width: 100%;
-			height: calc(100vh - 60px);
-			margin-top: 60px;
-		}
-        /* Button Styling */
-        .debug-control, .control {
-            background: white;
-            border: none;
-            cursor: pointer;
-            padding: 7px 10px;
-            margin: 10px;
-            font-size: 12px;
-            font-weight: bold;
-            color: #333;
-        }
-        .debug-control:hover, .control:hover {
-            background: #d7d7d7;
-        }
-        .debug-control.active, .control.active {
-            background: #ffebee;
-            color: #ff0000;
-        }
-        .legend {
-            position: absolute;
-            padding-left: 10px;
-            padding-right: 10px;
-            bottom: 35px;
-            right: 10px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.7);
-        }
-
-        .location-marker, .event-marker {
-            cursor: pointer;
-        }
-        .location-marker:hover .marker-icon,
-        .event-marker:hover .event-marker-icon {
-            transform: scale(1.1) !important;
-        }
-
-        .location-marker .marker-icon {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            border: 1px solid white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-            transform-origin: center center;
-        }
-        .marker-icon i {
-            color: white;
-            font-size: 7px;
-        }
-
-        .event-marker-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            border: 2px solid white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-            transform-origin: center center;
-        }
-        .event-marker-icon i {
-            color: white;
-            font-size: 16px;
-        }
-        .event-marker-radius {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border: 2px dashed;
-            border-radius: 50%;
-            opacity: 0.3;
-            pointer-events: none;
-            width: 60px;
-            height: 60px;
-            z-index: 1;
-        }
-
-        /* Popup context menu Styling */
-        .popup {
-            max-width: 200px;
-        }
-        .popup h4 {
-            margin: 0 0 5px 0;
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .popup p {
-            margin: 3px 0;
-            font-size: 12px;
-        }
-        .popup .btn {
-            padding: 8px;
-            font-size: 12px;
-            width: 100%;
-        }
-
-        .popup .form-control {
-            width: 90%;
-            padding: 8px;
-            margin-bottom: 10px;
-
-            font-size: 12px;
-            border: 1px solid darkgrey;
-            border-radius: 4px;
-        }
-
-        .popup small.text-muted {
-            color: gray;
-            font-size: 10px;
-        }
-	</style>
+    <!-- Map-specific styles -->
+    <link href="{% static 'css/pages/map/map.css' %}" rel="stylesheet">
 {% endblock %}
 
 <!-- Replace block content in base_template.html -->
 {% block content %}
 <div class="map-container">
+    <!-- Locations Panel -->
+    <div class="locations-panel">
+        <!-- New: Filtering tabs -->
+        <div class="panel-tabs">
+            <div class="panel-tab active" data-tab="all">All</div>
+            <div class="panel-tab" data-tab="locations">Locations</div>
+            <div class="panel-tab" data-tab="events">Events</div>
+        </div>
+
+        <!-- Enhanced search with filters -->
+        <div class="search-container">
+            <input type="text"
+                   class="search-input"
+                   placeholder="Search locations or events..."
+                   id="location-search">
+
+            <!-- NEW: Added event type filters -->
+            <div class="event-type-filter">
+                <button class="event-type-btn" data-type="METEOR">Meteor Showers</button>
+                <button class="event-type-btn" data-type="ECLIPSE">Eclipses</button>
+                <button class="event-type-btn" data-type="PLANET">Planetary</button>
+                <button class="event-type-btn" data-type="AURORA">Aurora</button>
+                <button class="event-type-btn" data-type="COMET">Comets</button>
+                <button class="event-type-btn" data-type="OTHER">Other</button>
+            </div>
+        </div>
+
+        <!-- Enhanced location/event list -->
+        <div class="location-list">
+            {% for location in viewing_locations %}
+            <div class="location-item"
+                 data-lat="{{ location.latitude }}"
+                 data-lng="{{ location.longitude }}"
+                 data-type="location">
+
+                <!-- New: Weather condition -->
+                {% if location.cloudCoverPercentage < 30 %}
+                <i class="fas fa-sun weather-icon"></i>
+                {% elif location.cloudCoverPercentage < 70 %}
+                <i class="fas fa-cloud-sun weather-icon"></i>
+                {% else %}
+                <i class="fas fa-cloud weather-icon"></i>
+                {% endif %}
+
+                <div class="location-title">{{ location.name }}</div>
+                <div class="location-type">Viewing Location</div>
+                <div class="location-details">
+                    <div>Elevation: {{ location.elevation }}m</div>
+                    {% if location.cloudCoverPercentage >= 0 %}
+                    <div>Cloud Cover: {{ location.cloudCoverPercentage }}%</div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+
+            {% for event in celestial_events %}
+            <div class="location-item"
+                 data-lat="{{ event.latitude }}"
+                 data-lng="{{ event.longitude }}"
+                 data-type="event"
+                 data-event-type="{{ event.event_type }}">
+                <div class="location-title">{{ event.name }}</div>
+                <div class="location-type">{{ event.get_event_type_display }}</div>
+                <div class="event-details">
+                    <div>Starts: {{ event.start_time|date:"M d, Y H:i" }}</div>
+                    <div>Ends: {{ event.end_time|date:"M d, Y H:i" }}</div>
+                    <div>Viewing Radius: {{ event.viewing_radius }}km</div>
+                    <div class="event-description">{{ event.description|truncatechars:100 }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            {% if viewing_locations.has_previous %}
+            <a class="page-item" href="?page={{ viewing_locations.previous_page_number }}">←</a>
+            {% endif %}
+
+            <span class="page-item active">{{ viewing_locations.number }}</span>
+
+            {% if viewing_locations.has_next %}
+            <a class="page-item" href="?page={{ viewing_locations.next_page_number }}">→</a>
+            {% endif %}
+        </div>
+    </div>
+
     {% csrf_token %}
-	<div id="map"></div>
+	<!-- Map View -->
+    <div class="map-view">
+        <div class="map-controls">
+            <button class="map-control-btn" id="toggle-dark-sky">Toggle Dark Sky</button>
+            <button class="map-control-btn" id="show-tile-borders">Show Borders</button>
+            <button class="map-control-btn" id="show-pixel-grid">Show Grid</button>
+        </div>
+        <div id="map"></div>
+    </div>
 </div>
 {% endblock %}
 
 <!-- Extra JS content -->
 {% block extra_scripts %}
-    <script>
-        // Class for debugging map features:
-        class MapDebugger {
-            constructor(map) {
-                this.map = map;
-                this.tileDebugEnabled = false;
-                this.pixelDebugEnabled = false;
-                this.currentTileLayer = null;
-                this.updateTimeout = null;
+<script type="module">
+    import {MapController} from "../../../static/js/pages/map/MapController.js";
 
-                this.selectedTile = null;
-
-                // Add throttled update on move
-                this.map.on('move', () => {
-                    if (!this.updateTimeout) {
-                        this.updateTimeout = setTimeout(() => {
-                            this.updateTileGrid();
-                            if (this.pixelDebugEnabled) {
-                                this.updatePixelGrid();
-                            }
-                            this.updateTimeout = null;
-                        }, 16); // Approximately 60fps (1000ms / 60)
-                    }
-                });
-
-                // Final update when movement ends
-                this.map.on('moveend', () => {
-                    if (this.updateTimeout) {
-                        clearTimeout(this.updateTimeout);
-                        this.updateTimeout = null;
-                    }
-                    this.updateTileGrid();
-                });
-            }
-
-            // TILE DEBUG FUNCTIONS: ---------------------------- //
-
-            toggleTileDebug() {
-                if (this.tileDebugEnabled) {
-                    // Remove existing tile debug layers
-                    if (this.map.getLayer('tile-debug-grid')) {
-                        this.map.removeLayer('tile-debug-grid');
-                    }
-                    if (this.map.getSource('tile-debug-source')) {
-                        this.map.removeSource('tile-debug-source');
-                    }
-                    this.tileDebugEnabled = false;
-                } else {
-                    // Create a grid source for the current zoom level
-                    const zoom = Math.floor(this.map.getZoom());
-                    const bounds = this.map.getBounds();
-
-                    // Calculate tile boundaries
-                    const gridFeatures = this.createTileGrid(
-                        bounds.getWest(),
-                        bounds.getSouth(),
-                        bounds.getEast(),
-                        bounds.getNorth(),
-                        zoom
-                    );
-
-                    // Add source and layer for tile grid
-                    this.map.addSource('tile-debug-source', {
-                        'type': 'geojson',
-                        'data': {
-                            'type': 'FeatureCollection',
-                            'features': gridFeatures
-                        }
-                    });
-
-                    this.map.addLayer({
-                        'id': 'tile-debug-grid',
-                        'type': 'line',
-                        'source': 'tile-debug-source',
-                        'layout': {
-                            'line-join': 'round',
-                            'line-cap': 'round'
-                        },
-                        'paint': {
-                            'line-color': '#FF0000',
-                            'line-width': 2,
-                            'line-opacity': 1
-                        }
-                    });
-
-                    this.tileDebugEnabled = true;
-                }
-            }
-
-            createTileGrid(west, south, east, north, zoom) {
-                const features = [];
-
-                // Add bounds limiting to prevent pole issues
-                south = Math.max(south, -85.0511); // Limit south to prevent projection issues
-                north = Math.min(north, 85.0511);  // Limit north to prevent projection issues
-
-                // Calculate tile ranges with safety checks
-                const n = Math.pow(2, zoom);
-                const west_tile = Math.floor((west + 180) / 360 * n);
-                const east_tile = Math.ceil((east + 180) / 360 * n);
-
-                // Add safety checks for latitude calculations
-                const south_lat_rad = Math.max(-85.0511 * Math.PI / 180, south * Math.PI / 180);
-                const north_lat_rad = Math.min(85.0511 * Math.PI / 180, north * Math.PI / 180);
-
-                const south_tile = Math.floor((1 - Math.log(Math.tan(south_lat_rad) + 1 / Math.cos(south_lat_rad)) / Math.PI) / 2 * n);
-                const north_tile = Math.ceil((1 - Math.log(Math.tan(north_lat_rad) + 1 / Math.cos(north_lat_rad)) / Math.PI) / 2 * n);
-
-                // Add limit to number of tiles to prevent excessive calculations
-                const MAX_TILES = 1000; // Arbitrary limit to prevent browser crashes
-                const tile_count = (east_tile - west_tile) * (south_tile - north_tile);
-
-                if (tile_count > MAX_TILES) {
-                    console.warn('Too many tiles to display, zoom in for more detail');
-                    return features;
-                }
-
-                try {
-                    // Create vertical lines (longitude boundaries)
-                    for (let x = west_tile; x <= east_tile; x++) {
-                        const lon = x * 360 / n - 180;
-                        features.push({
-                            'type': 'Feature',
-                            'geometry': {
-                                'type': 'LineString',
-                                'coordinates': [
-                                    [lon, Math.max(-85.0511, south)],
-                                    [lon, Math.min(85.0511, north)]
-                                ]
-                            },
-                            'properties': {
-                                'type': 'vertical'
-                            }
-                        });
-                    }
-
-                    // Create horizontal lines (latitude boundaries)
-                    for (let y = north_tile; y <= south_tile; y++) {
-                        // Add safety check for latitude calculation
-                        try {
-                            const lat = Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI;
-                            if (lat >= -85.0511 && lat <= 85.0511) {  // Only add if within safe bounds
-                                features.push({
-                                    'type': 'Feature',
-                                    'geometry': {
-                                        'type': 'LineString',
-                                        'coordinates': [
-                                            [west, lat],
-                                            [east, lat]
-                                        ]
-                                    },
-                                    'properties': {
-                                        'type': 'horizontal'
-                                    }
-                                });
-                            }
-                        } catch (e) {
-                            console.warn('Skipping invalid latitude calculation');
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error creating tile grid:', e);
-                    return [];  // Return empty features on error
-                }
-
-                return features;
-            }
-
-            updateTileGrid() {
-                if (this.tileDebugEnabled) {
-                    try {
-                        const bounds = this.map.getBounds();
-                        const zoom = Math.floor(this.map.getZoom());
-
-                        // Check if we're too close to poles
-                        if (bounds.getNorth() > 85.0511 || bounds.getSouth() < -85.0511) {
-                            console.warn('Too close to poles, tile debug may be inaccurate');
-                            return;  // Optionally return to prevent updates near poles
-                        }
-
-                        const gridFeatures = this.createTileGrid(
-                            bounds.getWest(),
-                            bounds.getSouth(),
-                            bounds.getEast(),
-                            bounds.getNorth(),
-                            zoom
-                        );
-
-                        const source = this.map.getSource('tile-debug-source');
-                        if (source) {
-                            source.setData({
-                                'type': 'FeatureCollection',
-                                'features': gridFeatures
-                            });
-                        }
-                    } catch (e) {
-                        console.error('Error updating tile grid:', e);
-                        // Optionally disable tile debug if there's an error
-                        this.tileDebugEnabled = false;
-                    }
-                }
-            }
-
-            // PIXEL DEBUG FUNCTIONS: --------------------------- //
-
-            createPixelGrid(west, south, east, north, zoom) {
-                const features = [];
-                const tileSize = 256; // Standard tile size
-
-                if(!this.selectedTile) {
-                    return features;
-                }
-
-                // Only create pixel grid for the selected tile:
-                const { x: x_tile, y: y_tile } = this.selectedTile;
-
-                // Calculate bounds for just this tile
-                const n = Math.pow(2, zoom);
-                const tile_west = x_tile * 360 / n - 180;
-                const tile_east = (x_tile + 1) * 360 / n - 180;
-                const tile_north = Math.atan(Math.sinh(Math.PI * (1 - 2 * y_tile / n))) * 180 / Math.PI;
-                const tile_south = Math.atan(Math.sinh(Math.PI * (1 - 2 * (y_tile + 1) / n))) * 180 / Math.PI;
-
-                // Only show pixel grid when zoomed in enough
-                if (zoom < 8) {
-                    console.warn('Zoom in to see pixel grid');
-                    return features;
-                }
-
-                // Create grid for each pixel in the selected tile
-                for (let px = 0; px < tileSize; px++) {
-                    for (let py = 0; py < tileSize; py++) {
-                        const pixel_west = tile_west + (tile_east - tile_west) * px / tileSize;
-                        const pixel_east = tile_west + (tile_east - tile_west) * (px + 1) / tileSize;
-                        const pixel_north = tile_north + (tile_south - tile_north) * py / tileSize;
-                        const pixel_south = tile_north + (tile_south - tile_north) * (py + 1) / tileSize;
-
-                        features.push({
-                            type: 'Feature',
-                            geometry: {
-                                type: 'LineString',
-                                coordinates: [
-                                    [pixel_west, pixel_north],
-                                    [pixel_east, pixel_north],
-                                    [pixel_east, pixel_south],
-                                    [pixel_west, pixel_south],
-                                    [pixel_west, pixel_north]
-                                ]
-                            },
-                            properties: {
-                                type: 'pixel',
-                                tile_x: x_tile,
-                                tile_y: y_tile,
-                                pixel_x: px,
-                                pixel_y: py
-                            }
-                        });
-                    }
-                }
-                return features;
-            }
-
-            // Add click handler for selecting tiles
-            setupTileSelection() {
-                this.map.on('click', (e) => {
-                    if (this.pixelDebugEnabled) {
-                        const zoom = Math.floor(this.map.getZoom());
-                        const coords = this.getTileCoordinates(e.lngLat.lng, e.lngLat.lat, zoom);
-
-                        // Update selected tile
-                        this.selectedTile = {
-                            x: coords.x,
-                            y: coords.y,
-                            z: coords.z
-                        };
-
-                        // Update the pixel grid
-                        this.updatePixelGrid();
-                    }
-                });
-            }
-
-            togglePixelDebug() {
-                if (this.pixelDebugEnabled) {
-                    if (this.map.getLayer('pixel-debug-grid')) {
-                        this.map.removeLayer('pixel-debug-grid');
-                    }
-                    if (this.map.getSource('pixel-debug-source')) {
-                        this.map.removeSource('pixel-debug-source');
-                    }
-                    this.selectedTile = null; // Reset selected tile
-                    this.pixelDebugEnabled = false;
-                } else {
-                    this.map.addSource('pixel-debug-source', {
-                        'type': 'geojson',
-                        'data': {
-                            'type': 'FeatureCollection',
-                            'features': []  // Start empty until a tile is selected
-                        }
-                    });
-
-                    this.map.addLayer({
-                        'id': 'pixel-debug-grid',
-                        'type': 'line',
-                        'source': 'pixel-debug-source',
-                        'layout': {
-                            'line-join': 'round',
-                            'line-cap': 'round'
-                        },
-                        'paint': {
-                            'line-color': '#00FF00',
-                            'line-width': 0.5,
-                            'line-opacity': 0.1
-                        }
-                    });
-
-                    this.pixelDebugEnabled = true;
-                    this.setupTileSelection(); // Setup click handling
-                }
-            }
-
-            updatePixelGrid() {
-                if (this.pixelDebugEnabled) {
-                    const bounds = this.map.getBounds();
-                    const zoom = Math.floor(this.map.getZoom());
-
-                    const source = this.map.getSource('pixel-debug-source');
-                    if (source) {
-                        source.setData({
-                            'type': 'FeatureCollection',
-                            'features': this.createPixelGrid(
-                                bounds.getWest(),
-                                bounds.getSouth(),
-                                bounds.getEast(),
-                                bounds.getNorth(),
-                                zoom
-                            )
-                        });
-                    }
-                }
-            }
-
-            addDebugControls() {
-                // Tile debug control button:
-                const debugButton = document.createElement('button');
-                debugButton.className = 'mapboxgl-ctrl-group mapboxgl-ctrl debug-control';
-                debugButton.innerHTML = 'Show Tile Borders';
-                debugButton.onclick = () => {
-                    this.toggleTileDebug();
-                    debugButton.innerHTML = this.tileDebugEnabled ? 'Hide Tile Borders' : 'Show Tile Borders';
-                    debugButton.classList.toggle('active', this.tileDebugEnabled);
-                };
-                this.map.getContainer().appendChild(debugButton);
-
-                // Pixel debug control button:
-                const pixelDebugButton = document.createElement('button');
-                pixelDebugButton.className = 'mapboxgl-ctrl-group mapboxgl-ctrl debug-control';
-                pixelDebugButton.innerHTML = 'Show Pixel Grid';
-                pixelDebugButton.onclick = () => {
-                    this.togglePixelDebug();
-                    this.selectedTile = null;
-                    pixelDebugButton.innerHTML = this.pixelDebugEnabled ? 'Hide Pixel Grid' : 'Show Pixel Grid';
-                    pixelDebugButton.classList.toggle('active', this.pixelDebugEnabled);
-                };
-                this.map.getContainer().appendChild(pixelDebugButton);
-
-                // Update popup styling
-                this.map.on('click', (e) => {
-                    if (this.tileDebugEnabled) {
-                        const zoom = Math.floor(this.map.getZoom());
-                        const tile = this.getTileCoordinates(e.lngLat.lng, e.lngLat.lat, zoom);
-
-                        new mapboxgl.Popup({
-                            closeButton: true,
-                            className: 'hint',
-                        })
-                        .setLngLat(e.lngLat)
-                        .setHTML(`
-                            <div class="popup">
-                                <h4>Tile Information</h4>
-                                <p>X: ${tile.x}</p>
-                                <p>Y: ${tile.y}</p>
-                                <p>Zoom: ${zoom}</p>
-                            </div>
-                        `)
-                        .addTo(this.map);
-                    }
-                });
-            }
-
-            getTileCoordinates(lng, lat, zoom) {
-                // Convert lng/lat to tile coordinates
-                const n = Math.pow(2, zoom);
-                const x = Math.floor((lng + 180) / 360 * n);
-                const y = Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * n);
-                return { x, y, z: zoom };
-            }
+    function initializePage() {
+        if (typeof initNavbar === 'function') {
+            initNavbar();
         }
 
-        // Map controller class for drawing layers, user interaction:
-        class MapController {
-            constructor() {
-                this.map = null;
-                this.userInteracting = false;
-                this.spinEnabled = true;
-                this.secondsPerRevolution = 720;
-                this.maxSpinZoom = 3;
-                this.debugger = null;
-
-                this.locationMarkers = new Map();
-                this.eventMarkers = new Map();
-            }
-
-            initialize() {
-                mapboxgl.accessToken = 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA';
-                this.map = new mapboxgl.Map({
-                    container: 'map',
-
-                    // For other styles:
-                    // https://docs.mapbox.com/api/maps/styles/
-                    style: 'mapbox://styles/mapbox/standard',
-                    projection: 'globe',
-                    zoom: 2,
-                    center: [-105.35, 39.113014],
-                });
-
-                this.map.on('load', () => {
-
-                    // Check URL parameters for location to focus --- //
-                    const urlParams = new URLSearchParams(window.location.search);
-                    const lat = parseFloat(urlParams.get('lat'));
-                    const lng = parseFloat(urlParams.get('lng'));
-                    const zoom = parseFloat(urlParams.get('zoom')) || 12;
-
-                    if (lat && lng) {
-                        this.map.flyTo({
-                            center: [lng, lat],
-                            zoom: zoom,
-                            essential: true
-                        });
-                    }
-
-                    // Adding controls: ----------------------------- //
-                    this.map.addControl(new mapboxgl.NavigationControl());
-                    this.map.addControl(new mapboxgl.GeolocateControl({
-                        positionOptions: { enableHighAccuracy: true },
-                        trackUserLocation: true,
-                        showUserHeading: true
-                    }));
-
-                    // Setting up event listeners: ------------------ //
-                    this.map.on('mousedown', () => this.userInteracting = true);
-                    this.map.on('dragstart', () => this.userInteracting = true);
-                    this.map.on('moveend', () => this.spinGlobe());
-
-                    this.map.on('click', () => {
-                        const existingPopups = document.getElementsByClassName('mapboxgl-popup');
-                        while (existingPopups[0]) {
-                            existingPopups[0].remove();
-                        }
-                    });
-
-                    // Add right-click event listener:
-                    this.map.on('contextmenu', (e) => {
-                        // First, close all existing popups
-                        const existingPopups = document.getElementsByClassName('mapboxgl-popup');
-                        while (existingPopups[0]) {
-                            existingPopups[0].remove();
-                        }
-
-                        // Get coordinates from click event
-                        const coordinates = e.lngLat;
-
-                        // Create popup content with coordinates and quality score
-                        const popupContent = `
-                            <div class="popup">
-                                <h4>Add New Point</h4>
-                                <div class="context-menu-buttons">
-                                    <button onclick="addLocation(${coordinates.lng}, ${coordinates.lat})"
-                                            class="btn">
-                                        <i class="fas fa-location-dot"></i>
-                                        Add Viewing Location
-                                    </button>
-                                    <button onclick="addEvent(${coordinates.lng}, ${coordinates.lat})"
-                                            class="btn">
-                                        <i class="fas fa-star"></i>
-                                        Add Celestial Event
-                                    </button>
-                                </div>
-                                <div class="coordinates-display">
-                                    <small>Longitude: ${coordinates.lng.toFixed(6)}</small><br>
-                                    <small>Latitude: ${coordinates.lat.toFixed(6)}</small>
-                                </div>
-                            </div>
-                        `;
-
-                        // Create and show popup
-                        new mapboxgl.Popup()
-                            .setLngLat(coordinates)
-                            .setHTML(popupContent)
-                            .addTo(this.map);
-                    });
-
-                    // Adding Dark Sky Layer & Controls: ------------ //
-                    this.setupDarkSkyLayer();
-
-                    // Initialize the debugger after dark sky layer:
-                    this.debugger = new MapDebugger(this.map);
-                    this.debugger.addDebugControls();
-
-                    this.map.setFog({
-                        'space-color': '#000000',
-                        'star-intensity': 1.0,
-                        'color': '#242B4B',
-                        'high-color': '#161B36',
-                        'horizon-blend': 0.05
-                    });
-
-                    this.map.addSource('mapbox-dem', {
-                        'type': 'raster-dem',
-                        'url': 'mapbox://mapbox.terrain-rgb',
-                        'tileSize': 512,
-                        'maxzoom': 14
-                    });
-                    this.map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
-
-                    this.loadLocationsAndEvents();
-                });
-
-                this.spinGlobe();
-            }
-
-            setupDarkSkyLayer() {
-                // Add dark sky source and layer:
-                this.map.addSource('dark-sky', {
-                    type: 'raster',
-                    tiles: ['/tiles/{z}/{x}/{y}.png'],
-                    tileSize: 256,
-                    attribution: 'Dark Sky Data © NASA Earth Observatory',
-                    bounds: [-180, -85.0511, 180, 85.0511],
-                    minzoom: 0,
-                    maxzoom: 8
-                });
-
-                this.map.addLayer({
-                    id: 'dark-sky-layer',
-                    type: 'raster',
-                    source: 'dark-sky',
-                    layout: {
-                        'visibility': 'none',
-                    },
-                    paint: {
-                        'raster-opacity': 0.7,
-                        'raster-fade-duration': 0
-                    }
-                });
-
-                // Add dark sky layer toggle button:
-                const button = document.createElement('button');
-                button.className = 'mapboxgl-ctrl-group mapboxgl-ctrl control';
-                button.innerText = 'Toggle Dark Sky';
-                button.onclick = () => {
-                    const visibility = this.map.getLayoutProperty('dark-sky-layer', 'visibility');
-                    this.map.setLayoutProperty(
-                        'dark-sky-layer',
-                        'visibility',
-                        visibility === 'visible' ? 'none' : 'visible'
-                    );
-                    // Update button state
-                    button.classList.toggle('active', visibility !== 'visible');
-                };
-                this.map.getContainer().appendChild(button);
-
-                // Since layer starts hidden, remove active class initially
-                button.classList.remove('active');
-
-                // Adding the legend:
-                const legend = document.createElement('div');
-                legend.className = 'mapboxgl-ctrl-group mapboxgl-ctrl legend';
-                legend.innerHTML = `
-                    <h4>Dark Sky Levels</h4>
-                    <div style="display: flex; align-items: center; margin: 5px 0;">
-                        <div style="background: linear-gradient(to right, black, floralwhite); width: 100px; height: 20px;"></div>
-                        <span style="margin-left: 10px;">Light Pollution Scale</span>
-                    </div>
-                `;
-                this.map.getContainer().appendChild(legend);
-            }
-
-            displayLocations(locations) {
-                try {
-                    // Clear existing markers:
-                    this.locationMarkers.forEach(marker => marker.remove());
-                    this.locationMarkers.clear();
-
-                    // Store locations data with markers for state management:
-                    this.locationsData = new Map(locations.map(loc => [loc.id, loc]))
-
-                    locations.forEach(location => {
-                        // Create marker element
-                        const el = document.createElement('div');
-                        el.className = 'location-marker';
-
-                        // Set marker color based on quality score
-                        const qualityScore = parseFloat(location.quality_score) || 0;
-                        const color = qualityScore >= 75 ? '#00ff00' :
-                            qualityScore >= 50 ? '#ffff00' :
-                                '#ff0000';
-
-                        // Create marker HTML
-                        el.innerHTML = `
-                            <div class="marker-icon" style="background-color: ${color}">
-                                <i class="fa-solid fa-location-dot"></i>
-                            </div>
-                        `;
-
-                        // Create and add the marker
-                        const marker = new mapboxgl.Marker({
-                            element: el,
-                            anchor: 'bottom'
-                        })
-                        .setLngLat([location.longitude, location.latitude])
-                        .addTo(this.map);
-
-                        // Handle click events:
-                        el.addEventListener('click', (e) => {
-                            // Preventing map click from closing popup:
-                            e.stopPropagation();
-
-                            // Create or remove click popup:
-                            if (el.clickPopup) {
-                                el.clickPopup.remove();
-                                el.clickPopup = null;
-                            } else {
-                                const currentLocation = this.locationsData.get(location.id);
-                                el.clickPopup = new mapboxgl.Popup({
-                                    closeButton: true,
-                                    offset: [0, -10]
-                                })
-                                .setLngLat([location.longitude, location.latitude])
-                                .setHTML(this.createPopupContent(currentLocation))
-                                .addTo(this.map);
-
-                                el.clickPopup.on('close', () => {
-                                    el.clickPopup = null;
-                                });
-                            }
-                        });
-
-                        // Store marker reference
-                        this.locationMarkers.set(location.id, marker);
-                    });
-
-                } catch (error) {
-                    console.error('Error displaying locations:', error);
-                }
-            }
-
-            createPopupContent(location) {
-                return `
-                    <div class='popup'>
-                        <h4>${location.name}</h4>
-                        <p>Quality Score: ${location.quality_score}</p>
-                        <p>Elevation: ${location.elevation} m</p>
-                        <p>Cloud Cover: ${location.cloudCoverPercentage}%</p>
-                        ${location.light_pollution_value ?
-                            `<p>Light Pollution: ${location.light_pollution_value}</p>` :
-                            ''}
-                        <button
-                            onclick="window.mapController.toggleLocationFavorite(${location.id}, this)"
-                            class="btn favorite-btn ${location.is_favorited ? 'favorited' : ''}"
-                        >
-                            <i class="fas ${location.is_favorited ? 'fa-heart' : 'fa-heart-o'}"></i>
-                            ${location.is_favorited ? 'Remove from Favorites' : 'Add to Favorites'}
-                        </button>
-                        <button class="btn favorite-button" onclick="window.location.href='https://www.google.com/maps/dir/?api=1&destination=${location.latitude },${ location.longitude }'">Get directions!</a>
-                    </div>
-                `;
-            }
-
-            async toggleLocationFavorite(locationId, button) {
-                try {
-                    const location = this.locationsData.get(locationId);
-                    const currentlyFavorited = location.is_favorited;
-
-                    await LocationService.toggleFavorite(locationId, currentlyFavorited);
-
-                    // Update the stored location data
-                    location.is_favorited = !currentlyFavorited;
-                    this.locationsData.set(locationId, location);
-
-                    // Toggle button state immediately after successful API call
-                    button.classList.toggle('favorited');
-                    button.innerHTML = `
-                        <i class="fas ${!currentlyFavorited ? 'fa-heart' : 'fa-heart-o'}"></i>
-                        ${!currentlyFavorited ? 'Remove from Favorites' : 'Add to Favorites'}
-                    `;
-                } catch (error) {
-                    console.error('Error toggling favorite:', error);
-                    alert('Failed to update favorite status. Please try again.');
-                }
-            }
-
-            displayEvents(events) {
-                try {
-                    // Clear existing event markers:
-                    this.eventMarkers.forEach(marker => marker.remove());
-                    this.eventMarkers.clear();
-
-                    // Event type configurations
-                    const eventConfigs = {
-                        'METEOR': {
-                            color: '#FF6B6B',
-                            icon: '<i class="fas fa-meteor"></i>'
-                        },
-                        'ECLIPSE': {
-                            color: '#4ECDC4',
-                            icon: '<i class="fas fa-moon"></i>'
-                        },
-                        'PLANET': {
-                            color: '#45B7D1',
-                            icon: '<i class="fas fa-globe"></i>'
-                        },
-                        'AURORA': {
-                            color: '#96CEB4',
-                            icon: '<i class="fas fa-sparkles"></i>'
-                        },
-                        'COMET': {
-                            color: '#F0ADFFFF',
-                            icon: '<i class="fas fa-star"></i>'
-                        },
-                        'OTHER': {
-                            color: '#CC00CC',
-                            icon: '<i class="fas fa-star-shooting"></i>'
-                        }
-                    };
-
-                    console.log('Events received:', events);
-
-                    events.forEach(event => {
-                        const el = document.createElement('div');
-                        el.className = 'event-marker';
-
-                        // Get event styling configuration, fallback to OTHER if type not found
-                        const config = eventConfigs[event.event_type] || eventConfigs['OTHER'];
-
-                        // Create marker HTML with event-specific icon
-                        el.innerHTML = `
-                            <div class="event-marker-icon" style="background-color: ${config.color}">
-                                ${config.icon}
-                            </div>
-                            <div class="event-marker-radius" style="border-color: ${config.color}"></div>
-                        `;
-
-                        // Create and add marker
-                        const marker = new mapboxgl.Marker({
-                            element: el,
-                            anchor: 'center'
-                        })
-                        .setLngLat([event.longitude, event.latitude])
-                        .addTo(this.map);
-
-                        // Add hover functionality
-                        el.addEventListener('mouseenter', () => {
-                            const popupContent = `
-                                <div class="popup">
-                                    <h4>${event.name}</h4>
-                                    <p>Type: ${event.event_type}</p>
-                                    <p>Start: ${new Date(event.start_time).toLocaleString()}</p>
-                                    <p>End: ${new Date(event.end_time).toLocaleString()}</p>
-                                    <p>Viewing Radius: ${event.viewing_radius} km</p>
-                                </div>
-                            `;
-
-                            const popup = new mapboxgl.Popup({
-                                closeButton: false,
-                                className: 'popup',
-                                offset: [0, -10]
-                            })
-                            .setLngLat([event.longitude, event.latitude])
-                            .setHTML(popupContent)
-                            .addTo(this.map);
-
-                            el.popup = popup;
-                        });
-
-                        el.addEventListener('mouseleave', () => {
-                            if (el.popup) {
-                                el.popup.remove();
-                                el.popup = null;
-                            }
-                        });
-
-                        // Click event for more details
-                        el.addEventListener('click', () => {
-                            // Fly to event location
-                            this.map.flyTo({
-                                center: [event.longitude, event.latitude],
-                                zoom: 8,
-                                essential: true
-                            });
-                        });
-
-                        this.eventMarkers.set(event.id, marker);
-                    });
-
-                } catch (error) {
-                    console.error('Error displaying events:', error);
-                }
-            }
-
-            async loadLocationsAndEvents() {
-                try {
-                    console.log('Starting to load locations and events...');
-
-                    const [locations, events] = await Promise.all([
-                        LocationService.getViewingLocations(),
-                        LocationService.getCelestialEvents()
-                    ]);
-                    console.log('Locations fetched:', locations);
-
-
-                    if (locations?.length > 0) {
-                        this.displayLocations(locations);
-                    }
-
-                    if (events?.length > 0) {
-                        this.displayEvents(events);
-                    }
-                } catch (error) {
-                    console.error('Error loading data:', error);
-                }
-            }
-
-            spinGlobe() {
-                const zoom = this.map.getZoom();
-                if (this.spinEnabled && !this.userInteracting && zoom < this.maxSpinZoom) {
-                    let distancePerSecond = 360 / this.secondsPerRevolution;
-                    const center = this.map.getCenter();
-                    center.lng -= distancePerSecond;
-                    this.map.easeTo({ center, duration: 1000, easing: (n) => n });
-                }
-            }
-        }
-
-        // API Service for handling all data fetching:
-        class LocationService {
-            static getCsrfToken() {
-                return document.querySelector('[name=csrfmiddlewaretoken]').value;
-            }
-
-            static async getLocationStatus(locationId) {
-                const response = await fetch(`/api/viewing-locations/${locationId}/favorite/`, {
-                    headers: {
-                        'Content-Type': 'applications/json',
-                        'X-CSRFToken': this.getCsrfToken()
-                    }
-                });
-                if (!response.ok) throw new Error('Failed to get location status');
-                return response.json();
-            }
-
-            static async toggleFavorite(locationID, currentlyFavorited) {
-                const endpoint = currentlyFavorited ? 'unfavorite' : 'favorite';
-                const response = await fetch(`/api/viewing-locations/${locationID}/${endpoint}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'applications/json',
-                        'X-CSRFToken': this.getCsrfToken()
-                    }
-                });
-                if (!response.ok) throw new Error(`Failed to ${endpoint} location`);
-                return response.json();
-            }
-
-            static async getViewingLocations() {
-                const response = await fetch('/api/viewing-locations/', {
-                    headers: {
-                        'Content-Type': 'applications/json',
-                        'X-CSRFToken': this.getCsrfToken()
-                    }
-                });
-                if (!response.ok) throw new Error('Failed to fetch viewing locations');
-                return response.json();
-            }
-
-            static async getCelestialEvents() {
-                const response = await fetch('/api/celestial-events/', {
-                    headers: {
-                        'Content-Type': 'applications/json',
-                        'X-CSRFToken': this.getCsrfToken()
-                    }
-                });
-                if (!response.ok) throw new Error('Failed to fetch celestial events');
-                return response.json();
-            }
-        }
-
-        // Function to add a location when right-clicking:
-        async function addLocation(longitude, latitude) {
-             try {
-                const response = await fetch('/api/viewing-locations/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    },
-                    body: JSON.stringify({
-                        name: `Location at ${latitude.toFixed(2)}, ${longitude.toFixed(2)}`,
-                        latitude: latitude,
-                        longitude: longitude,
-                        elevation: 0  // We could fetch actual elevation data here
-                    })
-                });
-
-                if (response.ok) {
-                    // Refresh the locations on the map
-                    const mapController = window.mapController;  // We'll need to make this accessible
-                    await mapController.loadLocationsAndEvents();
-
-                    // Close any open popups
-                    const popups = document.getElementsByClassName('mapboxgl-popup');
-                    if (popups.length) {
-                        popups[0].remove();
-                    }
-                } else {
-                    console.error('Failed to add location');
-                }
-            } catch (error) {
-                console.error('Error adding location:', error);
-            }
-        }
-
-        // Function to add an event when right-clicking:
-        async function addEvent(longitude, latitude) {
-            // Create a form popup for event details
-            const formPopupContent = `
-                <div class="popup">
-                    <h4>Add Celestial Event</h4>
-                    <form id="eventForm" onsubmit="return submitEventForm(${longitude}, ${latitude})">
-                        <div class="form-group">
-                            <input type="text" class="form-control" id="eventName" placeholder="Event Name" required>
-                        </div>
-                        <div class="form-group">
-                            <select class="form-control" id="eventType" required>
-                                <option value="">Select Event Type</option>
-                                <option value="METEOR">Meteor Shower</option>
-                                <option value="ECLIPSE">Eclipse</option>
-                                <option value="PLANET">Planetary Event</option>
-                                <option value="AURORA">Aurora</option>
-                                <option value="COMET">Comet</option>
-                                <option value="OTHER">Other</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <input type="datetime-local" class="form-control" id="startTime" required>
-                            <small class="text-muted">Start Time</small>
-                        </div>
-                        <div class="form-group">
-                            <input type="datetime-local" class="form-control" id="endTime" required>
-                            <small class="text-muted">End Time</small>
-                        </div>
-                        <div class="form-group">
-                            <input type="number" class="form-control" id="viewingRadius"
-                                   placeholder="Viewing Radius (km)" required min="0">
-                        </div>
-                        <div class="form-group">
-                            <textarea class="form-control" id="description"
-                                      placeholder="Description" required></textarea>
-                        </div>
-                        <div class="form-group">
-                            <button type="submit" class="btn">Add Event</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-
-            // Remove any existing popups
-            const popups = document.getElementsByClassName('mapboxgl-popup');
-            while(popups[0]) {
-                popups[0].remove();
-            }
-
-            // Show the form popup
-            new mapboxgl.Popup({
-                closeButton: true,
-                closeOnClick: false,
-            })
-            .setLngLat([longitude, latitude])
-            .setHTML(formPopupContent)
-            .addTo(window.mapController.map);
-        }
-
-        // Function to submit an event form to the API:
-        async function submitEventForm(longitude, latitude) {
-            event.preventDefault();  // Add this line
-
-            const formData = {
-                name: document.getElementById('eventName').value,
-                event_type: document.getElementById('eventType').value,
-                start_time: document.getElementById('startTime').value,
-                end_time: document.getElementById('endTime').value,
-                viewing_radius: document.getElementById('viewingRadius').value,
-                description: document.getElementById('description').value,
-                longitude: longitude,
-                latitude: latitude,
-                elevation: 0
-            };
-
-            try {
-                const response = await fetch('/api/celestial-events/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                    },
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.ok) {
-                    // Refresh the events on the map
-                    await window.mapController.loadLocationsAndEvents();
-
-                    // Close any open popups
-                    const popups = document.getElementsByClassName('mapboxgl-popup');
-                    while(popups[0]) {
-                        popups[0].remove();
-                    }
-                } else {
-                    console.error('Failed to add event', response);
-                    alert('Failed to add event. Please try again.');
-                }
-            } catch (error) {
-                console.error('Error adding event:', error);
-                alert('Error adding event. Please try again.');
-            }
-
-            return false; // Prevent form submission
-        }
-
-        function initializePage() {
-            if (typeof initNavbar === 'function') {
-                initNavbar();
-            }
-
-            window.mapController = new MapController();
-            window.mapController.initialize();
-        }
-
-        setTimeout(initializePage, 10);
-
-    </script>
+        window.mapController = new MapController();
+        window.mapController.initialize();
+    }
+    setTimeout(initializePage, 10);
+</script>
 {% endblock %}

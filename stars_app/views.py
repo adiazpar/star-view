@@ -2,13 +2,20 @@ from django.shortcuts import render, redirect
 
 # Importing other things from project files:
 from stars_app.models import *
-from stars_app.utils import LightPollutionCalculator, is_valid_email
+from stars_app.utils import is_valid_email
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.contrib.auth.views import (
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView,
+)
+from django.urls import reverse_lazy
 
 # To display error/success messages:
 from django.contrib import messages
@@ -17,7 +24,7 @@ from django.contrib import messages
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from stars_app.serializers import *
 
 # Tile libraries:
@@ -32,13 +39,16 @@ from django.contrib.admin.views.decorators import staff_member_required
 # Distance
 from geopy.distance import geodesic
 
+# Map:
+from django.core.paginator import Paginator
+
 
 # ---------------------------------------------------------------- #
 # Location Management Views:
 class CelestialEventViewSet(viewsets.ModelViewSet):
     queryset = CelestialEvent.objects.all()
     serializer_class = CelestialEventSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         # Set elevation to 0 if not provided
@@ -47,36 +57,23 @@ class CelestialEventViewSet(viewsets.ModelViewSet):
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
     serializer_class = ViewingLocationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
 
     def get_queryset(self):
         queryset = ViewingLocation.objects.all()
         favorites_only = self.request.query_params.get('favorites_only', 'false')
-        if favorites_only.lower() == 'true':
+        if favorites_only.lower() == 'true' and self.request.user.is_authenticated:
             queryset = queryset.filter(favorited_by__user=self.request.user)
         return queryset
 
     def perform_create(self, serializer):
-        # Calculate light pollution before saving
-        calculator = LightPollutionCalculator()
-
         # Get values from serializer:
         latitude = serializer.validated_data['latitude']
         longitude = serializer.validated_data['longitude']
         elevation = serializer.validated_data.get('elevation', 0)
 
-        # Calculate values:
-        pollution_value = calculator.calculate_light_pollution(latitude, longitude, radius_km=1)
-        quality_score = calculator.calculate_quality_score(
-            latitude=latitude,
-            longitude=longitude,
-            elevation=elevation,
-            viewing_radius_km=1
-        )
         serializer.save(
             added_by=self.request.user,
-            light_pollution_value=pollution_value,
-            quality_score=quality_score
         )
 
     @action(detail=True, methods=['POST', 'GET'])
@@ -319,7 +316,21 @@ def home(request):
     return render(request, 'stars_app/home.html')
 
 def map(request):
-    return render(request, 'stars_app/map.html')
+    # Get all locations and events:
+    locations = ViewingLocation.objects.all()
+    events = CelestialEvent.objects.all()
+
+    # Paginate locations:
+    paginator = Paginator(locations, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    context = {
+        'viewing_locations': page_obj,
+        'celestial_events': events,
+        'mapbox_token': 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA'
+    }
+    return render(request, 'stars_app/map.html', context)
 
 def event_list(request):
     event_list = CelestialEvent.objects.all()
@@ -346,6 +357,8 @@ def details(request, event_id):
     }
     return render(request, 'stars_app/details.html', current_data)
 
+# ---------------------------------------------------------------- #
+# User Profile Views:
 @login_required(login_url='login')
 def account(request, pk):
     user = User.objects.get(pk=pk)
@@ -364,6 +377,7 @@ def account(request, pk):
         'favorites': favorites,
         'user_profile': profile,
         'active_tab': active_tab,
+        'mapbox_token': 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA',
     }
 
     # Return the appropriate template based on the active tab
@@ -645,14 +659,6 @@ def custom_logout(request):
 
 # ---------------------------------------------------------------- #
 # Password Reset Views:
-from django.contrib.auth.views import (
-    PasswordResetView,
-    PasswordResetDoneView,
-    PasswordResetConfirmView,
-    PasswordResetCompleteView,
-)
-from django.urls import reverse_lazy
-
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'stars_app/password_reset.html'
     email_template_name = 'stars_app/password_reset_email.html'

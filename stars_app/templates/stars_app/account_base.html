@@ -8,7 +8,7 @@
     <div class="settings-sidebar">
         <!-- General Section -->
         <div class="sidebar-section">
-            <h4 class="sidebar-title">ACCOUNT</h4>
+            <h4 class="sidebar-title">ACCOUNT | {{ user.username }}</h4>
             <ul class="sidebar-menu">
                 <li class="sidebar-item {% if active_tab == 'profile' or not active_tab %}active{% endif %}">
                     <a href="{% url 'account' user.pk %}?tab=profile" class="sidebar-link" data-tooltip="Profile">
