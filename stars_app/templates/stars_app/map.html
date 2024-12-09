@@ -41,29 +41,52 @@
 
             <!-- Add event type filters -->
             <div class="event-type-filter">
-                <button class="event-type-btn" data-type="METEOR">Meteor Showers</button>
-                <button class="event-type-btn" data-type="ECLIPSE">Eclipses</button>
-                <button class="event-type-btn" data-type="PLANET">Planetary</button>
-                <button class="event-type-btn" data-type="AURORA">Aurora</button>
-                <button class="event-type-btn" data-type="COMET">Comets</button>
-                <button class="event-type-btn" data-type="OTHER">Other</button>
+                <div class="item-filter-title">
+                    Event Filters
+                </div>
+                <div class="filter-buttons">
+                    <button class="filter-btn" data-type="METEOR">Meteor Showers</button>
+                    <button class="filter-btn" data-type="ECLIPSE">Eclipses</button>
+                    <button class="filter-btn" data-type="PLANET">Planetary</button>
+                    <button class="filter-btn" data-type="AURORA">Aurora</button>
+                    <button class="filter-btn" data-type="COMET">Comets</button>
+                    <button class="filter-btn" data-type="OTHER">Other</button>
+                </div>
+            </div>
+
+            <!-- Add location type filtering -->
+            <div class="location-type-filter">
+                <div class="item-filter-title">
+                    Viewing Location Filters
+                </div>
+                <div class="filter-buttons">
+                    {% if user.is_authenticated %}
+                        <button class="filter-btn" data-filter="favorites">
+                            My Favorites
+                        </button>
+                        <button class="filter-btn" data-filter="my-locations">
+                            My Locations
+                        </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
 
-        <!-- Enhanced location/event list -->
+        <!-- Location/Event list -->
         <div class="location-list">
             {% for item in items %}
                 {% if item|get_class == 'ViewingLocation' %}
                     <div class="location-item"
                          data-lat="{{ item.latitude }}"
                          data-lng="{{ item.longitude }}"
-                         data-type="location">
+                         data-type="location"
+                         data-is-favorite="{% if user.is_authenticated %}{{ item|is_favorite:user|lower }}{% else %}false{% endif %}"
+                         data-added-by="{{ item.added_by.id }}">
 
                         <div class="item-snapshot">
-                            <img
-                                src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},3/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
-                                alt="Map view of {{ item.name }}"
-                                class="location-map">
+                            <img class="location-map"
+                                 src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},3/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
+                                 alt="Map view of {{ item.name }}">
                         </div>
 
                         <div class="item-content">
@@ -161,6 +184,7 @@
 
         window.mapController = new MapController();
         window.mapController.initialize();
+        window.currentUserId = "{{ user.id|default:'null' }}";
     }
     setTimeout(initializePage, 0);
 </script>

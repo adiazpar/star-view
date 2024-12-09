@@ -23,6 +23,8 @@ export class MapController {
             activeTab: 'all',
             eventTypes: new Set(),
             searchQuery: '',
+            showFavorites: false,
+            showMyLocations: false
         };
 
         // Pagination state:
@@ -466,7 +468,7 @@ export class MapController {
         });
 
         // Event type filtering
-        const eventTypeButtons = document.querySelectorAll('.event-type-filter button');
+        const eventTypeButtons = document.querySelectorAll('.event-type-filter .filter-buttons button');
         eventTypeButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const eventType = button.getAttribute('data-type');
@@ -489,7 +491,32 @@ export class MapController {
             });
         });
 
-        // Search functionality
+        // Location filtering
+        const locationFilterButtons = document.querySelectorAll('.location-type-filter .filter-buttons button');
+        locationFilterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filterType = button.getAttribute('data-filter');
+
+                // Toggle button state
+                button.classList.toggle('active');
+
+                // Update filter state
+                if (filterType === 'favorites') {
+                    this.filters.showFavorites = !this.filters.showFavorites;
+                } else if (filterType === 'my-locations') {
+                    this.filters.showMyLocations = !this.filters.showMyLocations;
+                }
+
+                // Reset to first page
+                this.pagination.currentPage = 1;
+
+                // Apply filters
+                this.applyFilters();
+                this.saveFilters();
+            });
+        });
+
+        // Search filtering
         const searchInput = document.querySelector('.search-container input');
         searchInput.addEventListener('input', (e) => {
             this.filters.searchQuery = e.target.value.toLowerCase();
@@ -515,6 +542,8 @@ export class MapController {
             let isVisible = true;
             const itemType = item.getAttribute('data-type');
             const eventType = item.getAttribute('data-event-type');
+            const isFavorite = item.getAttribute('data-is-favorite').toLowerCase() === 'true';
+            const isUserLocation = item.getAttribute('data-added-by') === window.currentUserId;
 
             // Tab filtering
             if (this.filters.activeTab !== 'all') {
@@ -528,6 +557,16 @@ export class MapController {
                 } else {
                     // If we're filtering by event types, hide all locations
                     isVisible = false;
+                }
+            }
+
+            // Location filtering
+            if (isVisible && itemType === 'location') {
+                if (this.filters.showFavorites) {
+                    isVisible = isFavorite;
+                }
+                if (this.filters.showMyLocations) {
+                    isVisible = isUserLocation;
                 }
             }
 
@@ -568,21 +607,37 @@ export class MapController {
 
             // Project the point to screen coordinates
             const point = this.map.project(coordinates);
-
-            // Get the map's container dimensions
             const bounds = this.map.getContainer().getBoundingClientRect();
-
-            // A point is behind the globe if its projected x or y coordinates
-            // are outside reasonable bounds (we add some padding to prevent flickering)
             const padding = 100;
-            const isVisible = point.x >= -padding &&
+
+            // Check if marker is within view
+            const isInView = point.x >= -padding &&
                             point.x <= bounds.width + padding &&
                             point.y >= -padding &&
                             point.y <= bounds.height + padding;
 
-            // Combine visibility check with tab filter
-            const shouldShow = (activeTab === 'all' || activeTab === 'location') && isVisible;
+            // Find corresponding location item to get its attributes
+            const locationItem = document.querySelector(
+                `.location-item[data-lat="${coordinates.lat}"][data-lng="${coordinates.lng}"]`
+            );
 
+            let shouldShow = (activeTab === 'all' || activeTab === 'location') && isInView;
+
+            // If we found a matching item, apply our location filters
+            if (shouldShow && locationItem) {
+                const isFavorite = locationItem.getAttribute('data-is-favorite').toLowerCase() === 'true';
+                const isUserLocation = locationItem.getAttribute('data-added-by') === window.currentUserId;
+
+                // Apply the same filtering logic as in applyFilters
+                if (this.filters.showFavorites) {
+                    shouldShow = isFavorite;
+                }
+                if (this.filters.showMyLocations) {
+                    shouldShow = isUserLocation;
+                }
+            }
+
+            // Apply visibility with transition
             if (element) {
                 element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
                 element.style.opacity = shouldShow ? '1' : '0';
