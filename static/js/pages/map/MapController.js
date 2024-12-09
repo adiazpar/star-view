@@ -36,13 +36,8 @@ export class MapController {
         this.initialize();
     }
 
-    initializeUI() {
-        this.setupFilters();
-        this.initializePagination();
-        this.setupFilters();
-        this.applyInitialState();
-    }
 
+    // Map Functions: ------------------------------------------ //
     async initialize() {
         try {
             await this.initializeMap();
@@ -364,7 +359,15 @@ export class MapController {
         }
     }
 
-    // Filtering:
+
+    // Filtering: ---------------------------------------------- //
+    initializeUI() {
+        this.setupFilters();
+        this.initializePagination();
+        this.setupFilters();
+        this.applyInitialState();
+    }
+
     setupFilters() {
         // Tab filtering
         const tabButtons = document.querySelectorAll('.panel-tab');
@@ -480,6 +483,92 @@ export class MapController {
         this.updateMapMarkers();
     }
 
+    updateMapMarkers() {
+        // Instead of handling individual markers, let's handle all markers based on the active tab
+        const activeTab = this.filters.activeTab;
+
+        // Handle location markers
+        this.markerManager.locations.forEach((marker, key) => {
+            const element = marker.getElement();
+            const coordinates = marker.getLngLat();
+
+            // Project the point to screen coordinates
+            const point = this.map.project(coordinates);
+
+            // Get the map's container dimensions
+            const bounds = this.map.getContainer().getBoundingClientRect();
+
+            // A point is behind the globe if its projected x or y coordinates
+            // are outside reasonable bounds (we add some padding to prevent flickering)
+            const padding = 100;
+            const isVisible = point.x >= -padding &&
+                            point.x <= bounds.width + padding &&
+                            point.y >= -padding &&
+                            point.y <= bounds.height + padding;
+
+            // Combine visibility check with tab filter
+            const shouldShow = (activeTab === 'all' || activeTab === 'location') && isVisible;
+
+            if (element) {
+                element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
+                element.style.opacity = shouldShow ? '1' : '0';
+
+                if (!shouldShow) {
+                    setTimeout(() => {
+                        element.style.display = 'none';
+                    }, this.transitionDuration);
+                } else {
+                    element.style.display = '';
+                    element.offsetHeight; // Force reflow
+                    element.style.opacity = '1';
+                }
+            }
+        });
+
+        // Handle event markers with the same logic
+        this.markerManager.events.forEach((marker) => {
+            const element = marker.getElement();
+            const coordinates = marker.getLngLat();
+
+            // Project the point to screen coordinates
+            const point = this.map.project(coordinates);
+
+            // Get the map's container dimensions
+            const bounds = this.map.getContainer().getBoundingClientRect();
+
+            // Check visibility using the same projection method
+            const padding = 100;
+            const isVisible = point.x >= -padding &&
+                            point.x <= bounds.width + padding &&
+                            point.y >= -padding &&
+                            point.y <= bounds.height + padding;
+
+            // Combine visibility with tab and event type filters
+            let shouldShow = (activeTab === 'all' || activeTab === 'event') && isVisible;
+
+            if (shouldShow && this.filters.eventTypes.size > 0) {
+                shouldShow = this.filters.eventTypes.has(marker.eventType);
+            }
+
+            if (element) {
+                element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
+                element.style.opacity = shouldShow ? '1' : '0';
+
+                if (!shouldShow) {
+                    setTimeout(() => {
+                        element.style.display = 'none';
+                    }, this.transitionDuration);
+                } else {
+                    element.style.display = '';
+                    element.offsetHeight; // Force reflow
+                    element.style.opacity = '1';
+                }
+            }
+        });
+    }
+
+
+    // Pagination: --------------------------------------------- //
     initializePagination() {
         // Ensure we have a pagination container
         let paginationContainer = document.querySelector('.pagination');
@@ -619,91 +708,8 @@ export class MapController {
         this.updatePagination();
     }
 
-    updateMapMarkers() {
-        // Instead of handling individual markers, let's handle all markers based on the active tab
-        const activeTab = this.filters.activeTab;
 
-        // Handle location markers
-        this.markerManager.locations.forEach((marker, key) => {
-            const element = marker.getElement();
-            const coordinates = marker.getLngLat();
-
-            // Project the point to screen coordinates
-            const point = this.map.project(coordinates);
-
-            // Get the map's container dimensions
-            const bounds = this.map.getContainer().getBoundingClientRect();
-
-            // A point is behind the globe if its projected x or y coordinates
-            // are outside reasonable bounds (we add some padding to prevent flickering)
-            const padding = 100;
-            const isVisible = point.x >= -padding &&
-                            point.x <= bounds.width + padding &&
-                            point.y >= -padding &&
-                            point.y <= bounds.height + padding;
-
-            // Combine visibility check with tab filter
-            const shouldShow = (activeTab === 'all' || activeTab === 'location') && isVisible;
-
-            if (element) {
-                element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
-                element.style.opacity = shouldShow ? '1' : '0';
-
-                if (!shouldShow) {
-                    setTimeout(() => {
-                        element.style.display = 'none';
-                    }, this.transitionDuration);
-                } else {
-                    element.style.display = '';
-                    element.offsetHeight; // Force reflow
-                    element.style.opacity = '1';
-                }
-            }
-        });
-
-        // Handle event markers with the same logic
-        this.markerManager.events.forEach((marker) => {
-            const element = marker.getElement();
-            const coordinates = marker.getLngLat();
-
-            // Project the point to screen coordinates
-            const point = this.map.project(coordinates);
-
-            // Get the map's container dimensions
-            const bounds = this.map.getContainer().getBoundingClientRect();
-
-            // Check visibility using the same projection method
-            const padding = 100;
-            const isVisible = point.x >= -padding &&
-                            point.x <= bounds.width + padding &&
-                            point.y >= -padding &&
-                            point.y <= bounds.height + padding;
-
-            // Combine visibility with tab and event type filters
-            let shouldShow = (activeTab === 'all' || activeTab === 'event') && isVisible;
-
-            if (shouldShow && this.filters.eventTypes.size > 0) {
-                shouldShow = this.filters.eventTypes.has(marker.eventType);
-            }
-
-            if (element) {
-                element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
-                element.style.opacity = shouldShow ? '1' : '0';
-
-                if (!shouldShow) {
-                    setTimeout(() => {
-                        element.style.display = 'none';
-                    }, this.transitionDuration);
-                } else {
-                    element.style.display = '';
-                    element.offsetHeight; // Force reflow
-                    element.style.opacity = '1';
-                }
-            }
-        });
-    }
-
-    // Add filter persistence:
+    // Filter persistence: ------------------------------------- //
     saveFilters() {
         // Convert our filter state into a format suitable for storage
         const filterState = {
