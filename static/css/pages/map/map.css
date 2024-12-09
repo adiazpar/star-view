@@ -17,7 +17,7 @@
     background-color: var(--background-dark);
     border-radius: var(--radius-sm);
     overflow: hidden;
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
     display: flex;
     position: relative;
 }
@@ -234,6 +234,7 @@
 }
 
 .location-type i {
+    color: var(--primary-light);
     width: 16px;
 }
 
