@@ -384,13 +384,15 @@
 /* Individual control buttons */
 .mapboxgl-ctrl-group button {
     background-color: var(--background-dark);
-    border: 1px solid var(--text-tertiary);
+    border: none;
+    border-bottom: 1px solid var(--text-tertiary);
     width: 30px;
     height: 30px;
 }
 
-.mapboxgl-ctrl-group:hover {
-    background-color: var(--surface);
+/* Remove border from last button in group */
+.mapboxgl-ctrl-group button:last-child {
+    border-bottom: none;
 }
 
 /* Icon colors */
@@ -404,8 +406,7 @@
 }
 
 .mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-active {
-    background-color: var(--primary);
-    border-color: var(--text-primary);
+    background-color: var(--primary-light);
 }
 
 /* Map Controls */
@@ -430,14 +431,11 @@
 .map-control-btn.active {
     color: var(--text-primary);
     background: var(--primary);
-    border-color: var(--text-primary);
+    border: 1px solid var(--primary);
 }
 
-.map-control-btn:hover:not(.active) {
-    background-color: var(--surface);
-}
-.map-control-btn:hover.active {
-    background-color: var(--primary-light);
+.map-control-btn:hover {
+    border-color: var(--primary);
 }
 
 /* Legend Styling */
