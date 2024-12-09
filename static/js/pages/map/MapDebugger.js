@@ -340,28 +340,18 @@ export class MapDebugger {
     }
 
     addDebugControls() {
-        // Tile debug control button:
-        const debugButton = document.createElement('button');
-        debugButton.className = 'mapboxgl-ctrl-group mapboxgl-ctrl debug-control';
-        debugButton.innerHTML = 'Show Tile Borders';
-        debugButton.onclick = () => {
-            this.toggleTileDebug();
-            debugButton.innerHTML = this.tileDebugEnabled ? 'Hide Tile Borders' : 'Show Tile Borders';
-            debugButton.classList.toggle('active', this.tileDebugEnabled);
-        };
-        this.map.getContainer().appendChild(debugButton);
 
-        // Pixel debug control button:
-        const pixelDebugButton = document.createElement('button');
-        pixelDebugButton.className = 'mapboxgl-ctrl-group mapboxgl-ctrl debug-control';
-        pixelDebugButton.innerHTML = 'Show Pixel Grid';
-        pixelDebugButton.onclick = () => {
+        // Set up click handlers for existing buttons
+        document.getElementById('show-tile-borders').addEventListener('click', () => {
+            this.toggleTileDebug();
+            document.getElementById('show-tile-borders').classList.toggle('active', this.tileDebugEnabled);
+        });
+
+        document.getElementById('show-pixel-grid').addEventListener('click', () => {
             this.togglePixelDebug();
             this.selectedTile = null;
-            pixelDebugButton.innerHTML = this.pixelDebugEnabled ? 'Hide Pixel Grid' : 'Show Pixel Grid';
-            pixelDebugButton.classList.toggle('active', this.pixelDebugEnabled);
-        };
-        this.map.getContainer().appendChild(pixelDebugButton);
+            document.getElementById('show-pixel-grid').classList.toggle('active', this.pixelDebugEnabled);
+        });
 
         // Update popup styling
         this.map.on('click', (e) => {

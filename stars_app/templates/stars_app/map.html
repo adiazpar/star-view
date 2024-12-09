@@ -3,6 +3,7 @@
 {% block body_class %}map-page{% endblock %}
 
 {% load static %}
+{% load custom_filters %}
 
 <!-- Extra header content -->
 {% block extra_head %}
@@ -19,11 +20,11 @@
 <div class="map-container">
     <!-- Locations Panel -->
     <div class="locations-panel">
-        <!-- New: Filtering tabs -->
+        <!-- Filtering tabs -->
         <div class="panel-tabs">
             <div class="panel-tab active" data-tab="all">ALL</div>
-            <div class="panel-tab" data-tab="locations">LOCATIONS</div>
-            <div class="panel-tab" data-tab="events">EVENTS</div>
+            <div class="panel-tab" data-tab="location">LOCATIONS</div>
+            <div class="panel-tab" data-tab="event">EVENTS</div>
         </div>
 
         <!-- Enhanced search with filters -->
@@ -38,7 +39,7 @@
                 </span>
             </div>
 
-            <!-- NEW: Added event type filters -->
+            <!-- Add event type filters -->
             <div class="event-type-filter">
                 <button class="event-type-btn" data-type="METEOR">Meteor Showers</button>
                 <button class="event-type-btn" data-type="ECLIPSE">Eclipses</button>
@@ -51,61 +52,79 @@
 
         <!-- Enhanced location/event list -->
         <div class="location-list">
-            {% for location in viewing_locations %}
-            <div class="location-item"
-                 data-lat="{{ location.latitude }}"
-                 data-lng="{{ location.longitude }}"
-                 data-type="location">
+            {% for item in items %}
+                {% if item|get_class == 'ViewingLocation' %}
+                    <div class="location-item"
+                         data-lat="{{ item.latitude }}"
+                         data-lng="{{ item.longitude }}"
+                         data-type="location">
 
-                <!-- New: Weather condition -->
-                {% if location.cloudCoverPercentage < 30 %}
-                <i class="fas fa-sun weather-icon"></i>
-                {% elif location.cloudCoverPercentage < 70 %}
-                <i class="fas fa-cloud-sun weather-icon"></i>
+                        <div class="item-snapshot">
+                            <img
+                                src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},3/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
+                                alt="Map view of {{ item.name }}"
+                                class="location-map">
+                        </div>
+
+                        <div class="item-content">
+                            <h3 class="location-title">{{ item.name }}</h3>
+                            <div class="location-type"><i class="fas fa-map-marker-alt"></i>Viewing Location</div>
+                            <div class="location-info">
+                                <div class="info-item">
+                                    SEE DETAILS
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 {% else %}
-                <i class="fas fa-cloud weather-icon"></i>
+                    <div class="location-item"
+                         data-lat="{{ item.latitude }}"
+                         data-lng="{{ item.longitude }}"
+                         data-type="event"
+                         data-event-type="{{ item.event_type }}">
+
+                        <div class="item-snapshot">
+                            <img
+                                src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},13/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
+                                alt="Map view of {{ item.name }}"
+                                class="location-map">
+                            <div class="snapshot-marker">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                        </div>
+
+                        <div class="item-content">
+                            <div class="location-title">{{ item.name }}</div>
+                            <div class="location-type">{{ item.get_event_type_display }}</div>
+                            <div class="event-details"></div>
+                        </div>
+                    </div>
+
                 {% endif %}
-
-                <div class="location-title">{{ location.name }}</div>
-                <div class="location-type">Viewing Location</div>
-                <div class="location-details">
-                    <div>Elevation: {{ location.elevation }}m</div>
-                    {% if location.cloudCoverPercentage >= 0 %}
-                    <div>Cloud Cover: {{ location.cloudCoverPercentage }}%</div>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
-
-            {% for event in celestial_events %}
-            <div class="location-item"
-                 data-lat="{{ event.latitude }}"
-                 data-lng="{{ event.longitude }}"
-                 data-type="event"
-                 data-event-type="{{ event.event_type }}">
-                <div class="location-title">{{ event.name }}</div>
-                <div class="location-type">{{ event.get_event_type_display }}</div>
-                <div class="event-details">
-                    <div>Starts: {{ event.start_time|date:"M d, Y H:i" }}</div>
-                    <div>Ends: {{ event.end_time|date:"M d, Y H:i" }}</div>
-                    <div>Viewing Radius: {{ event.viewing_radius }}km</div>
-                    <div class="event-description">{{ event.description|truncatechars:100 }}</div>
-                </div>
-            </div>
             {% endfor %}
         </div>
 
         <!-- Pagination -->
         <div class="pagination">
-            {% if viewing_locations.has_previous %}
-            <a class="page-item" href="?page={{ viewing_locations.previous_page_number }}">←</a>
-            {% endif %}
+            <!-- Previous button (always in same position) -->
+            <div class="pagination-prev">
+                {% if page_obj.has_previous %}
+                    <a class="page-item prev">←</a>
+                {% endif %}
+            </div>
 
-            <span class="page-item active">{{ viewing_locations.number }}</span>
+            <!-- Page numbers container -->
+            <div class="page-numbers">
+                <!-- Page buttons will be generated here -->
+            </div>
 
-            {% if viewing_locations.has_next %}
-            <a class="page-item" href="?page={{ viewing_locations.next_page_number }}">→</a>
-            {% endif %}
+            <!-- Next button (always in same position) -->
+            <div class="pagination-next">
+                {% if page_obj.has_next %}
+                    <a class="page-item next">→</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -117,6 +136,14 @@
             <button class="map-control-btn" id="show-tile-borders">Show Borders</button>
             <button class="map-control-btn" id="show-pixel-grid">Show Grid</button>
         </div>
+
+        <div class="legend">
+            <h4>Dark Sky Levels</h4>
+            <div class="legend-gradient">
+                <div class="legend-scale"></div>
+            </div>
+        </div>
+
         <div id="map"></div>
     </div>
 </div>
@@ -135,6 +162,6 @@
         window.mapController = new MapController();
         window.mapController.initialize();
     }
-    setTimeout(initializePage, 10);
+    setTimeout(initializePage, 0);
 </script>
 {% endblock %}
