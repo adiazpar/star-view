@@ -191,6 +191,12 @@
     pointer-events: none;
 }
 
+.location-item.active {
+    border-color: var(--primary);
+    background-color: var(--surface);
+    scale: 1.025;
+}
+
 .item-snapshot {
     flex: 0 0 150px; /* Fixed width for the map snapshot */
     height: 150px;
