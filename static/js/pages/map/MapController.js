@@ -173,16 +173,45 @@ export class MapController {
         });
     }
 
-    setupMapControls() {
-        this.map.addControl(new mapboxgl.NavigationControl());
-        this.map.addControl(new mapboxgl.GeolocateControl({
-            positionOptions: { enableHighAccuracy: true },
-            trackUserLocation: true,
-            showUserHeading: true
-        }));
-    }
+setupMapControls() {
+    this.map.addControl(new mapboxgl.NavigationControl());
 
-    setupDarkSkyLayer() {
+    this.map.addControl(new mapboxgl.GeolocateControl({
+        positionOptions: { enableHighAccuracy: true },
+        trackUserLocation: true,
+        showUserHeading: true
+    }));
+
+    class OrbitControl { //adds go to orbit button
+        onAdd(map) {
+            this.map = map;
+            this.container = document.createElement('div');
+            this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+            const button = document.createElement('button');
+            button.className = 'orbit-button';
+            button.title = 'Go to Orbit';
+            button.innerHTML = '🚀';
+
+            button.addEventListener('click', () => {
+                this.map.flyTo({
+                    zoom: 0,
+                    center: this.map.getCenter(),
+                    speed: 1.2,
+                });
+            });
+            this.container.appendChild(button);
+            return this.container;
+        }
+        onRemove() {
+            this.container.parentNode.removeChild(this.container);
+            this.map = undefined;
+        }
+    }
+    this.map.addControl(new OrbitControl(), 'top-right');
+}
+
+
+setupDarkSkyLayer() {
         // Add dark sky source and layer:
         this.map.addSource('dark-sky', {
             type: 'raster',
