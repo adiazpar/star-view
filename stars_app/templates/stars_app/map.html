@@ -29,45 +29,53 @@
 
         <!-- Enhanced search with filters -->
         <div class="search-section">
-            <div class="search-container">
-                <input type="text"
-                       class="search-input"
-                       placeholder="Search locations or events..."
-                       id="location-search">
-                <span class="search-icon">
-                    <i class="fas fa-search"></i>
-                </span>
+            <div class="search-controls">
+                <div class="search-container">
+                    <input type="text"
+                           class="search-input"
+                           placeholder="Search locations or events..."
+                           id="location-search">
+                    <span class="search-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                </div>
+
+                <button id="filter-toggle" class="filter-toggle-btn">
+                    <i class="fas fa-filter"></i>
+                </button>
             </div>
 
-            <!-- Add event type filters -->
-            <div class="event-type-filter">
-                <div class="item-filter-title">
-                    Event Filters
+            <div class="filter-panel">
+                <!-- Add event type filters -->
+                <div class="event-type-filter">
+                    <div class="item-filter-title">
+                        Event Filters
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn" data-type="METEOR">Meteor Showers</button>
+                        <button class="filter-btn" data-type="ECLIPSE">Eclipses</button>
+                        <button class="filter-btn" data-type="PLANET">Planetary</button>
+                        <button class="filter-btn" data-type="AURORA">Aurora</button>
+                        <button class="filter-btn" data-type="COMET">Comets</button>
+                        <button class="filter-btn" data-type="OTHER">Other</button>
+                    </div>
                 </div>
-                <div class="filter-buttons">
-                    <button class="filter-btn" data-type="METEOR">Meteor Showers</button>
-                    <button class="filter-btn" data-type="ECLIPSE">Eclipses</button>
-                    <button class="filter-btn" data-type="PLANET">Planetary</button>
-                    <button class="filter-btn" data-type="AURORA">Aurora</button>
-                    <button class="filter-btn" data-type="COMET">Comets</button>
-                    <button class="filter-btn" data-type="OTHER">Other</button>
-                </div>
-            </div>
 
-            <!-- Add location type filtering -->
-            <div class="location-type-filter">
-                <div class="item-filter-title">
-                    Viewing Location Filters
-                </div>
-                <div class="filter-buttons">
-                    {% if user.is_authenticated %}
-                        <button class="filter-btn" data-filter="favorites">
-                            My Favorites
-                        </button>
-                        <button class="filter-btn" data-filter="my-locations">
-                            My Locations
-                        </button>
-                    {% endif %}
+                <!-- Add location type filtering -->
+                <div class="location-type-filter">
+                    <div class="item-filter-title">
+                        Viewing Location Filters
+                    </div>
+                    <div class="filter-buttons">
+                        {% if user.is_authenticated %}
+                            <button class="filter-btn" data-filter="favorites">
+                                My Favorites
+                            </button>
+                            <button class="filter-btn" data-filter="my-locations">
+                                My Locations
+                            </button>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>

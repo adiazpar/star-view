@@ -30,12 +30,11 @@ export class MapController {
         // Pagination state:
         this.pagination = {
             currentPage: 1,
-            itemsPerPage: 20,
+            itemsPerPage: 10,
             totalItems: 0,
         }
 
         // Load saved filters before DOM initialization:
-        this.loadSavedFilters();
         this.initialize();
     }
 
@@ -442,6 +441,22 @@ export class MapController {
         this.setupFilters();
         this.setupLocationCardHovers();
         this.applyInitialState();
+        this.setupFilterToggle();
+    }
+
+    setupFilterToggle() {
+        const filterToggle = document.getElementById('filter-toggle');
+        const filterPanel = document.querySelector('.filter-panel');
+
+        if (filterToggle && filterPanel) {
+            filterToggle.addEventListener('click', () => {
+                // Toggle active state on button
+                filterToggle.classList.toggle('active');
+
+                // Toggle filter panel visibility
+                filterPanel.classList.toggle('visible');
+            });
+        }
     }
 
     setupFilters() {
@@ -463,7 +478,6 @@ export class MapController {
 
                 // Apply filters:
                 this.applyFilters();
-                this.saveFilters();
             });
         });
 
@@ -487,7 +501,6 @@ export class MapController {
 
                 // Apply filters:
                 this.applyFilters();
-                this.saveFilters();
             });
         });
 
@@ -512,7 +525,6 @@ export class MapController {
 
                 // Apply filters
                 this.applyFilters();
-                this.saveFilters();
             });
         });
 
@@ -525,7 +537,6 @@ export class MapController {
 
             // Apply filters:
             this.applyFilters();
-            this.saveFilters();
         });
     }
 
@@ -535,38 +546,34 @@ export class MapController {
             return;
         }
 
+        // Get all location items:
         const items = document.querySelectorAll('.location-item');
-        let visibleCount = 0;
+        let visibleItems = [];
 
         items.forEach(item => {
             let isVisible = true;
             const itemType = item.getAttribute('data-type');
             const eventType = item.getAttribute('data-event-type');
-            const isFavorite = item.getAttribute('data-is-favorite').toLowerCase() === 'true';
+            const isFavorite = item.getAttribute('data-is-favorite')?.toLowerCase() === 'true';
             const isUserLocation = item.getAttribute('data-added-by') === window.currentUserId;
 
             // Tab filtering
-            if (this.filters.activeTab !== 'all') {
-                isVisible = itemType === this.filters.activeTab;
+            if (this.filters.activeTab !== 'all' && itemType !== this.filters.activeTab) {
+                isVisible = false;
             }
 
             // Event type filtering
-            if (isVisible && this.filters.eventTypes.size > 0) {
-                if (itemType === 'event') {
-                    isVisible = this.filters.eventTypes.has(eventType);
-                } else {
-                    // If we're filtering by event types, hide all locations
-                    isVisible = false;
-                }
+            if (isVisible && this.filters.eventTypes.size > 0 && itemType === 'event') {
+                isVisible = this.filters.eventTypes.has(eventType);
             }
 
-            // Location filtering
+            // Location filtering (only apply to location items)
             if (isVisible && itemType === 'location') {
-                if (this.filters.showFavorites) {
-                    isVisible = isFavorite;
+                if (this.filters.showFavorites && !isFavorite) {
+                    isVisible = false;
                 }
-                if (this.filters.showMyLocations) {
-                    isVisible = isUserLocation;
+                if (this.filters.showMyLocations && !isUserLocation) {
+                    isVisible = false;
                 }
             }
 
@@ -574,23 +581,36 @@ export class MapController {
             if (isVisible && this.filters.searchQuery) {
                 const title = item.querySelector('.location-title')?.textContent.toLowerCase() || '';
                 const description = item.querySelector('.location-address, .event-description')?.textContent.toLowerCase() || '';
-                isVisible = title.includes(this.filters.searchQuery) || description.includes(this.filters.searchQuery);
+                isVisible = title.includes(this.filters.searchQuery) ||
+                           description.includes(this.filters.searchQuery);
             }
 
-            // Update visibility
+            // Important: Set pointer-events based on visibility
             if (isVisible) {
+                item.style.pointerEvents = 'auto';
                 item.classList.remove('hidden');
-                visibleCount++;
+                visibleItems.push(item);
             } else {
+                item.style.pointerEvents = 'none';
                 item.classList.add('hidden');
+                item.style.display = 'none'; // Immediately hide non-visible items
             }
         });
 
-        // Only update pagination if we have visible items
-        if (visibleCount > 0) {
-            this.pagination.totalItems = visibleCount;
-            this.updatePagination();
+        // Update pagination with visible items count
+        this.pagination.totalItems = visibleItems.length;
+
+        // Ensure current page is valid with new total
+        const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
+        if (this.pagination.currentPage > totalPages) {
+            this.pagination.currentPage = Math.max(1, totalPages);
         }
+
+        // Update pagination display
+        this.updatePagination();
+
+        // Update visible items based on current page
+        this.updateItemVisibility(visibleItems);
 
         // Update marker visibility on the map
         this.updateMapMarkers();
@@ -719,92 +739,93 @@ export class MapController {
         const paginationContainer = document.querySelector('.pagination');
         if (!paginationContainer) return;
 
-        // Get actually visible items (those with display !== 'none')
-        const visibleItems = Array.from(document.querySelectorAll('.location-item'))
-            .filter(item => !item.classList.contains('hidden'));
-
-        this.pagination.totalItems = visibleItems.length;
         const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
 
-        // Create pagination structure
-        const structure = `
+        // Clear existing pagination
+        paginationContainer.innerHTML = `
             <div class="pagination-prev"></div>
             <div class="page-numbers"></div>
             <div class="pagination-next"></div>
         `;
-        paginationContainer.innerHTML = structure;
 
         // Only show pagination if we have more than one page
-        if (totalPages > 1) {
-            const prevContainer = paginationContainer.querySelector('.pagination-prev');
-            const numbersContainer = paginationContainer.querySelector('.page-numbers');
-            const nextContainer = paginationContainer.querySelector('.pagination-next');
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
 
-            // Add prev button if not on first page
-            if (this.pagination.currentPage > 1) {
-                const prevButton = document.createElement('a');
-                prevButton.className = 'page-item prev';
-                prevButton.textContent = '←';
-                prevButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage - 1));
-                prevContainer.appendChild(prevButton);
-            }
+        paginationContainer.style.display = 'flex';
 
-            // Add page numbers
-            const maxVisiblePages = 5; // Adjust this number as needed
-            let startPage = Math.max(1, this.pagination.currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        const prevContainer = paginationContainer.querySelector('.pagination-prev');
+        const numbersContainer = paginationContainer.querySelector('.page-numbers');
+        const nextContainer = paginationContainer.querySelector('.pagination-next');
 
-            // Adjust start page if we're near the end
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
+        // Add prev button if not on first page
+        if (this.pagination.currentPage > 1) {
+            const prevButton = document.createElement('a');
+            prevButton.className = 'page-item prev';
+            prevButton.textContent = '←';
+            prevButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage - 1));
+            prevContainer.appendChild(prevButton);
+        }
 
-            // Add first page and ellipsis if needed
-            if (startPage > 1) {
-                this.addPageButton(numbersContainer, 1);
-                if (startPage > 2) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.className = 'page-ellipsis';
-                    ellipsis.textContent = '...';
-                    numbersContainer.appendChild(ellipsis);
-                }
-            }
+        // Calculate visible page range
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, this.pagination.currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-            // Add visible page numbers
-            for (let i = startPage; i <= endPage; i++) {
-                this.addPageButton(numbersContainer, i);
-            }
+        // Adjust start page if needed
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
 
-            // Add last page and ellipsis if needed
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.className = 'page-ellipsis';
-                    ellipsis.textContent = '...';
-                    numbersContainer.appendChild(ellipsis);
-                }
-                this.addPageButton(numbersContainer, totalPages);
-            }
-
-            // Add next button if not on last page
-            if (this.pagination.currentPage < totalPages) {
-                const nextButton = document.createElement('a');
-                nextButton.className = 'page-item next';
-                nextButton.textContent = '→';
-                nextButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage + 1));
-                nextContainer.appendChild(nextButton);
+        // Add first page and ellipsis if needed
+        if (startPage > 1) {
+            this.addPageButton(numbersContainer, 1);
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'page-ellipsis';
+                ellipsis.textContent = '...';
+                numbersContainer.appendChild(ellipsis);
             }
         }
 
-        // Update visibility of items based on current page
-        this.updateItemVisibility(visibleItems);
+        // Add page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            this.addPageButton(numbersContainer, i);
+        }
+
+        // Add last page and ellipsis if needed
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'page-ellipsis';
+                ellipsis.textContent = '...';
+                numbersContainer.appendChild(ellipsis);
+            }
+            this.addPageButton(numbersContainer, totalPages);
+        }
+
+        // Add next button if not on last page
+        if (this.pagination.currentPage < totalPages) {
+            const nextButton = document.createElement('a');
+            nextButton.className = 'page-item next';
+            nextButton.textContent = '→';
+            nextButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage + 1));
+            nextContainer.appendChild(nextButton);
+        }
     }
 
     addPageButton(container, pageNumber) {
         const button = document.createElement('a');
         button.className = `page-item${pageNumber === this.pagination.currentPage ? ' active' : ''}`;
         button.textContent = pageNumber;
-        button.addEventListener('click', () => this.goToPage(pageNumber));
+
+        // Important: Use arrow function to preserve 'this' context
+        button.addEventListener('click', () => {
+            this.goToPage(pageNumber);
+        });
+
         container.appendChild(button);
     }
 
@@ -812,91 +833,35 @@ export class MapController {
         const startIndex = (this.pagination.currentPage - 1) * this.pagination.itemsPerPage;
         const endIndex = startIndex + this.pagination.itemsPerPage;
 
-        visibleItems.forEach((item, index) => {
-            if (index >= startIndex && index < endIndex) {
-                item.style.display = '';
-                // Reset height for smooth transitions
-                requestAnimationFrame(() => {
-                    item.style.height = '';
-                });
-            } else {
-                item.style.display = 'none';
-            }
+        // First hide all items
+        visibleItems.forEach(item => {
+            item.style.display = 'none';
+        });
+
+        // Then show only the items for the current page
+        visibleItems.slice(startIndex, endIndex).forEach(item => {
+            item.style.display = '';
+            item.style.opacity = '1';
+            item.style.pointerEvents = 'auto';
         });
     }
 
     goToPage(pageNumber) {
-        // Ensure page number is valid
+        // Validate page number
         const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
         if (pageNumber < 1 || pageNumber > totalPages) return;
 
         // Update current page
         this.pagination.currentPage = pageNumber;
 
-        // Update pagination display
+        // Get current visible items
+        const visibleItems = Array.from(document.querySelectorAll('.location-item'))
+            .filter(item => !item.classList.contains('hidden'));
+
+        // Update pagination UI
         this.updatePagination();
-    }
 
-
-    // Filter persistence: ------------------------------------- //
-    saveFilters() {
-        // Convert our filter state into a format suitable for storage
-        const filterState = {
-            activeTab: this.filters.activeTab,
-            // Convert Set to Array for storage
-            eventTypes: Array.from(this.filters.eventTypes),
-            searchQuery: this.filters.searchQuery
-        };
-
-        // Save to localStorage with pretty formatting for debugging
-        localStorage.setItem('mapFilters', JSON.stringify(filterState, null, 2));
-    }
-
-    loadSavedFilters() {
-        try {
-            // Attempt to load saved filters
-            const savedFilters = localStorage.getItem('mapFilters');
-
-            if (savedFilters) {
-                const parsedFilters = JSON.parse(savedFilters);
-
-                // Restore the filter state
-                this.filters.activeTab = parsedFilters.activeTab || 'all';
-                this.filters.eventTypes = new Set(parsedFilters.eventTypes || []);
-                this.filters.searchQuery = parsedFilters.searchQuery || '';
-
-                // Now we need to update the UI to match the loaded state
-                this.restoreFilterUI();
-            }
-        } catch (error) {
-            console.error('Error loading saved filters:', error);
-            // If there's an error, we'll just use the default filters
-        }
-    }
-
-    restoreFilterUI() {
-        // Restore active tab
-        const tabs = document.querySelectorAll('.panel-tab');
-        tabs.forEach(tab => {
-            const isActive = tab.getAttribute('data-tab') === this.filters.activeTab;
-            tab.classList.toggle('active', isActive);
-        });
-
-        // Restore event type buttons
-        const eventButtons = document.querySelectorAll('.event-type-btn');
-        eventButtons.forEach(button => {
-            const eventType = button.getAttribute('data-type');
-            const isActive = this.filters.eventTypes.has(eventType);
-            button.classList.toggle('active', isActive);
-        });
-
-        // Restore search query
-        const searchInput = document.querySelector('.search-container input');
-        if (searchInput) {
-            searchInput.value = this.filters.searchQuery;
-        }
-
-        // Apply the restored filters
-        this.applyFilters();
+        // Important: Update item visibility with the current visible items
+        this.updateItemVisibility(visibleItems);
     }
 }

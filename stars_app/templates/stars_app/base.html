@@ -30,7 +30,6 @@
                 <li><a class="nav-link" href="{% url 'home' %}">HOME</a></li>
                 <li><a class="nav-link" href="{% url 'map' %}">MAP</a></li>
                 <li><a class="nav-link" href="{% url 'event_list' %}">EVENTS</a></li>
-                <li><a class="nav-link" href="#">ABOUT US</a></li>
                 {% if user.is_authenticated %}
                     <li><a class="nav-link" href="{% url 'account' user.id %}">ACCOUNT</a></li>
                 {% else %}
