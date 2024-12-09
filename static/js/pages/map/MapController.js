@@ -508,33 +508,86 @@ export class MapController {
         this.pagination.totalItems = visibleItems.length;
         const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
 
-        // Clear existing pagination content:
-        paginationContainer.innerHTML = '';
+        // Create pagination structure
+        const structure = `
+            <div class="pagination-prev"></div>
+            <div class="page-numbers"></div>
+            <div class="pagination-next"></div>
+        `;
+        paginationContainer.innerHTML = structure;
 
         // Only show pagination if we have more than one page
         if (totalPages > 1) {
-            paginationContainer.innerHTML = `
-                ${this.pagination.currentPage > 1 ? 
-                    '<a class="page-item prev">←</a>' : ''}
-                <span class="page-item active">${this.pagination.currentPage}/${totalPages}</span>
-                ${this.pagination.currentPage < totalPages ? 
-                    '<a class="page-item next">→</a>' : ''}
-            `;
+            const prevContainer = paginationContainer.querySelector('.pagination-prev');
+            const numbersContainer = paginationContainer.querySelector('.page-numbers');
+            const nextContainer = paginationContainer.querySelector('.pagination-next');
 
-            // Add event listeners to pagination controls
-            const prevButton = paginationContainer.querySelector('.prev');
-            const nextButton = paginationContainer.querySelector('.next');
-
-            if (prevButton) {
+            // Add prev button if not on first page
+            if (this.pagination.currentPage > 1) {
+                const prevButton = document.createElement('a');
+                prevButton.className = 'page-item prev';
+                prevButton.textContent = '←';
                 prevButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage - 1));
+                prevContainer.appendChild(prevButton);
             }
-            if (nextButton) {
+
+            // Add page numbers
+            const maxVisiblePages = 5; // Adjust this number as needed
+            let startPage = Math.max(1, this.pagination.currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            // Adjust start page if we're near the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            // Add first page and ellipsis if needed
+            if (startPage > 1) {
+                this.addPageButton(numbersContainer, 1);
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.className = 'page-ellipsis';
+                    ellipsis.textContent = '...';
+                    numbersContainer.appendChild(ellipsis);
+                }
+            }
+
+            // Add visible page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                this.addPageButton(numbersContainer, i);
+            }
+
+            // Add last page and ellipsis if needed
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.className = 'page-ellipsis';
+                    ellipsis.textContent = '...';
+                    numbersContainer.appendChild(ellipsis);
+                }
+                this.addPageButton(numbersContainer, totalPages);
+            }
+
+            // Add next button if not on last page
+            if (this.pagination.currentPage < totalPages) {
+                const nextButton = document.createElement('a');
+                nextButton.className = 'page-item next';
+                nextButton.textContent = '→';
                 nextButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage + 1));
+                nextContainer.appendChild(nextButton);
             }
         }
 
         // Update visibility of items based on current page
         this.updateItemVisibility(visibleItems);
+    }
+
+    addPageButton(container, pageNumber) {
+        const button = document.createElement('a');
+        button.className = `page-item${pageNumber === this.pagination.currentPage ? ' active' : ''}`;
+        button.textContent = pageNumber;
+        button.addEventListener('click', () => this.goToPage(pageNumber));
+        container.appendChild(button);
     }
 
     updateItemVisibility(visibleItems) {

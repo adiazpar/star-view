@@ -107,7 +107,24 @@
 
         <!-- Pagination -->
         <div class="pagination">
-            <!-- Pagination is populated by Javascript -->
+            <!-- Previous button (always in same position) -->
+            <div class="pagination-prev">
+                {% if page_obj.has_previous %}
+                    <a class="page-item prev">←</a>
+                {% endif %}
+            </div>
+
+            <!-- Page numbers container -->
+            <div class="page-numbers">
+                <!-- Page buttons will be generated here -->
+            </div>
+
+            <!-- Next button (always in same position) -->
+            <div class="pagination-next">
+                {% if page_obj.has_next %}
+                    <a class="page-item next">→</a>
+                {% endif %}
+            </div>
         </div>
     </div>
 

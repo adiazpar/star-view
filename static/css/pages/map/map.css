@@ -176,7 +176,7 @@
     border-color: var(--primary);
 
     .info-item {
-        color: var(--primary);
+        color: var(--primary-light);
     }
 }
 
@@ -247,6 +247,7 @@
     color: var(--text-primary);
     font-size: xx-small;
     font-weight: normal;
+    text-decoration: underline;
 }
 
 /* Responsive adjustments */
@@ -314,26 +315,47 @@
 /* Pagination Styles */
 .pagination {
     display: flex;
+    align-items: center;
     justify-content: center;
     gap: var(--space-sm);
     padding: var(--space-sm);
 }
 
-.page-item {
+.pagination-prev,
+.pagination-next {
+    /* Fixed width containers for arrows */
     width: 32px;
+    display: flex;
+    justify-content: center;
+}
+
+.page-numbers {
+    display: flex;
+    gap: var(--space-xs);
+    justify-content: center;
+    align-items: center;
+}
+
+.page-item {
+    width: 24px;
     height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: var(--radius-sm);
     background: var(--background-dark);
-    color: var(--text-primary);
+    color: var(--text-tertiary);
+    border: 1px solid var(--text-tertiary);
     cursor: pointer;
     transition: all var(--transition-base);
+
+    font-weight: normal;
 }
 
 .page-item.active {
     background: var(--primary);
+    color: var(--text-primary);
+    border: 1px solid var(--text-primary);
 }
 
 .page-item:hover:not(.active) {
