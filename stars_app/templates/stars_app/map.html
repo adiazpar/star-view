@@ -101,6 +101,20 @@
                             <h3 class="location-title">{{ item.name }}</h3>
                             <div class="location-type"><i class="fas fa-map-marker-alt"></i>Viewing Location</div>
                             <div class="location-info">
+                                <div class="star-rating">
+                                    <div class="star-rating-stars">
+                                        {% with average_rating=item.reviews.all|average_rating %}
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= average_rating|default:0|floatformat:"0" %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="fas fa-star empty"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="star-rating-count">({{ item.reviews.count }})</span>
+                                    {% endwith %}
+                                </div>
                                 <div class="info-item">
                                     SEE DETAILS
                                 </div>

@@ -28,7 +28,12 @@ class ViewingLocation(models.Model):
     country = models.CharField(max_length=200, blank=True, null=True)
 
     # Forecast
-    forecast = models.ForeignKey(Forecast, on_delete=models.CASCADE, default=defaultforecast)
+    forecast = models.ForeignKey(
+        Forecast,
+        on_delete=models.CASCADE,
+        default=defaultforecast
+    )
+
     cloudCoverPercentage = models.FloatField(null=True)
 
     # Light pollution

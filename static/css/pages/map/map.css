@@ -298,6 +298,7 @@
 .location-item .location-info {
     display: flex;
     flex-direction: column;
+    gap: var(--space-xs);
 }
 .location-info .info-item {
     display: flex;
@@ -306,6 +307,37 @@
     font-size: xx-small;
     font-weight: normal;
     text-decoration: underline;
+}
+
+/* Star Rating Container */
+.star-rating {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    margin-top: var(--space-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.star-rating-stars {
+    display: flex;
+    gap: 2px;
+}
+
+.star-rating i {
+    color: var(--primary);
+    font-size: var(--font-size-xs);
+}
+
+.star-rating .empty {
+    color: var(--text-tertiary);
+    opacity: 0.5;
+}
+
+.star-rating-count {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    margin-left: var(--space-xs);
 }
 
 /* Responsive adjustments */
