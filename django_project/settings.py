@@ -13,26 +13,25 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 import certifi
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file:
+load_dotenv()
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+# Use environment variables for sensitive data:
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+NASA_API_KEY = os.getenv('NASA_API_KEY')
+SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-=6thjzlzn*4m=b!7*s#186=prf42dn74qefi*1mcsm9^ufl&!%'
-NASA_API_KEY = 'iCT06JGwZ8Q8RjtFsbh7s4auDj01Iwuat6xFgVVO'
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
+# Allow hosts and trusted origins:
 ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io', 'app-dbolding-5.devedu.io', 'app-jcuthber-5.devedu.io', 'app-otinoco-5.devedu.io', '127.0.0.1', 'nyx.local', 'localhost']
 CSRF_TRUSTED_ORIGINS = ['https://app-adiazpar-5.devedu.io', 'https://app-dbolding-5.devedu.io', 'https://app-otinoco-5.devedu.io']
 
-
-# Email Configuration
+# Email Configuration:
 SITE_ID = 1
 SITE_NAME = "Event Horizon"
 DOMAIN = "127.0.0.1:8000"
@@ -42,15 +41,14 @@ os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 os.environ['SSL_CERT_FILE'] = certifi.where()
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
-SENDGRID_API_KEY = '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'
 SENDGRID_SANDBOX_MODE_IN_DEBUG = False  # Set to True to test without actually sending
-DEFAULT_FROM_EMAIL = 'eventhorizonnotifications@gmail.com'
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'eventhorizonnotifications@gmail.com')
 
-# Add these debug settings
+# Add these debug settings:
 SENDGRID_TRACK_EMAIL_OPENS = True
 SENDGRID_TRACK_CLICKS = True
 
-# Application definition
+# Application definition:
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -63,6 +61,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
 ]
 
+# Debug logging:
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -71,6 +70,7 @@ LOGGING = {
             'class': 'logging.StreamHandler',
         },
         'file': {
+            'level': 'WARNING',
             'class': 'logging.FileHandler',
             'filename': 'debug.log',  # This will create a debug.log file in your project directory
         },
@@ -79,6 +79,11 @@ LOGGING = {
         'stars_app': {  # Replace with your app name
             'handlers': ['console', 'file'],
             'level': 'DEBUG',
+            'propagate': True,
+        },
+        'django.security': {
+            'handlers': ['file'],
+            'level': 'WARNING',
             'propagate': True,
         },
     },

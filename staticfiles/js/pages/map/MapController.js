@@ -9,7 +9,6 @@ export class MapController {
         this.userInteracting = false;
         this.debugger = null;
         this.transitionDuration = 300;
-        this.defaultZoom = MAPBOX_CONFIG.defaultZoom;
 
         // Marker management:
         this.markerManager = {
@@ -28,7 +27,7 @@ export class MapController {
         // Pagination state:
         this.pagination = {
             currentPage: 1,
-            itemsPerPage: 20,
+            itemsPerPage: 10,
             totalItems: 0,
         }
 
@@ -46,9 +45,7 @@ export class MapController {
 
             // Initialize UI only after DOM is fully loaded
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    this.initializeUI();
-                });
+                document.addEventListener('DOMContentLoaded', () => this.initializeUI());
             } else {
                 // If DOM is already loaded, initialize UI immediately
                 this.initializeUI();
@@ -127,15 +124,12 @@ export class MapController {
             'horizon-blend': 0.05
         });
 
-
         this.map.addSource('mapbox-dem', {
             'type': 'raster-dem',
             'url': 'mapbox://mapbox.terrain-rgb',
             'tileSize': 512,
             'maxzoom': 14
         });
-
-
         this.map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
     }
 
@@ -271,12 +265,6 @@ export class MapController {
                 .setLngLat([location.longitude, location.latitude])
                 .addTo(this.map);
 
-                // Add click event listener to the marker element
-                el.addEventListener('click', () => {
-                    // Fly to the clicked location
-                    this.flyToLocation(location.latitude, location.longitude, 5000, 12, true);
-                });
-
                 // Store marker reference
                 this.markerManager.locations.set(location.id, marker);
             });
@@ -348,10 +336,22 @@ export class MapController {
 
                 // Click event for more details
                 el.addEventListener('click', () => {
-                    this.flyToLocation(event.latitude, event.longitude, 5000, 12, true);
+                    // Fly to event location
+                    this.map.flyTo({
+                        center: [event.longitude, event.latitude],
+                        zoom: 8,
+                        essential: true
+                    });
                 });
 
                 this.markerManager.events.set(event.id, marker);
+
+                // Log for debugging
+                console.log('Created event marker:', {
+                    id: event.id,
+                    type: event.event_type,
+                    storedType: marker.eventType
+                });
             });
 
         } catch (error) {
@@ -360,85 +360,11 @@ export class MapController {
     }
 
 
-    // Flying Shit: -------------------------------------------- //
-    flyToLocation(latitude, longitude, duration = 5000, zoom = 12, forceMove = false) {
-        // Validate coordinates
-        if (!latitude || !longitude) {
-            console.error('Invalid coordinates:', latitude, longitude);
-            return;
-        }
-
-        // Don't fly if user is interacting
-        if (this.userInteracting && !forceMove) {
-            return;
-        }
-
-        // Ensure the map is initialized
-        if (!this.map) {
-            console.error('Map not initialized');
-            return;
-        }
-
-        try {
-            this.map.flyTo({
-                center: [longitude, latitude],
-                zoom: zoom,
-                duration: duration,
-                essential: true,
-                curve: 1.42, // Add a smooth ease-out curve
-                speed: 1.2, // Slightly faster than default
-            });
-        } catch (error) {
-            console.error('Error flying to location:', error);
-        }
-    }
-
-    setupLocationCardHovers() {
-        const locationItems = document.querySelectorAll('.location-item');
-
-        let isHovering = false;
-
-        locationItems.forEach(item => {
-            const lat = parseFloat(item.getAttribute('data-lat'));
-            const lng = parseFloat(item.getAttribute('data-lng'));
-
-            if (!isNaN(lat) && !isNaN(lng)) {
-                let hoverTimeout;
-
-                item.addEventListener('mouseenter', () => {
-                    isHovering = true;
-                    hoverTimeout = setTimeout(() => {
-                        if (isHovering) {
-                            this.flyToLocation(lat, lng);
-                        }
-                    }, 500);
-
-                    item.classList.add('hover');
-                });
-
-                item.addEventListener('mouseleave', () => {
-                    isHovering = false;
-                    clearTimeout(hoverTimeout);
-                    item.classList.remove('hover');
-
-                    // Stop any ongoing camera animations
-                    if (this.map) {
-                        this.map.stop();
-                    }
-                });
-            } else {
-                console.warn('Invalid coordinates for item:', item);
-            }
-        });
-    }
-
-
     // Filtering: ---------------------------------------------- //
     initializeUI() {
         this.setupFilters();
         this.initializePagination();
         this.setupFilters();
-        this.setupLocationCardHovers();
         this.applyInitialState();
     }
 
@@ -795,6 +721,7 @@ export class MapController {
 
         // Save to localStorage with pretty formatting for debugging
         localStorage.setItem('mapFilters', JSON.stringify(filterState, null, 2));
+        console.log('Saved filters:', filterState);
     }
 
     loadSavedFilters() {
@@ -804,6 +731,7 @@ export class MapController {
 
             if (savedFilters) {
                 const parsedFilters = JSON.parse(savedFilters);
+                console.log('Loaded saved filters:', parsedFilters);
 
                 // Restore the filter state
                 this.filters.activeTab = parsedFilters.activeTab || 'all';

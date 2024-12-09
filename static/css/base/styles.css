@@ -21,7 +21,7 @@
 
     --background: black;
     --background-dark: #181818;
-    --surface: #FFFFFF19;
+    --surface: #2d2d2d;
     
     --text-primary: white;
     --text-secondary: #afafaf;
@@ -155,7 +155,8 @@ h4 { font-size: var(--font-size-lg); }
     margin: 0 auto;
     display: flex;
     gap: var(--space-sm);
-    box-shadow: var(--shadow-lg);
+    border: 1px solid black;
+    border-radius: var(--radius-sm);
 }
 
 .settings-sidebar {
@@ -957,7 +958,7 @@ h4 { font-size: var(--font-size-lg); }
     padding: var(--space-xl);
     width: 100%;
     max-width: 300px;
-    box-shadow: var(--shadow-lg);
+    border: 1px solid black;
     min-height: 650px;
 
 }
@@ -1087,8 +1088,8 @@ h4 { font-size: var(--font-size-lg); }
     padding: var(--space-xl);
     width: 100%;
     max-width: 300px;
-    box-shadow: var(--shadow-lg);
     min-height: 650px;
+    border: 1px solid black;
 }
 .register-form {
     width: 100%;
