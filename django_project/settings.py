@@ -23,6 +23,7 @@ load_dotenv()
 
 # Use environment variables for sensitive data:
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
 NASA_API_KEY = os.getenv('NASA_API_KEY')
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 DEBUG = os.getenv('DEBUG', 'False') == 'True'

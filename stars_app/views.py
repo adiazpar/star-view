@@ -189,6 +189,22 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 content_type='application/json'
             )
 
+    @action(detail=True, methods=['POST'])
+    def update_address(self, request, pk=None):
+        """Endpoint to manually trigger address update"""
+        location = self.get_object()
+        success = location.update_address_from_coordinates()
+
+        if success:
+            location.save()
+            serializer = self.get_serializer(location)
+            return Response(serializer.data)
+
+        return Response(
+            {'detail': 'Failed to update address'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
 @login_required
 @require_POST
 def update_viewing_nickname(request, favorite_id):

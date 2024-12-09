@@ -14,9 +14,12 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = ViewingLocation
         fields = ['id', 'name', 'latitude', 'longitude', 'elevation',
-                 'light_pollution_value', 'quality_score', 'added_by',
+                  'formatted_address', 'administrative_area', 'locality', 'country',
+                  'light_pollution_value', 'quality_score', 'added_by',
                   'created_at', 'is_favorited', 'cloudCoverPercentage', 'forecast']
-        read_only_fields = ['light_pollution_value', 'quality_score', 'added_by', 'created_at']
+        read_only_fields = ['light_pollution_value', 'quality_score', 'added_by',
+                          'created_at', 'formatted_address', 'administrative_area',
+                          'locality', 'country']
 
     def get_is_favorited(self, obj):
         request = self.context.get('request')
