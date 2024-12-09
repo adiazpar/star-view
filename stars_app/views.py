@@ -325,14 +325,11 @@ def map(request):
     locations = ViewingLocation.objects.all()
     events = CelestialEvent.objects.all()
 
-    # Paginate locations:
-    paginator = Paginator(locations, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Combine all items into one list:
+    combined_items = list(locations) + list(events)
 
     context = {
-        'viewing_locations': page_obj,
-        'celestial_events': events,
+        'items': combined_items,
         'mapbox_token': 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA'
     }
     return render(request, 'stars_app/map.html', context)

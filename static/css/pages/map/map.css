@@ -6,7 +6,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: var(--space-md);
+    padding: var(--space-lg);
     background-color: var(--background-dark);
     overflow: hidden;
 }
@@ -28,9 +28,13 @@
 
 .locations-panel {
     width: 400px;
+    min-width: 240px;
+    max-width: 400px;
     background-color: var(--surface);
+    border-right: 1px solid var(--background);
     display: flex;
     flex-direction: column;
+    transition: width var(--transition-base);
 }
 
 /* Tabs for filtering content */
@@ -132,17 +136,10 @@
     border-color: var(--primary);
 }
 
-/* New: Weather condition icon */
-.weather-icon {
-    position: absolute;
-    top: var(--space-sm);
-    right: var(--space-sm);
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-}
-
 /* Enhanced Location/Event Items */
 .location-list {
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
     background-color: var(--background-dark);
     flex: 1;
     overflow-y: auto;
@@ -157,75 +154,164 @@
 }
 
 .location-item {
+    display: flex;
+    max-height: 125px;
     background: var(--background-dark);
     border: 1px solid var(--text-tertiary);
     border-radius: var(--radius-sm);
-    padding: var(--space-md);
     margin-bottom: var(--space-md);
     cursor: pointer;
-    transition: all var(--transition-base);
-    position: relative; /* Added for new features */
+    transition: all var(--transition-base),
+                opacity var(--transition-slow),
+                margin var(--transition-slow),
+                padding var(--transition-slow),
+                border-width var(--transition-slow);
+    position: relative;
+    overflow: hidden;
+    opacity: 1;
 }
 
 .location-item:hover {
+    scale: 1.025;
     border-color: var(--primary);
+
+    .info-item {
+        color: var(--primary);
+    }
+}
+
+.location-item.hidden {
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.item-snapshot {
+    flex: 0 0 150px; /* Fixed width for the map snapshot */
+    height: 150px;
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+    background-color: var(--background);
+}
+
+.item-snapshot img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-content {
+    padding: var(--space-md);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* Prevents text overflow */
 }
 
 .location-title {
-    font-size: var(--font-size-lg);
+    font-size: var(--font-size-base);
     color: var(--text-primary);
-    margin-bottom: var(--space-sm);
+    margin-bottom: var(--space-xs);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
 }
 
 .location-type {
-    display: inline-block;
-    padding: 4px 8px;
-    background: var(--primary);
-    color: var(--text-primary);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-sm);
-    margin-bottom: var(--space-sm);
+    color: var(--text-tertiary);
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: x-small;
+    margin-bottom: var(--space-md);
 }
 
-.location-address {
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
+.location-type i {
+    width: 16px;
 }
 
-.map-view {
-    flex: 1;
-    position: relative;
-}
-
-#map {
-    width: 100%;
-    height: 100%;
-}
-
-.map-controls {
-    position: absolute;
-    top: var(--space-md);
-    left: var(--space-md);
-    z-index: 1;
+.location-item .location-info {
     display: flex;
-    gap: var(--space-sm);
+    flex-direction: column;
 }
-
-.map-control-btn {
-    padding: var(--space-sm) var(--space-md);
-    background: var(--surface);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
+.location-info .info-item {
+    display: flex;
+    text-transform: uppercase;
     color: var(--text-primary);
-    cursor: pointer;
-    transition: all var(--transition-base);
+    font-size: xx-small;
+    font-weight: normal;
 }
 
-.map-control-btn:hover {
-    background: var(--background-dark);
-    border-color: var(--primary);
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+    .locations-panel {
+        width: 350px;
+    }
 }
 
+@media (max-width: 900px) {
+    .locations-panel {
+        width: 300px;
+    }
+}
+
+@media (max-width: 768px) {
+    .locations-panel {
+        width: 250px;
+    }
+
+    /* Adjust the location snapshot size for smaller screens */
+    .item-snapshot {
+        flex: 0 0 120px;
+        height: 120px;
+    }
+
+    /* Adjust padding and margins for tighter layout */
+    .location-content {
+        padding: var(--space-sm);
+    }
+
+    .location-item {
+        flex-direction: column;
+        max-height: 300px;
+    }
+
+    .item-snapshot {
+        width: 100%;
+        flex: 0 0 120px;
+    }
+}
+
+/* For very small screens, consider a collapsible panel */
+@media (max-width: 576px) {
+    .locations-panel {
+        position: absolute;
+        left: 0;
+        width: 100%;
+        max-width: 100%;
+        height: 50vh; /* Take half the viewport height */
+        bottom: 0;
+        border-right: none;
+        border-top: 1px solid var(--background);
+    }
+
+    .map-container {
+        flex-direction: column;
+    }
+
+    .map-view {
+        height: 50vh;
+    }
+}
+
+/* Pagination Styles */
 .pagination {
     display: flex;
     justify-content: center;
@@ -235,7 +321,7 @@
 
 .page-item {
     width: 32px;
-    height: 32px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -254,33 +340,125 @@
     background: var(--surface);
 }
 
-/* Button Styling */
-.debug-control, .control {
-    background: white;
+.map-view {
+    flex: 1;
+    position: relative;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+}
+
+/* Mapbox controls container */
+.mapbox-control-container .mapbox-ctrl-group {
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+/* Individual control buttons */
+.mapboxgl-ctrl-group button {
+    background-color: var(--background-dark);
     border: none;
+    border-bottom: 1px solid var(--text-tertiary);
+    width: 30px;
+    height: 30px;
+}
+
+/* Remove border from last button in group */
+.mapboxgl-ctrl-group button:last-child {
+    border-bottom: none;
+}
+
+/* Icon colors */
+.mapboxgl-ctrl-group button span.mapboxgl-ctrl-icon {
+    filter: invert(1);  /* Makes the icons white */
+}
+
+/* Geolocate control specific styles */
+.mapboxgl-ctrl-geolocate {
+    background: var(--background-dark);
+}
+
+.mapboxgl-ctrl-geolocate.mapboxgl-ctrl-geolocate-active {
+    background-color: var(--primary-light);
+}
+
+/* Map Controls */
+.map-controls {
+    position: absolute;
+    top: var(--space-sm);
+    left: var(--space-sm);
+    z-index: 1;
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.map-control-btn {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
     cursor: pointer;
-    padding: 7px 10px;
-    margin: 10px;
-    font-size: 12px;
-    font-weight: bold;
-    color: #333;
+    transition: all var(--transition-base);
 }
-.debug-control:hover, .control:hover {
-    background: #d7d7d7;
+.map-control-btn.active {
+    color: var(--text-primary);
+    background: var(--primary);
+    border: 1px solid var(--primary);
 }
-.debug-control.active, .control.active {
-    background: #ffebee;
-    color: #ff0000;
+
+.map-control-btn:hover {
+    border-color: var(--primary);
 }
+
+/* Legend Styling */
 .legend {
     position: absolute;
-    padding-left: 10px;
-    padding-right: 10px;
-    bottom: 35px;
-    right: 10px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.7);
+    top: calc(var(--space-sm) + 40px); /* Position below the dark sky button */
+    left: var(--space-sm);
+    padding: var(--space-sm);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    z-index: 1;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-base), visibility var(--transition-base);
 }
+
+/* Show legend when dark sky is active */
+.legend.visible {
+    opacity: 0.9;
+    visibility: visible;
+}
+
+.legend h4 {
+    font-size: var(--font-size-xs);
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.legend-gradient {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.legend-scale {
+    width: 200px;
+    height: 16px;
+    background: linear-gradient(to right, black, floralwhite);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--text-tertiary);
+}
+
+/* Location and Event Marker styles */
 
 .location-marker, .event-marker {
     cursor: pointer;

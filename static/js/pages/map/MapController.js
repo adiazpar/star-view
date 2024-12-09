@@ -1,16 +1,14 @@
-import { MAPBOX_CONFIG } from "./mapbox-config.js";
-import { LocationService } from "./LocationService.js";
-import { MapDebugger, addLocation, addEvent, submitEventForm } from "./MapDebugger.js";
+import {MAPBOX_CONFIG} from "./mapbox-config.js";
+import {LocationService} from "./LocationService.js";
+import {MapDebugger} from "./MapDebugger.js";
 
 // Map controller class for drawing layers, user interaction:
 export class MapController {
     constructor() {
         this.map = null;
         this.userInteracting = false;
-        this.spinEnabled = true;
-        this.secondsPerRevolution = MAPBOX_CONFIG.spinRevolutionTime;
-        this.maxSpinZoom = MAPBOX_CONFIG.maxSpinZoom;
         this.debugger = null;
+        this.transitionDuration = 300;
 
         // Marker management:
         this.markerManager = {
@@ -20,11 +18,29 @@ export class MapController {
         };
 
         // Filter state management:
-        this.filterState = {
+        this.filters = {
             activeTab: 'all',
-            activeFilters: new Set(),
-            searchTerm: '',
+            eventTypes: new Set(),
+            searchQuery: '',
         };
+
+        // Pagination state:
+        this.pagination = {
+            currentPage: 1,
+            itemsPerPage: 10,
+            totalItems: 0,
+        }
+
+        // Load saved filters before DOM initialization:
+        this.loadSavedFilters();
+        this.initialize();
+    }
+
+    initializeUI() {
+        this.setupFilters();
+        this.initializePagination();
+        this.setupFilters();
+        this.applyInitialState();
     }
 
     async initialize() {
@@ -32,9 +48,41 @@ export class MapController {
             await this.initializeMap();
             await this.setupMapFeatures();
 
+            // Initialize UI only after DOM is fully loaded
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => this.initializeUI());
+            } else {
+                // If DOM is already loaded, initialize UI immediately
+                this.initializeUI();
+            }
+
         } catch(error) {
             console.error('Map initialization failed: ', error);
         }
+    }
+
+    applyInitialState() {
+        // Get all items
+        const items = document.querySelectorAll('.location-item');
+
+        // Set initial visibility
+        items.forEach(item => {
+            item.style.display = '';  // Make all items visible initially
+        });
+
+        // Calculate initial pagination
+        this.pagination.totalItems = items.length;
+
+        // Apply initial pagination
+        this.updatePagination();
+
+        // Update item visibility based on first page
+        const startIndex = 0;
+        const endIndex = this.pagination.itemsPerPage;
+
+        items.forEach((item, index) => {
+            item.style.display = (index >= startIndex && index < endIndex) ? '' : 'none';
+        });
     }
 
     async initializeMap() {
@@ -91,11 +139,22 @@ export class MapController {
     }
 
     async setupMapFeatures() {
-        this.initializeFilters();
+        this.setupFilters();
         this.setupMapControls();
         this.setupDarkSkyLayer();
         await this.loadLocationsAndEvents();
-        //this.setupDebugger()
+
+        const tileButton = document.getElementById('show-tile-borders');
+        const gridButton = document.getElementById('show-pixel-grid');
+
+        // If debugger is disabled, hide the buttons:
+        if(!MAPBOX_CONFIG.debugEnabled) {
+            tileButton.style.display = 'none';
+            gridButton.style.display = 'none';
+        }
+        else {
+            this.setupDebugger();
+        }
     }
 
     setupEventListeners() {
@@ -104,6 +163,12 @@ export class MapController {
         this.map.on('dragstart', () => this.userInteracting = true);
         this.map.on('moveend', () => {
             this.userInteracting = false;
+            this.updateMapMarkers();
+        });
+
+        this.map.on('zoomend', () => {
+            // Update markers whenever the zoom level changes
+            this.updateMapMarkers();
         });
     }
 
@@ -140,72 +205,23 @@ export class MapController {
         });
 
 
-        // Add dark sky layer toggle button:
-        const button = document.createElement('button');
-        button.className = 'mapboxgl-ctrl-group mapboxgl-ctrl control';
-        button.innerText = 'Toggle Dark Sky';
-        button.onclick = () => {
+        // Set up click handler for existing button
+        document.getElementById('toggle-dark-sky').addEventListener('click', () => {
             const visibility = this.map.getLayoutProperty('dark-sky-layer', 'visibility');
+            const isVisible = visibility === 'visible';
+
             this.map.setLayoutProperty(
                 'dark-sky-layer',
                 'visibility',
                 visibility === 'visible' ? 'none' : 'visible'
             );
-            // Update button state
-            button.classList.toggle('active', visibility !== 'visible');
-        };
-        this.map.getContainer().appendChild(button);
 
-        // Adding the legend:
-        const legend = document.createElement('div');
-        legend.className = 'mapboxgl-ctrl-group mapboxgl-ctrl legend';
-        legend.innerHTML = `
-            <h4>Dark Sky Levels</h4>
-            <div style="display: flex; align-items: center; margin: 5px 0;">
-                <div style="background: linear-gradient(to right, black, floralwhite); width: 100px; height: 20px;"></div>
-                <span style="margin-left: 10px;">Light Pollution Scale</span>
-            </div>
-        `;
-        this.map.getContainer().appendChild(legend);
-    }
+            // Toggle button state
+            document.getElementById('toggle-dark-sky').classList.toggle('active', !isVisible);
 
-    initializeFilters() {
-        // Tab filtering:
-        document.querySelectorAll('.panel-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                this.filterState.activeTab = tab.dataset.tab;
-                this.updateFilters();
-                this.updateTabStyles(tab);
-            });
+            // Toggle legend visibility
+            document.querySelector('.legend').classList.toggle('visible', !isVisible);
         });
-
-        // Event type filtering
-        document.querySelectorAll('.event-type-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const type = btn.dataset.type;
-
-                if (this.filterState.activeFilters.has(type)) {
-                    this.filterState.activeFilters.delete(type);
-                    btn.classList.remove('active');
-                } else {
-                    this.filterState.activeFilters.add(type);
-                    btn.classList.add('active');
-                }
-                this.updateFilters();
-            });
-        });
-
-        // Enhanced search
-        const searchInput = document.getElementById('location-search');
-        searchInput.addEventListener('input', (e) => {
-            this.filterState.searchTerm = e.target.value.toLowerCase();
-            this.updateFilters();
-        });
-    }
-
-    updateTabStyles(activeTab) {
-        document.querySelectorAll('.panel-tab').forEach(tab =>
-            tab.classList.toggle('active', tab === activeTab));
     }
 
     setupDebugger() {
@@ -317,8 +333,11 @@ export class MapController {
                     element: el,
                     anchor: 'center'
                 })
-                .setLngLat([event.longitude, event.latitude])
-                .addTo(this.map);
+                .setLngLat([event.longitude, event.latitude]);
+
+                marker.eventType = event.event_type;
+
+                marker.addTo(this.map);
 
                 // Click event for more details
                 el.addEventListener('click', () => {
@@ -331,6 +350,13 @@ export class MapController {
                 });
 
                 this.markerManager.events.set(event.id, marker);
+
+                // Log for debugging
+                console.log('Created event marker:', {
+                    id: event.id,
+                    type: event.event_type,
+                    storedType: marker.eventType
+                });
             });
 
         } catch (error) {
@@ -338,54 +364,353 @@ export class MapController {
         }
     }
 
-    updateFilters() {
-        document.querySelectorAll('.location-item').forEach(item => {
-            const isVisible = this.checkItemVisibility(item);
-            item.style.display = isVisible ? 'block' : 'none';
-            this.updateMarkerVisibility(item, isVisible);
+    // Filtering:
+    setupFilters() {
+        // Tab filtering
+        const tabButtons = document.querySelectorAll('.panel-tab');
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabButtons.forEach(tab => tab.classList.remove('active'));
+
+                // Add active class to clicked tab
+                button.classList.add('active');
+
+                // Update active tab in our filter state
+                this.filters.activeTab = button.getAttribute('data-tab').toLowerCase();
+
+                // Reset to first page:
+                this.pagination.currentPage = 1;
+
+                // Apply filters:
+                this.applyFilters();
+                this.saveFilters();
+            });
+        });
+
+        // Event type filtering
+        const eventTypeButtons = document.querySelectorAll('.event-type-filter button');
+        eventTypeButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const eventType = button.getAttribute('data-type');
+
+                // Toggle button active state
+                button.classList.toggle('active');
+
+                // Update our filter state
+                if (this.filters.eventTypes.has(eventType)) {
+                    this.filters.eventTypes.delete(eventType);
+                } else {
+                    this.filters.eventTypes.add(eventType);
+                }
+
+                this.pagination.currentPage = 1;
+
+                // Apply filters:
+                this.applyFilters();
+                this.saveFilters();
+            });
+        });
+
+        // Search functionality
+        const searchInput = document.querySelector('.search-container input');
+        searchInput.addEventListener('input', (e) => {
+            this.filters.searchQuery = e.target.value.toLowerCase();
+
+            this.pagination.currentPage = 1;
+
+            // Apply filters:
+            this.applyFilters();
+            this.saveFilters();
         });
     }
 
-    checkItemVisibility(item) {
-        if (this.filterState.activeTab !== 'all' &&
-            item.dataset.type !== this.filterState.activeTab) {
-            return false;
+    applyFilters() {
+        if(!this.filters) {
+            console.error('Filters objects is not initialized');
+            return;
         }
 
-        if (this.filterState.activeFilters.size > 0 &&
-            item.dataset.type === 'event' &&
-            !this.filterState.activeFilters.has(item.dataset.eventType)) {
-            return false;
+        const items = document.querySelectorAll('.location-item');
+        let visibleCount = 0;
+
+        items.forEach(item => {
+            let isVisible = true;
+            const itemType = item.getAttribute('data-type');
+            const eventType = item.getAttribute('data-event-type');
+
+            // Tab filtering
+            if (this.filters.activeTab !== 'all') {
+                isVisible = itemType === this.filters.activeTab;
+            }
+
+            // Event type filtering
+            if (isVisible && this.filters.eventTypes.size > 0) {
+                if (itemType === 'event') {
+                    isVisible = this.filters.eventTypes.has(eventType);
+                } else {
+                    // If we're filtering by event types, hide all locations
+                    isVisible = false;
+                }
+            }
+
+            // Search filtering
+            if (isVisible && this.filters.searchQuery) {
+                const title = item.querySelector('.location-title')?.textContent.toLowerCase() || '';
+                const description = item.querySelector('.location-address, .event-description')?.textContent.toLowerCase() || '';
+                isVisible = title.includes(this.filters.searchQuery) || description.includes(this.filters.searchQuery);
+            }
+
+            // Update visibility
+            if (isVisible) {
+                item.classList.remove('hidden');
+                visibleCount++;
+            } else {
+                item.classList.add('hidden');
+            }
+        });
+
+        // Only update pagination if we have visible items
+        if (visibleCount > 0) {
+            this.pagination.totalItems = visibleCount;
+            this.updatePagination();
         }
 
-        if (this.filterState.searchTerm) {
-            const title = item.querySelector('.location-title').textContent.toLowerCase();
-            const description = item.querySelector('.location-address, .event-description')
-                ?.textContent.toLowerCase() || '';
-            if (!title.includes(this.filterState.searchTerm) &&
-                !description.includes(this.filterState.searchTerm)) {
-                return false;
+        // Update marker visibility on the map
+        this.updateMapMarkers();
+    }
+
+    initializePagination() {
+        // Ensure we have a pagination container
+        let paginationContainer = document.querySelector('.pagination');
+        if (!paginationContainer) {
+            // If no pagination container exists, create one
+            paginationContainer = document.createElement('div');
+            paginationContainer.className = 'pagination';
+            const locationList = document.querySelector('.location-list');
+            if (locationList) {
+                locationList.appendChild(paginationContainer);
             }
         }
 
-        return true;
+        // Initial pagination update
+        this.updatePagination();
     }
 
-    updateMarkerVisibility(item, isVisible) {
-        const lat = parseFloat(item.dataset.lat);
-        const lng = parseFloat(item.dataset.lng);
-        const markerKey = this.getMarkerKey(lat, lng);
+    updatePagination() {
+        const paginationContainer = document.querySelector('.pagination');
+        if (!paginationContainer) return;
 
-        const marker = item.dataset.type === 'event'
-            ? this.markerManager.events.get(markerKey)
-            : this.markerManager.locations.get(markerKey);
+        // Get actually visible items (those with display !== 'none')
+        const visibleItems = Array.from(document.querySelectorAll('.location-item'))
+            .filter(item => !item.classList.contains('hidden'));
 
-        if (marker) {
-            marker.getElement().style.display = isVisible ? 'block' : 'none';
+        this.pagination.totalItems = visibleItems.length;
+        const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
+
+        // Clear existing pagination content:
+        paginationContainer.innerHTML = '';
+
+        // Only show pagination if we have more than one page
+        if (totalPages > 1) {
+            paginationContainer.innerHTML = `
+                ${this.pagination.currentPage > 1 ? 
+                    '<a class="page-item prev">←</a>' : ''}
+                <span class="page-item active">${this.pagination.currentPage}/${totalPages}</span>
+                ${this.pagination.currentPage < totalPages ? 
+                    '<a class="page-item next">→</a>' : ''}
+            `;
+
+            // Add event listeners to pagination controls
+            const prevButton = paginationContainer.querySelector('.prev');
+            const nextButton = paginationContainer.querySelector('.next');
+
+            if (prevButton) {
+                prevButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage - 1));
+            }
+            if (nextButton) {
+                nextButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage + 1));
+            }
+        }
+
+        // Update visibility of items based on current page
+        this.updateItemVisibility(visibleItems);
+    }
+
+    updateItemVisibility(visibleItems) {
+        const startIndex = (this.pagination.currentPage - 1) * this.pagination.itemsPerPage;
+        const endIndex = startIndex + this.pagination.itemsPerPage;
+
+        visibleItems.forEach((item, index) => {
+            if (index >= startIndex && index < endIndex) {
+                item.style.display = '';
+                // Reset height for smooth transitions
+                requestAnimationFrame(() => {
+                    item.style.height = '';
+                });
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    goToPage(pageNumber) {
+        // Ensure page number is valid
+        const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
+        if (pageNumber < 1 || pageNumber > totalPages) return;
+
+        // Update current page
+        this.pagination.currentPage = pageNumber;
+
+        // Update pagination display
+        this.updatePagination();
+    }
+
+    updateMapMarkers() {
+        // Instead of handling individual markers, let's handle all markers based on the active tab
+        const activeTab = this.filters.activeTab;
+
+        // Handle location markers
+        this.markerManager.locations.forEach((marker, key) => {
+            const element = marker.getElement();
+            const coordinates = marker.getLngLat();
+
+            // Project the point to screen coordinates
+            const point = this.map.project(coordinates);
+
+            // Get the map's container dimensions
+            const bounds = this.map.getContainer().getBoundingClientRect();
+
+            // A point is behind the globe if its projected x or y coordinates
+            // are outside reasonable bounds (we add some padding to prevent flickering)
+            const padding = 100;
+            const isVisible = point.x >= -padding &&
+                            point.x <= bounds.width + padding &&
+                            point.y >= -padding &&
+                            point.y <= bounds.height + padding;
+
+            // Combine visibility check with tab filter
+            const shouldShow = (activeTab === 'all' || activeTab === 'location') && isVisible;
+
+            if (element) {
+                element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
+                element.style.opacity = shouldShow ? '1' : '0';
+
+                if (!shouldShow) {
+                    setTimeout(() => {
+                        element.style.display = 'none';
+                    }, this.transitionDuration);
+                } else {
+                    element.style.display = '';
+                    element.offsetHeight; // Force reflow
+                    element.style.opacity = '1';
+                }
+            }
+        });
+
+        // Handle event markers with the same logic
+        this.markerManager.events.forEach((marker) => {
+            const element = marker.getElement();
+            const coordinates = marker.getLngLat();
+
+            // Project the point to screen coordinates
+            const point = this.map.project(coordinates);
+
+            // Get the map's container dimensions
+            const bounds = this.map.getContainer().getBoundingClientRect();
+
+            // Check visibility using the same projection method
+            const padding = 100;
+            const isVisible = point.x >= -padding &&
+                            point.x <= bounds.width + padding &&
+                            point.y >= -padding &&
+                            point.y <= bounds.height + padding;
+
+            // Combine visibility with tab and event type filters
+            let shouldShow = (activeTab === 'all' || activeTab === 'event') && isVisible;
+
+            if (shouldShow && this.filters.eventTypes.size > 0) {
+                shouldShow = this.filters.eventTypes.has(marker.eventType);
+            }
+
+            if (element) {
+                element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
+                element.style.opacity = shouldShow ? '1' : '0';
+
+                if (!shouldShow) {
+                    setTimeout(() => {
+                        element.style.display = 'none';
+                    }, this.transitionDuration);
+                } else {
+                    element.style.display = '';
+                    element.offsetHeight; // Force reflow
+                    element.style.opacity = '1';
+                }
+            }
+        });
+    }
+
+    // Add filter persistence:
+    saveFilters() {
+        // Convert our filter state into a format suitable for storage
+        const filterState = {
+            activeTab: this.filters.activeTab,
+            // Convert Set to Array for storage
+            eventTypes: Array.from(this.filters.eventTypes),
+            searchQuery: this.filters.searchQuery
+        };
+
+        // Save to localStorage with pretty formatting for debugging
+        localStorage.setItem('mapFilters', JSON.stringify(filterState, null, 2));
+        console.log('Saved filters:', filterState);
+    }
+
+    loadSavedFilters() {
+        try {
+            // Attempt to load saved filters
+            const savedFilters = localStorage.getItem('mapFilters');
+
+            if (savedFilters) {
+                const parsedFilters = JSON.parse(savedFilters);
+                console.log('Loaded saved filters:', parsedFilters);
+
+                // Restore the filter state
+                this.filters.activeTab = parsedFilters.activeTab || 'all';
+                this.filters.eventTypes = new Set(parsedFilters.eventTypes || []);
+                this.filters.searchQuery = parsedFilters.searchQuery || '';
+
+                // Now we need to update the UI to match the loaded state
+                this.restoreFilterUI();
+            }
+        } catch (error) {
+            console.error('Error loading saved filters:', error);
+            // If there's an error, we'll just use the default filters
         }
     }
 
-    getMarkerKey(lat, lng) {
-        return `${lat},${lng}`;
+    restoreFilterUI() {
+        // Restore active tab
+        const tabs = document.querySelectorAll('.panel-tab');
+        tabs.forEach(tab => {
+            const isActive = tab.getAttribute('data-tab') === this.filters.activeTab;
+            tab.classList.toggle('active', isActive);
+        });
+
+        // Restore event type buttons
+        const eventButtons = document.querySelectorAll('.event-type-btn');
+        eventButtons.forEach(button => {
+            const eventType = button.getAttribute('data-type');
+            const isActive = this.filters.eventTypes.has(eventType);
+            button.classList.toggle('active', isActive);
+        });
+
+        // Restore search query
+        const searchInput = document.querySelector('.search-container input');
+        if (searchInput) {
+            searchInput.value = this.filters.searchQuery;
+        }
+
+        // Apply the restored filters
+        this.applyFilters();
     }
 }
