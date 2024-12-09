@@ -9,6 +9,9 @@ from stars_app.models.forecast import Forecast
 from django.contrib.auth.models import User
 from stars_app.utils import is_valid_email
 
+# Services:
+from stars_app.services.light_pollution import LightPollutionService
+
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -43,9 +46,6 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 # Distance
 from geopy.distance import geodesic
-
-# Map:
-from django.core.paginator import Paginator
 
 
 # ---------------------------------------------------------------- #
@@ -204,6 +204,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             {'detail': 'Failed to update address'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
 
 @login_required
 @require_POST
@@ -374,6 +375,7 @@ def details(request, event_id):
         'view_loc': closet_loc
     }
     return render(request, 'stars_app/details.html', current_data)
+
 
 # ---------------------------------------------------------------- #
 # User Profile Views:

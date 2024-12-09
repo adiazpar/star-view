@@ -1130,7 +1130,7 @@ h4 { font-size: var(--font-size-lg); }
 /* Event List Page Styling */
 .list-page {
     padding: var(--space-md);
-    background-color: var(--surface);
+    background-color: var(--background-dark);
     min-height: 100vh;
 }
 

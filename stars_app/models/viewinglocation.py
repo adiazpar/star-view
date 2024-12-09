@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 
 from .forecast import Forecast
 from .defaultforecast import defaultforecast
+from stars_app.services.light_pollution import LightPollutionService
 
 
 # Viewing Location Model -------------------------------------------- #
@@ -31,8 +32,16 @@ class ViewingLocation(models.Model):
     cloudCoverPercentage = models.FloatField(null=True)
 
     # Light pollution
-    light_pollution_value = models.FloatField(null=True, blank=True, help_text="Calculated light pollution value from tiles")
-    quality_score = models.FloatField(null=True, blank=True)
+    light_pollution_value = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Light pollution in magnitude per square arcsecond (higher values = darker skies)"
+    )
+    quality_score = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Overall viewing quality score (0-100) based on light pollution and elevation"
+    )
 
     added_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -81,6 +90,22 @@ class ViewingLocation(models.Model):
             print(f"Error updating address: {str(e)}")
             return False
 
+    # Add new method for light pollution updates
+    def update_light_pollution(self):
+        """Update light pollution and quality score for this location"""
+        service = LightPollutionService()
+        light_pollution = service.get_light_pollution(
+            self.latitude,
+            self.longitude
+        )
+
+        if light_pollution is not None:
+            self.light_pollution_value = light_pollution
+            self.quality_score = service.calculate_quality_score(light_pollution)
+            self.save(update_fields=['light_pollution_value', 'quality_score'])
+            return True
+        return False
+
     def save(self, *args, **kwargs):
         # If this is a new location or coordinates have changed, update address
         if not self.pk or any(
@@ -90,6 +115,13 @@ class ViewingLocation(models.Model):
             self.update_address_from_coordinates()
 
         super().save(*args, **kwargs)
+
+        # Then update light pollution if needed
+        if not self.pk or any(
+                field in kwargs.get('update_fields', [])
+                for field in ['latitude', 'longitude']
+        ) or self.light_pollution_value is None:
+            self.update_light_pollution()
 
     # Forecast methods:
     def getForecast(self, hours=10):  # gets the forcasted cloud cover with 10 or the maximum the api will supply XXX will only work for the US
