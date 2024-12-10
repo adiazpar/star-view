@@ -11,6 +11,15 @@ export class MapController {
         this.transitionDuration = 300;
         this.defaultZoom = MAPBOX_CONFIG.defaultZoom;
 
+        this.activeInfoPanel = null;
+        this.infoPanelVisible = false;
+
+        // Existing constructor properties...
+        this.selectedLocationId = null;  // Track currently selected location
+
+        // Bind methods to preserve 'this' context
+        this.handleLocationSelection = this.handleLocationSelection.bind(this);
+
         // Marker management:
         this.markerManager = {
             locations: new Map(),
@@ -23,17 +32,18 @@ export class MapController {
             activeTab: 'all',
             eventTypes: new Set(),
             searchQuery: '',
+            showFavorites: false,
+            showMyLocations: false
         };
 
         // Pagination state:
         this.pagination = {
             currentPage: 1,
-            itemsPerPage: 20,
+            itemsPerPage: 10,
             totalItems: 0,
         }
 
         // Load saved filters before DOM initialization:
-        this.loadSavedFilters();
         this.initialize();
     }
 
@@ -280,6 +290,17 @@ setupDarkSkyLayer() {
             this.markerManager.locations.forEach(marker => marker.remove());
             this.markerManager.locations.clear();
 
+            // Store the full location data including favorites
+            this.locations = locations.map(location => {
+                const locationElement = document.querySelector(`.location-item[data-id="${location.id}"]`);
+                return {
+                    ...location,
+                    is_favorited: locationElement ?
+                        locationElement.getAttribute('is-favorite') === 'true' :
+                        false
+                };
+            });
+
             locations.forEach(location => {
                 // Create marker element
                 const el = document.createElement('div');
@@ -302,8 +323,7 @@ setupDarkSkyLayer() {
 
                 // Add click event listener to the marker element
                 el.addEventListener('click', () => {
-                    // Fly to the clicked location
-                    this.flyToLocation(location.latitude, location.longitude, 5000, 12, true);
+                    this.handleLocationSelection(location, el);
                 });
 
                 // Store marker reference
@@ -389,6 +409,245 @@ setupDarkSkyLayer() {
     }
 
 
+    // INFO Panel: --------------------------------------------- //
+    async createInfoPanel(location) {
+
+        // Get or create info panel container
+        let infoPanel = document.querySelector('.location-info-panel');
+        if (!infoPanel) {
+            infoPanel = document.createElement('div');
+            infoPanel.className = 'location-info-panel';
+            document.querySelector('.map-view').appendChild(infoPanel);
+        }
+
+        // Format values with proper handling of unavailable data
+        const cloudCover = location.cloudCoverPercentage >= 0
+            ? `${location.cloudCoverPercentage}%`
+            : 'Not available';
+
+        const lightPollution = location.light_pollution_value
+            ? `${location.light_pollution_value.toFixed(2)} mag/arcsec²`
+            : 'Not available';
+
+        const qualityScore = location.quality_score
+            ? `${Math.round(location.quality_score)}/100`
+            : 'Not available';
+
+        // Calculate average rating - similar to your template filter
+        const reviews = location.reviews || [];
+        const averageRating = reviews.length > 0
+            ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
+            : 0;
+
+        // Generate star HTML - we'll create 5 stars, filled based on the average rating
+        const starsHTML = Array.from({ length: 5 }, (_, i) => {
+            return `<i class="fas fa-star ${i < averageRating ? '' : 'empty'}"></i>`;
+        }).join('');
+
+        // Get login status from global variable or data attribute
+        const isLoggedIn = window.currentUser === true;
+
+        if (isLoggedIn) {
+            try {
+                const response = await fetch(`/api/viewing-locations/${location.id}/favorite/`, {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+                location.is_favorited = data.is_favorited;
+            } catch(error) {
+                console.error('Error checking favorite status:', error);
+                location.is_favorited = false; // Default to false if request fails
+            }
+        } else {
+            location.is_favorited = false; // Default to false for logged out users
+        }
+
+        // Create the action buttons HTML conditionally (favorites)
+        const actionButtonsHTML = isLoggedIn ? `
+            <button class="action-button favorite-button ${location.is_favorited ? 'active' : ''}" 
+                    onclick="window.mapController.toggleFavorite(${location.id})">
+                <i class="fas fa-heart"></i>
+                ${location.is_favorited ? 'Unfavorite' : 'Favorite'}
+            </button>
+        ` : `
+            <div class="action-button disabled">
+                <i class="fas fa-lock"></i>
+                Must be logged in to favorite
+            </div>
+        `;
+
+        // Update panel content
+        infoPanel.innerHTML = `
+            <div class="panel-header">
+                <button class="close-panel">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3>${location.name}</h3>
+                <div class="location-type">VIEWING LOCATION</div>
+            </div>
+            
+            <div class="panel-body">
+                <div class="info-section">
+                
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>User Ratings</label>
+                            <div class="rating-container">
+                                <div class="star-rating">
+                                    <div class="star-rating-stars">
+                                        ${starsHTML}
+                                    </div>
+                                    <span class="rating-count">(${reviews.length})</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Cloud Cover</label>
+                            <span class="${cloudCover === 'Not available' ? 'unavailable' : ''}">${cloudCover}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-moon"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Light Pollution</label>
+                            <span class="${lightPollution === 'Not available' ? 'unavailable' : ''}">${lightPollution}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Quality Score</label>
+                            <span class="${qualityScore === 'Not available' ? 'unavailable' : ''}">${qualityScore}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-mountain"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Elevation</label>
+                            <span>${location.elevation.toFixed(0)} m</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${location.formatted_address ? `
+                    <div class="info-section">
+                        <h4>Location Details</h4>
+                        <div class="info-row">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="info-content">
+                                <span class="address">${location.formatted_address}</span>
+                                <label>${location.longitude} , ${location.latitude}</label>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}               
+
+                <div class="panel-actions">
+                     ${actionButtonsHTML}
+                    <a href="/location/${location.id}" class="action-button primary">
+                        <i class="fas fa-info-circle"></i>
+                        View Full Details
+                    </a>
+                </div>
+            </div>
+        `;
+
+        // Add event listeners
+        const closeButton = infoPanel.querySelector('.close-panel');
+        closeButton.addEventListener('click', () => this.hideInfoPanel());
+
+        // Show panel with animation
+        infoPanel.classList.add('visible');
+        this.infoPanelVisible = true;
+        this.activeInfoPanel = infoPanel;
+    }
+
+    hideInfoPanel() {
+        if (this.activeInfoPanel) {
+            this.activeInfoPanel.classList.remove('visible');
+            this.infoPanelVisible = false;
+            this.selectedLocationId = null;
+            this.clearActiveStates();
+        }
+    }
+
+    async toggleFavorite(locationId) {
+        try {
+            const location = this.findLocationById(locationId);
+            if (!location) return;
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+
+            const action = location.is_favorited ? 'unfavorite' : 'favorite';
+            const response = await fetch(`/api/viewing-locations/${locationId}/${action}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (response.ok) {
+                // Toggle the favorited state
+                location.is_favorited = !location.is_favorited;
+
+                // Update the favorite button
+                const favoriteButton = document.querySelector('.favorite-button');
+                if (favoriteButton) {
+                    favoriteButton.classList.toggle('active', location.is_favorited);
+                    favoriteButton.innerHTML = `
+                        <i class="fas fa-heart"></i>
+                        ${location.is_favorited ? 'Unfavorite' : 'Favorite'}
+                    `;
+                }
+
+                // Update the card in the list if it exists
+                const locationCard = document.querySelector(`.location-item[data-id="${locationId}"]`);
+                if (locationCard) {
+                    locationCard.setAttribute('is-favorite', location.is_favorited.toString());
+                    // Update the heart indicator if it exists
+                    const heartIndicator = locationCard.querySelector('.favorite-indicator');
+                    if (heartIndicator) {
+                        heartIndicator.classList.toggle('active', location.is_favorited);
+                    }
+                }
+            }
+            else {
+                console.error('Server responded with:', response.status);
+                const errorData = await response.json();
+                console.error('Error details:', errorData);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    }
+
+
     // Flying Shit: -------------------------------------------- //
     flyToLocation(latitude, longitude, duration = 5000, zoom = 12, forceMove = false) {
         // Validate coordinates
@@ -422,42 +681,119 @@ setupDarkSkyLayer() {
         }
     }
 
-    setupLocationCardHovers() {
-        const locationItems = document.querySelectorAll('.location-item');
+    // Set up the location card listeners to read click inputs
+    setupLocationCardListeners() {
+        // Get all location cards
+        const locationCards = document.querySelectorAll('.location-item[data-type="location"]');
 
-        let isHovering = false;
+        locationCards.forEach(card => {
+            // First, remove any existing click listeners
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
 
-        locationItems.forEach(item => {
-            const lat = parseFloat(item.getAttribute('data-lat'));
-            const lng = parseFloat(item.getAttribute('data-lng'));
+            newCard.addEventListener('click', (event) => {
+                // Prevent event handling if clicking the favorite heart
+                if (event.target.closest('.favorite-indicator')) {
+                    return;
+                }
+                const locationId = newCard.getAttribute('data-id');
+                const isFavorited = newCard.getAttribute('is-favorite') === 'true';
 
-            if (!isNaN(lat) && !isNaN(lng)) {
-                let hoverTimeout;
+                const location = this.findLocationById(locationId);
 
-                item.addEventListener('mouseenter', () => {
-                    isHovering = true;
-                    hoverTimeout = setTimeout(() => {
-                        if (isHovering) {
-                            this.flyToLocation(lat, lng);
-                        }
-                    }, 500);
+                if (location) {
+                    location.is_favorited = isFavorited;
+                    this.handleLocationSelection(location, newCard);
+                }
+            });
+        });
+    }
 
-                    item.classList.add('hover');
-                });
+    // Unified handler for both marker and card clicks
+    handleLocationSelection(location, element = null) {
+        // Update selected state
+        if (this.selectedLocationId === location.id) {
+            // If clicking the same location, toggle the panel
+            this.hideInfoPanel();
+            this.selectedLocationId = null;
+            this.clearActiveStates();
+        } else {
+            // New location selected
+            this.selectedLocationId = location.id;
 
-                item.addEventListener('mouseleave', () => {
-                    isHovering = false;
-                    clearTimeout(hoverTimeout);
-                    item.classList.remove('hover');
+            // If clicked from map (not from card)
+            if (!element?.classList.contains('location-item')) {
+                // Find which page the item is on
+                const locationCard = document.querySelector(`.location-item[data-id="${location.id}"]`);
+                if (locationCard) {
+                    location.is_favorited = locationCard.getAttribute('is-favorite') === 'true';
 
-                    // Stop any ongoing camera animations
-                    if (this.map) {
-                        this.map.stop();
+                    const visibleItems = Array.from(document.querySelectorAll('.location-item'))
+                        .filter(item => !item.classList.contains('hidden'));
+
+                    const itemIndex = visibleItems.indexOf(locationCard);
+                    const targetPage = Math.floor(itemIndex / this.pagination.itemsPerPage) + 1;
+
+                    // Only change page if needed
+                    if (targetPage !== this.pagination.currentPage) {
+                        this.pagination.currentPage = targetPage;
+                        this.applyFilters();
                     }
-                });
-            } else {
-                console.warn('Invalid coordinates for item:', item);
+
+                    // Wait for DOM update then scroll
+                    setTimeout(() => {
+                        locationCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
             }
+
+            this.createInfoPanel(location);
+            this.updateActiveStates(location.id);
+
+            // Fly to location on the map
+            this.flyToLocation(location.latitude, location.longitude, 5000, 12, true);
+        }
+    }
+
+     // Helper method to find location data by ID
+    findLocationById(locationId) {
+        // Convert locationId to string for comparison since HTML attributes are strings
+        const id = locationId.toString();
+        const location = this.locations.find(loc => loc.id.toString() === id);
+
+        if (!location) {
+            console.warn(`No location found with ID: ${id}`);
+        }
+        return location;
+    }
+
+    // Update visual states for active elements
+    updateActiveStates(locationId) {
+        // Clear previous active states
+        this.clearActiveStates();
+
+        // Update card active state
+        const card = document.querySelector(`.location-item[data-id="${locationId}"]`);
+        if (card) {
+            card.classList.add('active');
+        }
+
+        // Update marker active state
+        const marker = this.markerManager.locations.get(locationId);
+        if (marker) {
+            marker.getElement().classList.add('active');
+        }
+    }
+
+    // Clear all active states
+    clearActiveStates() {
+        // Clear active cards
+        document.querySelectorAll('.location-item.active')
+            .forEach(card => card.classList.remove('active'));
+
+        // Clear active markers
+        this.markerManager.locations.forEach(marker => {
+            marker.getElement().classList.remove('active');
         });
     }
 
@@ -467,8 +803,24 @@ setupDarkSkyLayer() {
         this.setupFilters();
         this.initializePagination();
         this.setupFilters();
-        this.setupLocationCardHovers();
         this.applyInitialState();
+        this.setupLocationCardListeners();
+        this.setupFilterToggle();
+    }
+
+    setupFilterToggle() {
+        const filterToggle = document.getElementById('filter-toggle');
+        const filterPanel = document.querySelector('.filter-panel');
+
+        if (filterToggle && filterPanel) {
+            filterToggle.addEventListener('click', () => {
+                // Toggle active state on button
+                filterToggle.classList.toggle('active');
+
+                // Toggle filter panel visibility
+                filterPanel.classList.toggle('visible');
+            });
+        }
     }
 
     setupFilters() {
@@ -490,12 +842,11 @@ setupDarkSkyLayer() {
 
                 // Apply filters:
                 this.applyFilters();
-                this.saveFilters();
             });
         });
 
         // Event type filtering
-        const eventTypeButtons = document.querySelectorAll('.event-type-filter button');
+        const eventTypeButtons = document.querySelectorAll('.event-type-filter .filter-buttons button');
         eventTypeButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const eventType = button.getAttribute('data-type');
@@ -514,11 +865,34 @@ setupDarkSkyLayer() {
 
                 // Apply filters:
                 this.applyFilters();
-                this.saveFilters();
             });
         });
 
-        // Search functionality
+        // Location filtering
+        const locationFilterButtons = document.querySelectorAll('.location-type-filter .filter-buttons button');
+        locationFilterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const filterType = button.getAttribute('data-filter');
+
+                // Toggle button state
+                button.classList.toggle('active');
+
+                // Update filter state
+                if (filterType === 'favorites') {
+                    this.filters.showFavorites = !this.filters.showFavorites;
+                } else if (filterType === 'my-locations') {
+                    this.filters.showMyLocations = !this.filters.showMyLocations;
+                }
+
+                // Reset to first page
+                this.pagination.currentPage = 1;
+
+                // Apply filters
+                this.applyFilters();
+            });
+        });
+
+        // Search filtering
         const searchInput = document.querySelector('.search-container input');
         searchInput.addEventListener('input', (e) => {
             this.filters.searchQuery = e.target.value.toLowerCase();
@@ -527,7 +901,6 @@ setupDarkSkyLayer() {
 
             // Apply filters:
             this.applyFilters();
-            this.saveFilters();
         });
     }
 
@@ -537,25 +910,33 @@ setupDarkSkyLayer() {
             return;
         }
 
+        // Get all location items:
         const items = document.querySelectorAll('.location-item');
-        let visibleCount = 0;
+        let visibleItems = [];
 
         items.forEach(item => {
             let isVisible = true;
             const itemType = item.getAttribute('data-type');
             const eventType = item.getAttribute('data-event-type');
+            const isFavorite = item.getAttribute('data-is-favorite')?.toLowerCase() === 'true';
+            const isUserLocation = item.getAttribute('data-added-by') === window.currentUserId;
 
             // Tab filtering
-            if (this.filters.activeTab !== 'all') {
-                isVisible = itemType === this.filters.activeTab;
+            if (this.filters.activeTab !== 'all' && itemType !== this.filters.activeTab) {
+                isVisible = false;
             }
 
             // Event type filtering
-            if (isVisible && this.filters.eventTypes.size > 0) {
-                if (itemType === 'event') {
-                    isVisible = this.filters.eventTypes.has(eventType);
-                } else {
-                    // If we're filtering by event types, hide all locations
+            if (isVisible && this.filters.eventTypes.size > 0 && itemType === 'event') {
+                isVisible = this.filters.eventTypes.has(eventType);
+            }
+
+            // Location filtering (only apply to location items)
+            if (isVisible && itemType === 'location') {
+                if (this.filters.showFavorites && !isFavorite) {
+                    isVisible = false;
+                }
+                if (this.filters.showMyLocations && !isUserLocation) {
                     isVisible = false;
                 }
             }
@@ -564,23 +945,36 @@ setupDarkSkyLayer() {
             if (isVisible && this.filters.searchQuery) {
                 const title = item.querySelector('.location-title')?.textContent.toLowerCase() || '';
                 const description = item.querySelector('.location-address, .event-description')?.textContent.toLowerCase() || '';
-                isVisible = title.includes(this.filters.searchQuery) || description.includes(this.filters.searchQuery);
+                isVisible = title.includes(this.filters.searchQuery) ||
+                           description.includes(this.filters.searchQuery);
             }
 
-            // Update visibility
+            // Important: Set pointer-events based on visibility
             if (isVisible) {
+                item.style.pointerEvents = 'auto';
                 item.classList.remove('hidden');
-                visibleCount++;
+                visibleItems.push(item);
             } else {
+                item.style.pointerEvents = 'none';
                 item.classList.add('hidden');
+                item.style.display = 'none'; // Immediately hide non-visible items
             }
         });
 
-        // Only update pagination if we have visible items
-        if (visibleCount > 0) {
-            this.pagination.totalItems = visibleCount;
-            this.updatePagination();
+        // Update pagination with visible items count
+        this.pagination.totalItems = visibleItems.length;
+
+        // Ensure current page is valid with new total
+        const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
+        if (this.pagination.currentPage > totalPages) {
+            this.pagination.currentPage = Math.max(1, totalPages);
         }
+
+        // Update pagination display
+        this.updatePagination();
+
+        // Update visible items based on current page
+        this.updateItemVisibility(visibleItems);
 
         // Update marker visibility on the map
         this.updateMapMarkers();
@@ -597,21 +991,37 @@ setupDarkSkyLayer() {
 
             // Project the point to screen coordinates
             const point = this.map.project(coordinates);
-
-            // Get the map's container dimensions
             const bounds = this.map.getContainer().getBoundingClientRect();
-
-            // A point is behind the globe if its projected x or y coordinates
-            // are outside reasonable bounds (we add some padding to prevent flickering)
             const padding = 100;
-            const isVisible = point.x >= -padding &&
+
+            // Check if marker is within view
+            const isInView = point.x >= -padding &&
                             point.x <= bounds.width + padding &&
                             point.y >= -padding &&
                             point.y <= bounds.height + padding;
 
-            // Combine visibility check with tab filter
-            const shouldShow = (activeTab === 'all' || activeTab === 'location') && isVisible;
+            // Find corresponding location item to get its attributes
+            const locationItem = document.querySelector(
+                `.location-item[data-lat="${coordinates.lat}"][data-lng="${coordinates.lng}"]`
+            );
 
+            let shouldShow = (activeTab === 'all' || activeTab === 'location') && isInView;
+
+            // If we found a matching item, apply our location filters
+            if (shouldShow && locationItem) {
+                const isFavorite = locationItem.getAttribute('data-is-favorite').toLowerCase() === 'true';
+                const isUserLocation = locationItem.getAttribute('data-added-by') === window.currentUserId;
+
+                // Apply the same filtering logic as in applyFilters
+                if (this.filters.showFavorites) {
+                    shouldShow = isFavorite;
+                }
+                if (this.filters.showMyLocations) {
+                    shouldShow = isUserLocation;
+                }
+            }
+
+            // Apply visibility with transition
             if (element) {
                 element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
                 element.style.opacity = shouldShow ? '1' : '0';
@@ -693,92 +1103,93 @@ setupDarkSkyLayer() {
         const paginationContainer = document.querySelector('.pagination');
         if (!paginationContainer) return;
 
-        // Get actually visible items (those with display !== 'none')
-        const visibleItems = Array.from(document.querySelectorAll('.location-item'))
-            .filter(item => !item.classList.contains('hidden'));
-
-        this.pagination.totalItems = visibleItems.length;
         const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
 
-        // Create pagination structure
-        const structure = `
+        // Clear existing pagination
+        paginationContainer.innerHTML = `
             <div class="pagination-prev"></div>
             <div class="page-numbers"></div>
             <div class="pagination-next"></div>
         `;
-        paginationContainer.innerHTML = structure;
 
         // Only show pagination if we have more than one page
-        if (totalPages > 1) {
-            const prevContainer = paginationContainer.querySelector('.pagination-prev');
-            const numbersContainer = paginationContainer.querySelector('.page-numbers');
-            const nextContainer = paginationContainer.querySelector('.pagination-next');
+        if (totalPages <= 1) {
+            paginationContainer.style.display = 'none';
+            return;
+        }
 
-            // Add prev button if not on first page
-            if (this.pagination.currentPage > 1) {
-                const prevButton = document.createElement('a');
-                prevButton.className = 'page-item prev';
-                prevButton.textContent = '←';
-                prevButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage - 1));
-                prevContainer.appendChild(prevButton);
-            }
+        paginationContainer.style.display = 'flex';
 
-            // Add page numbers
-            const maxVisiblePages = 5; // Adjust this number as needed
-            let startPage = Math.max(1, this.pagination.currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        const prevContainer = paginationContainer.querySelector('.pagination-prev');
+        const numbersContainer = paginationContainer.querySelector('.page-numbers');
+        const nextContainer = paginationContainer.querySelector('.pagination-next');
 
-            // Adjust start page if we're near the end
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
+        // Add prev button if not on first page
+        if (this.pagination.currentPage > 1) {
+            const prevButton = document.createElement('a');
+            prevButton.className = 'page-item prev';
+            prevButton.textContent = '←';
+            prevButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage - 1));
+            prevContainer.appendChild(prevButton);
+        }
 
-            // Add first page and ellipsis if needed
-            if (startPage > 1) {
-                this.addPageButton(numbersContainer, 1);
-                if (startPage > 2) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.className = 'page-ellipsis';
-                    ellipsis.textContent = '...';
-                    numbersContainer.appendChild(ellipsis);
-                }
-            }
+        // Calculate visible page range
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, this.pagination.currentPage - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
 
-            // Add visible page numbers
-            for (let i = startPage; i <= endPage; i++) {
-                this.addPageButton(numbersContainer, i);
-            }
+        // Adjust start page if needed
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
 
-            // Add last page and ellipsis if needed
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.className = 'page-ellipsis';
-                    ellipsis.textContent = '...';
-                    numbersContainer.appendChild(ellipsis);
-                }
-                this.addPageButton(numbersContainer, totalPages);
-            }
-
-            // Add next button if not on last page
-            if (this.pagination.currentPage < totalPages) {
-                const nextButton = document.createElement('a');
-                nextButton.className = 'page-item next';
-                nextButton.textContent = '→';
-                nextButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage + 1));
-                nextContainer.appendChild(nextButton);
+        // Add first page and ellipsis if needed
+        if (startPage > 1) {
+            this.addPageButton(numbersContainer, 1);
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'page-ellipsis';
+                ellipsis.textContent = '...';
+                numbersContainer.appendChild(ellipsis);
             }
         }
 
-        // Update visibility of items based on current page
-        this.updateItemVisibility(visibleItems);
+        // Add page numbers
+        for (let i = startPage; i <= endPage; i++) {
+            this.addPageButton(numbersContainer, i);
+        }
+
+        // Add last page and ellipsis if needed
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'page-ellipsis';
+                ellipsis.textContent = '...';
+                numbersContainer.appendChild(ellipsis);
+            }
+            this.addPageButton(numbersContainer, totalPages);
+        }
+
+        // Add next button if not on last page
+        if (this.pagination.currentPage < totalPages) {
+            const nextButton = document.createElement('a');
+            nextButton.className = 'page-item next';
+            nextButton.textContent = '→';
+            nextButton.addEventListener('click', () => this.goToPage(this.pagination.currentPage + 1));
+            nextContainer.appendChild(nextButton);
+        }
     }
 
     addPageButton(container, pageNumber) {
         const button = document.createElement('a');
         button.className = `page-item${pageNumber === this.pagination.currentPage ? ' active' : ''}`;
         button.textContent = pageNumber;
-        button.addEventListener('click', () => this.goToPage(pageNumber));
+
+        // Important: Use arrow function to preserve 'this' context
+        button.addEventListener('click', () => {
+            this.goToPage(pageNumber);
+        });
+
         container.appendChild(button);
     }
 
@@ -786,91 +1197,38 @@ setupDarkSkyLayer() {
         const startIndex = (this.pagination.currentPage - 1) * this.pagination.itemsPerPage;
         const endIndex = startIndex + this.pagination.itemsPerPage;
 
-        visibleItems.forEach((item, index) => {
-            if (index >= startIndex && index < endIndex) {
-                item.style.display = '';
-                // Reset height for smooth transitions
-                requestAnimationFrame(() => {
-                    item.style.height = '';
-                });
-            } else {
-                item.style.display = 'none';
-            }
+        // First hide all items
+        visibleItems.forEach(item => {
+            item.style.display = 'none';
         });
+
+        // Then show only the items for the current page
+        visibleItems.slice(startIndex, endIndex).forEach(item => {
+            item.style.display = '';
+            item.style.opacity = '1';
+            item.style.pointerEvents = 'auto';
+        });
+
+        // Reattach listeners to visible cards
+        //this.setupLocationCardListeners();
     }
 
     goToPage(pageNumber) {
-        // Ensure page number is valid
+        // Validate page number
         const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
         if (pageNumber < 1 || pageNumber > totalPages) return;
 
         // Update current page
         this.pagination.currentPage = pageNumber;
 
-        // Update pagination display
+        // Get current visible items
+        const visibleItems = Array.from(document.querySelectorAll('.location-item'))
+            .filter(item => !item.classList.contains('hidden'));
+
+        // Update pagination UI
         this.updatePagination();
-    }
 
-
-    // Filter persistence: ------------------------------------- //
-    saveFilters() {
-        // Convert our filter state into a format suitable for storage
-        const filterState = {
-            activeTab: this.filters.activeTab,
-            // Convert Set to Array for storage
-            eventTypes: Array.from(this.filters.eventTypes),
-            searchQuery: this.filters.searchQuery
-        };
-
-        // Save to localStorage with pretty formatting for debugging
-        localStorage.setItem('mapFilters', JSON.stringify(filterState, null, 2));
-    }
-
-    loadSavedFilters() {
-        try {
-            // Attempt to load saved filters
-            const savedFilters = localStorage.getItem('mapFilters');
-
-            if (savedFilters) {
-                const parsedFilters = JSON.parse(savedFilters);
-
-                // Restore the filter state
-                this.filters.activeTab = parsedFilters.activeTab || 'all';
-                this.filters.eventTypes = new Set(parsedFilters.eventTypes || []);
-                this.filters.searchQuery = parsedFilters.searchQuery || '';
-
-                // Now we need to update the UI to match the loaded state
-                this.restoreFilterUI();
-            }
-        } catch (error) {
-            console.error('Error loading saved filters:', error);
-            // If there's an error, we'll just use the default filters
-        }
-    }
-
-    restoreFilterUI() {
-        // Restore active tab
-        const tabs = document.querySelectorAll('.panel-tab');
-        tabs.forEach(tab => {
-            const isActive = tab.getAttribute('data-tab') === this.filters.activeTab;
-            tab.classList.toggle('active', isActive);
-        });
-
-        // Restore event type buttons
-        const eventButtons = document.querySelectorAll('.event-type-btn');
-        eventButtons.forEach(button => {
-            const eventType = button.getAttribute('data-type');
-            const isActive = this.filters.eventTypes.has(eventType);
-            button.classList.toggle('active', isActive);
-        });
-
-        // Restore search query
-        const searchInput = document.querySelector('.search-container input');
-        if (searchInput) {
-            searchInput.value = this.filters.searchQuery;
-        }
-
-        // Apply the restored filters
-        this.applyFilters();
+        // Important: Update item visibility with the current visible items
+        this.updateItemVisibility(visibleItems);
     }
 }

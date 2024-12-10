@@ -9,6 +9,9 @@ from stars_app.models.forecast import Forecast
 from django.contrib.auth.models import User
 from stars_app.utils import is_valid_email
 
+# Services:
+from stars_app.services.light_pollution import LightPollutionService
+
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -44,11 +47,8 @@ from django.contrib.admin.views.decorators import staff_member_required
 # Distance
 from geopy.distance import geodesic
 
-# Map:
-from django.core.paginator import Paginator
 
-
-# ---------------------------------------------------------------- #
+# -------------------------------------------------------------- #
 # Location Management Views:
 class CelestialEventViewSet(viewsets.ModelViewSet):
     queryset = CelestialEvent.objects.all()
@@ -79,6 +79,23 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
 
         serializer.save(
             added_by=self.request.user,
+        )
+
+    @action(detail=True, methods=['POST'])
+    def update_elevation(self, request, pk=None):
+        """Endpoint to manually trigger elevation update"""
+        location = self.get_object()
+        success = location.update_elevation_from_mapbox()
+
+        if success:
+            location.calculate_quality_score()  # Recalculate quality score with new elevation
+            location.save()
+            serializer = self.get_serializer(location)
+            return Response(serializer.data)
+
+        return Response(
+            {'detail': 'Failed to update elevation'},
+            status=status.HTTP_400_BAD_REQUEST
         )
 
     @action(detail=True, methods=['POST', 'GET'])
@@ -189,6 +206,97 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 content_type='application/json'
             )
 
+    @action(detail=True, methods=['POST'])
+    def update_address(self, request, pk=None):
+        """Endpoint to manually trigger address update"""
+        location = self.get_object()
+        success = location.update_address_from_coordinates()
+
+        if success:
+            location.save()
+            serializer = self.get_serializer(location)
+            return Response(serializer.data)
+
+        return Response(
+            {'detail': 'Failed to update address'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    @action(detail=True, methods=['POST'])
+    def add_review(self, request, pk=None):
+        location = self.get_object()
+
+        # Check if user already reviewed this location
+        existing_review = LocationReview.objects.filter(
+            user=request.user,
+            location=location
+        ).first()
+
+        if existing_review:
+            return Response(
+                {'detail': 'You have already reviewed this location'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = LocationReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, location=location)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['PUT'])
+    def update_review(self, request, pk=None):
+        location = self.get_object()
+        review = LocationReview.objects.filter(
+            user=request.user,
+            location=location
+        ).first()
+
+        if not review:
+            return Response(
+                {'detail': 'Review not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = LocationReviewSerializer(review, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['DELETE'])
+    def delete_review(self, request, pk=None):
+        location = self.get_object()
+        review = LocationReview.objects.filter(
+            user=request.user,
+            location=location
+        ).first()
+
+        if not review:
+            return Response(
+                {'detail': 'Review not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        review.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class LocationReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = LocationReviewSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return LocationReview.objects.filter(
+            location_id=self.kwargs['location_pk']
+        )
+
+    def perform_create(self, serializer):
+        location = ViewingLocation.objects.get(pk=self.kwargs['location_pk'])
+        serializer.save(
+            user=self.request.user,
+            location=location
+        )
+
 @login_required
 @require_POST
 def update_viewing_nickname(request, favorite_id):
@@ -212,7 +320,7 @@ def update_viewing_nickname(request, favorite_id):
         }, status=400)
 
 
-# ---------------------------------------------------------------- #
+# -------------------------------------------------------------- #
 # Update All Forecasts Button on Upload Page
 @staff_member_required
 def update_forecast(request):
@@ -224,7 +332,7 @@ def update_forecast(request):
     return render(request, 'stars_app/upload_tif.html')
 
 
-# ---------------------------------------------------------------- #
+# -------------------------------------------------------------- #
 # Tile Views:
 @staff_member_required
 def upload_and_process_tif(request):
@@ -315,7 +423,7 @@ def serve_tile(request, z, x, y):
         return HttpResponse('Tile not found', status=404)
 
 
-# ---------------------------------------------------------------- #
+# -------------------------------------------------------------- #
 # Navigation Views:
 def home(request):
     return render(request, 'stars_app/home.html')
@@ -359,7 +467,8 @@ def details(request, event_id):
     }
     return render(request, 'stars_app/details.html', current_data)
 
-# ---------------------------------------------------------------- #
+
+# -------------------------------------------------------------- #
 # User Profile Views:
 @login_required(login_url='login')
 def account(request, pk):
@@ -553,7 +662,7 @@ def change_password(request):
         }, status=400)
 
 
-# ---------------------------------------------------------------- #
+# -------------------------------------------------------------- #
 # Authentication Views:
 def register(request):
     if request.method == 'POST':
@@ -659,7 +768,7 @@ def custom_logout(request):
     return redirect('home')
 
 
-# ---------------------------------------------------------------- #
+# -------------------------------------------------------------- #
 # Password Reset Views:
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'stars_app/password_reset.html'

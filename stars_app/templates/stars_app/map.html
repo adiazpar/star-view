@@ -17,6 +17,8 @@
 
 <!-- Replace block content in base_template.html -->
 {% block content %}
+{% csrf_token %}
+
 <div class="map-container">
     <!-- Locations Panel -->
     <div class="locations-panel">
@@ -29,47 +31,96 @@
 
         <!-- Enhanced search with filters -->
         <div class="search-section">
-            <div class="search-container">
-                <input type="text"
-                       class="search-input"
-                       placeholder="Search locations or events..."
-                       id="location-search">
-                <span class="search-icon">
-                    <i class="fas fa-search"></i>
-                </span>
+            <div class="search-controls">
+                <div class="search-container">
+                    <input type="text"
+                           class="search-input"
+                           placeholder="Search locations or events..."
+                           id="location-search">
+                    <span class="search-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                </div>
+
+                <button id="filter-toggle" class="filter-toggle-btn">
+                    <i class="fas fa-filter"></i>
+                </button>
             </div>
 
-            <!-- Add event type filters -->
-            <div class="event-type-filter">
-                <button class="event-type-btn" data-type="METEOR">Meteor Showers</button>
-                <button class="event-type-btn" data-type="ECLIPSE">Eclipses</button>
-                <button class="event-type-btn" data-type="PLANET">Planetary</button>
-                <button class="event-type-btn" data-type="AURORA">Aurora</button>
-                <button class="event-type-btn" data-type="COMET">Comets</button>
-                <button class="event-type-btn" data-type="OTHER">Other</button>
+            <div class="filter-panel">
+                <!-- Add event type filters -->
+                <div class="event-type-filter">
+                    <div class="item-filter-title">
+                        Event Filters
+                    </div>
+                    <div class="filter-buttons">
+                        <button class="filter-btn" data-type="METEOR">Meteor Showers</button>
+                        <button class="filter-btn" data-type="ECLIPSE">Eclipses</button>
+                        <button class="filter-btn" data-type="PLANET">Planetary</button>
+                        <button class="filter-btn" data-type="AURORA">Aurora</button>
+                        <button class="filter-btn" data-type="COMET">Comets</button>
+                        <button class="filter-btn" data-type="OTHER">Other</button>
+                    </div>
+                </div>
+
+                <!-- Add location type filtering -->
+                <div class="location-type-filter">
+                    <div class="item-filter-title">
+                        Viewing Location Filters
+                    </div>
+                    <div class="filter-buttons">
+                        {% if user.is_authenticated %}
+                            <button class="filter-btn" data-filter="favorites">
+                                My Favorites
+                            </button>
+                            <button class="filter-btn" data-filter="my-locations">
+                                My Locations
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Enhanced location/event list -->
+        <!-- Location/Event list -->
         <div class="location-list">
             {% for item in items %}
                 {% if item|get_class == 'ViewingLocation' %}
                     <div class="location-item"
                          data-lat="{{ item.latitude }}"
                          data-lng="{{ item.longitude }}"
-                         data-type="location">
+                         data-type="location"
+                         data-id="{{ item.id }}"
+                         data-is-favorite="{% if user.is_authenticated %}{{ item|is_favorite:user|lower }}{% else %}false{% endif %}"
+                         data-added-by="{{ item.added_by.id }}">
 
                         <div class="item-snapshot">
-                            <img
-                                src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},3/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
-                                alt="Map view of {{ item.name }}"
-                                class="location-map">
+                            <div class="favorite-indicator {% if user.is_authenticated and item|is_favorite:user %}active{% endif %}">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <img class="location-map"
+                                 src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},3/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
+                                 alt="Map view of {{ item.name }}">
                         </div>
 
                         <div class="item-content">
                             <h3 class="location-title">{{ item.name }}</h3>
                             <div class="location-type"><i class="fas fa-map-marker-alt"></i>Viewing Location</div>
                             <div class="location-info">
+                                <div class="star-rating">
+                                    <div class="star-rating-stars">
+                                        {% with average_rating=item.reviews.all|average_rating %}
+                                            {% for i in "12345"|make_list %}
+                                                {% if forloop.counter <= average_rating|default:0|floatformat:"0" %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="fas fa-star empty"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </div>
+                                        <span class="star-rating-count">({{ item.reviews.count }})</span>
+                                    {% endwith %}
+                                </div>
                                 <div class="info-item">
                                     SEE DETAILS
                                 </div>
@@ -128,7 +179,6 @@
         </div>
     </div>
 
-    {% csrf_token %}
 	<!-- Map View -->
     <div class="map-view">
         <div class="map-controls">
@@ -161,6 +211,8 @@
 
         window.mapController = new MapController();
         window.mapController.initialize();
+        window.currentUser = {% if user.is_authenticated %}true{% else %}false{% endif %};
+        window.currentUserId = "{{ user.id|default:'null' }}";
     }
     setTimeout(initializePage, 0);
 </script>

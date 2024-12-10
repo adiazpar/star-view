@@ -1,6 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 
+from rest_framework_nested import routers
+
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
@@ -15,6 +17,9 @@ from .views import (
 router = DefaultRouter()
 router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
 router.register(r'celestial-events', views.CelestialEventViewSet, basename='celestial-events')
+
+locations_router = routers.NestedDefaultRouter(router, r'viewing-locations', lookup='location')
+locations_router.register(r'reviews', views.LocationReviewViewSet, basename='location-reviews')
 
 urlpatterns = [
     # User authentication:
@@ -54,6 +59,7 @@ urlpatterns = [
 
     # Django Rest Framework:
     path('api/', include(router.urls)),
+    path('api/', include(locations_router.urls)),
 
     # Update Forecasts
     path('update/', views.update_forecast, name='update_forecast'),

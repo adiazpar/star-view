@@ -6,6 +6,7 @@ media/
 
 # Byte-compiled / optimized / DLL files
 .env
+data/
 __pycache__/
 *.py[cod]
 *$py.class
