@@ -14,9 +14,17 @@ class Command(BaseCommand):
         for i, location in enumerate(locations, 1):
             self.stdout.write(f'Processing {i}/{total}: {location.name}')
 
-            # Update elevation if needed
-            if not location.elevation:
-                location.update_elevation_from_mapbox()
+            # Update address
+            location.update_address_from_coordinates()
+
+            # Update elevation
+            location.update_elevation_from_mapbox()
+
+            # Update light pollution
+            location.update_light_pollution()
+
+            # Update forecast
+            location.updateForecast()
 
             # Update quality score
             location.calculate_quality_score()

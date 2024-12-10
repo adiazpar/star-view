@@ -947,3 +947,270 @@
         transform: translateY(0);
     }
 }
+
+/* Location Creation Popup Styles */
+.location-creation-popup {
+    font-family: inherit;
+}
+
+/* Popup container styling */
+.location-creation-popup .mapboxgl-popup-content {
+    background-color: var(--surface);
+    color: var(--text-primary);
+    padding: 0;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--background);
+    min-width: 280px;
+}
+
+/* Close button styling */
+.location-creation-popup .mapboxgl-popup-close-button {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-lg);
+    padding: var(--space-sm);
+    right: var(--space-xs);
+    top: var(--space-xs);
+    transition: color var(--transition-base);
+}
+
+.location-creation-popup .mapboxgl-popup-close-button:hover {
+    background: none;
+    color: var(--primary);
+}
+
+/* Content container */
+.popup-content {
+    padding: var(--space-md);
+}
+
+/* Popup header */
+.popup-header {
+    margin-bottom: var(--space-md);
+}
+
+.popup-header h4 {
+    margin: 0;
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    padding-right: var(--space-xl);
+}
+
+/* Input styling */
+.popup-input-container {
+    margin-bottom: var(--space-md);
+}
+
+.popup-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-base);
+}
+
+.popup-input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.popup-input:hover:not(:focus) {
+    border-color: var(--text-secondary);
+}
+
+.popup-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.popup-input.error {
+    border-color: var(--negate);
+}
+
+/* Action button styling */
+.popup-action-button {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--primary);
+    color: var(--text-primary);
+    border: 1px solid var(--primary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+}
+
+.popup-action-button:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+}
+
+.popup-action-button i {
+    font-size: var(--font-size-sm);
+}
+
+/* Message popup styling */
+.message-popup .mapboxgl-popup-content {
+    padding: var(--space-md);
+    text-align: center;
+}
+
+.message-popup.success .mapboxgl-popup-content {
+    background-color: var(--primary);
+    border-color: var(--primary);
+}
+
+.message-popup.error .mapboxgl-popup-content {
+    background-color: var(--negate);
+    border-color: var(--negate);
+}
+
+.message-popup p {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+
+/* Loading Popup Styles */
+.loading-popup .mapboxgl-popup-content {
+    background-color: var(--background-dark);
+    color: var(--text-primary);
+    padding: var(--space-sm);
+    border-radius: var(--radius-full);  /* Rounded corners for chat bubble effect */
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--background);
+    min-width: 40px;
+    text-align: center;
+}
+
+/* Remove the default popup tip */
+.loading-popup .mapboxgl-popup-tip {
+    display: none;
+}
+
+/* Loading dots container */
+.loading-dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px;
+}
+
+/* Individual loading dot */
+.loading-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--primary-light);
+    border-radius: 50%;
+    animation: loadingDot 1.4s infinite ease-in-out;
+}
+
+/* Delay each dot's animation */
+.loading-dot:nth-child(1) { animation-delay: 0s; }
+.loading-dot:nth-child(2) { animation-delay: 0.2s; }
+.loading-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* Loading dots animation */
+@keyframes loadingDot {
+    0%, 80%, 100% {
+        transform: scale(0.6);
+        opacity: 0.6;
+    }
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* For success/error messages, maintain chat bubble style */
+.message-popup.success .mapboxgl-popup-content,
+.message-popup.error .mapboxgl-popup-content {
+    border-radius: 20px;
+    padding: var(--space-sm) var(--space-md);
+}
+
+.message-popup.success .mapboxgl-popup-tip,
+.message-popup.error .mapboxgl-popup-tip {
+    display: none;
+}
+
+/* Delete option styling */
+.panel-delete-option {
+    padding: var(--space-xs) var(--space-md);
+    border-bottom: 1px solid var(--background);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.delete-location-button {
+    background: none;
+    border: none;
+    color: var(--negate);
+    font-size: var(--font-size-sm);
+    padding: var(--space-xs);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    transition: all var(--transition-base);
+    opacity: 0.8;
+}
+
+.delete-location-button:hover {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.delete-location-button i {
+    font-size: var(--font-size-sm);
+}
+
+/* Confirmation popup styling */
+.delete-confirmation-popup .mapboxgl-popup-content {
+    background-color: var(--surface);
+    color: var(--text-primary);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--background);
+}
+
+.delete-confirmation-popup .popup-content {
+    text-align: center;
+}
+
+.delete-confirmation-popup .popup-actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+}
+
+.delete-confirmation-popup .popup-actions button {
+    flex: 1;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--text-tertiary);
+    background: var(--background-dark);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.delete-confirmation-popup .popup-actions .confirm-delete {
+    background: var(--negate);
+    border-color: var(--negate);
+    color: var(--text-primary);
+}
+
+.delete-confirmation-popup .popup-actions button:hover {
+    transform: scale(1.05);
+}

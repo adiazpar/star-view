@@ -19,6 +19,7 @@ export class MapController {
 
         // Bind methods to preserve 'this' context
         this.handleLocationSelection = this.handleLocationSelection.bind(this);
+        this.deleteLocation = this.deleteLocation.bind(this);
 
         // Marker management:
         this.markerManager = {
@@ -103,14 +104,16 @@ export class MapController {
             center: MAPBOX_CONFIG.defaultCenter,
         });
 
-        return new Promise((resolve) => {
+        await new Promise((resolve) => {
             this.map.on('load', () => {
-                this.setupEventListeners();
                 this.handleURLParameters();
                 this.setupMapTerrain();
                 resolve();
             });
         });
+
+        // Setup event listeners after map is loaded:
+        this.setupEventListeners();
     }
 
     handleURLParameters() {
@@ -181,47 +184,68 @@ export class MapController {
             // Update markers whenever the zoom level changes
             this.updateMapMarkers();
         });
+
+        // Add right-click handler (context menu):
+        this.map.on('contextmenu', (e) => {
+            // Prevent default context menu
+            e.preventDefault();
+
+            if (!window.currentUser) {
+                // Show login required message
+                const popup = new mapboxgl.Popup()
+                    .setLngLat(e.lngLat)
+                    .setHTML(`
+                        <div style="padding: 12px; text-align: center;">
+                            <p>Please log in to create viewing locations</p>
+                            <a href="/login" class="action-button">Log In</a>
+                        </div>
+                    `)
+                    .addTo(this.map);
+                return;
+            }
+
+            this.showLocationCreationPopup(e.lngLat);
+        });
     }
 
-setupMapControls() {
-    this.map.addControl(new mapboxgl.NavigationControl());
+    setupMapControls() {
+        this.map.addControl(new mapboxgl.NavigationControl());
 
-    this.map.addControl(new mapboxgl.GeolocateControl({
-        positionOptions: { enableHighAccuracy: true },
-        trackUserLocation: true,
-        showUserHeading: true
-    }));
+        this.map.addControl(new mapboxgl.GeolocateControl({
+            positionOptions: { enableHighAccuracy: true },
+            trackUserLocation: true,
+            showUserHeading: true
+        }));
 
-    class OrbitControl { //adds go to orbit button
-        onAdd(map) {
-            this.map = map;
-            this.container = document.createElement('div');
-            this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
-            const button = document.createElement('button');
-            button.className = 'orbit-button';
-            button.title = 'Go to Orbit';
-            button.innerHTML = '🚀';
+        class OrbitControl { //adds go to orbit button
+            onAdd(map) {
+                this.map = map;
+                this.container = document.createElement('div');
+                this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group';
+                const button = document.createElement('button');
+                button.className = 'orbit-button';
+                button.title = 'Go to Orbit';
+                button.innerHTML = '🚀';
 
-            button.addEventListener('click', () => {
-                this.map.flyTo({
-                    zoom: 0,
-                    center: this.map.getCenter(),
-                    speed: 1.2,
+                button.addEventListener('click', () => {
+                    this.map.flyTo({
+                        zoom: 0,
+                        center: this.map.getCenter(),
+                        speed: 1.2,
+                    });
                 });
-            });
-            this.container.appendChild(button);
-            return this.container;
+                this.container.appendChild(button);
+                return this.container;
+            }
+            onRemove() {
+                this.container.parentNode.removeChild(this.container);
+                this.map = undefined;
+            }
         }
-        onRemove() {
-            this.container.parentNode.removeChild(this.container);
-            this.map = undefined;
-        }
+        this.map.addControl(new OrbitControl(), 'top-right');
     }
-    this.map.addControl(new OrbitControl(), 'top-right');
-}
 
-
-setupDarkSkyLayer() {
+    setupDarkSkyLayer() {
         // Add dark sky source and layer:
         this.map.addSource('dark-sky', {
             type: 'raster',
@@ -409,6 +433,284 @@ setupDarkSkyLayer() {
     }
 
 
+    // Location Creation Popup: -------------------------------- //
+    showLocationCreationPopup(lngLat) {
+        const popupContent = document.createElement('div');
+        popupContent.className = 'popup-content';
+        popupContent.setAttribute('role', 'dialog');
+        popupContent.setAttribute('aria-labelledby', 'location-creation-title');
+
+        popupContent.innerHTML = `
+            <div class="popup-header">
+                <h4 id="location-creation-title">Create New Viewing Location</h4>
+            </div>
+            <form class="popup-form" onsubmit="return false;">
+                <div class="popup-input-container">
+                    <label for="new-location-name" class="visually-hidden">Location name</label>
+                    <input type="text" 
+                           id="new-location-name" 
+                           class="popup-input"
+                           placeholder="Enter location name"
+                           required
+                           autocomplete="off">
+                </div>
+                <button type="submit"
+                        id="create-location-btn" 
+                        class="popup-action-button">
+                    <i class="fas fa-plus" aria-hidden="true"></i>
+                    <span>Create Location</span>
+                </button>
+            </form>
+        `;
+
+        // Create and show popup with corrected accessibility
+        const popup = new mapboxgl.Popup({
+            closeButton: true,
+            closeOnClick: false,
+            className: 'location-creation-popup',
+            maxWidth: '300px'
+        })
+        .setLngLat(lngLat)
+        .setDOMContent(popupContent)
+        .addTo(this.map);
+
+        // Set up form submission
+        const form = popupContent.querySelector('.popup-form');
+        const nameInput = popupContent.querySelector('#new-location-name');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = nameInput.value.trim();
+            if (name) {
+                this.createViewingLocation(name, lngLat);
+                popup.remove();
+            } else {
+                nameInput.classList.add('error');
+                nameInput.addEventListener('input', () => {
+                    nameInput.classList.remove('error');
+                }, { once: true });
+            }
+        });
+
+        // Focus input after popup is shown
+        nameInput.focus();
+    }
+
+    async createViewingLocation(name, lngLat) {
+        try {
+            // Show loading state with animated dots
+            const loadingPopup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false,
+                className: 'loading-popup'
+            })
+            .setLngLat(lngLat)
+            .setHTML(`
+                <div class="loading-dots">
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                    <div class="loading-dot"></div>
+                </div>
+            `)
+            .addTo(this.map);
+
+            // Create location data
+            const locationData = {
+                name: name,
+                latitude: lngLat.lat,
+                longitude: lngLat.lng,
+            };
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Send POST request
+            const response = await fetch('/api/viewing-locations/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken,
+                    'Accept': 'application/json'  // Explicitly request JSON response
+                },
+                body: JSON.stringify(locationData),
+                credentials: 'same-origin'
+            });
+
+            // Remove loading popup
+            loadingPopup.remove();
+
+            // Handle non-successful responses
+            if (!response.ok) {
+                const errorData = await response.json();
+                const errorMessage = errorData.error || 'Failed to create location. Please try again.';
+
+                // Show error popup with specific message
+                const errorPopup = new mapboxgl.Popup({
+                    closeButton: true,
+                    closeOnClick: false,
+                    className: 'message-popup error',
+                    maxWidth: '300px'
+                })
+                .setLngLat(lngLat)
+                .setHTML(`<p><i class="fas fa-exclamation-circle"></i> ${errorMessage}</p>`)
+                .addTo(this.map);
+
+                // Log detailed error for debugging
+                console.error('Server response:', errorData);
+                return;
+            }
+
+            const newLocation = await response.json();
+            this.displayLocations([newLocation]);
+            await this.refreshLocationsList();
+            await this.loadLocationsAndEvents();
+
+            // Show success message
+            const successPopup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: true,
+                className: 'message-popup success'
+            })
+            .setLngLat(lngLat)
+            .setHTML('<p><i class="fas fa-check-circle"></i> Location created successfully!</p>')
+            .addTo(this.map);
+
+            // Remove success message after 2 seconds
+            setTimeout(() => successPopup.remove(), 2000);
+
+        } catch (error) {
+            console.error('Error creating location:', error);
+
+            // Show user-friendly error message
+            const errorPopup = new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: false,
+                className: 'message-popup error'
+            })
+            .setLngLat(lngLat)
+            .setHTML(`
+                <p><i class="fas fa-exclamation-circle"></i> Something went wrong while creating the location.</p>
+                <p style="font-size: smaller; margin-top: 8px;">Please try again or contact support if the problem persists.</p>
+            `)
+            .addTo(this.map);
+        }
+    }
+
+    async deleteLocation(locationId) {
+        try {
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            // Show confirmation popup
+            const location = this.findLocationById(locationId);
+            const marker = this.markerManager.locations.get(locationId);
+            const lngLat = marker.getLngLat();
+
+            const popup = new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: false,
+                className: 'delete-confirmation-popup',
+                maxWidth: '300px'
+            })
+            .setLngLat(lngLat)
+            .setHTML(`
+                <div class="popup-content">
+                    <p>Are you sure you want to delete "${location.name}"?</p>
+                    <p style="font-size: smaller; color: var(--text-tertiary);">This action cannot be undone.</p>
+                    <div class="popup-actions">
+                        <button class="cancel-delete">Cancel</button>
+                        <button class="confirm-delete">Delete</button>
+                    </div>
+                </div>
+            `)
+            .addTo(this.map);
+
+            // Add event listeners to popup buttons
+            const popupContent = popup.getElement();
+            popupContent.querySelector('.cancel-delete').addEventListener('click', () => {
+                popup.remove();
+            });
+
+            popupContent.querySelector('.confirm-delete').addEventListener('click', async () => {
+                popup.remove();
+
+                // Show loading popup
+                const loadingPopup = new mapboxgl.Popup({
+                    closeButton: false,
+                    closeOnClick: false,
+                    className: 'loading-popup'
+                })
+                .setLngLat(lngLat)
+                .setHTML(`
+                    <div class="loading-dots">
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                        <div class="loading-dot"></div>
+                    </div>
+                `)
+                .addTo(this.map);
+
+                try {
+                    const response = await fetch(`/api/viewing-locations/${locationId}/`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        credentials: 'same-origin'
+                    });
+
+                    loadingPopup.remove();
+
+                    if (!response.ok) {
+                        throw new Error('Failed to delete location');
+                    }
+
+                    // Hide info panel
+                    this.hideInfoPanel();
+
+                    // Remove marker from map
+                    this.markerManager.locations.get(locationId).remove();
+                    this.markerManager.locations.delete(locationId);
+
+                    // Refresh location list
+                    await this.loadLocationsAndEvents();
+                    await this.refreshLocationsList();
+
+                    // Show success message
+                    const successPopup = new mapboxgl.Popup({
+                        closeButton: false,
+                        closeOnClick: true,
+                        className: 'message-popup success'
+                    })
+                    .setLngLat(lngLat)
+                    .setHTML('<p><i class="fas fa-check-circle"></i> Location deleted successfully</p>')
+                    .addTo(this.map);
+
+                    setTimeout(() => successPopup.remove(), 2000);
+
+                } catch (error) {
+                    console.error('Error deleting location:', error);
+
+                    const errorPopup = new mapboxgl.Popup({
+                        closeButton: true,
+                        closeOnClick: false,
+                        className: 'message-popup error'
+                    })
+                    .setLngLat(lngLat)
+                    .setHTML(`
+                        <p><i class="fas fa-exclamation-circle"></i> Failed to delete location</p>
+                        <p style="font-size: smaller; margin-top: 8px;">Please try again or contact support if the problem persists.</p>
+                    `)
+                    .addTo(this.map);
+                }
+            });
+
+        } catch (error) {
+            console.error('Error initiating delete:', error);
+        }
+    }
+
+
     // INFO Panel: --------------------------------------------- //
     async createInfoPanel(location) {
 
@@ -446,6 +748,24 @@ setupDarkSkyLayer() {
 
         // Get login status from global variable or data attribute
         const isLoggedIn = window.currentUser === true;
+        const currentUserId = window.currentUserId?.toString();
+
+        // Safely access the creator ID, accounting for possible undefined values
+        const creatorId = location.added_by?.id?.toString();
+
+        // Add debug logging
+        console.log('Delete button debug:', {
+            isLoggedIn,
+            currentUserId,
+            creatorId,
+            location,
+            shouldShowDelete: isLoggedIn && currentUserId && creatorId && currentUserId === creatorId
+        });
+
+        const showDeleteOption = isLoggedIn &&
+                               currentUserId &&
+                               creatorId &&
+                               currentUserId === creatorId;
 
         if (isLoggedIn) {
             try {
@@ -487,6 +807,15 @@ setupDarkSkyLayer() {
                 <h3>${location.name}</h3>
                 <div class="location-type">VIEWING LOCATION</div>
             </div>
+            
+            ${showDeleteOption ? `
+                <div class="panel-delete-option">
+                    <button class="delete-location-button">
+                        <i class="fas fa-trash"></i>
+                        Delete Location
+                    </button>
+                </div>
+            ` : ''}
             
             <div class="panel-body">
                 <div class="info-section">
@@ -574,7 +903,18 @@ setupDarkSkyLayer() {
             </div>
         `;
 
-        // Add event listeners
+         // Delete button listener:
+        if (showDeleteOption) {
+            const deleteButton = infoPanel.querySelector('.delete-location-button');
+            if (deleteButton) {
+                deleteButton.addEventListener('click', () => {
+                    console.log('Delete button clicked for location:', location.id); // Debug log
+                    this.deleteLocation(location.id);
+                });
+            }
+        }
+
+        // Close button listeners
         const closeButton = infoPanel.querySelector('.close-panel');
         closeButton.addEventListener('click', () => this.hideInfoPanel());
 
@@ -797,6 +1137,78 @@ setupDarkSkyLayer() {
         });
     }
 
+    // Refresh the location list:
+    async refreshLocationsList() {
+        try {
+            // First, fetch the updated list of locations from the server
+            const locationsList = document.querySelector('.location-list');
+            const response = await fetch('/api/viewing-locations/');
+            const data = await response.json();
+
+            // Clear existing items
+            locationsList.innerHTML = '';
+
+            // Add each location to the list
+            data.forEach(location => {
+                const locationElement = document.createElement('div');
+                locationElement.className = 'location-item';
+                locationElement.setAttribute('data-type', 'location');
+                locationElement.setAttribute('data-id', location.id);
+                locationElement.setAttribute('data-lat', location.latitude);
+                locationElement.setAttribute('data-lng', location.longitude);
+                locationElement.setAttribute('is-favorite', location.is_favorited || false);
+                locationElement.setAttribute('data-added-by', location.added_by.id);
+
+                locationElement.innerHTML = `
+                <div class="item-snapshot">
+                    <div class="favorite-indicator ${location.is_favorited ? 'active' : ''}">
+                        <i class="fas fa-heart"></i>
+                    </div>
+                    <img class="location-map" src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${location.longitude},${location.latitude},3/150x150@2x?access_token=${MAPBOX_CONFIG.accessToken}&attribution=false" alt="Map view of ${location.name}">
+                </div>
+                <div class="item-content">
+                    <h3 class="location-title">${location.name}</h3>
+                    <div class="location-type">VIEWING LOCATION</div>
+                    <div class="location-info">
+                        <div class="star-rating">
+                            <div class="star-rating-stars">
+                                ${this.generateStarRating(location.reviews)}
+                            </div>
+                            <span class="star-rating-count">(${location.reviews?.length || 0})</span>
+                        </div>
+                        <div class="info-item">SEE DETAILS</div>
+                    </div>
+                </div>
+            `;
+
+                locationsList.appendChild(locationElement);
+            });
+
+            // Recalculate pagination
+            this.pagination.totalItems = data.length;
+            this.pagination.currentPage = 1;  // Reset to first page
+
+            // Apply filters and pagination
+            this.applyFilters();
+
+            // Reattach event listeners to the new elements
+            this.setupLocationCardListeners();
+
+        } catch (error) {
+            console.error('Error refreshing locations list:', error);
+        }
+    }
+
+    // Helper method to generate star rating HTML
+    generateStarRating(reviews) {
+        const averageRating = reviews?.length > 0
+            ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
+            : 0;
+
+        return Array.from({ length: 5 }, (_, i) =>
+            `<i class="fas fa-star ${i < averageRating ? '' : 'empty'}"></i>`
+        ).join('');
+    }
 
     // Filtering: ---------------------------------------------- //
     initializeUI() {
@@ -1009,7 +1421,7 @@ setupDarkSkyLayer() {
 
             // If we found a matching item, apply our location filters
             if (shouldShow && locationItem) {
-                const isFavorite = locationItem.getAttribute('data-is-favorite').toLowerCase() === 'true';
+                const isFavorite = locationItem.getAttribute('data-is-favorite') === 'true';
                 const isUserLocation = locationItem.getAttribute('data-added-by') === window.currentUserId;
 
                 // Apply the same filtering logic as in applyFilters

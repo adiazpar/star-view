@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from stars_app.services import AuroraService, MeteorShowerService, CometService, EclipseService
-from stars_app.models import CelestialEvent
+from stars_app.services.services import AuroraService, MeteorShowerService, CometService, EclipseService
+from stars_app.models.celestialevent import CelestialEvent
 
 
 class Command(BaseCommand):

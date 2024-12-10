@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from django_project import settings
 from .forecast import Forecast
 from .defaultforecast import defaultforecast
 from stars_app.services.light_pollution import LightPollutionService
@@ -16,7 +17,7 @@ class ViewingLocation(models.Model):
     name = models.CharField(max_length=200)
     latitude = models.FloatField()
     longitude = models.FloatField()
-    elevation = models.FloatField(help_text="Elevation in meters")
+    elevation = models.FloatField(help_text="Elevation in meters", default=0)
 
     # New address fields
     formatted_address = models.CharField(max_length=500, blank=True, null=True,
@@ -84,12 +85,17 @@ class ViewingLocation(models.Model):
             address_parts = []
             if self.locality:
                 address_parts.append(self.locality)
+                self.save(update_fields=['locality'])
             if self.administrative_area:
                 address_parts.append(self.administrative_area)
+                self.save(update_fields=['administrative_area'])
             if self.country:
                 address_parts.append(self.country)
+                self.save(update_fields=['country'])
 
             self.formatted_address = ", ".join(filter(None, address_parts))
+            self.save(update_fields=['formatted_address'])
+
             return True
 
         except Exception as e:
@@ -253,24 +259,55 @@ class ViewingLocation(models.Model):
 
     # Save a location's data:
     def save(self, *args, **kwargs):
-        # If this is a new location or coordinates have changed, update all
-        if not self.pk or any(
-                field in kwargs.get('update_fields', [])
-                for field in ['latitude', 'longitude']
-        ):
-            self.update_address_from_coordinates()
-            self.update_elevation_from_mapbox()
-            self.update_light_pollution()
-            self.calculate_quality_score()
+        try:
+            is_new = not self.pk
 
-        super().save(*args, **kwargs)
+            # First save to get the ID:
+            super().save(*args, **kwargs)
 
-        # Then update light pollution if needed
-        if not self.pk or any(
-                field in kwargs.get('update_fields', [])
-                for field in ['latitude', 'longitude']
-        ) or self.light_pollution_value is None:
-            self.update_light_pollution()
+            if not getattr(settings, 'DISABLE_EXTERNAL_APIS', False):
+                # If this is a new location or coordinates have changed
+                if is_new or any(
+                        field in kwargs.get('update_fields', [])
+                        for field in ['latitude', 'longitude']
+                ):
+                    # Add debug logging
+                    print(f"Updating data for location {self.name}")
+
+                    try:
+                        self.update_address_from_coordinates()
+                    except Exception as e:
+                        print(f"Warning: Could not update address: {e}")
+
+                    try:
+                        self.update_elevation_from_mapbox()
+                    except Exception as e:
+                        print(f"Warning: Could not update elevation: {e}")
+
+                    try:
+                        self.update_light_pollution()
+                    except Exception as e:
+                        print(f"Warning: Could not update light pollution: {e}")
+
+                    try:
+                        self.updateForecast()
+                    except Exception as e:
+                        print(f"Warning: Could not update forecast: {e}")
+
+                    try:
+                        self.calculate_quality_score()
+                    except Exception as e:
+                        print(f"Warning: Could not calculate quality score: {e}")
+
+                    super().save(update_fields=[
+                        'formatted_address', 'administrative_area', 'locality', 'country',
+                        'elevation', 'light_pollution_value', 'cloudCoverPercentage',
+                        'quality_score'
+                    ])
+
+        except Exception as e:
+            print(f"Error saving viewing location: {e}")
+            raise
 
 
     def __str__(self):
@@ -278,4 +315,3 @@ class ViewingLocation(models.Model):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.updateForecast()

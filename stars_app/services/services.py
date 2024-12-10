@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from stars_app.models.celestialevent import CelestialEvent
 import re
-from .utils import AstronomicalCoordinates
+from stars_app.utils import AstronomicalCoordinates
 
 
 # AURORA SERVICE ---------------------------------------------------- #
@@ -49,7 +49,7 @@ class AuroraService:
         """Parse NASA date strings and return timezone-aware datetime objects"""
         try:
             naive_dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
-            return timezone.make_aware(naive_dt, timezone=timezone.utc)
+            return timezone.make_aware(naive_dt, timezone=timezone.localtime())
         except ValueError:
             print(f"Unable to parse date: {date_str}")
             return timezone.now()

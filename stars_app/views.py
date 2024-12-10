@@ -2,15 +2,8 @@ from django.shortcuts import render, redirect
 
 # Importing other things from project files:
 from stars_app.models.userprofile import UserProfile
-from stars_app.models.celestialevent import CelestialEvent
-from stars_app.models.favoritelocation import FavoriteLocation
-from stars_app.models.viewinglocation import ViewingLocation
-from stars_app.models.forecast import Forecast
 from django.contrib.auth.models import User
 from stars_app.utils import is_valid_email
-
-# Services:
-from stars_app.services.light_pollution import LightPollutionService
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -46,6 +39,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 
 # Distance
 from geopy.distance import geodesic
+
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+import json
 
 
 # -------------------------------------------------------------- #
@@ -296,6 +293,39 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             location=location
         )
+
+
+class ViewingLocationCreateView(LoginRequiredMixin, View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+
+            # Create new viewing location
+            location = ViewingLocation.objects.create(
+                name=data['name'],
+                latitude=data['latitude'],
+                longitude=data['longitude'],
+                added_by=request.user
+            )
+
+            # The save() method will automatically fetch additional data
+            # through the APIs as defined in your model
+
+            # Return the location data
+            return JsonResponse({
+                'id': location.id,
+                'name': location.name,
+                'latitude': location.latitude,
+                'longitude': location.longitude,
+                'elevation': location.elevation,
+                'formatted_address': location.formatted_address,
+                'light_pollution_value': location.light_pollution_value,
+                'cloudCoverPercentage': location.cloudCoverPercentage,
+                'quality_score': location.quality_score
+            })
+
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
 
 @login_required
 @require_POST

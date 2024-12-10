@@ -61,6 +61,9 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/', include(locations_router.urls)),
 
+    # Other:
+    path('api/viewing-locations/', views.ViewingLocationCreateView.as_view(), name='viewing-location-create'),
+
     # Update Forecasts
     path('update/', views.update_forecast, name='update_forecast'),
 
