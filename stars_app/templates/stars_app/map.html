@@ -93,6 +93,9 @@
                          data-added-by="{{ item.added_by.id }}">
 
                         <div class="item-snapshot">
+                            <div class="favorite-indicator {% if user.is_authenticated and item|is_favorite:user %}active{% endif %}">
+                                <i class="fas fa-heart"></i>
+                            </div>
                             <img class="location-map"
                                  src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},3/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
                                  alt="Map view of {{ item.name }}">

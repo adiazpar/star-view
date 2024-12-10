@@ -261,7 +261,12 @@ export class MapController {
             this.markerManager.locations.forEach(marker => marker.remove());
             this.markerManager.locations.clear();
 
-            this.locations = locations;
+            // Store the full location data including favorites
+            this.locations = locations.map(location => ({
+                ...location,
+                // Add any additional fields from the API
+                is_favorited: document.querySelector(`.location-item[data-id="${location.id}"]`)?.getAttribute('is-favorite') === 'true'
+            }));
 
             locations.forEach(location => {
                 // Create marker element
@@ -394,6 +399,17 @@ export class MapController {
             ? `${Math.round(location.quality_score)}/100`
             : 'Not available';
 
+        // Calculate average rating - similar to your template filter
+        const reviews = location.reviews || [];
+        const averageRating = reviews.length > 0
+            ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
+            : 0;
+
+        // Generate star HTML - we'll create 5 stars, filled based on the average rating
+        const starsHTML = Array.from({ length: 5 }, (_, i) => {
+            return `<i class="fas fa-star ${i < averageRating ? '' : 'empty'}"></i>`;
+        }).join('');
+
         // Update panel content
         infoPanel.innerHTML = `
             <div class="panel-header">
@@ -406,6 +422,24 @@ export class MapController {
             
             <div class="panel-body">
                 <div class="info-section">
+                
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-star-half-alt"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>User Ratings</label>
+                            <div class="rating-container">
+                                <div class="star-rating">
+                                    <div class="star-rating-stars">
+                                        ${starsHTML}
+                                    </div>
+                                    <span class="rating-count">(${reviews.length})</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="info-row">
                         <div class="info-icon">
                             <i class="fas fa-cloud"></i>
@@ -442,7 +476,7 @@ export class MapController {
                         </div>
                         <div class="info-content">
                             <label>Elevation</label>
-                            <span>${location.elevation.toFixed(0)}m</span>
+                            <span>${location.elevation.toFixed(0)} m</span>
                         </div>
                     </div>
                 </div>
@@ -456,10 +490,11 @@ export class MapController {
                             </div>
                             <div class="info-content">
                                 <span class="address">${location.formatted_address}</span>
+                                <label>${location.longitude} , ${location.latitude}</label>
                             </div>
                         </div>
                     </div>
-                ` : ''}
+                ` : ''}               
 
                 <div class="panel-actions">
                     <a href="/location/${location.id}" class="action-button primary">
@@ -523,22 +558,29 @@ export class MapController {
         }
     }
 
+    // Set up the location card listeners to read click inputs
     setupLocationCardListeners() {
         // Get all location cards
         const locationCards = document.querySelectorAll('.location-item[data-type="location"]');
 
         locationCards.forEach(card => {
-            card.addEventListener('click', () => {
-                // Get location data from the card
-                const locationId = card.getAttribute('data-id');
+            // First, remove any existing click listeners
+            const newCard = card.cloneNode(true);
+            card.parentNode.replaceChild(newCard, card);
 
-                // Find the corresponding location data
+            newCard.addEventListener('click', (event) => {
+                // Prevent event handling if clicking the favorite heart
+                if (event.target.closest('.favorite-indicator')) {
+                    return;
+                }
+                const locationId = newCard.getAttribute('data-id');
+                const isFavorited = newCard.getAttribute('is-favorite') === 'true';
+
                 const location = this.findLocationById(locationId);
 
                 if (location) {
-                    this.handleLocationSelection(location, card);
-                } else {
-                    console.warn('No location found for ID:', locationId);
+                    location.is_favorited = isFavorited;
+                    this.handleLocationSelection(location, newCard);
                 }
             });
         });
@@ -1018,7 +1060,7 @@ export class MapController {
         });
 
         // Reattach listeners to visible cards
-        this.setupLocationCardListeners();
+        //this.setupLocationCardListeners();
     }
 
     goToPage(pageNumber) {
