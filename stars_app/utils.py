@@ -1,18 +1,6 @@
-from PIL import Image
-import numpy as np
-from django.conf import settings
-import os
 import math
 import ephem
-from datetime import datetime
 from django.utils import timezone
-
-# Email validation:
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
-from django.core.validators import validate_email
-from django.core.exceptions import ValidationError
 import re
 
 import logging
@@ -122,11 +110,8 @@ class AstronomicalCoordinates:
         dec = shower_data['dec_deg']
 
         # Account for radiant drift if applicable
-        peak_date = datetime.strptime(f"{date.year}-{shower_data['peak_date']}", "%Y-%m-%d")
-        days_from_peak = (date - peak_date.replace(tzinfo=timezone.utc)).days
-
-        ra += shower_data['drift_ra'] * days_from_peak
-        dec += shower_data['drift_dec'] * days_from_peak
+        ra += shower_data['drift_ra']
+        dec += shower_data['drift_dec']
 
         # Convert to proper format for PyEphem
         radiant = ephem.Equatorial(math.radians(ra), math.radians(dec))

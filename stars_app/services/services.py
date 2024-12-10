@@ -49,7 +49,7 @@ class AuroraService:
         """Parse NASA date strings and return timezone-aware datetime objects"""
         try:
             naive_dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ')
-            return timezone.make_aware(naive_dt, timezone=timezone.utc)
+            return timezone.make_aware(naive_dt, timezone=timezone.localtime())
         except ValueError:
             print(f"Unable to parse date: {date_str}")
             return timezone.now()
