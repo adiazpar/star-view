@@ -17,7 +17,7 @@ class ViewingLocation(models.Model):
     name = models.CharField(max_length=200)
     latitude = models.FloatField()
     longitude = models.FloatField()
-    elevation = models.FloatField(help_text="Elevation in meters")
+    elevation = models.FloatField(help_text="Elevation in meters", default=0)
 
     # New address fields
     formatted_address = models.CharField(max_length=500, blank=True, null=True,
@@ -260,12 +260,20 @@ class ViewingLocation(models.Model):
     # Save a location's data:
     def save(self, *args, **kwargs):
         try:
+            is_new = not self.pk
+
+            # First save to get the ID:
+            super().save(*args, **kwargs)
+
             if not getattr(settings, 'DISABLE_EXTERNAL_APIS', False):
                 # If this is a new location or coordinates have changed
-                if not self.pk or any(
+                if is_new or any(
                         field in kwargs.get('update_fields', [])
                         for field in ['latitude', 'longitude']
                 ):
+                    # Add debug logging
+                    print(f"Updating data for location {self.name}")
+
                     try:
                         self.update_address_from_coordinates()
                     except Exception as e:
@@ -290,9 +298,12 @@ class ViewingLocation(models.Model):
                         self.calculate_quality_score()
                     except Exception as e:
                         print(f"Warning: Could not calculate quality score: {e}")
-                pass
 
-            super().save(*args, **kwargs)
+                    super().save(update_fields=[
+                        'formatted_address', 'administrative_area', 'locality', 'country',
+                        'elevation', 'light_pollution_value', 'cloudCoverPercentage',
+                        'quality_score'
+                    ])
 
         except Exception as e:
             print(f"Error saving viewing location: {e}")
