@@ -367,14 +367,15 @@
     gap: 2px;
 }
 
-.star-rating i {
-    color: var(--golden);
-    font-size: var(--font-size-xs);
+/* Update the star icon styles */
+.star-rating-stars .fa-star {
+    color: var(--text-tertiary);  /* Default color for empty stars */
+    transition: color var(--transition-base);  /* Smooth color transition */
 }
 
-.star-rating .empty {
-    color: var(--text-tertiary);
-    opacity: 0.5;
+/* New style for filled stars */
+.star-rating-stars .fa-star.filled {
+    color: var(--golden);  /* Use your golden color variable for filled stars */
 }
 
 .star-rating-count {
@@ -924,15 +925,17 @@
     gap: 2px;
 }
 
-.location-info-panel .star-rating-stars i {
-    color: var(--golden);
+/* Update the info panel star styles */
+.location-info-panel .star-rating-stars .fa-star {
+    color: var(--text-tertiary);
     font-size: var(--font-size-sm);
+    transition: color var(--transition-base);
 }
 
-.location-info-panel .star-rating-stars i.empty {
-    color: var(--text-tertiary);
-    opacity: 0.5;
+.location-info-panel .star-rating-stars .fa-star.filled {
+    color: var(--golden);
 }
+
 
 .location-info-panel .rating-count {
     color: var(--text-tertiary);

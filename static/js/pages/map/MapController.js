@@ -768,9 +768,9 @@ export class MapController {
             ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
             : 0;
 
-        // Generate star HTML - we'll create 5 stars, filled based on the average rating
+        // Generate stars HTML with the new 'filled' class system
         const starsHTML = Array.from({ length: 5 }, (_, i) => {
-            return `<i class="fas fa-star ${i < averageRating ? '' : 'empty'}"></i>`;
+            return `<i class="fas fa-star ${i < averageRating ? 'filled' : ''}"></i>`;
         }).join('');
 
         // Get login status from global variable or data attribute

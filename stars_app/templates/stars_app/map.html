@@ -110,16 +110,17 @@
                                 <div class="star-rating">
                                     <div class="star-rating-stars">
                                         {% with average_rating=item.reviews.all|average_rating %}
+                                            {# Loop through 5 stars #}
                                             {% for i in "12345"|make_list %}
-                                                {% if forloop.counter <= average_rating|default:0|floatformat:"0" %}
-                                                    <i class="fas fa-star"></i>
-                                                {% else %}
-                                                    <i class="fas fa-star empty"></i>
-                                                {% endif %}
+                                                {# Convert average_rating to integer for comparison #}
+                                                {% with rating_int=average_rating|floatformat:"0"|add:"0" %}
+                                                    {# Check if this star should be filled based on the rating #}
+                                                    <i class="fas fa-star {% if forloop.counter <= rating_int %}filled{% endif %}"></i>
+                                                {% endwith %}
                                             {% endfor %}
-                                        </div>
-                                        <span class="star-rating-count">({{ item.reviews.count }})</span>
-                                    {% endwith %}
+                                        {% endwith %}
+                                    </div>
+                                    <span class="star-rating-count">({{ item.reviews.count }})</span>
                                 </div>
                                 <div class="info-item">
                                     SEE DETAILS

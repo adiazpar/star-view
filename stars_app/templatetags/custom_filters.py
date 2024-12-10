@@ -19,4 +19,7 @@ def average_rating(reviews):
     # Calculate the average rating from a queryset of reviews:
     if not reviews:
         return 0
-    return reviews.aggregate(Avg('rating'))['rating_avg'] or 0
+    # The aggregate function creates a key with _avg suffix
+    result = reviews.aggregate(Avg('rating'))
+    # Safely get the value with a default of 0
+    return result.get('rating__avg', 0) or 0  # Note the double underscore
