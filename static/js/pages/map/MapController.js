@@ -11,6 +11,15 @@ export class MapController {
         this.transitionDuration = 300;
         this.defaultZoom = MAPBOX_CONFIG.defaultZoom;
 
+        this.activeInfoPanel = null;
+        this.infoPanelVisible = false;
+
+        // Existing constructor properties...
+        this.selectedLocationId = null;  // Track currently selected location
+
+        // Bind methods to preserve 'this' context
+        this.handleLocationSelection = this.handleLocationSelection.bind(this);
+
         // Marker management:
         this.markerManager = {
             locations: new Map(),
@@ -252,6 +261,8 @@ export class MapController {
             this.markerManager.locations.forEach(marker => marker.remove());
             this.markerManager.locations.clear();
 
+            this.locations = locations;
+
             locations.forEach(location => {
                 // Create marker element
                 const el = document.createElement('div');
@@ -274,8 +285,7 @@ export class MapController {
 
                 // Add click event listener to the marker element
                 el.addEventListener('click', () => {
-                    // Fly to the clicked location
-                    this.flyToLocation(location.latitude, location.longitude, 5000, 12, true);
+                    this.handleLocationSelection(location, el);
                 });
 
                 // Store marker reference
@@ -361,6 +371,125 @@ export class MapController {
     }
 
 
+    // Map Panel: ---------------------------------------------- //
+    createInfoPanel(location) {
+        // Get or create info panel container
+        let infoPanel = document.querySelector('.location-info-panel');
+        if (!infoPanel) {
+            infoPanel = document.createElement('div');
+            infoPanel.className = 'location-info-panel';
+            document.querySelector('.map-view').appendChild(infoPanel);
+        }
+
+        // Format values with proper handling of unavailable data
+        const cloudCover = location.cloudCoverPercentage >= 0
+            ? `${location.cloudCoverPercentage}%`
+            : 'Not available';
+
+        const lightPollution = location.light_pollution_value
+            ? `${location.light_pollution_value.toFixed(2)} mag/arcsec²`
+            : 'Not available';
+
+        const qualityScore = location.quality_score
+            ? `${Math.round(location.quality_score)}/100`
+            : 'Not available';
+
+        // Update panel content
+        infoPanel.innerHTML = `
+            <div class="panel-header">
+                <button class="close-panel">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h3>${location.name}</h3>
+                <div class="location-type">VIEWING LOCATION</div>
+            </div>
+            
+            <div class="panel-body">
+                <div class="info-section">
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-cloud"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Cloud Cover</label>
+                            <span class="${cloudCover === 'Not available' ? 'unavailable' : ''}">${cloudCover}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-moon"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Light Pollution</label>
+                            <span class="${lightPollution === 'Not available' ? 'unavailable' : ''}">${lightPollution}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Quality Score</label>
+                            <span class="${qualityScore === 'Not available' ? 'unavailable' : ''}">${qualityScore}</span>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-icon">
+                            <i class="fas fa-mountain"></i>
+                        </div>
+                        <div class="info-content">
+                            <label>Elevation</label>
+                            <span>${location.elevation.toFixed(0)}m</span>
+                        </div>
+                    </div>
+                </div>
+
+                ${location.formatted_address ? `
+                    <div class="info-section">
+                        <h4>Location Details</h4>
+                        <div class="info-row">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <div class="info-content">
+                                <span class="address">${location.formatted_address}</span>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+
+                <div class="panel-actions">
+                    <a href="/location/${location.id}" class="action-button primary">
+                        <i class="fas fa-info-circle"></i>
+                        View Full Details
+                    </a>
+                </div>
+            </div>
+        `;
+
+        // Add event listeners
+        const closeButton = infoPanel.querySelector('.close-panel');
+        closeButton.addEventListener('click', () => this.hideInfoPanel());
+
+        // Show panel with animation
+        infoPanel.classList.add('visible');
+        this.infoPanelVisible = true;
+        this.activeInfoPanel = infoPanel;
+    }
+
+    hideInfoPanel() {
+        if (this.activeInfoPanel) {
+            this.activeInfoPanel.classList.remove('visible');
+            this.infoPanelVisible = false;
+            this.selectedLocationId = null;
+            this.clearActiveStates();
+        }
+    }
+
+
     // Flying Shit: -------------------------------------------- //
     flyToLocation(latitude, longitude, duration = 5000, zoom = 12, forceMove = false) {
         // Validate coordinates
@@ -394,42 +523,85 @@ export class MapController {
         }
     }
 
-    setupLocationCardHovers() {
-        const locationItems = document.querySelectorAll('.location-item');
+    setupLocationCardListeners() {
+        // Get all location cards
+        const locationCards = document.querySelectorAll('.location-item[data-type="location"]');
 
-        let isHovering = false;
+        locationCards.forEach(card => {
+            card.addEventListener('click', () => {
+                // Get location data from the card
+                const locationId = card.getAttribute('data-id');
 
-        locationItems.forEach(item => {
-            const lat = parseFloat(item.getAttribute('data-lat'));
-            const lng = parseFloat(item.getAttribute('data-lng'));
+                // Find the corresponding location data
+                const location = this.findLocationById(locationId);
 
-            if (!isNaN(lat) && !isNaN(lng)) {
-                let hoverTimeout;
+                if (location) {
+                    this.handleLocationSelection(location, card);
+                } else {
+                    console.warn('No location found for ID:', locationId);
+                }
+            });
+        });
+    }
 
-                item.addEventListener('mouseenter', () => {
-                    isHovering = true;
-                    hoverTimeout = setTimeout(() => {
-                        if (isHovering) {
-                            this.flyToLocation(lat, lng);
-                        }
-                    }, 500);
+    // Unified handler for both marker and card clicks
+    handleLocationSelection(location, element = null) {
+        // Update selected state
+        if (this.selectedLocationId === location.id) {
+            // If clicking the same location, toggle the panel
+            this.hideInfoPanel();
+            this.selectedLocationId = null;
+            this.clearActiveStates();
+        } else {
+            // New location selected
+            this.selectedLocationId = location.id;
+            this.createInfoPanel(location);
+            this.updateActiveStates(location.id);
 
-                    item.classList.add('hover');
-                });
+            // Fly to location on the map
+            this.flyToLocation(location.latitude, location.longitude, 5000, 12, true);
+        }
+    }
 
-                item.addEventListener('mouseleave', () => {
-                    isHovering = false;
-                    clearTimeout(hoverTimeout);
-                    item.classList.remove('hover');
+     // Helper method to find location data by ID
+    findLocationById(locationId) {
+        // Convert locationId to string for comparison since HTML attributes are strings
+        const id = locationId.toString();
+        const location = this.locations.find(loc => loc.id.toString() === id);
 
-                    // Stop any ongoing camera animations
-                    if (this.map) {
-                        this.map.stop();
-                    }
-                });
-            } else {
-                console.warn('Invalid coordinates for item:', item);
-            }
+        if (!location) {
+            console.warn(`No location found with ID: ${id}`);
+        }
+        return location;
+    }
+
+    // Update visual states for active elements
+    updateActiveStates(locationId) {
+        // Clear previous active states
+        this.clearActiveStates();
+
+        // Update card active state
+        const card = document.querySelector(`.location-item[data-id="${locationId}"]`);
+        if (card) {
+            card.classList.add('active');
+        }
+
+        // Update marker active state
+        const marker = this.markerManager.locations.get(locationId);
+        if (marker) {
+            marker.getElement().classList.add('active');
+        }
+    }
+
+    // Clear all active states
+    clearActiveStates() {
+        // Clear active cards
+        document.querySelectorAll('.location-item.active')
+            .forEach(card => card.classList.remove('active'));
+
+        // Clear active markers
+        this.markerManager.locations.forEach(marker => {
+            marker.getElement().classList.remove('active');
         });
     }
 
@@ -439,8 +611,8 @@ export class MapController {
         this.setupFilters();
         this.initializePagination();
         this.setupFilters();
-        this.setupLocationCardHovers();
         this.applyInitialState();
+        this.setupLocationCardListeners();
         this.setupFilterToggle();
     }
 
@@ -844,6 +1016,9 @@ export class MapController {
             item.style.opacity = '1';
             item.style.pointerEvents = 'auto';
         });
+
+        // Reattach listeners to visible cards
+        this.setupLocationCardListeners();
     }
 
     goToPage(pageNumber) {

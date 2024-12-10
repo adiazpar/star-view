@@ -88,6 +88,7 @@
                          data-lat="{{ item.latitude }}"
                          data-lng="{{ item.longitude }}"
                          data-type="location"
+                         data-id="{{ item.id }}"
                          data-is-favorite="{% if user.is_authenticated %}{{ item|is_favorite:user|lower }}{% else %}false{% endif %}"
                          data-added-by="{{ item.added_by.id }}">
 
