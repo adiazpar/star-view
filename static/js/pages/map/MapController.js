@@ -262,11 +262,15 @@ export class MapController {
             this.markerManager.locations.clear();
 
             // Store the full location data including favorites
-            this.locations = locations.map(location => ({
-                ...location,
-                // Add any additional fields from the API
-                is_favorited: document.querySelector(`.location-item[data-id="${location.id}"]`)?.getAttribute('is-favorite') === 'true'
-            }));
+            this.locations = locations.map(location => {
+                const locationElement = document.querySelector(`.location-item[data-id="${location.id}"]`);
+                return {
+                    ...location,
+                    is_favorited: locationElement ?
+                        locationElement.getAttribute('is-favorite') === 'true' :
+                        false
+                };
+            });
 
             locations.forEach(location => {
                 // Create marker element
@@ -377,7 +381,8 @@ export class MapController {
 
 
     // INFO Panel: --------------------------------------------- //
-    createInfoPanel(location) {
+    async createInfoPanel(location) {
+
         // Get or create info panel container
         let infoPanel = document.querySelector('.location-info-panel');
         if (!infoPanel) {
@@ -412,7 +417,23 @@ export class MapController {
 
         // Get login status from global variable or data attribute
         const isLoggedIn = window.currentUser === true;
-        console.log('Login status:', isLoggedIn);  // Debug log
+
+        if (isLoggedIn) {
+            try {
+                const response = await fetch(`/api/viewing-locations/${location.id}/favorite/`, {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+                location.is_favorited = data.is_favorited;
+            } catch(error) {
+                console.error('Error checking favorite status:', error);
+                location.is_favorited = false; // Default to false if request fails
+            }
+        } else {
+            location.is_favorited = false; // Default to false for logged out users
+        }
 
         // Create the action buttons HTML conditionally (favorites)
         const actionButtonsHTML = isLoggedIn ? `
@@ -676,6 +697,8 @@ export class MapController {
                 // Find which page the item is on
                 const locationCard = document.querySelector(`.location-item[data-id="${location.id}"]`);
                 if (locationCard) {
+                    location.is_favorited = locationCard.getAttribute('is-favorite') === 'true';
+
                     const visibleItems = Array.from(document.querySelectorAll('.location-item'))
                         .filter(item => !item.classList.contains('hidden'));
 
