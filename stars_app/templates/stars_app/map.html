@@ -17,6 +17,8 @@
 
 <!-- Replace block content in base_template.html -->
 {% block content %}
+{% csrf_token %}
+
 <div class="map-container">
     <!-- Locations Panel -->
     <div class="locations-panel">
@@ -177,7 +179,6 @@
         </div>
     </div>
 
-    {% csrf_token %}
 	<!-- Map View -->
     <div class="map-view">
         <div class="map-controls">
@@ -210,6 +211,7 @@
 
         window.mapController = new MapController();
         window.mapController.initialize();
+        window.currentUser = {% if user.is_authenticated %}true{% else %}false{% endif %};
         window.currentUserId = "{{ user.id|default:'null' }}";
     }
     setTimeout(initializePage, 0);

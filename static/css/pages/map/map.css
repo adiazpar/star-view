@@ -290,7 +290,7 @@
 
 .favorite-indicator i {
     font-size: var(--font-size-base);
-    color: #ff69b4; /* Pink color for the heart */
+    color: var(--pink); /* Pink color for the heart */
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7)); /* Add subtle shadow for better visibility */
 }
 
@@ -835,15 +835,61 @@
     font-size: var(--font-size-sm);
     text-decoration: none;
     transition: all var(--transition-base);
+    border: 1px solid var(--text-tertiary);
+    background: var(--background-dark);
+    color: var(--text-secondary);
 }
 
-.action-button.primary {
-    background: var(--primary);
+.action-button:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.favorite-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    background: var(--background-dark);
+    color: var(--text-secondary);
+    border: 1px solid var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.favorite-button:hover {
+    border-color: var(--pink);
+    color: var(--pink);
+}
+
+.favorite-button.active {
+    background: var(--pink);
     color: var(--text-primary);
+    border-color: var(--pink);
 }
 
-.action-button.primary:hover {
-    background: var(--primary-light);
+.favorite-button.active:hover {
+    background: var(--pink-light);
+}
+
+.action-button.disabled {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    border: 1px solid var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.action-button.disabled i {
+    font-size: var(--font-size-sm);
 }
 
 /* Info panel rating styles */

@@ -376,7 +376,7 @@ export class MapController {
     }
 
 
-    // Map Panel: ---------------------------------------------- //
+    // INFO Panel: --------------------------------------------- //
     createInfoPanel(location) {
         // Get or create info panel container
         let infoPanel = document.querySelector('.location-info-panel');
@@ -409,6 +409,24 @@ export class MapController {
         const starsHTML = Array.from({ length: 5 }, (_, i) => {
             return `<i class="fas fa-star ${i < averageRating ? '' : 'empty'}"></i>`;
         }).join('');
+
+        // Get login status from global variable or data attribute
+        const isLoggedIn = window.currentUser === true;
+        console.log('Login status:', isLoggedIn);  // Debug log
+
+        // Create the action buttons HTML conditionally (favorites)
+        const actionButtonsHTML = isLoggedIn ? `
+            <button class="action-button favorite-button ${location.is_favorited ? 'active' : ''}" 
+                    onclick="window.mapController.toggleFavorite(${location.id})">
+                <i class="fas fa-heart"></i>
+                ${location.is_favorited ? 'Unfavorite' : 'Favorite'}
+            </button>
+        ` : `
+            <div class="action-button disabled">
+                <i class="fas fa-lock"></i>
+                Must be logged in to favorite
+            </div>
+        `;
 
         // Update panel content
         infoPanel.innerHTML = `
@@ -497,6 +515,7 @@ export class MapController {
                 ` : ''}               
 
                 <div class="panel-actions">
+                     ${actionButtonsHTML}
                     <a href="/location/${location.id}" class="action-button primary">
                         <i class="fas fa-info-circle"></i>
                         View Full Details
@@ -521,6 +540,60 @@ export class MapController {
             this.infoPanelVisible = false;
             this.selectedLocationId = null;
             this.clearActiveStates();
+        }
+    }
+
+    async toggleFavorite(locationId) {
+        try {
+            const location = this.findLocationById(locationId);
+            if (!location) return;
+
+            // Get CSRF token
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+
+            const action = location.is_favorited ? 'unfavorite' : 'favorite';
+            const response = await fetch(`/api/viewing-locations/${locationId}/${action}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'same-origin'
+            });
+
+            if (response.ok) {
+                // Toggle the favorited state
+                location.is_favorited = !location.is_favorited;
+
+                // Update the favorite button
+                const favoriteButton = document.querySelector('.favorite-button');
+                if (favoriteButton) {
+                    favoriteButton.classList.toggle('active', location.is_favorited);
+                    favoriteButton.innerHTML = `
+                        <i class="fas fa-heart"></i>
+                        ${location.is_favorited ? 'Unfavorite' : 'Favorite'}
+                    `;
+                }
+
+                // Update the card in the list if it exists
+                const locationCard = document.querySelector(`.location-item[data-id="${locationId}"]`);
+                if (locationCard) {
+                    locationCard.setAttribute('is-favorite', location.is_favorited.toString());
+                    // Update the heart indicator if it exists
+                    const heartIndicator = locationCard.querySelector('.favorite-indicator');
+                    if (heartIndicator) {
+                        heartIndicator.classList.toggle('active', location.is_favorited);
+                    }
+                }
+            }
+            else {
+                console.error('Server responded with:', response.status);
+                const errorData = await response.json();
+                console.error('Error details:', errorData);
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
         }
     }
 
