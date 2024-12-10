@@ -81,6 +81,23 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             added_by=self.request.user,
         )
 
+    @action(detail=True, methods=['POST'])
+    def update_elevation(self, request, pk=None):
+        """Endpoint to manually trigger elevation update"""
+        location = self.get_object()
+        success = location.update_elevation_from_mapbox()
+
+        if success:
+            location.calculate_quality_score()  # Recalculate quality score with new elevation
+            location.save()
+            serializer = self.get_serializer(location)
+            return Response(serializer.data)
+
+        return Response(
+            {'detail': 'Failed to update elevation'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     @action(detail=True, methods=['POST', 'GET'])
     def favorite(self, request, pk=None):
         location = self.get_object()
