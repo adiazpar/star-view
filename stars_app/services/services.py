@@ -5,7 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from stars_app.models.celestialevent import CelestialEvent
 import re
-from .utils import AstronomicalCoordinates
+from stars_app.utils import AstronomicalCoordinates
 
 
 # AURORA SERVICE ---------------------------------------------------- #
