@@ -597,6 +597,31 @@ export class MapController {
         } else {
             // New location selected
             this.selectedLocationId = location.id;
+
+            // If clicked from map (not from card)
+            if (!element?.classList.contains('location-item')) {
+                // Find which page the item is on
+                const locationCard = document.querySelector(`.location-item[data-id="${location.id}"]`);
+                if (locationCard) {
+                    const visibleItems = Array.from(document.querySelectorAll('.location-item'))
+                        .filter(item => !item.classList.contains('hidden'));
+
+                    const itemIndex = visibleItems.indexOf(locationCard);
+                    const targetPage = Math.floor(itemIndex / this.pagination.itemsPerPage) + 1;
+
+                    // Only change page if needed
+                    if (targetPage !== this.pagination.currentPage) {
+                        this.pagination.currentPage = targetPage;
+                        this.applyFilters();
+                    }
+
+                    // Wait for DOM update then scroll
+                    setTimeout(() => {
+                        locationCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 100);
+                }
+            }
+
             this.createInfoPanel(location);
             this.updateActiveStates(location.id);
 

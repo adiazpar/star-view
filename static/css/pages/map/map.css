@@ -717,6 +717,7 @@
     transform: translateX(calc(100% + var(--space-md)));
     transition: transform 0.3s ease-in-out;
     z-index: 1000;
+    opacity: 0.98;
 }
 
 .location-info-panel.visible {
