@@ -24,7 +24,7 @@ class LocationReviewSerializer(serializers.ModelSerializer):
 
 # Viewing Location Serializer ------------------------------------- #
 class ViewingLocationSerializer(serializers.ModelSerializer):
-    added_by = serializers.ReadOnlyField(source='added_by.username')
+    added_by = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
 
     reviews = LocationReviewSerializer(many=True, read_only=True)
@@ -41,6 +41,12 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
         read_only_fields = ['light_pollution_value', 'quality_score', 'added_by',
                           'created_at', 'formatted_address', 'administrative_area',
                           'locality', 'country']
+
+    def get_added_by(self, obj):
+        return {
+            'id': obj.added_by.id,
+            'username': obj.added_by.username
+        } if obj.added_by else None
 
     def get_average_rating(self, obj):
         return obj.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
