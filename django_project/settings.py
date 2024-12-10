@@ -28,7 +28,9 @@ NASA_API_KEY = os.getenv('NASA_API_KEY')
 NASA_FIRMS_KEY = os.getenv('NASA_FIRMS_KEY')
 WAANSB_FILE_PATH = os.path.join(BASE_DIR, 'data', 'waansb_2015.tif')
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
+
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
+DISABLE_EXTERNAL_APIS = True
 
 # Allow hosts and trusted origins:
 ALLOWED_HOSTS = ['app-adiazpar-5.devedu.io', 'app-dbolding-5.devedu.io', 'app-jcuthber-5.devedu.io', 'app-otinoco-5.devedu.io', '127.0.0.1', 'nyx.local', 'localhost']
