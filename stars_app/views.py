@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 
 # Importing other things from project files:
 from stars_app.models.userprofile import UserProfile
@@ -55,6 +55,9 @@ class CelestialEventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Set elevation to 0 if not provided
         serializer.save(elevation=serializer.validated_data.get('elevation', 0))
+
+# -------------------------------------------------------------- #
+# Viewing Location Views:
 
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
@@ -294,7 +297,6 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
             location=location
         )
 
-
 class ViewingLocationCreateView(LoginRequiredMixin, View):
     def post(self, request):
         try:
@@ -326,6 +328,71 @@ class ViewingLocationCreateView(LoginRequiredMixin, View):
 
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+@login_required
+def delete_review(request, review_id):
+    # Get the review or return 404
+    review = get_object_or_404(LocationReview, pk=review_id)
+
+    # Check if the logged-in user owns this review
+    if request.user != review.user:
+        return JsonResponse({
+            'success': False,
+            'message': 'You can only delete your own reviews'
+        }, status=403)
+
+    try:
+        # Delete the review
+        review.delete()
+        return JsonResponse({
+            'success': True,
+            'message': 'Review deleted successfully'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': 'Failed to delete review'
+        }, status=500)
+
+def location_details(request, location_id):
+    location = get_object_or_404(ViewingLocation, pk=location_id)
+    reviews = LocationReview.objects.filter(location=location)
+
+    # Check if the user has already reviewed (if they're logged in)
+    user_has_reviewed = False
+    is_owner = False
+    if request.user.is_authenticated:
+        user_has_reviewed = LocationReview.objects.filter(
+            location=location,
+            user=request.user
+        ).exists()
+        is_owner = location.added_by == request.user
+
+    if request.method == 'POST' and not is_owner:
+        # Handle review submission
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
+
+        if rating:
+            review, created = LocationReview.objects.get_or_create(
+                location=location,
+                user=request.user,
+                defaults={'rating': rating, 'comment': comment}
+            )
+            if not created:
+                review.rating = rating
+                review.comment = comment
+                review.save()
+            return redirect('location_details', location_id=location_id)
+
+    context = {
+        'location': location,
+        'reviews': reviews,
+        'user_has_reviewed': user_has_reviewed,
+        'is_owner': is_owner,
+        'mapbox_token': settings.MAPBOX_TOKEN,
+    }
+    return render(request, 'stars_app/location_details.html', context)
 
 @login_required
 @require_POST

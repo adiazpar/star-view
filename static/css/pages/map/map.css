@@ -367,14 +367,15 @@
     gap: 2px;
 }
 
-.star-rating i {
-    color: var(--golden);
-    font-size: var(--font-size-xs);
+/* Update the star icon styles */
+.star-rating-stars .fa-star {
+    color: var(--text-tertiary);  /* Default color for empty stars */
+    transition: color var(--transition-base);  /* Smooth color transition */
 }
 
-.star-rating .empty {
-    color: var(--text-tertiary);
-    opacity: 0.5;
+/* New style for filled stars */
+.star-rating-stars .fa-star.filled {
+    color: var(--golden);  /* Use your golden color variable for filled stars */
 }
 
 .star-rating-count {
@@ -727,6 +728,7 @@
 .panel-header {
     padding: var(--space-md);
     border-bottom: 1px solid var(--background);
+    position: relative;
 }
 
 .panel-header h3 {
@@ -737,14 +739,15 @@
     padding-right: var(--space-xl);
 }
 
-.panel-header .location-type {
+.panel-header .info-type {
     color: var(--text-tertiary);
     text-transform: uppercase;
     font-weight: bold;
     font-size: x-small;
 }
 
-.close-panel {
+.close-panel,
+.delete-panel {
     position: absolute;
     top: var(--space-sm);
     right: var(--space-sm);
@@ -755,6 +758,20 @@
     padding: var(--space-xs);
     font-size: var(--font-size-base);
     transition: color var(--transition-base);
+}
+
+.close-panel {
+    right: var(--space-sm);
+}
+
+.delete-panel {
+    font-size: var(--font-size-sm);
+    top: var(--space-xl);
+    right: var(--space-sm);
+}
+
+.delete-panel:hover {
+    color: var(--negate-light);
 }
 
 .close-panel:hover {
@@ -908,15 +925,17 @@
     gap: 2px;
 }
 
-.location-info-panel .star-rating-stars i {
-    color: var(--golden);
+/* Update the info panel star styles */
+.location-info-panel .star-rating-stars .fa-star {
+    color: var(--text-tertiary);
     font-size: var(--font-size-sm);
+    transition: color var(--transition-base);
 }
 
-.location-info-panel .star-rating-stars i.empty {
-    color: var(--text-tertiary);
-    opacity: 0.5;
+.location-info-panel .star-rating-stars .fa-star.filled {
+    color: var(--golden);
 }
+
 
 .location-info-panel .rating-count {
     color: var(--text-tertiary);
@@ -946,6 +965,26 @@
     .location-info-panel.visible {
         transform: translateY(0);
     }
+}
+
+/* Login popup styling */
+.login-required-popup .mapboxgl-popup-content {
+    background-color: var(--surface);
+    color: var(--text-primary);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+/* Remove the white border by making the tip/container background transparent */
+.login-required-popup .mapboxgl-popup-tip {
+    display: none;  /* Remove the popup tip arrow */
+}
+
+/* Remove any default white backgrounds */
+.login-required-popup.mapboxgl-popup {
+    background: transparent;
 }
 
 /* Location Creation Popup Styles */
@@ -1027,7 +1066,7 @@
 }
 
 .popup-input.error {
-    border-color: var(--negate);
+    border-color: var(--negate-light);
 }
 
 /* Action button styling */
@@ -1068,8 +1107,8 @@
 }
 
 .message-popup.error .mapboxgl-popup-content {
-    background-color: var(--negate);
-    border-color: var(--negate);
+    background-color: var(--negate-light);
+    border-color: var(--negate-light);
 }
 
 .message-popup p {
@@ -1143,36 +1182,6 @@
     display: none;
 }
 
-/* Delete option styling */
-.panel-delete-option {
-    padding: var(--space-xs) var(--space-md);
-    border-bottom: 1px solid var(--background);
-    display: flex;
-    justify-content: flex-end;
-}
-
-.delete-location-button {
-    background: none;
-    border: none;
-    color: var(--negate);
-    font-size: var(--font-size-sm);
-    padding: var(--space-xs);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    transition: all var(--transition-base);
-    opacity: 0.8;
-}
-
-.delete-location-button:hover {
-    opacity: 1;
-    transform: scale(1.05);
-}
-
-.delete-location-button i {
-    font-size: var(--font-size-sm);
-}
 
 /* Confirmation popup styling */
 .delete-confirmation-popup .mapboxgl-popup-content {
@@ -1180,8 +1189,9 @@
     color: var(--text-primary);
     padding: var(--space-md);
     border-radius: var(--radius-sm);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
     border: 1px solid var(--background);
+    opacity: 0.9;
 }
 
 .delete-confirmation-popup .popup-content {
@@ -1206,8 +1216,8 @@
 }
 
 .delete-confirmation-popup .popup-actions .confirm-delete {
-    background: var(--negate);
-    border-color: var(--negate);
+    background: var(--negate-light);
+    border-color: var(--negate-light);
     color: var(--text-primary);
 }
 

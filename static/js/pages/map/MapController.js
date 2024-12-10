@@ -14,6 +14,11 @@ export class MapController {
         this.activeInfoPanel = null;
         this.infoPanelVisible = false;
 
+        // Track current login & Creation popups:
+        this.currentLoginPopup = null;  // Track the current login popup
+        this.currentCreationPopup = null;  // Track the current creation popup
+
+
         // Existing constructor properties...
         this.selectedLocationId = null;  // Track currently selected location
 
@@ -190,17 +195,31 @@ export class MapController {
             // Prevent default context menu
             e.preventDefault();
 
+            // First, clean up any existing popups
+            if (this.currentLoginPopup) {
+                this.currentLoginPopup.remove();
+                this.currentLoginPopup = null;
+            }
+            if (this.currentCreationPopup) {
+                this.currentCreationPopup.remove();
+                this.currentCreationPopup = null;
+            }
+
             if (!window.currentUser) {
                 // Show login required message
-                const popup = new mapboxgl.Popup()
-                    .setLngLat(e.lngLat)
-                    .setHTML(`
-                        <div style="padding: 12px; text-align: center;">
-                            <p>Please log in to create viewing locations</p>
-                            <a href="/login" class="action-button">Log In</a>
-                        </div>
-                    `)
-                    .addTo(this.map);
+                this.currentLoginPopup = new mapboxgl.Popup({
+                    closeButton: true,
+                    closeOnClick: false,
+                    className: 'login-required-popup'  // Add this class
+                })
+                .setLngLat(e.lngLat)
+                .setHTML(`
+                    <div>
+                        <p style="margin-bottom: var(--space-md)">Please log in to create viewing locations</p>
+                        <a href="/login" class="action-button">Log In</a>
+                    </div>
+                `)
+                .addTo(this.map);
                 return;
             }
 
@@ -330,9 +349,12 @@ export class MapController {
                 const el = document.createElement('div');
                 el.className = 'location-marker';
 
+                // Determine if location is favorited
+                const isFavorited = location.is_favorited;
+
                 // Create marker HTML
                 el.innerHTML = `
-                    <div class="marker-icon" style="background-color: var(--primary)">
+                    <div class="marker-icon" style="background-color: ${isFavorited ? 'var(--pink)' : 'var(--primary)'}">
                         <i class="fa-solid fa-location-dot"></i>
                     </div>
                 `;
@@ -464,7 +486,7 @@ export class MapController {
         `;
 
         // Create and show popup with corrected accessibility
-        const popup = new mapboxgl.Popup({
+        this.currentCreationPopup = new mapboxgl.Popup({
             closeButton: true,
             closeOnClick: false,
             className: 'location-creation-popup',
@@ -473,6 +495,11 @@ export class MapController {
         .setLngLat(lngLat)
         .setDOMContent(popupContent)
         .addTo(this.map);
+
+        // Add event listener for popup close
+        this.currentCreationPopup.on('close', () => {
+            this.currentCreationPopup = null;
+        });
 
         // Set up form submission
         const form = popupContent.querySelector('.popup-form');
@@ -483,7 +510,7 @@ export class MapController {
             const name = nameInput.value.trim();
             if (name) {
                 this.createViewingLocation(name, lngLat);
-                popup.remove();
+                this.currentCreationPopup.remove();
             } else {
                 nameInput.classList.add('error');
                 nameInput.addEventListener('input', () => {
@@ -741,9 +768,9 @@ export class MapController {
             ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
             : 0;
 
-        // Generate star HTML - we'll create 5 stars, filled based on the average rating
+        // Generate stars HTML with the new 'filled' class system
         const starsHTML = Array.from({ length: 5 }, (_, i) => {
-            return `<i class="fas fa-star ${i < averageRating ? '' : 'empty'}"></i>`;
+            return `<i class="fas fa-star ${i < averageRating ? 'filled' : ''}"></i>`;
         }).join('');
 
         // Get login status from global variable or data attribute
@@ -752,15 +779,6 @@ export class MapController {
 
         // Safely access the creator ID, accounting for possible undefined values
         const creatorId = location.added_by?.id?.toString();
-
-        // Add debug logging
-        console.log('Delete button debug:', {
-            isLoggedIn,
-            currentUserId,
-            creatorId,
-            location,
-            shouldShowDelete: isLoggedIn && currentUserId && creatorId && currentUserId === creatorId
-        });
 
         const showDeleteOption = isLoggedIn &&
                                currentUserId &&
@@ -801,21 +819,17 @@ export class MapController {
         // Update panel content
         infoPanel.innerHTML = `
             <div class="panel-header">
+                ${showDeleteOption ? `
+                    <button class="delete-panel" aria-label="Delete location">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : ''}
                 <button class="close-panel">
                     <i class="fas fa-times"></i>
                 </button>
                 <h3>${location.name}</h3>
-                <div class="location-type">VIEWING LOCATION</div>
-            </div>
-            
-            ${showDeleteOption ? `
-                <div class="panel-delete-option">
-                    <button class="delete-location-button">
-                        <i class="fas fa-trash"></i>
-                        Delete Location
-                    </button>
-                </div>
-            ` : ''}
+                <div class="info-type">VIEWING LOCATION</div>
+            </div>            
             
             <div class="panel-body">
                 <div class="info-section">
@@ -898,17 +912,16 @@ export class MapController {
                     <a href="/location/${location.id}" class="action-button primary">
                         <i class="fas fa-info-circle"></i>
                         View Full Details
-                    </a>
+                    </a>                    
                 </div>
             </div>
         `;
 
          // Delete button listener:
         if (showDeleteOption) {
-            const deleteButton = infoPanel.querySelector('.delete-location-button');
+            const deleteButton = infoPanel.querySelector('.delete-panel');
             if (deleteButton) {
                 deleteButton.addEventListener('click', () => {
-                    console.log('Delete button clicked for location:', location.id); // Debug log
                     this.deleteLocation(location.id);
                 });
             }
@@ -964,6 +977,16 @@ export class MapController {
                         <i class="fas fa-heart"></i>
                         ${location.is_favorited ? 'Unfavorite' : 'Favorite'}
                     `;
+                }
+
+                // Update the marker color
+                const marker = this.markerManager.locations.get(locationId);
+                if (marker) {
+                    const markerIcon = marker.getElement().querySelector('.marker-icon');
+                    if (markerIcon) {
+                        markerIcon.style.backgroundColor = location.is_favorited ? 'var(--pink)' : 'var(--primary)';
+                    }
+                    marker.getElement().setAttribute('data-favorited', location.is_favorited);
                 }
 
                 // Update the card in the list if it exists

@@ -53,6 +53,10 @@ urlpatterns = [
     path('list/<event_id>', views.details, name='details'),
     path('account/<int:pk>', views.account, name='account'),
 
+    # Viewing location:
+    path('location/<int:location_id>/', views.location_details, name='location_details'),
+    path('delete-review/<int:review_id>/', views.delete_review, name='delete_review'),
+
     # Map Tiles:
     path('upload/', views.upload_and_process_tif, name='upload_and_process_tif'),
     path('tiles/<int:z>/<int:x>/<int:y>.png', views.serve_tile, name='serve_tile'),
