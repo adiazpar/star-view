@@ -5,6 +5,7 @@ from stars_app.models.userprofile import UserProfile
 from django.contrib.auth.models import User
 from stars_app.utils import is_valid_email
 
+
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -46,7 +47,7 @@ import json
 
 from itertools import chain
 from django.core.paginator import Paginator
-
+from .models.reviewvote import ReviewVote
 
 # -------------------------------------------------------------- #
 # Location Management Views:
@@ -299,6 +300,46 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             location=location
         )
+
+    @action(detail=True, methods=['POST'])
+    def vote(self, request, pk=None, location_pk=None):
+        review = self.get_object()
+        vote_type = request.data.get('vote_type')
+
+        if vote_type not in ['up', 'down']:
+            return Response(
+                {'error': 'Invalid vote type'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Convert vote_type to boolean
+        is_upvote = vote_type == 'up'
+
+        # Get existing vote
+        vote = ReviewVote.objects.filter(
+            user=request.user,
+            review=review
+        ).first()
+
+        if vote:
+            if vote.is_upvote == is_upvote:
+                # If voting the same way, remove the vote
+                vote.delete()
+            else:
+                # If voting differently, update the vote
+                vote.is_upvote = is_upvote
+                vote.save()
+        else:
+            # Create new vote
+            ReviewVote.objects.create(
+                user=request.user,
+                review=review,
+                is_upvote=is_upvote
+            )
+
+        # Return updated review data
+        serializer = self.get_serializer(review)
+        return Response(serializer.data)
 
 class ViewingLocationCreateView(LoginRequiredMixin, View):
     def post(self, request):

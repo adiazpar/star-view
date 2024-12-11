@@ -12,14 +12,25 @@ class LocationReviewSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     user_full_name = serializers.SerializerMethodField()
 
+    vote_count = serializers.IntegerField(read_only=True)
+    user_vote = serializers.SerializerMethodField()
+
     class Meta:
         model = LocationReview
         fields = ['id', 'location', 'user', 'user_full_name',
-                 'rating', 'comment', 'created_at', 'updated_at']
-        read_only_fields = ['user', 'user_full_name']
+                 'rating', 'comment', 'created_at', 'updated_at',
+                  'vote_count', 'user_vote']
 
     def get_user_full_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}".strip()
+
+    def get_user_vote(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            vote = obj.votes.filter(user=request.user).first()
+            if vote:
+                return 'up' if vote.is_upvote else 'down'
+        return None
 
 
 # Viewing Location Serializer ------------------------------------- #

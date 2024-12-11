@@ -407,6 +407,50 @@
     font-style: italic;
 }
 
+/* Voting system styles */
+.vote-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+}
+
+.vote-button {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    cursor: pointer;
+    color: var(--text-tertiary);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.vote-button:hover {
+    color: var(--text-primary);
+}
+
+.vote-button.voted {
+    color: var(--primary);
+}
+
+.vote-button.voted:hover {
+    opacity: 0.8;
+}
+
+.vote-count {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    min-width: 2em;
+    text-align: center;
+}
+
+.vote-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 /* Pagination styling */
 .pagination-container {
     display: flex;
@@ -613,6 +657,27 @@
                             {% if review.comment %}
                                 <div class="review-comment">{{ review.comment }}</div>
                             {% endif %}
+
+                            <!-- Add voting controls -->
+                            <div class="vote-controls">
+                                {% if user.is_authenticated and review.user != user %}
+                                    <button class="vote-button upvote {% if review.user_vote == 'up' %}voted{% endif %}"
+                                            data-review-id="{{ review.id }}"
+                                            data-location-id="{{ location.id }}"
+                                            data-vote-type="up">
+                                        <i class="fas fa-arrow-up"></i>
+                                    </button>
+                                    <span class="vote-count">{{ review.vote_count }}</span>
+                                    <button class="vote-button downvote {% if review.user_vote == 'down' %}voted{% endif %}"
+                                            data-review-id="{{ review.id }}"
+                                            data-location-id="{{ location.id }}"
+                                            data-vote-type="down">
+                                        <i class="fas fa-arrow-down"></i>
+                                    </button>
+                                {% else %}
+                                    <span class="vote-count">{{ review.vote_count }}</span>
+                                {% endif %}
+                            </div>
                         </div>
                     {% endfor %}
 
@@ -752,6 +817,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const reviewsList = document.querySelector('.reviews-list');
     if (reviewsList) {
         reviewsList.addEventListener('click', function(e) {
+
+            // Delete button handling:
             const deleteButton = e.target.closest('.delete-review-btn');
             if (deleteButton) {
                 e.preventDefault();
@@ -802,6 +869,46 @@ document.addEventListener('DOMContentLoaded', function() {
                         alert('Failed to delete review. Please try again.');
                     });
                 }
+            }
+
+            // Vote button handling:
+            const voteButton = e.target.closest('.vote-button');
+            if (voteButton && !voteButton.classList.contains('disabled')) {
+                e.preventDefault();
+
+                const reviewId = voteButton.dataset.reviewId;
+                const locationId = voteButton.dataset.locationId;
+                const voteType = voteButton.dataset.voteType;
+
+                fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/vote/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ vote_type: voteType }),
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    // Update vote count
+                    const voteCountElement = voteButton.parentElement.querySelector('.vote-count');
+                    voteCountElement.textContent = data.vote_count;
+
+                    // Update button states
+                    const upvoteButton = voteButton.parentElement.querySelector('.upvote');
+                    const downvoteButton = voteButton.parentElement.querySelector('.downvote');
+
+                    upvoteButton.classList.toggle('voted', data.user_vote === 'up');
+                    downvoteButton.classList.toggle('voted', data.user_vote === 'down');
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Failed to register vote. Please try again.');
+                });
             }
         });
     }

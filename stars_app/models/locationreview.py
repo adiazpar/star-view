@@ -34,3 +34,10 @@ class LocationReview(models.Model):
 
     def __str__(self):
         return f"{self.user.username}'s review of {self.location.name}"
+
+    @property
+    def vote_count(self):
+        """Returns the total vote score (upvotes - downvotes)"""
+        upvotes = self.votes.filter(is_upvote=True).count()
+        downvotes = self.votes.filter(is_upvote=False).count()
+        return upvotes - downvotes
