@@ -780,12 +780,14 @@ h4 { font-size: var(--font-size-lg); }
 
     z-index: 1000;
 }
-.navbar .logo {
+.navbar .logo a {
     display: flex;
     align-items: center;
     gap: var(--space-md);
+    text-decoration: none;
 }
-.navbar .logo .logo-img {
+
+.navbar .logo a .logo-img {
     height: 50px;
     width: auto;
     margin-right: 0;
@@ -793,9 +795,11 @@ h4 { font-size: var(--font-size-lg); }
     filter: invert(100%);
     -webkit-filter: invert(100%);
 }
-.navbar .logo h3 {
+.navbar .logo a h3 {
     margin: 0;
+    color: var(--text-primary);
 }
+
 .hamburger {
     display: none;
     font-size: 30px;

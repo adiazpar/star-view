@@ -1,389 +1,470 @@
 {% extends 'stars_app/base.html' %}
 {% load static %}
+{% block body_class %}location-details-page{% endblock %}
 
 
 <!-- Extra header content -->
 {% block extra_head %}
-    <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
-    <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
 
-    <style>
-    /* Add to your existing CSS */
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: var(--space-lg);
-    }
+<style>
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-lg);
+}
 
-    .title-section {
-        flex: 1;
-    }
+.title-section {
+    flex: 1;
+}
 
-    .header-actions {
-        display: flex;
-        gap: var(--space-md);
-        align-items: center;
-    }
+.header-actions {
+    display: flex;
+    gap: var(--space-md);
+    align-items: center;
+}
 
-    .action-button {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        padding: var(--space-sm) var(--space-md);
-        border-radius: var(--radius-sm);
-        font-size: var(--font-size-sm);
-        cursor: pointer;
-        transition: all var(--transition-base);
-        border: 1px solid var(--text-tertiary);
-        background: var(--surface);
-        color: var(--text-primary);
-        text-decoration: none;
-    }
+.action-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: 1px solid var(--text-tertiary);
+    background: var(--surface);
+    color: var(--text-primary);
+    text-decoration: none;
+}
 
-    .favorite-button {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-        padding: var(--space-sm) var(--space-md);
-        border-radius: var(--radius-sm);
-        font-size: var(--font-size-sm);
-        cursor: pointer;
-        transition: all var(--transition-base);
-        border: 1px solid var(--text-tertiary);
-        background: var(--surface);
-        color: var(--text-primary);
-    }
+.favorite-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: 1px solid var(--text-tertiary);
+    background: var(--surface);
+    color: var(--text-primary);
+}
 
-    /* Style for when favorited */
-    .favorite-button.favorited {
-        background: var(--surface);
-        border-color: var(--pink);
-        color: var(--pink);
-    }
+/* Style for when favorited */
+.favorite-button.favorited {
+    background: var(--surface);
+    border-color: var(--pink);
+    color: var(--pink);
+}
 
-    .favorite-button:hover {
-        border-color: var(--pink);
-        color: var(--pink);
-    }
+.favorite-button:hover {
+    border-color: var(--pink);
+    color: var(--pink);
+}
 
-    .favorite-button.favorited:hover {
-        background: var(--pink);
-        color: var(--text-primary);
-    }
+.favorite-button.favorited:hover {
+    background: var(--pink);
+    color: var(--text-primary);
+}
 
-    .favorite-button i {
-        color: inherit;
-    }
+.favorite-button i {
+    color: inherit;
+}
 
-    .view-map-button:hover {
-        background: var(--primary);
-        border-color: var(--primary);
-    }
+.view-map-button:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+}
 
-    /* Ensure the map container has a fixed size */
-    .location-map-container {
-        width: 100%;
-        height: 400px;
-        overflow: hidden;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--text-tertiary);
-        position: relative;
-    }
+/* Ensure the map container has a fixed size */
+.location-map-container {
+    width: 100%;
+    height: 400px;
+    overflow: hidden;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--text-tertiary);
+    position: relative;
+}
 
-    .location-static-map {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
+.location-static-map {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 
-    /* Location Details Page Styling */
-    .location-details-page {
-        padding: var(--space-md);
-        background-color: var(--background-dark);
-        min-height: 100vh;
-    }
+/* Location Details Page Styling */
+.location-details-page {
+    padding: var(--space-md);
+    background-color: var(--background-dark);
+    min-height: 100vh;
+}
 
-    .location-details-container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: var(--space-lg);
-    }
+.location-details-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
 
-    /* Location Header */
-    .location-header {
-        margin-bottom: var(--space-xl);
-        border-bottom: 1px solid var(--text-tertiary);
-    }
+/* Location Header */
+.location-header {
+    margin-bottom: var(--space-xl);
+    border-bottom: 1px solid var(--text-tertiary);
+}
 
-    .location-header h3 {
-        color: var(--text-primary);
-        margin-bottom: var(--space-xs);
-    }
+.location-header h3 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
 
-    .location-header .subtitle {
-        font-size: var(--font-size-sm);
-        color: var(--text-secondary);
-        margin-bottom: var(--space-md);
-    }
+.location-header .subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+}
 
-    /* Main Content Layout */
+/* Main Content Layout */
+.location-main-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-xl);
+    margin-bottom: var(--space-xl);
+}
+
+/* Map Container */
+.location-map-container {
+    height: 400px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+/* Location Information */
+.location-primary-info {
+    background: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--radius-sm);
+}
+
+.info-section h4 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+}
+
+.info-grid {
+    display: grid;
+    gap: var(--space-md);
+}
+
+/* Reviews Section */
+.reviews-section {
+    background: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--radius-sm);
+    margin-top: var(--space-xl);
+}
+
+.reviews-section h4 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+}
+
+/* Review Form */
+.review-form-container {
+    background: var(--background-dark);
+    padding: var(--space-lg);
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--space-xl);
+}
+
+.review-form-container h5 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+}
+
+.review-form {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.rating-input {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: var(--space-xs);
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating label {
+    cursor: pointer;
+    font-size: var(--font-size-xl);
+    color: var(--text-tertiary);
+    transition: color var(--transition-base);
+}
+
+.star-rating label:before {
+    content: '★';
+}
+
+.star-rating input:checked ~ label,
+.star-rating label:hover,
+.star-rating label:hover ~ label {
+    color: var(--golden);
+}
+
+.comment-input textarea {
+    width: 100%;
+    background: var(--background);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+    resize: vertical;
+}
+
+.submit-review {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    justify-self: start;
+}
+
+.submit-review:hover {
+    background-color: var(--primary-light);
+}
+
+/* Login Prompt styling */
+.login-prompt-container {
+    background: var(--background-dark);
+    border-radius: var(--radius-sm);
+    padding: var(--space-lg);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+}
+
+.login-prompt-message {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+    font-size: var(--font-size-sm);
+}
+
+.login-prompt-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--primary);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-base);
+}
+
+.login-prompt-button:hover {
+    background: var(--primary-light);
+}
+
+.login-prompt-button i {
+    font-size: var(--font-size-sm);
+}
+
+/* Owner message styling */
+.owner-message-container {
+    background: var(--background-dark);
+    border-radius: var(--radius-sm);
+    padding: var(--space-lg);
+    text-align: center;
+    margin-bottom: var(--space-xl);
+    border: 1px solid var(--text-tertiary);
+}
+
+.owner-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.owner-message p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.owner-message i {
+    font-size: var(--font-size-xl);
+    color: var(--negate-light);
+}
+
+/* Review Cards */
+.reviews-list {
+    display: grid;
+    gap: var(--space-md);
+}
+
+.review-card {
+    background: var(--background-dark);
+    padding: var(--space-md);
+    border-radius: var(--radius-sm);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.rating-display {
+    display: flex;
+    flex-direction: row;  /* Not reversed for display */
+    gap: var(--space-xs);
+}
+
+.rating-display i.fas.fa-star {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-base);
+}
+
+.rating-display i.fas.fa-star.filled {
+    color: var(--golden);
+}
+
+.review-date {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+}
+
+.review-author {
+    color: var(--text-primary);
+    font-weight: bold;
+    margin-bottom: var(--space-sm);
+}
+
+.review-comment {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.no-reviews {
+    text-align: center;
+    color: var(--text-tertiary);
+    padding: var(--space-xl);
+}
+
+/* Delete button */
+.review-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.delete-review-btn {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: color var(--transition-base);
+}
+
+.delete-review-btn:hover {
+    color: var(--negate);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-sm);
+}
+
+.current-user-review {
+    border: 1px solid var(--primary-light);
+    background: var(--background-dark);
+}
+
+.your-review-badge {
+    font-size: var(--font-size-xs);
+    color: var(--primary);
+    margin-left: var(--space-sm);
+    font-style: italic;
+}
+
+/* Pagination styling */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--space-xl);
+    gap: var(--space-sm);
+}
+
+.pagination-button {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.pagination-button:hover:not(.disabled) {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.pagination-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.current-page {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--primary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
     .location-main-content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: var(--space-xl);
-        margin-bottom: var(--space-xl);
+        grid-template-columns: 1fr;
     }
 
-    /* Map Container */
     .location-map-container {
-        height: 400px;
-        border-radius: var(--radius-sm);
-        overflow: hidden;
-    }
-
-    /* Location Information */
-    .location-primary-info {
-        background: var(--surface);
-        padding: var(--space-lg);
-        border-radius: var(--radius-sm);
-    }
-
-    .info-section h4 {
-        color: var(--text-primary);
-        margin-bottom: var(--space-lg);
-    }
-
-    .info-grid {
-        display: grid;
-        gap: var(--space-md);
-    }
-
-    /* Reviews Section */
-    .reviews-section {
-        background: var(--surface);
-        padding: var(--space-lg);
-        border-radius: var(--radius-sm);
-        margin-top: var(--space-xl);
-    }
-
-    .reviews-section h4 {
-        color: var(--text-primary);
-        margin-bottom: var(--space-lg);
-    }
-
-    /* Review Form */
-    .review-form-container {
-        background: var(--background-dark);
-        padding: var(--space-lg);
-        border-radius: var(--radius-sm);
-        margin-bottom: var(--space-xl);
-    }
-
-    .review-form-container h5 {
-        color: var(--text-primary);
-        margin-bottom: var(--space-md);
-    }
-
-    .review-form {
-        display: grid;
-        gap: var(--space-md);
-    }
-
-    .rating-input {
-        display: flex;
-        align-items: center;
-        gap: var(--space-md);
-    }
-
-    .star-rating {
-        display: flex;
-        flex-direction: row-reverse;
-        gap: var(--space-xs);
-    }
-
-    .star-rating input {
-        display: none;
-    }
-
-    .star-rating label {
-        cursor: pointer;
-        font-size: var(--font-size-xl);
-        color: var(--text-tertiary);
-        transition: color var(--transition-base);
-    }
-
-    .star-rating label:before {
-        content: '★';
-    }
-
-    .star-rating input:checked ~ label,
-    .star-rating label:hover,
-    .star-rating label:hover ~ label {
-        color: var(--golden);
-    }
-
-    .comment-input textarea {
-        width: 100%;
-        background: var(--background);
-        border: 1px solid var(--text-tertiary);
-        border-radius: var(--radius-sm);
-        padding: var(--space-sm);
-        color: var(--text-primary);
-        resize: vertical;
-    }
-
-    .submit-review {
-        padding: var(--space-sm) var(--space-md);
-        background-color: var(--primary);
-        border: none;
-        border-radius: var(--radius-sm);
-        color: var(--text-primary);
-        cursor: pointer;
-        transition: background-color var(--transition-base);
-        justify-self: start;
-    }
-
-    .submit-review:hover {
-        background-color: var(--primary-light);
-    }
-
-    /* Add to your CSS */
-    .login-prompt-container {
-        background: var(--background-dark);
-        border-radius: var(--radius-sm);
-        padding: var(--space-lg);
-        text-align: center;
-        margin-bottom: var(--space-xl);
-    }
-
-    .login-prompt-message {
-        color: var(--text-secondary);
-        margin-bottom: var(--space-md);
-        font-size: var(--font-size-sm);
-    }
-
-    .login-prompt-button {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--space-sm);
-        padding: var(--space-sm) var(--space-md);
-        background: var(--primary);
-        color: var(--text-primary);
-        text-decoration: none;
-        border-radius: var(--radius-sm);
-        transition: background-color var(--transition-base);
-    }
-
-    .login-prompt-button:hover {
-        background: var(--primary-light);
-    }
-
-    .login-prompt-button i {
-        font-size: var(--font-size-sm);
-    }
-
-    /* Review Cards */
-    .reviews-list {
-        display: grid;
-        gap: var(--space-md);
-    }
-
-    .review-card {
-        background: var(--background-dark);
-        padding: var(--space-md);
-        border-radius: var(--radius-sm);
+        height: 300px;
     }
 
     .review-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--space-sm);
-    }
-
-    .rating-display {
-        display: flex;
-        flex-direction: row;  /* Not reversed for display */
+        flex-direction: column;
+        align-items: flex-start;
         gap: var(--space-xs);
     }
-
-    .rating-display i.fas.fa-star {
-        color: var(--text-tertiary);
-        font-size: var(--font-size-base);
-    }
-
-    .rating-display i.fas.fa-star.filled {
-        color: var(--golden);
-    }
-
-
-    .review-date {
-        font-size: var(--font-size-sm);
-        color: var(--text-tertiary);
-    }
-
-    .review-author {
-        color: var(--text-primary);
-        font-weight: bold;
-        margin-bottom: var(--space-sm);
-    }
-
-    .review-comment {
-        color: var(--text-secondary);
-        font-size: var(--font-size-sm);
-    }
-
-    .no-reviews {
-        text-align: center;
-        color: var(--text-tertiary);
-        padding: var(--space-xl);
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .location-main-content {
-            grid-template-columns: 1fr;
-        }
-
-        .location-map-container {
-            height: 300px;
-        }
-
-        .review-header {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: var(--space-xs);
-        }
-    }
-
-    /* Delete button */
-    .review-meta {
-        display: flex;
-        align-items: center;
-        gap: var(--space-sm);
-    }
-
-    .delete-review-btn {
-        background: none;
-        border: none;
-        padding: var(--space-xs);
-        color: var(--text-tertiary);
-        cursor: pointer;
-        transition: color var(--transition-base);
-    }
-
-    .delete-review-btn:hover {
-        color: var(--negate);
-    }
-
-    .review-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: var(--space-sm);
-    }
-    </style>
+}
+</style>
 {% endblock %}
 
 
@@ -465,7 +546,14 @@
             <h4>Reviews</h4>
 
             {% if user.is_authenticated %}
-                {% if not is_owner and not user_has_reviewed %}
+                {% if is_owner %}
+                    <div class="owner-message-container">
+                        <div class="owner-message">
+                            <i class="fas fa-info-circle"></i>
+                            <p>As the creator of this location, you cannot submit a review. This helps maintain the integrity of our rating system.</p>
+                        </div>
+                    </div>
+                {% elif not user_has_reviewed %}
                     <div class="review-form-container">
                         <h5>Add Your Review</h5>
                         <form method="POST" class="review-form">
@@ -498,9 +586,9 @@
             {% endif %}
 
             <div class="reviews-list">
-                {% if reviews %}
-                    {% for review in reviews %}
-                        <div class="review-card">
+                {% if page_obj %}
+                    {% for review in page_obj %}
+                        <div class="review-card {% if review.user == user %}current-user-review{% endif %}">
                             <div class="review-header">
                                 <div class="rating-display">
                                     {% for i in "12345"|make_list %}
@@ -516,12 +604,40 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="review-author">{{ review.user.username }}</div>
+                            <div class="review-author">
+                                {{ review.user.username }}
+                                {% if review.user == user %}
+                                    <span class="your-review-badge">(Your Review)</span>
+                                {% endif %}
+                            </div>
                             {% if review.comment %}
                                 <div class="review-comment">{{ review.comment }}</div>
                             {% endif %}
                         </div>
                     {% endfor %}
+
+                    <!-- Pagination controls -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                        <div class="pagination-container">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}"
+                                   class="pagination-button">
+                                    <i class="fas fa-chevron-left"></i> Previous
+                                </a>
+                            {% endif %}
+
+                            <span class="pagination-info">
+                                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                            </span>
+
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}"
+                                   class="pagination-button">
+                                    Next <i class="fas fa-chevron-right"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
                 {% else %}
                     <div class="no-reviews">No reviews yet</div>
                 {% endif %}
@@ -531,7 +647,6 @@
 </div>
 
 <script>
-
 // Initialize map and favorite functionality after DOM loads
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize Mapbox
@@ -609,9 +724,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Initializing review form HTML:
+    const reviewFormHTML = `
+        <div class="review-form-container">
+            <h5>Add Your Review</h5>
+            <form method="POST" class="review-form">
+                {% csrf_token %}
+                <div class="rating-input">
+                    <label>Rating:</label>
+                    <div class="star-rating">
+                        {% for i in "54321" %}
+                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
+                        <label for="star{{ i }}"></label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="comment-input">
+                    <label for="comment">Comment:</label>
+                    <textarea id="comment" name="comment" rows="4"></textarea>
+                </div>
+                <button type="submit" class="submit-review">Submit Review</button>
+            </form>
+        </div>
+    `;
+
     // Add delete review functionality
     const reviewsList = document.querySelector('.reviews-list');
-
     if (reviewsList) {
         reviewsList.addEventListener('click', function(e) {
             const deleteButton = e.target.closest('.delete-review-btn');
@@ -634,9 +772,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(data => {
                         if (data.success) {
+                            // Remove the review card
                             deleteButton.closest('.review-card').remove();
+
+                            // Check if there are any reviews left
                             if (!document.querySelector('.review-card')) {
                                 reviewsList.innerHTML = '<div class="no-reviews">No reviews yet</div>';
+                            }
+
+                            // Insert the review form before the reviews list:
+                            if (data.should_show_form) {
+                                const reviewsSection = document.querySelector('.reviews-section');
+                                const reviewsListElement = document.querySelector('.reviews-list');
+
+                                // Create a container for the form
+                                const formContainer = document.createElement('div');
+                                formContainer.innerHTML = reviewFormHTML;
+
+                                // Insert the form before the reviews list
+                                reviewsSection.insertBefore(formContainer, reviewsListElement);
+
+                                // Initialize star rating functionality
+                                initializeStarRating();
                             }
                         }
                     })
@@ -648,10 +805,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    function initializeStarRating() {
+        const starLabels = document.querySelectorAll('.star-rating label');
+        starLabels.forEach(label => {
+            label.addEventListener('mouseover', function() {
+                const siblings = [...this.parentElement.children];
+                const index = siblings.indexOf(this);
+                siblings.forEach((sibling, i) => {
+                    if (i >= index && sibling.tagName === 'LABEL') {
+                        sibling.classList.add('hover');
+                    }
+                });
+            });
+
+            label.addEventListener('mouseout', function() {
+                const siblings = [...this.parentElement.children];
+                siblings.forEach(sibling => {
+                    if (sibling.tagName === 'LABEL') {
+                        sibling.classList.remove('hover');
+                    }
+                });
+            });
+        });
+    }
 });
 </script>
-{% endblock %}
-
-{% block extra_js %}
-
 {% endblock %}

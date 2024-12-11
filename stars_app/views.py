@@ -44,6 +44,9 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 
+from itertools import chain
+from django.core.paginator import Paginator
+
 
 # -------------------------------------------------------------- #
 # Location Management Views:
@@ -346,7 +349,8 @@ def delete_review(request, review_id):
         review.delete()
         return JsonResponse({
             'success': True,
-            'message': 'Review deleted successfully'
+            'message': 'Review deleted successfully',
+            'should_show_form': True
         })
     except Exception as e:
         return JsonResponse({
@@ -356,11 +360,38 @@ def delete_review(request, review_id):
 
 def location_details(request, location_id):
     location = get_object_or_404(ViewingLocation, pk=location_id)
-    reviews = LocationReview.objects.filter(location=location)
+
+    # First, get all reviews for this location
+    all_reviews = LocationReview.objects.filter(location=location)
+
+    # If user is authenticated, get their review separately:
+    user_review = None
+    other_reviews = all_reviews
+
+    if request.user.is_authenticated:
+        user_review = all_reviews.filter(user=request.user).first()
+        other_reviews = all_reviews.exclude(user=request.user)
+
+    # Order other reviews by created_at:
+    other_reviews = other_reviews.order_by('-created_at')
+
+    # Combine user's review (if it exists) with other reviews:
+    if user_review:
+        reviews_list = list(chain([user_review], other_reviews))
+    else:
+        reviews_list = list(other_reviews)
+
+    # Create paginator instance
+    paginator = Paginator(reviews_list, 10)  # Show 10 reviews per page
+
+    # Get the requested page number from the URL
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
 
     # Check if the user has already reviewed (if they're logged in)
     user_has_reviewed = False
     is_owner = False
+
     if request.user.is_authenticated:
         user_has_reviewed = LocationReview.objects.filter(
             location=location,
@@ -387,7 +418,7 @@ def location_details(request, location_id):
 
     context = {
         'location': location,
-        'reviews': reviews,
+        'page_obj': page_obj,
         'user_has_reviewed': user_has_reviewed,
         'is_owner': is_owner,
         'mapbox_token': settings.MAPBOX_TOKEN,
