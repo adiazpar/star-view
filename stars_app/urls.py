@@ -18,8 +18,14 @@ router = DefaultRouter()
 router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
 router.register(r'celestial-events', views.CelestialEventViewSet, basename='celestial-events')
 
+# Nested router for reviews
 locations_router = routers.NestedDefaultRouter(router, r'viewing-locations', lookup='location')
 locations_router.register(r'reviews', views.LocationReviewViewSet, basename='location-reviews')
+
+# Nested router for comments
+reviews_router = routers.NestedDefaultRouter(locations_router, r'reviews', lookup='review')
+reviews_router.register(r'comments', views.ReviewCommentViewSet, basename='review-comments')
+
 
 urlpatterns = [
     # User authentication:
@@ -64,6 +70,7 @@ urlpatterns = [
     # Django Rest Framework:
     path('api/', include(router.urls)),
     path('api/', include(locations_router.urls)),
+    path('api/', include(reviews_router.urls)),
 
     # Other:
     path('api/viewing-locations/', views.ViewingLocationCreateView.as_view(), name='viewing-location-create'),

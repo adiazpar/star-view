@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from rest_framework.exceptions import PermissionDenied
 
 # Importing other things from project files:
 from stars_app.models.userprofile import UserProfile
@@ -59,6 +60,7 @@ class CelestialEventViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Set elevation to 0 if not provided
         serializer.save(elevation=serializer.validated_data.get('elevation', 0))
+
 
 # -------------------------------------------------------------- #
 # Viewing Location Views:
@@ -294,6 +296,12 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
             location_id=self.kwargs['location_pk']
         )
 
+    def get_serializer_context(self):
+        # This ensures the serializer has access to the request
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
     def perform_create(self, serializer):
         location = ViewingLocation.objects.get(pk=self.kwargs['location_pk'])
         serializer.save(
@@ -315,31 +323,80 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
         # Convert vote_type to boolean
         is_upvote = vote_type == 'up'
 
-        # Get existing vote
-        vote = ReviewVote.objects.filter(
+        # Get or create the vote
+        vote, created = ReviewVote.objects.get_or_create(
             user=request.user,
-            review=review
-        ).first()
+            review=review,
+            defaults={'is_upvote': is_upvote}
+        )
 
-        if vote:
+        if not created:
             if vote.is_upvote == is_upvote:
                 # If voting the same way, remove the vote
                 vote.delete()
+                vote = None
             else:
                 # If voting differently, update the vote
                 vote.is_upvote = is_upvote
                 vote.save()
-        else:
-            # Create new vote
-            ReviewVote.objects.create(
-                user=request.user,
-                review=review,
-                is_upvote=is_upvote
-            )
 
-        # Return updated review data
+        # Return serialized review data with updated vote information
         serializer = self.get_serializer(review)
         return Response(serializer.data)
+
+class ReviewCommentViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewCommentSerializer
+    permission_classes = [IsAuthenticated]  # Require authentication for all comment operations
+
+    def get_queryset(self):
+        return ReviewComment.objects.filter(
+            review_id=self.kwargs['review_pk']
+        ).select_related('user', 'user__userprofile')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
+
+    def perform_create(self, serializer):
+        try:
+            review = get_object_or_404(
+                LocationReview,
+                id=self.kwargs['review_pk'],
+                location_id=self.kwargs['location_pk']
+            )
+
+            # Create the comment
+            comment = serializer.save(
+                user=self.request.user,
+                review=review
+            )
+
+            # Re-serialize the created comment with full user information
+            return_serializer = self.get_serializer(comment)
+            return return_serializer.data
+
+        except Exception as e:
+            print(f"Error creating comment: {str(e)}")
+            raise
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # Print request data for debugging
+            print(f"Received comment request data: {request.data}")
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            print(f"Error in create method: {str(e)}")
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    def perform_destroy(self, instance):
+        # Only allow users to delete their own comments
+        if instance.user != self.request.user:
+            raise PermissionDenied("You can only delete your own comments")
+        instance.delete()
 
 class ViewingLocationCreateView(LoginRequiredMixin, View):
     def post(self, request):
@@ -401,47 +458,56 @@ def delete_review(request, review_id):
 
 def location_details(request, location_id):
     location = get_object_or_404(ViewingLocation, pk=location_id)
-
-    # First, get all reviews for this location
     all_reviews = LocationReview.objects.filter(location=location)
 
-    # If user is authenticated, get their review separately:
-    user_review = None
-    other_reviews = all_reviews
-
-    if request.user.is_authenticated:
-        user_review = all_reviews.filter(user=request.user).first()
-        other_reviews = all_reviews.exclude(user=request.user)
-
-    # Order other reviews by created_at:
-    other_reviews = other_reviews.order_by('-created_at')
-
-    # Combine user's review (if it exists) with other reviews:
-    if user_review:
-        reviews_list = list(chain([user_review], other_reviews))
-    else:
-        reviews_list = list(other_reviews)
-
-    # Create paginator instance
-    paginator = Paginator(reviews_list, 10)  # Show 10 reviews per page
-
-    # Get the requested page number from the URL
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
-
-    # Check if the user has already reviewed (if they're logged in)
+    # Initialize these variables early
     user_has_reviewed = False
     is_owner = False
 
     if request.user.is_authenticated:
-        user_has_reviewed = LocationReview.objects.filter(
-            location=location,
-            user=request.user
-        ).exists()
+        # Check if user owns the location
         is_owner = location.added_by == request.user
 
-    if request.method == 'POST' and not is_owner:
-        # Handle review submission
+        # Check if user has already reviewed
+        user_has_reviewed = all_reviews.filter(user=request.user).exists()
+
+        # Get user's review and other reviews
+        user_review = all_reviews.filter(user=request.user).first()
+        other_reviews = all_reviews.exclude(user=request.user)
+    else:
+        user_review = None
+        other_reviews = all_reviews
+
+    # Order other reviews by created_at
+    other_reviews = other_reviews.order_by('-created_at')
+
+    # Combine reviews and handle pagination
+    reviews_list = list(chain([user_review], other_reviews)) if user_review else list(other_reviews)
+    reviews_list = [r for r in reviews_list if r is not None]
+
+    paginator = Paginator(reviews_list, 10)
+    page_number = request.GET.get('page', 1)
+    page_obj = paginator.get_page(page_number)
+
+    # Add vote information
+    if request.user.is_authenticated:
+        for review in page_obj:
+            # Get the vote for this review
+            vote = ReviewVote.objects.filter(
+                user=request.user,
+                review=review
+            ).first()
+
+            # Add vote information as an attribute (not a property)
+            setattr(review, 'user_vote', 'up' if vote and vote.is_upvote else 'down' if vote else None)
+
+            # Calculate vote count
+            upvotes = review.votes.filter(is_upvote=True).count()
+            downvotes = review.votes.filter(is_upvote=False).count()
+            setattr(review, 'vote_counts', upvotes - downvotes)  # Using setattr instead of direct assignment
+
+    # Handle review submission
+    if request.method == 'POST' and request.user.is_authenticated and not is_owner:
         rating = request.POST.get('rating')
         comment = request.POST.get('comment')
 
@@ -460,7 +526,7 @@ def location_details(request, location_id):
     context = {
         'location': location,
         'page_obj': page_obj,
-        'user_has_reviewed': user_has_reviewed,
+        'user_has_reviewed': user_has_reviewed,  # Fixed: Don't append 'is not None'
         'is_owner': is_owner,
         'mapbox_token': settings.MAPBOX_TOKEN,
     }

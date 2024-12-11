@@ -351,10 +351,36 @@
     color: var(--text-tertiary);
 }
 
+.review-author-section {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    margin-bottom: var(--space-sm);
+}
+
+.review-profile-picture {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    background-color: var(--background);
+    /* Add a subtle border to make the image pop against dark backgrounds */
+    border: 1px solid var(--text-tertiary);
+}
+
 .review-author {
     color: var(--text-primary);
     font-weight: bold;
     margin-bottom: var(--space-sm);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.review-username {
+    color: var(--text-primary);
+    font-weight: bold;
 }
 
 .review-comment {
@@ -385,7 +411,7 @@
 }
 
 .delete-review-btn:hover {
-    color: var(--negate);
+    color: var(--negate-light);
 }
 
 .review-header {
@@ -406,6 +432,130 @@
     margin-left: var(--space-sm);
     font-style: italic;
 }
+
+/* Comments section styling */
+.review-comments-section {
+    margin-top: var(--space-md);
+    border-top: 1px solid var(--text-tertiary);
+    padding-top: var(--space-md);
+}
+
+.comments-toggle {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-xs) 0;
+}
+
+.comments-toggle:hover {
+    color: var(--text-primary);
+}
+
+.comments-container {
+    margin-top: var(--space-md);
+}
+
+.comment-form {
+    margin-bottom: var(--space-md);
+}
+
+.comment-input {
+    width: 100%;
+    background: var(--background);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+    resize: vertical;
+    margin-bottom: var(--space-sm);
+}
+
+.submit-comment {
+    background: var(--primary);
+    color: var(--text-primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs) var(--space-md);
+    cursor: pointer;
+}
+
+.comment {
+    display: flex;
+    gap: var(--space-md);
+    margin-bottom: var(--space-md);
+}
+
+.comment-profile-picture {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xs);
+}
+
+.comment-username {
+    font-weight: bold;
+    color: var(--text-primary);
+}
+
+.comment-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+}
+
+.comment-text {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.comment-login-prompt {
+    background: var(--background);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    text-align: center;
+    margin-bottom: var(--space-md);
+}
+
+.comment-login-prompt p {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-sm);
+}
+
+.login-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--primary);
+    color: var(--text-primary);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-base);
+}
+
+.login-link:hover {
+    background: var(--primary-light);
+}
+
+.login-link i {
+    font-size: var(--font-size-sm);
+}
+
 
 /* Voting system styles */
 .vote-controls {
@@ -431,12 +581,21 @@
     color: var(--text-primary);
 }
 
-.vote-button.voted {
-    color: var(--primary);
+.vote-button.voted.upvote {
+    color: var(--primary-light);
+}
+.vote-button.voted.downvote {
+    color: var(--negate-light);
 }
 
 .vote-button.voted:hover {
     opacity: 0.8;
+    color: var(--primary);
+}
+
+.vote-button.voted.downvote:hover {
+    opacity: 0.8;
+    color: var(--negate);
 }
 
 .vote-count {
@@ -447,8 +606,15 @@
 }
 
 .vote-button.disabled {
-    opacity: 0.5;
+    opacity: 0.3;
     cursor: not-allowed;
+    pointer-events: none;
+    color: var(--text-tertiary);
+}
+
+.vote-button.disabled:hover {
+    color: var(--text-tertiary);
+    transform: none;
 }
 
 /* Pagination styling */
@@ -648,34 +814,107 @@
                                     {% endif %}
                                 </div>
                             </div>
-                            <div class="review-author">
-                                {{ review.user.username }}
-                                {% if review.user == user %}
-                                    <span class="your-review-badge">(Your Review)</span>
-                                {% endif %}
+
+                            <div class="review-author-section">
+                                <img src="{{ review.user.userprofile.get_profile_picture_url }}"
+                                     alt="{{ review.user.username }}'s profile picture"
+                                     class="review-profile-picture">
+                                <div class="review-author">
+                                    <span class="review-username">{{ review.user.username }}</span>
+                                    {% if review.user == user %}
+                                        <span class="your-review-badge">(Your Review)</span>
+                                    {% endif %}
+                                </div>
                             </div>
+
                             {% if review.comment %}
                                 <div class="review-comment">{{ review.comment }}</div>
                             {% endif %}
 
+                            <!-- Add the collapsible comments section -->
+                            <div class="review-comments-section">
+                                <button class="comments-toggle" data-review-id="{{ review.id }}">
+                                    <i class="fas fa-comments"></i>
+                                    <span class="comments-count">{{ review.comments.count }} Comments</span>
+                                </button>
+
+                                <div class="comments-container" id="comments-{{ review.id }}" style="display: none;">
+                                    {% if user.is_authenticated %}
+                                        <form class="comment-form"
+                                              data-review-id="{{ review.id }}"
+                                              data-location-id="{{ location.id }}">
+                                            {% csrf_token %}
+                                            <textarea class="comment-input" placeholder="Add a comment..." rows="2"></textarea>
+                                            <button type="submit" class="submit-comment">Post</button>
+                                        </form>
+                                    {% else %}
+                                        <div class="comment-login-prompt">
+                                            <p>You must be logged in to leave a comment</p>
+                                            <a href="{% url 'login' %}?next={{ request.path }}" class="login-link">
+                                                <i class="fas fa-sign-in-alt"></i>
+                                                Log in to comment
+                                            </a>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="comments-list" id="comments-list-{{ review.id }}">
+                                        {% for comment in review.comments.all %}
+                                            <div class="comment">
+                                                <img src="{{ comment.user.userprofile.get_profile_picture_url }}"
+                                                     alt="{{ comment.user.username }}'s profile picture"
+                                                     class="comment-profile-picture">
+                                                <div class="comment-content">
+                                                    <div class="comment-header">
+                                                        <span class="comment-username">{{ comment.user.username }}</span>
+                                                        <span class="comment-date">{{ comment.created_at|date:"M d, Y" }}</span>
+                                                    </div>
+                                                    <p class="comment-text">{{ comment.content }}</p>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Add voting controls -->
                             <div class="vote-controls">
-                                {% if user.is_authenticated and review.user != user %}
-                                    <button class="vote-button upvote {% if review.user_vote == 'up' %}voted{% endif %}"
-                                            data-review-id="{{ review.id }}"
-                                            data-location-id="{{ location.id }}"
-                                            data-vote-type="up">
-                                        <i class="fas fa-arrow-up"></i>
-                                    </button>
-                                    <span class="vote-count">{{ review.vote_count }}</span>
-                                    <button class="vote-button downvote {% if review.user_vote == 'down' %}voted{% endif %}"
-                                            data-review-id="{{ review.id }}"
-                                            data-location-id="{{ location.id }}"
-                                            data-vote-type="down">
-                                        <i class="fas fa-arrow-down"></i>
-                                    </button>
+                                {% if user.is_authenticated %}
+                                    {% if review.user != user %}
+                                        <!-- Existing interactive voting buttons -->
+                                        <button class="vote-button upvote {% if review.user_vote == 'up' %}voted{% endif %}"
+                                                data-review-id="{{ review.id }}"
+                                                data-location-id="{{ location.id }}"
+                                                data-vote-type="up">
+                                            <i class="fas fa-thumbs-up"></i>
+                                        </button>
+
+                                        <span class="vote-count">{{ review.vote_counts }}</span>
+
+                                        <button class="vote-button downvote {% if review.user_vote == 'down' %}voted{% endif %}"
+                                                data-review-id="{{ review.id }}"
+                                                data-location-id="{{ location.id }}"
+                                                data-vote-type="down">
+                                            <i class="fas fa-thumbs-down"></i>
+                                        </button>
+                                    {% else %}
+                                        <!-- New disabled buttons for own review -->
+                                        <button class="vote-button disabled" disabled>
+                                            <i class="fas fa-thumbs-up"></i>
+                                        </button>
+                                        <span class="vote-count">{{ review.vote_count }}</span>
+                                        <button class="vote-button disabled" disabled>
+                                            <i class="fas fa-thumbs-down"></i>
+                                        </button>
+                                    {% endif %}
                                 {% else %}
+                                    <!-- Disabled buttons for logged out users -->
+                                    <button class="vote-button disabled" disabled>
+                                        <i class="fas fa-thumbs-up"></i>
+                                    </button>
                                     <span class="vote-count">{{ review.vote_count }}</span>
+                                    <button class="vote-button disabled" disabled>
+                                        <i class="fas fa-thumbs-down"></i>
+                                    </button>
                                 {% endif %}
                             </div>
                         </div>
@@ -879,6 +1118,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const reviewId = voteButton.dataset.reviewId;
                 const locationId = voteButton.dataset.locationId;
                 const voteType = voteButton.dataset.voteType;
+                const voteContainer = voteButton.closest('.vote-controls')
 
                 fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/vote/`, {
                     method: 'POST',
@@ -895,15 +1135,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
                 .then(data => {
                     // Update vote count
-                    const voteCountElement = voteButton.parentElement.querySelector('.vote-count');
+                    const voteCountElement = voteContainer.querySelector('.vote-count');
                     voteCountElement.textContent = data.vote_count;
 
                     // Update button states
-                    const upvoteButton = voteButton.parentElement.querySelector('.upvote');
-                    const downvoteButton = voteButton.parentElement.querySelector('.downvote');
+                    const upvoteButton = voteContainer.querySelector('.upvote');
+                    const downvoteButton = voteContainer.querySelector('.downvote');
 
-                    upvoteButton.classList.toggle('voted', data.user_vote === 'up');
-                    downvoteButton.classList.toggle('voted', data.user_vote === 'down');
+                    // Update visual state
+                    upvoteButton.classList.remove('voted');
+                    downvoteButton.classList.remove('voted');
+
+                    if (data.user_vote === 'up') {
+                        upvoteButton.classList.add('voted');
+                    } else if (data.user_vote === 'down') {
+                        downvoteButton.classList.add('voted');
+                    }
+
+                    // Update data attributes
+                    upvoteButton.dataset.currentVote = data.user_vote || '';
+                    downvoteButton.dataset.currentVote = data.user_vote || '';
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -934,6 +1185,110 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             });
+        });
+    }
+
+
+    // Handle comment section toggling
+    document.querySelectorAll('.comments-toggle').forEach(button => {
+        button.addEventListener('click', function() {
+            const reviewId = this.dataset.reviewId;
+            const commentsContainer = document.getElementById(`comments-${reviewId}`);
+            const isHidden = commentsContainer.style.display === 'none';
+
+            commentsContainer.style.display = isHidden ? 'block' : 'none';
+        });
+    });
+
+    // Handle comment submission
+    document.querySelectorAll('.comment-form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const reviewId = this.dataset.reviewId;
+            const locationId = this.dataset.locationId;
+            const commentInput = this.querySelector('.comment-input');
+            const content = commentInput.value.trim();
+
+            // Debug logging
+            console.log('Submitting comment:', {
+                locationId,
+                reviewId,
+                content
+            });
+
+            if (!content) return;
+
+            fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ content: content }),
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(error => {
+                        // Log the error details
+                        console.error('Server error:', error);
+                        throw new Error(error.detail || 'Failed to post comment');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Add the new comment to the list
+                const commentsList = document.getElementById(`comments-list-${reviewId}`);
+                const newComment = createCommentElement(data);
+                commentsList.appendChild(newComment);
+
+                // Clear the input
+                commentInput.value = '';
+
+                // Update comment count
+                const countElement = this.closest('.review-comments-section')
+                    .querySelector('.comments-count');
+                const currentCount = parseInt(countElement.textContent);
+                countElement.textContent = `${currentCount + 1} Comments`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to post comment. Please try again.');
+            });
+        });
+    });
+
+    function createCommentElement(comment) {
+        const div = document.createElement('div');
+        div.className = 'comment';
+
+        // Handle both the old and new response formats
+        const username = comment.user.username || comment.user;
+        const profilePicUrl = comment.user.profile_picture_url || comment.user_profile_picture;
+
+        div.innerHTML = `
+            <img src="${profilePicUrl}"
+                 alt="${username}'s profile picture"
+                 class="comment-profile-picture">
+            <div class="comment-content">
+                <div class="comment-header">
+                    <span class="comment-username">${username}</span>
+                    <span class="comment-date">${formatDate(comment.created_at)}</span>
+                </div>
+                <p class="comment-text">${comment.content}</p>
+            </div>
+        `;
+        return div;
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
         });
     }
 });

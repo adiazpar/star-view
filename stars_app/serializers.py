@@ -3,16 +3,39 @@ from rest_framework import serializers
 
 from stars_app.models.celestialevent import CelestialEvent
 from stars_app.models.favoritelocation import FavoriteLocation
+from stars_app.models.reviewvote import ReviewVote
+from stars_app.models.reviewcomment import ReviewComment
 from stars_app.models.viewinglocation import ViewingLocation
 from stars_app.models.locationreview import LocationReview
+
+
+# Review Comment Serializer --------------------------------------- #
+class ReviewCommentSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+    user_profile_picture = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReviewComment
+        fields = ['id', 'review', 'user', 'user_profile_picture', 'content', 'created_at']
+        read_only_fields = ['user', 'review']
+
+    def get_user(self, obj):
+        # Return full user information needed by frontend
+        return {
+            'username': obj.user.username,
+            'profile_picture_url': obj.user.userprofile.get_profile_picture_url
+        }
+
+    def get_user_profile_picture(self, obj):
+        # Get the user's profile picture URL
+        return obj.user.userprofile.get_profile_picture_url
 
 
 # Location Review Serializer -------------------------------------- #
 class LocationReviewSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     user_full_name = serializers.SerializerMethodField()
-
-    vote_count = serializers.IntegerField(read_only=True)
+    vote_count = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
 
     class Meta:
@@ -27,10 +50,21 @@ class LocationReviewSerializer(serializers.ModelSerializer):
     def get_user_vote(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            vote = obj.votes.filter(user=request.user).first()
-            if vote:
+            vote = ReviewVote.objects.filter(
+                user=request.user,
+                review=obj
+            ).first()
+
+            # Convert boolean to string representation
+            if vote is not None:  # Check if vote exists
                 return 'up' if vote.is_upvote else 'down'
-        return None
+        return None  # Return None if no vote exists
+
+    def get_vote_count(self, obj):
+        # Calculate the total vote score
+        upvotes = obj.votes.filter(is_upvote=True).count()
+        downvotes = obj.votes.filter(is_upvote=False).count()
+        return upvotes - downvotes
 
 
 # Viewing Location Serializer ------------------------------------- #
