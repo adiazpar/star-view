@@ -1,47 +1,54 @@
 {% load static %}
-{% load bootstrap5 %}
-
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/styles.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'css/base/styles.css' %}" type="text/css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <title>Event Horizon</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    {% block extra_head %}{% endblock %}
+    <script src="{% static 'js/base/script.js' %}"></script>
 </head>
 
 <!-- Body Content -->
 <body>
     <nav class="navbar">
         <div class="logo">
-            <img src="/static/images/star_logo_transparent.png" alt="Shooting Stars Logo" class="logo-img">
-            <h2>Event Horizon</h2>
+            <img src="/static/images/logo.png" alt="Shooting Stars Logo" class="logo-img">
+            <h3>Event Horizon</h3>
         </div>
 
         <div class="nav-container">
             <ul class="nav-links" id="nav-links">
                 <li><a class="nav-link" href="{% url 'home' %}">HOME</a></li>
                 <li><a class="nav-link" href="{% url 'map' %}">MAP</a></li>
-                <li><a class="nav-link" href="{% url 'event_list' %}">EVENT LIST</a></li>
-                <li><a class="nav-link" href="#">ABOUT US</a></li>
+                <li><a class="nav-link" href="{% url 'event_list' %}">EVENTS</a></li>
                 {% if user.is_authenticated %}
                     <li><a class="nav-link" href="{% url 'account' user.id %}">ACCOUNT</a></li>
                 {% else %}
-                    <li><a class="nav-link" href="{% url 'login' %}">ACCOUNT</a></li>
+                    <li><a class="nav-link" href="{% url 'login' %}?next={% url 'account' 1 %}">ACCOUNT</a></li>
                 {% endif %}
             </ul>
 
             <div class="hamburger-auth-group">
-                <ul class="auth-links" id="auth-links">
+                <div class="auth-links" id="auth-links">
                     {% if user.is_authenticated %}
-                        <li><a class="auth-link" href="{% url 'logout' %}">LOGOUT</a></li>
+                        <a href="{% url 'logout' %}" class="save-button">LOGOUT</a>
                     {% else %}
-                        <li><a class="auth-link" href="{% url 'login' %}">LOGIN</a></li>
+                        {% if request.path != '/login/' %}
+                            <a href="{% url 'login' %}?next={{ request.path }}" class="save-button">LOGIN</a>
+                        {% else %}
+                            <a href="{% url 'login' %}" class="save-button">LOGIN</a>
+                        {% endif %}
                     {% endif %}
-                </ul>
+                </div>
 
                 <button class="hamburger" id="hamburger">
                     &#9776;
@@ -50,11 +57,18 @@
         </div>
     </nav>
 
+    <!-- Main Content -->
     <div class="content {% block body_class %}{% endblock %}">
         {% block content %}
         {% endblock %}
     </div>
 
-    <script src="{% static 'js/script.js' %}"></script>
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Created by Group 8 - Alejandro Diaz , Jason Cuthbert , Daniel Bolding , Oscar Tinoco</p>
+    </footer>
+
+    {% block extra_scripts %}
+    {% endblock %}
 </body>
 </html>

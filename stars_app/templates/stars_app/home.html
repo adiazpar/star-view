@@ -1,24 +1,69 @@
 <!-- inherit from base.html-->
 {% extends "stars_app/base.html" %}
 {% block body_class %}home-page{% endblock %}
+{% load static %}
+
+<!-- Extra header content -->
+{% block extra_head %}
+<!-- Home specific styles -->
+<link href="{% static 'css/pages/home.css' %}" rel="stylesheet">
+{% endblock %}
 
 <!-- Populates block content in base_template.html -->
 {% block content %}
-    <div class="home-container">
+<div class="home-container">
+    <!-- Stars background container -->
+    <div class="stars-background" id="starsContainer"></div>
+
+    <!-- Main content wrapper -->
+    <div class="content-wrapper">
         <div class="home-header">
-            <p>WELCOME TO THE EVENT HORIZON</p>
+            WELCOME TO THE EVENT HORIZON
         </div>
 
         <div class="home-main">
-            <p>A Stargazing Companion</p>
+            A Stargazing Companion
         </div>
 
-        <div class="map-button" >
-            <a class="button" href="{% url 'map' %}">ENTER THE MAP</a>
+        {% if next_event %}
+        <!-- Featured Event Section -->
+        <div class="featured-event">
+            <h2>Next Major Event: {{ next_event.name }}</h2>
+            <div class="countdown-timer" data-target-date="{{ next_event.date|date:'Y-m-d H:i:s' }}">
+                <!-- Countdown will be populated by JavaScript -->
+            </div>
+            <div class="map-button">
+                <a href="{% url 'map' %}" class="button">ENTER THE MAP</a>
+            </div>
         </div>
+        {% endif %}
 
-        <div class="home-footer">
-            <p>Created by Group8 - Alejandro Diaz, Daniel Bolding, Jason Cuthbert, Oscar Tinoco</p>
+        <!-- Quick Stats Section -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <i class="fas fa-clock"></i>
+                <div class="stat-value">{{ upcoming_events_count }}</div>
+                <div class="stat-label">Upcoming Events</div>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-map-marker-alt"></i>
+                <div class="stat-value">{{ nearby_spots_count }}</div>
+                <div class="stat-label">Nearby Spots</div>
+            </div>
+
+            <div class="stat-card">
+                <i class="fas fa-star"></i>
+                <div class="stat-value">Clear</div>
+                <div class="stat-label">Tonight's Forecast</div>
+            </div>
         </div>
     </div>
+</div>
+{% endblock %}
+
+<!-- Extra JS content -->
+{% block extra_scripts %}
+<script type="module" src="{% static 'js/pages/home/stars-animation.js' %}"></script>
+<script type="module" src="{% static 'js/pages/home/countdown-timer.js' %}"></script>
 {% endblock %}

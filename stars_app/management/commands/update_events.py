@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from stars_app.services import AuroraService, MeteorShowerService, CometService, EclipseService
-from stars_app.models import CelestialEvent
+from stars_app.services.services import AuroraService, MeteorShowerService, CometService, EclipseService
+from stars_app.models.celestialevent import CelestialEvent
 
 
 class Command(BaseCommand):
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         if event_type == 'all':
             # Clear all event types
             deleted_count = CelestialEvent.objects.all().delete()
-            self.stdout.write(f"Cleared all existing events")
+            self.stdout.write("Cleared all existing events")
         else:
             # Clear only specified event type
             deleted_count = CelestialEvent.objects.filter(event_type=event_type.upper()).delete()
