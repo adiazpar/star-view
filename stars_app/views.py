@@ -523,7 +523,21 @@ def serve_tile(request, z, x, y):
 # -------------------------------------------------------------- #
 # Navigation Views:
 def home(request):
-    return render(request, 'stars_app/home.html')
+    from datetime import datetime, timedelta
+
+    # Example test event data:
+    next_event = {
+        'name': 'Lyrid Meteor Shower',
+        'date': datetime.now() + timedelta(days=3, hours=14, minutes=22),
+    }
+
+    context = {
+        'next_event': next_event,
+        'upcoming_events_count': 12,  # Replace with actual query
+        'nearby_spots_count': 8,  # Replace with actual query
+    }
+
+    return render(request, 'stars_app/home.html', context)
 
 def map(request):
     # Get all locations and events:
