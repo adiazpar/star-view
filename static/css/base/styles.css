@@ -106,7 +106,7 @@ h4 { font-size: var(--font-size-lg); }
     text-align: left;
 
     font-size: var(--font-size-xs);
-    z-index: 999;
+    z-index: 1000;
 }
 .footer p {
     margin-left: 20px;
@@ -875,78 +875,6 @@ h4 { font-size: var(--font-size-lg); }
 }
 
 /* ---------------------------------------------------------------- */
-/* Home Page Styling */
-.home-page {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-    height: 100vh;
-
-    background-image: url('/static/images/night_sky.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-.home-container {
-    padding: 40px;
-    width: 500px;
-}
-.home-header {
-    font-size: xx-large;
-    font-family: Arial, sans-serif;
-
-    text-shadow: 0 10px 4px black;
-    text-decoration: none;
-    text-align: center;
-    color: white;
-}
-.home-main {
-    font-size: large;
-    font-family: Arial, sans-serif;
-
-    text-shadow: 0 10px 4px black;
-    text-align: center;
-    color: white;
-}
-.home-footer {
-    margin-top: 80px;
-    font-size: small;
-    font-family: Arial, sans-serif;
-    text-align: center;
-    bottom: 2%;
-    color: white;
-}
-.map-button {
-    margin-top: 80px;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-}
-.map-button .button {
-    color: white;
-    text-decoration: none;
-    display: inline-block;
-    padding: 1.2rem 3.4rem;
-    background-color: #2b7aff;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0,0,0,1);
-
-    font-size: medium;
-    font-family: Arial, sans-serif;
-    font-weight: bold;
-}
-.map-button .button:hover {
-    transform: scale(1.05);
-    transition: transform 0.2s ease-in-out;
-}
-.map-button .button:not(:hover) {
-    transform: scale(1);
-    transition: transform 0.2s ease-in-out;
-}
-
-
-/* ---------------------------------------------------------------- */
 /* Login Page Styling */
 .login-page {
     display: flex;
@@ -956,6 +884,7 @@ h4 { font-size: var(--font-size-lg); }
     background-color: var(--background-dark);
     min-height: 100vh;
 }
+
 .login-container {
     background-color: var(--surface);
     border-radius: var(--radius-sm);
@@ -964,8 +893,8 @@ h4 { font-size: var(--font-size-lg); }
     max-width: 300px;
     border: 1px solid black;
     min-height: 650px;
-
 }
+
 .login-form {
     width: 100%;
 }
