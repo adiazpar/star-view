@@ -829,71 +829,135 @@ export class MapController {
                 </button>
                 <h3>${location.name}</h3>
                 <div class="info-type">VIEWING LOCATION</div>
-            </div>            
+            </div>     
             
-            <div class="panel-body">
-                <div class="info-section">
-                
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <i class="fas fa-star-half-alt"></i>
-                        </div>
-                        <div class="info-content">
-                            <label>User Ratings</label>
-                            <div class="rating-container">
-                                <div class="star-rating">
-                                    <div class="star-rating-stars">
-                                        ${starsHTML}
+            <div class="info-tabs">
+                <button class="info-tab active" data-tab="conditions">
+                    <i class="fas fa-binoculars"></i>
+                    Viewing Conditions
+                </button>
+                <button class="info-tab" data-tab="moon">
+                    <i class="fas fa-moon"></i>
+                    Moon Data
+                </button>
+            </div>
+
+            <div class="panel-content-wrapper">
+                <div class="tab-content-scroll">
+                    <!-- Conditions Tab Content -->
+                    <div class="tab-content active" data-tab="conditions">
+                        <div class="info-section">               
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>User Ratings</label>
+                                    <div class="rating-container">
+                                        <div class="star-rating">
+                                            <div class="star-rating-stars">
+                                                ${starsHTML}
+                                            </div>
+                                            <span class="rating-count">(${reviews.length})</span>
+                                        </div>
                                     </div>
-                                    <span class="rating-count">(${reviews.length})</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-cloud"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Cloud Cover</label>
+                                    <span class="${cloudCover === 'Not available' ? 'unavailable' : ''}">${cloudCover}</span>
+                                </div>
+                            </div>
+        
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-moon"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Light Pollution</label>
+                                    <span class="${lightPollution === 'Not available' ? 'unavailable' : ''}">${lightPollution}</span>
+                                </div>
+                            </div>
+        
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Quality Score</label>
+                                    <span class="${qualityScore === 'Not available' ? 'unavailable' : ''}">${qualityScore}</span>
+                                </div>
+                            </div>
+        
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-mountain"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Elevation</label>
+                                    <span>${location.elevation.toFixed(0)} m</span>
                                 </div>
                             </div>
                         </div>
+                    
                     </div>
                     
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <i class="fas fa-cloud"></i>
+                    <!-- Moon Data Tab Content -->
+                    <div class="tab-content" data-tab="moon">
+                        <div class="info-section">
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-moon"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Moon Phase</label>
+                                    <span>${location.moon_phase_info.short_name} - ${location.moon_phase.toFixed(1)}%</span>                                   
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-angle-up"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Moon Altitude</label>
+                                    <span>${location.moon_altitude ? location.moon_altitude.toFixed(1) + '°' : 'Not available'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-arrow-up"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Next Moonrise</label>
+                                    <span>${location.next_moonrise ? new Date(location.next_moonrise).toLocaleTimeString() : 'Not available'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="info-row">
+                                <div class="info-icon">
+                                    <i class="fas fa-arrow-down"></i>
+                                </div>
+                                <div class="info-content">
+                                    <label>Next Moonset</label>
+                                    <span>${location.next_moonset ? new Date(location.next_moonset).toLocaleTimeString() : 'Not available'}</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="info-content">
-                            <label>Cloud Cover</label>
-                            <span class="${cloudCover === 'Not available' ? 'unavailable' : ''}">${cloudCover}</span>
-                        </div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <i class="fas fa-moon"></i>
-                        </div>
-                        <div class="info-content">
-                            <label>Light Pollution</label>
-                            <span class="${lightPollution === 'Not available' ? 'unavailable' : ''}">${lightPollution}</span>
-                        </div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <i class="fas fa-star"></i>
-                        </div>
-                        <div class="info-content">
-                            <label>Quality Score</label>
-                            <span class="${qualityScore === 'Not available' ? 'unavailable' : ''}">${qualityScore}</span>
-                        </div>
-                    </div>
-
-                    <div class="info-row">
-                        <div class="info-icon">
-                            <i class="fas fa-mountain"></i>
-                        </div>
-                        <div class="info-content">
-                            <label>Elevation</label>
-                            <span>${location.elevation.toFixed(0)} m</span>
-                        </div>
-                    </div>
-                </div>
-
+                    </div>     
+                </div>                                     
+            </div>
+            
+            <div class="panel-bottom">
+                <!-- Address Section -->              
                 ${location.formatted_address ? `
-                    <div class="info-section">
+                    <div class="location-details">
                         <h4>Location Details</h4>
                         <div class="info-row">
                             <div class="info-icon">
@@ -905,19 +969,38 @@ export class MapController {
                             </div>
                         </div>
                     </div>
-                ` : ''}               
-
+                ` : ''} 
+            
+                
+                <!-- Action buttons -->
                 <div class="panel-actions">
                      ${actionButtonsHTML}
                     <a href="/location/${location.id}" class="action-button primary">
                         <i class="fas fa-info-circle"></i>
                         View Full Details
                     </a>                    
-                </div>
-            </div>
+                </div>  
+            </div>                
         `;
 
-         // Delete button listener:
+        // Tab switching functionality:
+        const tabs = infoPanel.querySelectorAll('.info-tab');
+        const tabContents = infoPanel.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+
+                // Add active class to clicked tab and corresponding content
+                tab.classList.add('active');
+                const tabContent = infoPanel.querySelector(`.tab-content[data-tab="${tab.dataset.tab}"]`);
+                tabContent.classList.add('active');
+            });
+        });
+
+        // Delete button listener:
         if (showDeleteOption) {
             const deleteButton = infoPanel.querySelector('.delete-panel');
             if (deleteButton) {
