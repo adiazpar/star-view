@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     'stars_app',
     'rest_framework',
     'django.contrib.sites',
+    'django_crontab',
 ]
 
 # Debug logging:
@@ -94,6 +95,21 @@ LOGGING = {
     },
 }
 
+# Automated commands and cronjobs
+CRONJOBS = [
+    # HERE ARE A SUITE OF CRONJOB COMMANDS TO USE:
+    # python3 manage.py crontab show        -- Show all cronjobs
+    # python3 manage.py crontab add         -- Add all cronjobs
+    # python3 manage.py crontab remove      -- Remove all cronjobs
+
+    # Run every hour between 6 PM and 6 AM
+    ('0 18-23,0-5 * * *', 'django.core.management.call_command', ['update_moon_conditions']),
+
+    # Run once at noon for basic updates
+    ('0 12 * * *', 'django.core.management.call_command', ['update_moon_conditions']),
+]
+
+# Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

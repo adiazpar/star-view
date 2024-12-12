@@ -12,6 +12,25 @@
 <!-- Populates block content in base_template.html -->
 {% block content %}
 <div class="home-container">
+
+    {% if messages %}
+        <div class="message-container" id="messages-container">
+            <div class="messages" id="messages-container">
+                {% for message in messages %}
+                <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
+                    {{ message }}
+                    <button type="button" class="message-close" onclick="this.parentElement.remove()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
     <!-- Main content section -->
     <div class="content-wrapper">
         <div class="hero-section">
@@ -30,8 +49,4 @@
         </div>
     </div>
 </div>
-{% endblock %}
-
-<!-- Extra JS content -->
-{% block extra_scripts %}
 {% endblock %}

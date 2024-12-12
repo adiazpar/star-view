@@ -19,43 +19,39 @@ class ViewingLocation(models.Model):
     longitude = models.FloatField()
     elevation = models.FloatField(help_text="Elevation in meters", default=0)
 
-    # New address fields
-    formatted_address = models.CharField(max_length=500, blank=True, null=True,
-                                         help_text="Full formatted address from geocoding or user input")
-    administrative_area = models.CharField(max_length=200, blank=True, null=True,
-                                           help_text="State/Province/Region")
-    locality = models.CharField(max_length=200, blank=True, null=True,
-                                help_text="City/Town")
+    # New address fields:
+    formatted_address = models.CharField(max_length=500, blank=True, null=True, help_text="Full formatted address from geocoding or user input")
+    administrative_area = models.CharField(max_length=200, blank=True, null=True, help_text="State/Province/Region")
+    locality = models.CharField(max_length=200, blank=True, null=True, help_text="City/Town")
     country = models.CharField(max_length=200, blank=True, null=True)
 
-    # Forecast
-    forecast = models.ForeignKey(
-        Forecast,
-        on_delete=models.CASCADE,
-        default=defaultforecast
-    )
-
+    # Forecast:
+    forecast = models.ForeignKey(Forecast, on_delete=models.CASCADE, default=defaultforecast)
     cloudCoverPercentage = models.FloatField(null=True)
 
-    # Light pollution
-    light_pollution_value = models.FloatField(
-        null=True,
-        blank=True,
-        help_text="Light pollution in magnitude per square arcsecond (higher values = darker skies)"
-    )
+    # Light pollution:
+    light_pollution_value = models.FloatField(null=True, blank=True, help_text="Light pollution in magnitude per square arcsecond (higher values = darker skies)")
 
-    quality_score = models.FloatField(
-        null=True,
-        blank=True,
-        help_text="Overall viewing quality score (0-100) based on light pollution and elevation"
-    )
+    quality_score = models.FloatField(null=True, blank=True, help_text="Overall viewing quality score (0-100) based on light pollution and elevation")
 
     added_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    # Moon Data:
+    moon_phase = models.FloatField(null=True, blank=True, help_text="Current moon phase percentage (0-100)")
+    moon_altitude = models.FloatField(null=True, blank=True, help_text="Moon's altitude above horizon in degrees")
+    moon_impact_score = models.FloatField(null=True, blank=True, help_text="Score indicating moon's impact on viewing conditions (0-1)")
+    next_moonrise = models.DateTimeField(null=True, blank=True)
+    next_moonset = models.DateTimeField(null=True, blank=True)
+
+    next_astronomical_dawn = models.DateTimeField(null=True, blank=True)
+    next_astronomical_dusk = models.DateTimeField(null=True, blank=True)
+
+
     # Address Methods:
     def update_address_from_coordinates(self):
         """Updates address fields using Mapbox reverse geocoding"""
+
         try:
             from django.conf import settings
             mapbox_token = settings.MAPBOX_TOKEN
@@ -105,6 +101,7 @@ class ViewingLocation(models.Model):
     # Method for light pollution updates
     def update_light_pollution(self):
         """Update light pollution and quality score for this location"""
+
         service = LightPollutionService()
         light_pollution = service.get_light_pollution(
             self.latitude,
@@ -121,6 +118,7 @@ class ViewingLocation(models.Model):
     # Getting elevation data from mapbox:
     def update_elevation_from_mapbox(self):
         """Updates elevation using Mapbox Tilequery API"""
+
         try:
             from django.conf import settings
             mapbox_token = settings.MAPBOX_TOKEN
@@ -160,35 +158,56 @@ class ViewingLocation(models.Model):
     # Calculating quality score:
     def calculate_quality_score(self):
         """
-    Calculate overall quality score based on:
-    - Light pollution (50% weight if no elevation, 40% if elevation exists)
-    - Cloud cover (50% weight if no elevation, 40% if elevation exists)
-    - Elevation (20% weight, only if elevation > 0)
-    """
+        Calculate overall quality score based on:
+        - Light pollution (30% weight if no elevation, 40% if elevation exists)
+        - Cloud cover (30% weight if no elevation, 40% if elevation exists)
+        - Elevation (20% weight, only if elevation > 0)
+        - Moon conditions (20% weight)
+        """
+
         try:
             score = 0
             has_elevation = self.elevation and self.elevation > 0
 
-            # Adjust weights based on whether elevation exists
-            lp_weight = 0.4 if has_elevation else 0.5
-            cloud_weight = 0.4 if has_elevation else 0.5
+            # Base weights:
+            weights = {
+                'light_pollution': 0.3,
+                'cloud_cover': 0.3,
+                'elevation': 0.2 if has_elevation else 0,
+                'moon': 0.2
+            }
+
+            # Redistribute elevation weight if not present:
+            if not has_elevation:
+                weights['light_pollution'] += 0.1
+                weights['cloud_cover'] += 0.1
+
+            # CALCULATE COMPONENET SCORES BELOW ................ :
 
             # Light pollution score (higher mag/arcsec² is better)
             # Typical range: 16 (poor) to 22 (excellent)
             if self.light_pollution_value:
                 lp_score = min(100, max(0, (self.light_pollution_value - 16) * (100/6)))
-                score += lp_score * lp_weight
+                score += lp_score * weights['light_pollution']
 
             # Cloud cover score (lower is better)
-            if self.cloudCoverPercentage is not None and self.cloudCoverPercentage >= 0:
+            # Using NOAA
+            if self.cloudCoverPercentage is not None:
                 cloud_score = 100 - self.cloudCoverPercentage
-                score += cloud_score * cloud_weight
+                score += cloud_score * weights['cloud_cover']
 
             # Elevation score (only if elevation > 0)
             # Assume max practical elevation of 4000m
             if has_elevation:
                 elevation_score = min(100, (self.elevation / 4000) * 100)
-                score += elevation_score * 0.2
+                score += elevation_score * weights['elevation']
+
+            # Moon impact score
+            # Grabs data from ephem python library
+            if self.moon_impact_score is not None:
+                moon_score = self.moon_impact_score * 100
+                score += moon_score * weights['moon']
+
 
             self.quality_score = round(score, 1)
             self.save(update_fields=['quality_score'])

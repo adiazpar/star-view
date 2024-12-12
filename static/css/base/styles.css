@@ -19,6 +19,8 @@
     --negate-light: #ff4d4d;
     --negate-dark: #e01a1a;
 
+    --success: #10c25b;
+
     --golden: #ffce2b;
     --pink: #ff69b4;
     --pink-light: #ff81c0;
@@ -458,37 +460,91 @@ h4 { font-size: var(--font-size-lg); }
     justify-content: flex-end;
 }
 
-.messages {
-    position: fixed;
-    top: 80px;
-    right: 20px;
-    z-index: 1000;
+/* Message styling */
+.message-container {
+    width: 100%;
+    position: sticky;
+    padding: 0 var(--space-xl);
+    top: 0;
+    z-index: 10;
+    box-sizing: border-box;
 }
 
 .message {
-    margin-bottom: 10px;
-    padding: var(--space-sm) var(--space-lg);
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
     border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
     color: var(--text-primary);
-    animation: slideIn 0.3s ease-out;
+
+    margin-bottom: var(--space-lg);
+    animation: fadeIn 0.3s ease-out;
 }
 
-.success {
-    background-color: #2ecc71;
+.message-text {
+    flex: 1;
+    min-width: 0;
+    padding-right: var(--space-md);
 }
 
-.error {
-    background-color: var(--negate);
+.message.error {
+    background-color: var(--negate-light);
 }
 
-@keyframes slideIn {
+.message.success {
+    background-color: var(--success);
+}
+
+.message-close {
+    flex-shrink: 0; /* Prevent button from shrinking */
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-primary);
+    opacity: 0.8;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity var(--transition-base);
+}
+
+.message-close svg {
+    width: 14px;
+    height: 14px;
+}
+
+.message-close:hover {
+    opacity: 1;
+}
+
+/* Fade Animation */
+@keyframes fadeIn {
     from {
-        transform: translateX(100%);
         opacity: 0;
+        transform: translateY(-10px);
     }
     to {
-        transform: translateX(0);
         opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fade Out Animation */
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 }
 

@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from stars_app.services.services import AuroraService, MeteorShowerService, CometService, EclipseService
+from stars_app.services.services import MeteorShowerService, CometService, EclipseService
 from stars_app.models.celestialevent import CelestialEvent
 
 
@@ -47,16 +47,6 @@ class Command(BaseCommand):
             # Clear only specified event type
             deleted_count = CelestialEvent.objects.filter(event_type=event_type.upper()).delete()
             self.stdout.write(f"Cleared existing {event_type} events")
-
-    def update_aurora_events(self):
-        """Update aurora events"""
-        try:
-            service = AuroraService()
-            service.fetch_aurora_events()
-        except Exception as e:
-            self.stdout.write(
-                self.style.ERROR(f'Error updating aurora events: {str(e)}')
-            )
 
     def update_meteor_events(self):
         """Update meteor events"""

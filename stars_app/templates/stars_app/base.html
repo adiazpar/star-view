@@ -71,6 +71,42 @@
     </footer>
 
     {% block extra_scripts %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Function to remove message completely
+        function removeMessage(messageElement) {
+            // First add the fadeOut animation
+            messageElement.style.animation = 'fadeOut 0.3s ease-out forwards';
+
+            // After animation completes, remove the entire element
+            setTimeout(() => {
+                // Check if the message's container will be empty
+                const container = messageElement.parentElement;
+                messageElement.remove();
+
+                // If container is empty, remove it too
+                if (container && container.children.length === 0) {
+                    container.remove();
+                }
+            }, 300); // Match this to your animation duration
+        }
+
+        // Handle automatic timeout for all messages
+        const messages = document.querySelectorAll('.message');
+        messages.forEach(message => {
+            setTimeout(() => removeMessage(message), 5000);
+        });
+
+        // Handle close button clicks
+        document.querySelectorAll('.message-close').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const message = this.closest('.message');
+                removeMessage(message);
+            });
+        });
+    });
+    </script>
     {% endblock %}
 </body>
 </html>
