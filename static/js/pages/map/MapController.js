@@ -916,7 +916,7 @@ export class MapController {
                                 </div>
                                 <div class="info-content">
                                     <label>Moon Phase</label>
-                                    <span>${location.moon_phase ? location.moon_phase.toFixed(1) + '%' : 'Not available'}</span>
+                                    <span>${location.moon_phase_info.short_name} - ${location.moon_phase.toFixed(1)}%</span>                                   
                                 </div>
                             </div>
                             

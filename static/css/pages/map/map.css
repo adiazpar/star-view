@@ -908,6 +908,13 @@
     margin-bottom: 0;
 }
 
+.moon-phase-details {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+    display: block;
+    margin-top: var(--space-xs);
+}
+
 .panel-bottom {
     flex: 0 0 auto; /* Don't grow or shrink */
     padding: var(--space-md);

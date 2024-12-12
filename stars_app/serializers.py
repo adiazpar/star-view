@@ -76,6 +76,8 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
     average_rating = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
 
+    moon_phase_info = serializers.SerializerMethodField()
+
     class Meta:
         model = ViewingLocation
         fields = ['id', 'name', 'latitude', 'longitude', 'elevation',
@@ -88,6 +90,7 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
                   'moon_phase', 'moon_altitude', 'moon_impact_score',
                   'next_moonrise', 'next_moonset',
                   'next_astronomical_dawn', 'next_astronomical_dusk',
+                  'moon_phase_info'
                   ]
 
         read_only_fields = ['light_pollution_value', 'quality_score', 'added_by',
@@ -122,6 +125,18 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
 
         # Otherwise return false since no favorites:
         return False
+
+    def get_moon_phase_info(self, obj):
+        """
+        Returns both the numerical phase and descriptive information
+        about the current moon phase.
+        """
+        phase_info = obj.get_moon_phase_name()
+        return {
+            'percentage': obj.moon_phase,
+            'short_name': phase_info['short_name'],
+            'description': phase_info['description']
+        }
 
 
 # Celestial Event Serializer -------------------------------------- #
