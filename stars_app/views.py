@@ -944,7 +944,7 @@ def register(request):
                 return redirect('register')
 
             # We are creating a user after verifying everything is correct:
-            user = User.objects.create(
+            user = User.objects.create_user(
                 username=username.lower(),
                 email=email,
                 password=pass1,
