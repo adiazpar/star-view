@@ -719,6 +719,9 @@
     transition: transform 0.3s ease-in-out;
     z-index: 1000;
     opacity: 0.98;
+
+    display: flex;
+    flex-direction: column;
 }
 
 .location-info-panel.visible {
@@ -726,8 +729,8 @@
 }
 
 .panel-header {
+    flex: 0 0 auto;
     padding: var(--space-md);
-    border-bottom: 1px solid var(--background);
     position: relative;
 }
 
@@ -778,8 +781,78 @@
     color: var(--primary);
 }
 
-.panel-body {
+/* Panel Tab Styles */
+.info-tabs {
+    flex: 0 0 auto;
+    display: flex;
+    padding: 0 var(--space-md) var(--space-md) var(--space-md);
+    gap: var(--space-sm);
+    border-bottom: 1px solid var(--background);
+}
+
+.info-tab {
+    flex: 1;
+    padding: var(--space-sm);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-xs);
+    font-size: xx-small;
+}
+
+.info-tab:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.info-tab.active {
+    background: var(--primary);
+    color: var(--text-primary);
+    border-color: var(--primary);
+}
+
+.info-tab i {
+    font-size: var(--font-size-sm);
+}
+
+/* Tab Content Styles */
+.tab-content {
+    display: none;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.tab-content.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Panel body */
+.panel-content-wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+}
+
+/* Scrollable tab content */
+.tab-content-scroll {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: auto;
     padding: var(--space-md);
+
+    /* Firefox scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-tertiary) var(--background-dark);
 }
 
 .info-section {
@@ -822,7 +895,7 @@
 
 .info-content span {
     display: block;
-    font-size: medium;
+    font-size: small;
     color: var(--text-primary);
 }
 
@@ -831,12 +904,32 @@
     font-style: italic;
 }
 
+.info-section:last-child {
+    margin-bottom: 0;
+}
+
+.panel-bottom {
+    flex: 0 0 auto; /* Don't grow or shrink */
+    padding: var(--space-md);
+    border-top: 1px solid var(--background);
+}
+
+.location-details h4 {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin: 0 0 var(--space-sm) 0;
+}
+
+.address-section .info-section {
+    padding: 0 var(--space-md);
+    margin: 0;
+}
+
 .info-content .address {
     line-height: 1.4;
 }
 
 .panel-actions {
-    margin-top: var(--space-lg);
     display: flex;
     flex-direction: column;
     gap: var(--space-sm);
@@ -939,7 +1032,7 @@
 
 .location-info-panel .rating-count {
     color: var(--text-tertiary);
-    font-size: var(--font-size-sm);
+    font-size: xx-small;
 }
 
 /* Responsive adjustments */

@@ -82,10 +82,23 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
                   'formatted_address', 'administrative_area', 'locality', 'country',
                   'light_pollution_value', 'quality_score', 'added_by',
                   'created_at', 'is_favorited', 'cloudCoverPercentage', 'forecast',
-                  'reviews', 'average_rating', 'review_count']
+                  'reviews', 'average_rating', 'review_count',
+
+                  # Moon Related Fields:
+                  'moon_phase', 'moon_altitude', 'moon_impact_score',
+                  'next_moonrise', 'next_moonset',
+                  'next_astronomical_dawn', 'next_astronomical_dusk',
+                  ]
+
         read_only_fields = ['light_pollution_value', 'quality_score', 'added_by',
                           'created_at', 'formatted_address', 'administrative_area',
-                          'locality', 'country']
+                          'locality', 'country',
+
+                            # Moon fields as read-only since they're calculated
+                            'moon_phase', 'moon_altitude', 'moon_impact_score',
+                            'next_moonrise', 'next_moonset',
+                            'next_astronomical_dawn', 'next_astronomical_dusk'
+                            ]
 
     def get_added_by(self, obj):
         return {
