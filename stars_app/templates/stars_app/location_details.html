@@ -831,6 +831,48 @@
                                 <div class="review-comment">{{ review.comment }}</div>
                             {% endif %}
 
+                            <!-- Add voting controls -->
+                            <div class="vote-controls">
+                                {% if user.is_authenticated %}
+                                    {% if review.user != user %}
+                                        <!-- Existing interactive voting buttons -->
+                                        <button class="vote-button upvote {% if review.user_vote == 'up' %}voted{% endif %}"
+                                                data-review-id="{{ review.id }}"
+                                                data-location-id="{{ location.id }}"
+                                                data-vote-type="up">
+                                            <i class="fas fa-thumbs-up"></i>
+                                        </button>
+
+                                        <span class="vote-count">{{ review.vote_counts }}</span>
+
+                                        <button class="vote-button downvote {% if review.user_vote == 'down' %}voted{% endif %}"
+                                                data-review-id="{{ review.id }}"
+                                                data-location-id="{{ location.id }}"
+                                                data-vote-type="down">
+                                            <i class="fas fa-thumbs-down"></i>
+                                        </button>
+                                    {% else %}
+                                        <!-- New disabled buttons for own review -->
+                                        <button class="vote-button disabled" disabled>
+                                            <i class="fas fa-thumbs-up"></i>
+                                        </button>
+                                        <span class="vote-count">{{ review.vote_count }}</span>
+                                        <button class="vote-button disabled" disabled>
+                                            <i class="fas fa-thumbs-down"></i>
+                                        </button>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Disabled buttons for logged out users -->
+                                    <button class="vote-button disabled" disabled>
+                                        <i class="fas fa-thumbs-up"></i>
+                                    </button>
+                                    <span class="vote-count">{{ review.vote_count }}</span>
+                                    <button class="vote-button disabled" disabled>
+                                        <i class="fas fa-thumbs-down"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+
                             <!-- Add the collapsible comments section -->
                             <div class="review-comments-section">
                                 <button class="comments-toggle" data-review-id="{{ review.id }}">
@@ -874,48 +916,6 @@
                                         {% endfor %}
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Add voting controls -->
-                            <div class="vote-controls">
-                                {% if user.is_authenticated %}
-                                    {% if review.user != user %}
-                                        <!-- Existing interactive voting buttons -->
-                                        <button class="vote-button upvote {% if review.user_vote == 'up' %}voted{% endif %}"
-                                                data-review-id="{{ review.id }}"
-                                                data-location-id="{{ location.id }}"
-                                                data-vote-type="up">
-                                            <i class="fas fa-thumbs-up"></i>
-                                        </button>
-
-                                        <span class="vote-count">{{ review.vote_counts }}</span>
-
-                                        <button class="vote-button downvote {% if review.user_vote == 'down' %}voted{% endif %}"
-                                                data-review-id="{{ review.id }}"
-                                                data-location-id="{{ location.id }}"
-                                                data-vote-type="down">
-                                            <i class="fas fa-thumbs-down"></i>
-                                        </button>
-                                    {% else %}
-                                        <!-- New disabled buttons for own review -->
-                                        <button class="vote-button disabled" disabled>
-                                            <i class="fas fa-thumbs-up"></i>
-                                        </button>
-                                        <span class="vote-count">{{ review.vote_count }}</span>
-                                        <button class="vote-button disabled" disabled>
-                                            <i class="fas fa-thumbs-down"></i>
-                                        </button>
-                                    {% endif %}
-                                {% else %}
-                                    <!-- Disabled buttons for logged out users -->
-                                    <button class="vote-button disabled" disabled>
-                                        <i class="fas fa-thumbs-up"></i>
-                                    </button>
-                                    <span class="vote-count">{{ review.vote_count }}</span>
-                                    <button class="vote-button disabled" disabled>
-                                        <i class="fas fa-thumbs-down"></i>
-                                    </button>
-                                {% endif %}
                             </div>
                         </div>
                     {% endfor %}
