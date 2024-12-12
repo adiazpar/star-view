@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
-from django.conf import settings
 from django.utils import timezone
 from stars_app.models.celestialevent import CelestialEvent
 import re

@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 
@@ -972,21 +973,27 @@ def register(request):
 def custom_login(request):
     if request.method == 'POST':
         try:
-            username = request.POST.get('username')
+            username_or_email = request.POST.get('username').lower()
             password = request.POST.get('password')
             next_url = request.POST.get('next', '')
 
-            # We are getting the user model from an imported library in models.py:
-            user = User.objects.filter(username=username.lower())
+            # Try to get user by username or email
+            user = User.objects.filter(
+                Q(username=username_or_email) |
+                Q(email=username_or_email)
+            ).first()
 
             # Check for the case that the user doesn't exist in our database:
-            if not user.exists():
-                print('Username not found')
+            if not user:
+                messages.error(request, 'No account found with that username or email.')
                 return redirect('login')
 
-            # Check for matching username & password:
-            user = authenticate(request, username=username.lower(), password=password)
+            # Authenticate with username
+            user = authenticate(request, username=user.username, password=password)
+
             if user is not None:
+                messages.success(request, f'Logged in successfully as {user.username}')
+
                 login(request, user)
 
                 if next_url and next_url.strip() and not next_url.startswith('/login/'):
@@ -995,17 +1002,15 @@ def custom_login(request):
                 return redirect('home')
 
             # If user couldn't authenticate above, display wrong password message:
-            print('Wrong password...')
+            messages.error(request, 'Invalid password.')
             return redirect('login')
 
         except Exception as e:
-            # Display a message to the user that login was unsuccessful:
-            print(f'Something went wrong... {(e)}')
-            return redirect('home')
+            messages.error(request, 'An error occurred while trying to log in. Please try again.')
+            return redirect('login')
 
     # If we didn't call a post method, direct user to login page:
     next_url = request.GET.get('next', '')
-
     if next_url.startswith('/login/'):
         next_url = ''
 
@@ -1013,6 +1018,7 @@ def custom_login(request):
 
 @login_required(login_url='login')
 def custom_logout(request):
+    messages.success(request, f'Logged out successfully...')
     logout(request)
     return redirect('home')
 
