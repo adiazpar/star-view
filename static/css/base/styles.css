@@ -846,10 +846,11 @@ h4 { font-size: var(--font-size-lg); }
 .navbar .logo a .logo-img {
     height: 50px;
     width: auto;
+    scale: 1.4;
     margin-right: 0;
     margin-left: -10px;
-    filter: invert(100%);
-    -webkit-filter: invert(100%);
+    /*filter: invert(100%);
+    -webkit-filter: invert(100%);*/
 }
 .navbar .logo a h3 {
     margin: 0;

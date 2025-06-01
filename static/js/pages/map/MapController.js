@@ -114,9 +114,6 @@ export class MapController {
                 this.handleURLParameters();
                 this.setupMapTerrain();
                 resolve();
-
-                // Load available tilesets:
-                this.loadLightPollutionLayer();
             });
         });
 
@@ -126,27 +123,61 @@ export class MapController {
 
     async loadLightPollutionLayer() {
         try {
-            const response = await fetch('http://localhost:3001/api/tilesets');
-            const tilesets = await response.json();
-
-            if (data.tilesets && data.tilesets.length > 0) {
+            console.log('🌍 Starting to load light pollution layer...');
+            
+            // Use the tile server URL configured by Django
+            const tileServerUrl = window.TILE_SERVER_URL || 'http://localhost:3001';
+                
+            console.log(`🔗 Fetching tilesets from: ${tileServerUrl}/api/tilesets`);
+            
+            const response = await fetch(`${tileServerUrl}/api/tilesets`);
+            console.log(`📡 Response status: ${response.status}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            console.log('📊 Received tileset data:', data);
+    
+            // Fix: Use the correct response structure
+            if (data && data.tilesets && data.tilesets.length > 0) {
                 // Find a light pollution tileset
                 const lightPollutionTileset = data.tilesets.find(tileset => 
-                    tileset.id.includes('light') || tileset.id.includes('pollution')
+                    tileset.id.includes('light') || 
+                    tileset.id.includes('pollution') ||
+                    tileset.name.toLowerCase().includes('light') ||
+                    tileset.name.toLowerCase().includes('pollution')
                 );
-
+    
                 if (lightPollutionTileset) {
-                    console.log('Found tileset:', lightPollutionTileset.id);
+                    console.log('✅ Found light pollution tileset:', lightPollutionTileset);
                     
-                    // Add the tile source using the actual tileset name
+                    // Construct the tile URL - use the same base URL as the API call
+                    const tileUrl = `${tileServerUrl}/tiles/${lightPollutionTileset.id}/{z}/{x}/{y}.png`;
+                    console.log('🗺️ Tile URL template:', tileUrl);
+                    
+                    // Check if the layer already exists and remove it
+                    if (this.map.getLayer('light-pollution-layer')) {
+                        console.log('🗑️ Removing existing light pollution layer');
+                        this.map.removeLayer('light-pollution-layer');
+                    }
+                    if (this.map.getSource('light-pollution')) {
+                        console.log('🗑️ Removing existing light pollution source');
+                        this.map.removeSource('light-pollution');
+                    }
+                    
+                    // Add the tile source
                     this.map.addSource('light-pollution', {
                         'type': 'raster',
-                        'tiles': [`http://localhost:3001/tiles/${lightPollutionTileset.id}/{z}/{x}/{y}.png`],
-                        'tileSize': 256,
+                        'tiles': [tileUrl],
+                        'tileSize': lightPollutionTileset.tileSize || 256,
                         'maxzoom': lightPollutionTileset.maxZoom || 12,
                         'minzoom': lightPollutionTileset.minZoom || 0,
-                        'bounds': lightPollutionTileset.bounds
+                        'bounds': lightPollutionTileset.bounds || [-180, -85, 180, 85]
                     });
+    
+                    console.log('📍 Added light pollution source with bounds:', lightPollutionTileset.bounds);
     
                     // Add the layer
                     this.map.addLayer({
@@ -154,17 +185,46 @@ export class MapController {
                         'type': 'raster',
                         'source': 'light-pollution',
                         'paint': {
-                            'raster-opacity': 0.7
+                            'raster-opacity': 0.7,
+                            'raster-fade-duration': 300
                         }
                     });
                     
-                    console.log('Light pollution layer added successfully');
+                    console.log('🎉 Light pollution layer added successfully!');
+                    
+                    // Test if tiles are loading by adding load/error listeners
+                    this.map.on('sourcedata', (e) => {
+                        if (e.sourceId === 'light-pollution' && e.isSourceLoaded) {
+                            console.log('📡 Light pollution tiles are loading...');
+                        }
+                    });
+                    
+                    this.map.on('error', (e) => {
+                        if (e.source && e.source.id === 'light-pollution') {
+                            console.error('❌ Error loading light pollution tiles:', e);
+                        }
+                    });
+                    
                 } else {
-                    console.warn('No light pollution tileset found');
+                    console.warn('⚠️ No light pollution tileset found in available tilesets');
+                    console.log('Available tilesets:', data.tilesets.map(ts => ({id: ts.id, name: ts.name})));
                 }
+            } else {
+                console.warn('⚠️ No tilesets found in API response');
+                console.log('Response data:', data);
             }
         } catch (error) {
-            console.error('Failed to load tilesets:', error);
+            console.error('❌ Failed to load light pollution layer:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack
+            });
+            
+            // Try to provide helpful debugging information
+            if (error.message.includes('fetch')) {
+                console.error('💡 This might be a CORS or network connectivity issue');
+                console.error('💡 Make sure the tile server is running and accessible');
+            }
         }
     }
 
@@ -209,6 +269,7 @@ export class MapController {
         this.setupMapControls();
         this.setupStreetViewToggle();
         await this.loadLocationsAndEvents();
+        await this.loadLightPollutionLayer();
 
         const tileButton = document.getElementById('show-tile-borders');
         const gridButton = document.getElementById('show-pixel-grid');

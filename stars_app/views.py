@@ -592,14 +592,37 @@ def map(request):
     locations = ViewingLocation.objects.all()
     events = CelestialEvent.objects.all()
 
+    # Get tile server configuration
+    tile_config = get_tile_server_config()
+
     # Combine all items into one list:
     combined_items = list(locations) + list(events)
 
     context = {
         'items': combined_items,
         'mapbox_token': settings.MAPBOX_TOKEN,
+        'tile_server_config': tile_config['public_url'],
     }
     return render(request, 'stars_app/map.html', context)
+
+def get_tile_server_config():
+    """Get the appropriate tile server URL based on environment"""
+    import socket
+    
+    # Check if we're running in Docker by trying to resolve the service name
+    try:
+        socket.gethostbyname('tile-server')
+        # We're in Docker, use internal URL for server calls, public for browser
+        return {
+            'internal_url': 'http://tile-server:3001',
+            'public_url': 'http://localhost:3001'  # This should be accessible from the browser
+        }
+    except socket.gaierror:
+        # Not in Docker, use localhost for everything
+        return {
+            'internal_url': 'http://localhost:3001',
+            'public_url': 'http://localhost:3001'
+        }
 
 def event_list(request):
     event_list = CelestialEvent.objects.all()

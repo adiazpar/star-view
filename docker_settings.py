@@ -22,11 +22,13 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Docker-specific host configuration
 ALLOWED_HOSTS = ALLOWED_HOSTS + ['webapp', 'tile-server']  # Add container hostnames
 
-# Container-specific paths (your existing paths are already correct)
+# Container-specific paths
 # We're keeping your existing STATIC_URL, STATIC_ROOT, and STATICFILES_DIRS
 
-# Add tile server URL for container communication
-TILE_SERVER_URL = os.getenv('TILE_SERVER_URL', 'http://tile-server:3001')
+# Tile Server Configuration
+TILE_SERVER_INTERNAL_URL = os.getenv('TILE_SERVER_URL', 'http://tile-server:3001')  # For server-to-server communication
+TILE_SERVER_PUBLIC_URL = os.getenv('TILE_SERVER_PUBLIC_URL', 'http://localhost:3001')  # For browser access
+
 ALLOWED_HOSTS = ALLOWED_HOSTS + ['127.0.0.1', '0.0.0.0']
 
 CORS_ALLOW_ALL_ORIGINS = [
