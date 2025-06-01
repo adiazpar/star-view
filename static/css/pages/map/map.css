@@ -1,4 +1,3 @@
-
 /* Map Page Styles */
 .map-page {
     position: fixed;
@@ -6,7 +5,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: var(--space-lg);
+    padding: 0;
     background-color: var(--background-dark);
     overflow: hidden;
 }
@@ -15,9 +14,9 @@
     width: 100%;
     height: 100%;
     background-color: var(--background-dark);
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     overflow: hidden;
-    box-shadow: var(--shadow-md);
+    box-shadow: none;
     display: flex;
     position: relative;
 }

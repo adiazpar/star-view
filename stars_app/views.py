@@ -36,9 +36,9 @@ import os
 from django.conf import settings
 from django.http import HttpResponse, FileResponse
 from django.views.decorators.cache import cache_control
-from osgeo import gdal
 import subprocess
 from django.contrib.admin.views.decorators import staff_member_required
+import requests
 
 # Distance
 from geopy.distance import geodesic
@@ -569,97 +569,6 @@ def update_forecast(request):
 
 
 # -------------------------------------------------------------- #
-# Tile Views:
-@staff_member_required
-def upload_and_process_tif(request):
-    if request.method == 'POST' and request.FILES.get('tif_file'):
-        try:
-            # Get the uploaded file
-            tif_file = request.FILES['tif_file']
-
-            # Ensure the file is a .tif
-            if not tif_file.name.endswith('.tif'):
-                messages.error(request, 'Please upload a .tif file')
-                return redirect('upload_and_process_tif')
-
-            # Create necessary directories
-            os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
-            os.makedirs(settings.TILES_DIR, exist_ok=True)
-
-            # Save the original file
-            original_path = os.path.join(settings.MEDIA_ROOT, 'night_lights.tif')
-            with open(original_path, 'wb+') as destination:
-                for chunk in tif_file.chunks():
-                    destination.write(chunk)
-
-            # Reproject to Web Mercator
-            reprojected_path = os.path.join(settings.MEDIA_ROOT, 'night_lights_3857.tif')
-            warp_options = gdal.WarpOptions(
-                dstSRS='EPSG:3857',
-                resampleAlg=gdal.GRA_Bilinear,
-                format='GTiff',
-                creationOptions=['COMPRESS=LZW']
-            )
-
-            gdal.Warp(
-                destNameOrDestDS=reprojected_path,
-                srcDSOrSrcDSTab=original_path,
-                options=warp_options
-            )
-
-            # Add overviews
-            ds = gdal.Open(reprojected_path, 1)  # 1 = GA_Update
-            if ds is not None:
-                ds.BuildOverviews("AVERAGE", [2, 4, 8, 16, 32])
-                ds = None  # Close the dataset
-            else:
-                raise Exception("Failed to open reprojected file for overview generation")
-
-            # Generate tiles
-            subprocess.run([
-                'gdal2tiles.py',
-                '--zoom=0-8',
-                '--processes=4',
-                '--webviewer=none',
-                '--resampling=bilinear',
-                '--profile=mercator',
-                reprojected_path,
-                settings.TILES_DIR
-            ], check=True)  # Added check=True to raise exception if command fails
-
-            messages.success(request, 'File uploaded and tiles generated successfully!')
-            return redirect('map')
-
-        except subprocess.CalledProcessError as e:
-            messages.error(request, f'Error generating tiles: {str(e)}')
-            return redirect('upload_and_process_tif')
-
-        except Exception as e:
-            messages.error(request, f'Error processing file: {str(e)}')
-            return redirect('upload_and_process_tif')
-
-    return render(request, 'stars_app/upload_tif.html')
-
-@cache_control(max_age=86400)
-def serve_tile(request, z, x, y):
-    # Mapbox uses XYZ coordinates, whereas GDAL uses TMZ coordinates.
-    # We will need to convert XYZ/TMZ, mostly focused on the y coord...
-    tms_y = (1 <<z) - 1 -y
-
-    # Serve individual map tiles:
-    tile_path = os.path.join(settings.TILES_DIR, str(z), str(x), f"{tms_y}.png")
-
-    if os.path.exists(tile_path):
-        response = FileResponse(open(tile_path, 'rb'), content_type='image/png')
-        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-        response['Pragma'] = 'no-cache'
-        response['Expires'] = '0'
-        return response
-    else:
-        return HttpResponse('Tile not found', status=404)
-
-
-# -------------------------------------------------------------- #
 # Navigation Views:
 def home(request):
     from datetime import datetime, timedelta
@@ -688,7 +597,7 @@ def map(request):
 
     context = {
         'items': combined_items,
-        'mapbox_token': 'pk.eyJ1IjoiamN1YmVyZHJ1aWQiLCJhIjoiY20yMHNqODY3MGtqcDJvb2MzMXF3dHczNCJ9.yXIqwWQECN6SYhppPQE3PA'
+        'mapbox_token': settings.MAPBOX_TOKEN,
     }
     return render(request, 'stars_app/map.html', context)
 

@@ -1,4 +1,7 @@
-# GROUP 8 FALL 2024:
+# GROUP 8 FALL 2024 - Event Horizon
+
+## Project Overview
+Event Horizon is an astronomical viewing location platform that helps stargazers find optimal locations for celestial observations. The platform integrates real-time light pollution data, weather forecasts, moon phase information, and community reviews to provide comprehensive stargazing recommendations.
 
 ## Project Initial Setup
 If you'd like to work in DevEDU, here are some instructions to get the project started and ready for development:
@@ -64,9 +67,10 @@ Additional notes:
 KEY NOTES related to this section:
 - If you're working on this project locally, please install and use Python 3.11.
 - Check the current version of Python by running the command python3 --version in the CLI of your development environment.
-- Please install Django 4.2
+- Please install Django 5.1.3
 - Check the current version of Django by running the command django-admin --version in the CLI of your virtual enviornment.
-- This should be specified in the requirements.txt, so once you pip install -r the contents there, Django 4.2 should be automatically installed.
+- This should be specified in the requirements.txt, so once you pip install -r the contents there, Django should be automatically installed.
+- **GDAL is no longer required** - we've migrated to cloud-based tile services for better performance and reliability.
 
 ## How to Switch to a remote branch if it isn't showing up in your local environment:
 Use the commands below:
@@ -78,24 +82,48 @@ Use the commands below:
     
     git reset --hard origin/{branchname}   # removes staged and working directory changes
 
-## How to Upload a Tileset for GDAL parsing:
-We have decided to excluded the /media/ directory from our repository since it ends up being a fairly large folder in size after GDAL parsing.
+## Cloud-Based Light Pollution System
+We have migrated from local GDAL processing to a modern cloud-based architecture for better performance and maintainability.
 
-1. Be sure the app is running correctly in your environment. If you haven't done so already, be sure to follow the steps in the previous section to correctly set up the app.
+### Current Data Sources:
+- **NASA VIIRS**: Real-time satellite light pollution data
+- **NASA Black Marble**: Global nighttime lights visualization  
+- **MapBox Geocoding**: Location-based light pollution estimation
 
-2. Be sure to start the app and make sure it is running on a working server.
+### Managing Light Pollution Data:
 
-3. Log into the admin account. The credentials should be...
-Username: group8
-Password: A092320d@
+1. Ensure the app is running correctly in your environment.
 
-4. Navigate to the app's '/upload' extension. Once there, you should see a button to upload a .tif file. I have provided a .tif file in our project's root directory downloaded from this link:
+2. Log into the admin account with the credentials:
+   - Username: group8
+   - Password: A092320d@
 
-https://earthobservatory.nasa.gov/features/NightLights/page3.php
-https://www.reddit.com/r/mapbox/comments/ufgst3/how_to_create_a_dark_sky_map/
+3. Navigate to `/manage-light-pollution/` to access the data management interface.
 
-5. Take a look at the command line tool where you are running the server. You should see activity there while the .tif is being uploaded and parsed into tiles.
+4. Use the management interface to:
+   - Refresh light pollution data cache
+   - Update location data from NASA VIIRS
+   - Monitor data source status
 
-6. Once this process is finished, you have successfully uploaded and processed the .tif data into a tiled mesh for our map.
+5. The map page now displays cloud-based light pollution overlays with:
+   - Real-time NASA satellite data
+   - Interactive dark sky visualization
+   - Global coverage without local file storage
 
-7. Our 'map' page should now include a dark sky layer, where light pollution activity is clearly visible on all parts of the globe.
+### Benefits of the New System:
+- ✅ **No GDAL dependency issues**
+- ✅ **Faster loading and better performance** 
+- ✅ **Real-time data updates**
+- ✅ **Reduced server storage requirements**
+- ✅ **Cross-platform compatibility**
+
+For detailed technical information about the migration, see `CLOUD_MIGRATION.md`.
+
+## Core Features:
+- **Interactive mapping** with light pollution overlays
+- **Stargazing location discovery** and community reviews
+- **Celestial event tracking** (meteor showers, eclipses, etc.)
+- **Weather integration** for cloud cover forecasting
+- **Moon phase and astronomical twilight calculations**
+- **User favorites and location management**
+- **Quality scoring** based on light pollution and elevation

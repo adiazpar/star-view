@@ -114,11 +114,58 @@ export class MapController {
                 this.handleURLParameters();
                 this.setupMapTerrain();
                 resolve();
+
+                // Load available tilesets:
+                this.loadLightPollutionLayer();
             });
         });
 
         // Setup event listeners after map is loaded:
         this.setupEventListeners();
+    }
+
+    async loadLightPollutionLayer() {
+        try {
+            const response = await fetch('http://localhost:3001/api/tilesets');
+            const tilesets = await response.json();
+
+            if (data.tilesets && data.tilesets.length > 0) {
+                // Find a light pollution tileset
+                const lightPollutionTileset = data.tilesets.find(tileset => 
+                    tileset.id.includes('light') || tileset.id.includes('pollution')
+                );
+
+                if (lightPollutionTileset) {
+                    console.log('Found tileset:', lightPollutionTileset.id);
+                    
+                    // Add the tile source using the actual tileset name
+                    this.map.addSource('light-pollution', {
+                        'type': 'raster',
+                        'tiles': [`http://localhost:3001/tiles/${lightPollutionTileset.id}/{z}/{x}/{y}.png`],
+                        'tileSize': 256,
+                        'maxzoom': lightPollutionTileset.maxZoom || 12,
+                        'minzoom': lightPollutionTileset.minZoom || 0,
+                        'bounds': lightPollutionTileset.bounds
+                    });
+    
+                    // Add the layer
+                    this.map.addLayer({
+                        'id': 'light-pollution-layer',
+                        'type': 'raster',
+                        'source': 'light-pollution',
+                        'paint': {
+                            'raster-opacity': 0.7
+                        }
+                    });
+                    
+                    console.log('Light pollution layer added successfully');
+                } else {
+                    console.warn('No light pollution tileset found');
+                }
+            }
+        } catch (error) {
+            console.error('Failed to load tilesets:', error);
+        }
     }
 
     handleURLParameters() {
@@ -160,7 +207,7 @@ export class MapController {
     async setupMapFeatures() {
         this.setupFilters();
         this.setupMapControls();
-        this.setupDarkSkyLayer();
+        this.setupStreetViewToggle();
         await this.loadLocationsAndEvents();
 
         const tileButton = document.getElementById('show-tile-borders');
@@ -264,47 +311,46 @@ export class MapController {
         this.map.addControl(new OrbitControl(), 'top-right');
     }
 
-    setupDarkSkyLayer() {
-        // Add dark sky source and layer:
-        this.map.addSource('dark-sky', {
-            type: 'raster',
-            tiles: ['/tiles/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: 'Dark Sky Data © NASA Earth Observatory',
-            bounds: [-180, -85.0511, 180, 85.0511],
-            minzoom: 0,
-            maxzoom: 8
-        });
+    setupStreetViewToggle() {
+        // Street view toggle state
+        this.streetViewMode = false;
+        
+        const toggleButton = document.getElementById('toggle-dark-sky');
+        if (!toggleButton) {
+            console.warn('Toggle button not found');
+            return;
+        }
 
-        this.map.addLayer({
-            id: 'dark-sky-layer',
-            type: 'raster',
-            source: 'dark-sky',
-            layout: { 'visibility': 'none', },
-            paint: {
-                'raster-opacity': 0.7,
-                'raster-fade-duration': 0
+        // Set up click handler for the toggle button
+        toggleButton.addEventListener('click', () => {
+            this.streetViewMode = !this.streetViewMode;
+            
+            if (this.streetViewMode) {
+                // Switch to satellite view for street view mode
+                this.map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
+                toggleButton.textContent = 'Globe View';
+                toggleButton.classList.add('active');
+                
+                // Disable terrain for street view
+                this.map.setTerrain(null);
+                
+                console.log('Switched to street view mode');
+            } else {
+                // Switch back to original globe view
+                this.map.setStyle(MAPBOX_CONFIG.style);
+                toggleButton.textContent = 'Street View';
+                toggleButton.classList.remove('active');
+                
+                // Re-enable terrain when switching back
+                this.map.once('style.load', () => {
+                    this.setupMapTerrain();
+                });
+                
+                console.log('Switched to globe view mode');
             }
         });
 
-
-        // Set up click handler for existing button
-        document.getElementById('toggle-dark-sky').addEventListener('click', () => {
-            const visibility = this.map.getLayoutProperty('dark-sky-layer', 'visibility');
-            const isVisible = visibility === 'visible';
-
-            this.map.setLayoutProperty(
-                'dark-sky-layer',
-                'visibility',
-                visibility === 'visible' ? 'none' : 'visible'
-            );
-
-            // Toggle button state
-            document.getElementById('toggle-dark-sky').classList.toggle('active', !isVisible);
-
-            // Toggle legend visibility
-            document.querySelector('.legend').classList.toggle('visible', !isVisible);
-        });
+        console.log('Street view toggle initialized');
     }
 
     setupDebugger() {

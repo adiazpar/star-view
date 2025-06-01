@@ -19,7 +19,14 @@
 {% block content %}
 {% csrf_token %}
 
-<div class="map-container">
+<div class="map-container"
+     {% if user.is_authenticated %}
+     data-current-user="true"
+     data-current-user-id="{{ user.id }}"
+     {% else %}
+     data-current-user="false"
+     {% endif %}>
+     
     <!-- Locations Panel -->
     <div class="locations-panel">
         <!-- Filtering tabs -->
@@ -99,7 +106,7 @@
                                 <i class="fas fa-heart"></i>
                             </div>
                             <img class="location-map"
-                                 src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},3/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
+                                 src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},6/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
                                  alt="Map view of {{ item.name }}">
                         </div>
 
@@ -138,7 +145,7 @@
 
                         <div class="item-snapshot">
                             <img
-                                src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},13/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
+                                src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},10/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
                                 alt="Map view of {{ item.name }}"
                                 class="location-map">
                             <div class="snapshot-marker">
@@ -181,9 +188,9 @@
     </div>
 
 	<!-- Map View -->
-    <div class="map-view">
+    <div class="map-view" data-mapbox-token="{{ mapbox_token }}">
         <div class="map-controls">
-            <button class="map-control-btn" id="toggle-dark-sky">Toggle Dark Sky</button>
+            <button class="map-control-btn" id="toggle-dark-sky">Street View</button>
             <button class="map-control-btn" id="show-tile-borders">Show Borders</button>
             <button class="map-control-btn" id="show-pixel-grid">Show Grid</button>
         </div>
@@ -210,10 +217,13 @@
             initNavbar();
         }
 
+        // Get user data from data attributes
+        const mapContainer = document.querySelector('.map-container');
+        window.currentUser = mapContainer.dataset.currentUser === 'true';
+        window.currentUserId = mapContainer.dataset.currentUserId || null;
+
         window.mapController = new MapController();
         window.mapController.initialize();
-        window.currentUser = {% if user.is_authenticated %}true{% else %}false{% endif %};
-        window.currentUserId = "{{ user.id|default:'null' }}";
     }
     setTimeout(initializePage, 0);
 </script>
