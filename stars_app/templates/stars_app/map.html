@@ -223,7 +223,7 @@
         window.currentUserId = mapContainer.dataset.currentUserId || null;
 
         // Make tile server URL available to JavaScript
-        window.TILE_SERVER_URL = '{{ tile_server_url|default:"http://localhost:3001" }}';
+        window.TILE_SERVER_URL = '{{ tile_server_url }}';
         
         // Also add some debugging info
         console.log('🔧 Tile server URL configured as:', window.TILE_SERVER_URL);

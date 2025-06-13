@@ -20,22 +20,18 @@ WHITENOISE_AUTOREFRESH = True  # Automatically reload CSS changes
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Docker-specific host configuration
-ALLOWED_HOSTS = ALLOWED_HOSTS + ['webapp', 'tile-server']  # Add container hostnames
+ALLOWED_HOSTS = ALLOWED_HOSTS + ['webapp', '127.0.0.1', '0.0.0.0']  # Add container hostnames
 
 # Container-specific paths
 # We're keeping your existing STATIC_URL, STATIC_ROOT, and STATICFILES_DIRS
 
-# Tile Server Configuration
-TILE_SERVER_INTERNAL_URL = os.getenv('TILE_SERVER_URL', 'http://tile-server:3001')  # For server-to-server communication
-TILE_SERVER_PUBLIC_URL = os.getenv('TILE_SERVER_PUBLIC_URL', 'http://localhost:3001')  # For browser access
-
-ALLOWED_HOSTS = ALLOWED_HOSTS + ['127.0.0.1', '0.0.0.0']
+# Remote Tile Server Configuration
+TILE_SERVER_URL = os.getenv('TILE_SERVER_URL', 'http://143.198.25.144:3001')  # Remote DigitalOcean server
 
 CORS_ALLOW_ALL_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    "http://localhost:3001",
-    "http://127.0.0.1:3001",
+    "http://143.198.25.144:3001",  # Remote tile server
 ]
 
 # Optional: Add some debugging for static files during development

@@ -26,6 +26,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
 SENDGRID_API_KEY = os.getenv('SENDGRID_API_KEY')
 
+# Tile Server Configuration
+TILE_SERVER_URL = os.getenv('TILE_SERVER_URL', 'http://localhost:3001')
+
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 DISABLE_EXTERNAL_APIS = False
 

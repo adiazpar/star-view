@@ -601,7 +601,7 @@ def map(request):
     context = {
         'items': combined_items,
         'mapbox_token': settings.MAPBOX_TOKEN,
-        'tile_server_config': tile_config['public_url'],
+        'tile_server_url': tile_config['public_url'],
     }
     return render(request, 'stars_app/map.html', context)
 
@@ -615,13 +615,13 @@ def get_tile_server_config():
         # We're in Docker, use internal URL for server calls, public for browser
         return {
             'internal_url': 'http://tile-server:3001',
-            'public_url': 'http://localhost:3001'  # This should be accessible from the browser
+            'public_url': 'http://143.198.25.144:3001'  # This should be accessible from the browser
         }
     except socket.gaierror:
         # Not in Docker, use localhost for everything
         return {
             'internal_url': 'http://localhost:3001',
-            'public_url': 'http://localhost:3001'
+            'public_url': 'http://143.198.25.144:3001'
         }
 
 def event_list(request):

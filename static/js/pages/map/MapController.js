@@ -126,7 +126,7 @@ export class MapController {
             console.log('🌍 Starting to load light pollution layer...');
             
             // Use the tile server URL configured by Django
-            const tileServerUrl = window.TILE_SERVER_URL || 'http://localhost:3001';
+            const tileServerUrl = window.TILE_SERVER_URL;
                 
             console.log(`🔗 Fetching tilesets from: ${tileServerUrl}/api/tilesets`);
             
@@ -174,7 +174,8 @@ export class MapController {
                         'tileSize': lightPollutionTileset.tileSize || 256,
                         'maxzoom': lightPollutionTileset.maxZoom || 12,
                         'minzoom': lightPollutionTileset.minZoom || 0,
-                        'bounds': lightPollutionTileset.bounds || [-180, -85, 180, 85]
+                        'bounds': lightPollutionTileset.bounds || [-180, -90, 180, 90],
+                        'scheme': 'xyz'
                     });
     
                     console.log('📍 Added light pollution source with bounds:', lightPollutionTileset.bounds);
@@ -185,8 +186,9 @@ export class MapController {
                         'type': 'raster',
                         'source': 'light-pollution',
                         'paint': {
-                            'raster-opacity': 0.7,
-                            'raster-fade-duration': 300
+                            'raster-opacity': 0.6,
+                            'raster-fade-duration': 300,
+                            'raster-resampling': 'nearest'  // Smooth interpolation
                         }
                     });
                     
@@ -201,7 +203,15 @@ export class MapController {
                     
                     this.map.on('error', (e) => {
                         if (e.source && e.source.id === 'light-pollution') {
-                            console.error('❌ Error loading light pollution tiles:', e);
+                            if (e.error && e.error.status === 404) {
+                                // Silently ignore 404 errors for light pollution tiles
+                                // This happens for areas outside the data bounds (like Antarctica)
+                                e.preventDefault();
+                            } else if (e.error && e.error.message && e.error.message.includes('Failed to load tile')) {
+                                // Also ignore tile loading errors for light pollution layer
+                                console.debug('Light pollution tile load failed, likely outside data bounds');
+                                e.preventDefault();
+                            }
                         }
                     });
                     
@@ -256,7 +266,7 @@ export class MapController {
         this.map.addSource('mapbox-dem', {
             'type': 'raster-dem',
             'url': 'mapbox://mapbox.terrain-rgb',
-            'tileSize': 512,
+            'tileSize': 256,
             'maxzoom': 14
         });
 

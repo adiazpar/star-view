@@ -1,0 +1,73 @@
+# docker-compose.yml - The main orchestration file for our development environment.
+# This file tells Docker how to build and connect all of our services together.
+
+services:
+  # Django Web Application Service
+  # This contains our Django app
+  webapp:
+    build:
+      context: ./webapp
+      dockerfile: Dockerfile
+
+    ports:
+      # Maps port 8000 inside the container to port 8000 on my computer
+      # This means we can access Django at http://localhost:8000
+      - "8000:8000"
+
+    volumes:
+      # Mounts the webapp directory to /app inside the container
+      # This means we can edit files on our computer and they will be reflected in the container
+      - ./webapp:/app
+
+    environment:
+      # Configuration for Django webapp
+      - DEBUG=1
+      - DJANGO_SETTINGS_MODULE=docker_settings
+      - TILE_SERVER_URL=http://143.198.25.144:3001
+      - DATABASE_URL=sqlite:///db.sqlite3
+
+    networks:
+      - event-horizon
+
+    # Restart policy: if the container crashes, restart it automatically
+    restart: unless-stopped
+
+    # Override the default command to use your Django project's manage.py
+    command: python manage.py runserver 0.0.0.0:8000 --settings=docker_settings
+    
+  # Redis for caching tile metadata and processing status
+  # This speeds up repeated operations and provides a place to store job status
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+    volumes:
+      - redis-data:/data
+
+    networks:
+      - event-horizon
+
+    restart: unless-stopped
+
+    # Redis configuration for better performance
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+
+# Named Volumes - these persist data even when containers are stopped
+volumes:
+  # Redis data persistence
+  redis-data:
+    driver: local
+
+
+# Networks - allows containers to communicate with each other
+networks:
+  # This network is used by all services
+  event-horizon:
+    driver: bridge
+
+    # Enavle IPv6 if needed
+    enable_ipv6: false
+
+# This is the end of the file!
