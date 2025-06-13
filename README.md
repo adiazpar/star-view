@@ -82,6 +82,7 @@ Use the commands below:
     
     git reset --hard origin/{branchname}   # removes staged and working directory changes
 
+
 ## Cloud-Based Light Pollution System
 We have migrated from local GDAL processing to a modern cloud-based architecture for better performance and maintainability.
 
@@ -89,41 +90,3 @@ We have migrated from local GDAL processing to a modern cloud-based architecture
 - **NASA VIIRS**: Real-time satellite light pollution data
 - **NASA Black Marble**: Global nighttime lights visualization  
 - **MapBox Geocoding**: Location-based light pollution estimation
-
-### Managing Light Pollution Data:
-
-1. Ensure the app is running correctly in your environment.
-
-2. Log into the admin account with the credentials:
-   - Username: group8
-   - Password: A092320d@
-
-3. Navigate to `/manage-light-pollution/` to access the data management interface.
-
-4. Use the management interface to:
-   - Refresh light pollution data cache
-   - Update location data from NASA VIIRS
-   - Monitor data source status
-
-5. The map page now displays cloud-based light pollution overlays with:
-   - Real-time NASA satellite data
-   - Interactive dark sky visualization
-   - Global coverage without local file storage
-
-### Benefits of the New System:
-- ✅ **No GDAL dependency issues**
-- ✅ **Faster loading and better performance** 
-- ✅ **Real-time data updates**
-- ✅ **Reduced server storage requirements**
-- ✅ **Cross-platform compatibility**
-
-For detailed technical information about the migration, see `CLOUD_MIGRATION.md`.
-
-## Core Features:
-- **Interactive mapping** with light pollution overlays
-- **Stargazing location discovery** and community reviews
-- **Celestial event tracking** (meteor showers, eclipses, etc.)
-- **Weather integration** for cloud cover forecasting
-- **Moon phase and astronomical twilight calculations**
-- **User favorites and location management**
-- **Quality scoring** based on light pollution and elevation

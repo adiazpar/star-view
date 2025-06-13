@@ -2,6 +2,8 @@
 *.sqlite3
 
 .DS_Store
+CLAUDE.md
+projectplan.md
 media/
 
 # Byte-compiled / optimized / DLL files
