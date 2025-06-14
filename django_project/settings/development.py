@@ -14,16 +14,32 @@ try:
 except ImportError:
     pass
 
-# Development database (SQLite)
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'TEST': {
-            'NAME': ':memory:'
-        },
+# Development database - can be PostgreSQL or SQLite
+if os.getenv('USE_POSTGRESQL', 'false').lower() == 'true':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'event_horizon_dev'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+            'TEST': {
+                'NAME': 'test_' + os.getenv('DB_NAME', 'event_horizon_dev'),
+            },
+        }
     }
-}
+else:
+    # Default to SQLite for development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'TEST': {
+                'NAME': ':memory:'
+            },
+        }
+    }
 
 # Development email backend (console for testing)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

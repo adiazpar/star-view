@@ -13,6 +13,10 @@ export class MapController {
 
         this.activeInfoPanel = null;
         this.infoPanelVisible = false;
+        
+        // Initialize locations and events arrays to prevent undefined errors
+        this.locations = [];
+        this.events = [];
 
         // Track current login & Creation popups:
         this.currentLoginPopup = null;  // Track the current login popup
@@ -1322,6 +1326,13 @@ export class MapController {
     findLocationById(locationId) {
         // Convert locationId to string for comparison since HTML attributes are strings
         const id = locationId.toString();
+        
+        // Check if locations array exists and has data
+        if (!this.locations || this.locations.length === 0) {
+            console.warn('No locations data available. Locations may still be loading.');
+            return null;
+        }
+        
         const location = this.locations.find(loc => loc.id.toString() === id);
 
         if (!location) {

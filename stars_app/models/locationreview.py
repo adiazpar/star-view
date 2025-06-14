@@ -2,8 +2,9 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from .viewinglocation import ViewingLocation
+from .base import TimestampedModel
 
-class LocationReview(models.Model):
+class LocationReview(TimestampedModel):
     location = models.ForeignKey(
         ViewingLocation,
         on_delete=models.CASCADE,
@@ -24,13 +25,17 @@ class LocationReview(models.Model):
         null=True,
         help_text="Optional review comment"
     )
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         # Ensure one review per user per location
         unique_together = ('user', 'location')
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['rating'], name='review_rating_idx'),
+            models.Index(fields=['created_at'], name='review_created_idx'),
+            models.Index(fields=['location'], name='review_location_idx'),
+            models.Index(fields=['user'], name='review_user_idx'),
+        ]
 
     def __str__(self):
         return f"{self.user.username}'s review of {self.location.name}"

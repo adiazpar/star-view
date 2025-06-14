@@ -3,10 +3,11 @@ from django.contrib.auth.models import User
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from .base import TimestampedModel
 
 
 # User Profile Model ------------------------------------------------ #
-class UserProfile(models.Model):
+class UserProfile(TimestampedModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(
         upload_to='profile_pics/',
