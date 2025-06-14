@@ -119,6 +119,26 @@ Most endpoints support filtering and search capabilities:
             'description': 'Manage astronomical viewing locations with quality scores and environmental data',
         },
         {
+            'name': 'Location Management',
+            'description': 'Advanced location features including verification, clustering, and bulk operations',
+        },
+        {
+            'name': 'Photos',
+            'description': 'Upload and manage photos for viewing locations',
+        },
+        {
+            'name': 'Categories & Tags',
+            'description': 'Organize locations with categories and user-generated tags',
+        },
+        {
+            'name': 'Community Moderation',
+            'description': 'Report and moderate location content and issues',
+        },
+        {
+            'name': 'User Reputation',
+            'description': 'User contribution tracking and reputation scoring system',
+        },
+        {
             'name': 'Celestial Events',
             'description': 'Access information about astronomical events like meteors, eclipses, and planet visibility',
         },
@@ -826,6 +846,346 @@ print(schema)
 # Check specific endpoint schemas
 from drf_spectacular.utils import extend_schema_view
 print(ViewingLocationViewSet.__dict__)
+```
+
+---
+
+## Checkpoint 2.1 API Endpoints
+
+### Location Management Endpoints
+
+#### Bulk Import
+```http
+POST /api/v1/viewing-locations/bulk_import/
+```
+**Description**: Import multiple locations via CSV/JSON with validation and duplicate detection
+
+**Authentication**: Required
+
+**Parameters**:
+- `format` (string): "csv" or "json"
+- `dry_run` (boolean): Validate without saving
+- `data` (array): Location data array
+- `file` (file): CSV/JSON file upload
+
+**Example Request**:
+```json
+{
+  "format": "json",
+  "dry_run": false,
+  "data": [
+    {
+      "name": "Dark Sky Location",
+      "latitude": 40.7128,
+      "longitude": -74.0060,
+      "elevation": 100
+    }
+  ]
+}
+```
+
+**Responses**:
+- `200`: Import successful with results summary
+- `400`: Validation errors or duplicate conflicts
+- `401`: Authentication required
+
+#### Clustered Locations
+```http
+GET /api/v1/viewing-locations/clustered/
+```
+**Description**: Get locations with clustering for map display based on zoom level and bounds
+
+**Authentication**: None required
+
+**Parameters**:
+- `zoom` (integer): Map zoom level (1-20)
+- `north` (float): Northern boundary
+- `south` (float): Southern boundary  
+- `east` (float): Eastern boundary
+- `west` (float): Western boundary
+
+**Example Request**:
+```http
+GET /api/v1/viewing-locations/clustered/?zoom=10&north=41&south=40&east=-73&west=-75
+```
+
+**Response Example**:
+```json
+{
+  "clusters": [
+    {
+      "type": "cluster",
+      "latitude": 40.5,
+      "longitude": -74.0,
+      "count": 15,
+      "average_quality": 78.5,
+      "has_verified": true
+    },
+    {
+      "type": "location", 
+      "id": 123,
+      "name": "Individual Location",
+      "latitude": 40.1,
+      "longitude": -74.5,
+      "quality_score": 95
+    }
+  ],
+  "total_locations": 45,
+  "zoom_level": 10
+}
+```
+
+#### Duplicate Detection
+```http
+POST /api/v1/viewing-locations/check_duplicates/
+```
+**Description**: Check for duplicate locations within specified radius
+
+**Authentication**: None required
+
+**Parameters**:
+- `latitude` (float): Location latitude
+- `longitude` (float): Location longitude  
+- `radius_km` (float): Search radius in kilometers (default: 0.5)
+
+**Example Request**:
+```json
+{
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "radius_km": 1.0
+}
+```
+
+**Response Example**:
+```json
+{
+  "duplicates": [
+    {
+      "id": 15,
+      "name": "Similar Location",
+      "distance_km": 0.3,
+      "latitude": 40.7145,
+      "longitude": -74.0070
+    }
+  ],
+  "count": 1
+}
+```
+
+### Photo Management Endpoints
+
+#### Upload Photo
+```http
+POST /api/v1/viewing-locations/{id}/upload_photo/
+```
+**Description**: Upload a photo to a viewing location
+
+**Authentication**: Required
+
+**Parameters**:
+- `image` (file): Image file
+- `caption` (string): Optional photo caption
+- `is_primary` (boolean): Set as primary photo
+
+**Example Response**:
+```json
+{
+  "id": 42,
+  "image": "/media/location_photos/1/abc123.jpg",
+  "caption": "Amazing Milky Way view",
+  "is_primary": true,
+  "is_approved": true,
+  "uploaded_by": "photographer123",
+  "uploaded_at": "2024-01-15T22:30:00Z"
+}
+```
+
+#### Get Location Photos
+```http
+GET /api/v1/viewing-locations/{id}/photos/
+```
+**Description**: Get all photos for a location
+
+**Authentication**: None required
+
+**Response Example**:
+```json
+[
+  {
+    "id": 42,
+    "image": "/media/location_photos/1/abc123.jpg",
+    "caption": "Amazing Milky Way view",
+    "is_primary": true,
+    "uploaded_by": "photographer123",
+    "uploaded_at": "2024-01-15T22:30:00Z"
+  }
+]
+```
+
+#### Set Primary Photo
+```http
+POST /api/v1/viewing-locations/{id}/set_primary_photo/
+```
+**Description**: Set a photo as the primary photo for a location
+
+**Authentication**: Required
+
+**Parameters**:
+- `photo_id` (integer): ID of photo to set as primary
+
+### Community Moderation Endpoints
+
+#### Submit Report
+```http
+POST /api/v1/viewing-locations/{id}/report/
+```
+**Description**: Report issues with a location
+
+**Authentication**: Required
+
+**Parameters**:
+- `report_type` (string): "DUPLICATE", "INACCURATE", "SPAM", "CLOSED", "DANGEROUS", "OTHER"
+- `description` (string): Detailed description of the issue
+- `duplicate_of_id` (integer): For DUPLICATE reports, ID of original location
+
+**Example Request**:
+```json
+{
+  "report_type": "INACCURATE",
+  "description": "GPS coordinates are off by 2km. Actual location is further north."
+}
+```
+
+**Response Example**:
+```json
+{
+  "id": 15,
+  "report_type": "INACCURATE", 
+  "description": "GPS coordinates are off by 2km...",
+  "location": 123,
+  "reported_by": "username",
+  "status": "PENDING",
+  "submitted_at": "2024-01-15T22:30:00Z"
+}
+```
+
+#### View Reports (Admin Only)
+```http
+GET /api/v1/viewing-locations/{id}/reports/
+```
+**Description**: View all reports for a location (admin users only)
+
+**Authentication**: Required (Admin)
+
+**Response Example**:
+```json
+[
+  {
+    "id": 15,
+    "report_type": "INACCURATE",
+    "description": "GPS coordinates are off...",
+    "reported_by": "username",
+    "status": "REVIEWED",
+    "reviewed_by": "admin",
+    "review_notes": "Confirmed and corrected",
+    "reviewed_at": "2024-01-16T10:00:00Z"
+  }
+]
+```
+
+### User Reputation Endpoints
+
+#### Get User Reputation
+```http
+GET /api/v1/users/{id}/
+```
+**Description**: Get user profile including reputation data
+
+**Authentication**: None required (public read access)
+
+**Response Example**:
+```json
+{
+  "id": 123,
+  "username": "stargazer",
+  "profile": {
+    "reputation_score": 150,
+    "verified_locations_count": 5,
+    "helpful_reviews_count": 8,
+    "quality_photos_count": 12,
+    "is_trusted_contributor": true
+  }
+}
+```
+
+### Enhanced Filtering Parameters
+
+All `/api/v1/viewing-locations/` endpoints now support these additional filters:
+
+#### Verification Filters
+- `is_verified` (boolean): Show only verified locations
+- `verified_only` (boolean): Alternative verified filter
+- `times_reported__lte` (integer): Maximum number of reports
+- `visitor_count__gte` (integer): Minimum visitor count
+
+#### Category and Tag Filters  
+- `category` (string): Single category slug
+- `categories` (string): Comma-separated category slugs
+- `tag` (string): Single tag slug
+- `tags` (string): Comma-separated tag slugs
+
+#### Geographic Filters
+- `lat` + `lng` + `radius` (float): Radius search from coordinates
+- Bounds filtering: `north`, `south`, `east`, `west`
+
+#### Date Filters
+- `recently_visited` (boolean): Visited in last 30 days
+- `added_after` (date): Added after date
+- `added_before` (date): Added before date
+
+**Example Advanced Filter**:
+```http
+GET /api/v1/viewing-locations/?is_verified=true&min_quality_score=80&category=nationalstate-park&lat=40.7&lng=-74.0&radius=10
+```
+
+### Management Commands
+
+#### Update User Reputation
+```bash
+# Update all users
+python manage.py update_reputation
+
+# Update specific user
+python manage.py update_reputation --user username
+```
+
+### Error Responses
+
+All new endpoints follow standard error response format:
+
+**400 Bad Request**:
+```json
+{
+  "detail": "Invalid report type",
+  "field_errors": {
+    "report_type": ["Select a valid choice"]
+  }
+}
+```
+
+**401 Unauthorized**:
+```json
+{
+  "detail": "Authentication credentials were not provided."
+}
+```
+
+**403 Forbidden**:
+```json
+{
+  "detail": "You do not have permission to perform this action."
+}
 ```
 
 ---

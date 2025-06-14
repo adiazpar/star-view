@@ -15,3 +15,6 @@ from .reviewcomment import ReviewComment
 from .favoritelocation import FavoriteLocation
 from .forecast import Forecast
 from .defaultforecast import defaultforecast
+from .locationphoto import LocationPhoto
+from .locationcategory import LocationCategory, LocationTag
+from .locationreport import LocationReport

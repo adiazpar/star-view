@@ -9,6 +9,9 @@ from stars_app.models.viewinglocation import ViewingLocation
 from stars_app.models.locationreview import LocationReview
 from stars_app.models.userprofile import UserProfile
 from stars_app.models.forecast import Forecast
+from stars_app.models.locationphoto import LocationPhoto
+from stars_app.models.locationcategory import LocationCategory, LocationTag
+from stars_app.models.locationreport import LocationReport
 from django.contrib.auth.models import User
 
 
@@ -70,14 +73,61 @@ class LocationReviewSerializer(serializers.ModelSerializer):
         return upvotes - downvotes
 
 
+# Location Category Serializer ---------------------------------- #
+class LocationCategorySerializer(serializers.ModelSerializer):
+    location_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = LocationCategory
+        fields = ['id', 'name', 'slug', 'category_type', 'description', 'icon', 'location_count']
+        read_only_fields = ['slug']
+    
+    def get_location_count(self, obj):
+        return obj.locations.count()
+
+
+# Location Tag Serializer ---------------------------------------- #
+class LocationTagSerializer(serializers.ModelSerializer):
+    created_by = serializers.ReadOnlyField(source='created_by.username')
+    
+    class Meta:
+        model = LocationTag
+        fields = ['id', 'name', 'slug', 'created_by', 'usage_count', 'is_approved', 'created_at']
+        read_only_fields = ['slug', 'created_by', 'usage_count', 'created_at']
+
+
+# Location Photo Serializer -------------------------------------- #
+class LocationPhotoSerializer(serializers.ModelSerializer):
+    uploaded_by = serializers.ReadOnlyField(source='uploaded_by.username')
+    image_url = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = LocationPhoto
+        fields = ['id', 'location', 'uploaded_by', 'image', 'image_url', 
+                  'caption', 'is_primary', 'is_approved', 'taken_at', 
+                  'camera_make', 'camera_model', 'created_at']
+        read_only_fields = ['uploaded_by', 'is_approved', 'created_at', 'image_url']
+        extra_kwargs = {
+            'image': {'write_only': True}
+        }
+
+
 # Viewing Location Serializer ------------------------------------- #
 class ViewingLocationSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)  # Explicitly define ID as integer
     added_by = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
+    verified_by = serializers.SerializerMethodField()
 
     reviews = LocationReviewSerializer(many=True, read_only=True)
     average_rating = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
+    
+    photos = LocationPhotoSerializer(many=True, read_only=True)
+    primary_photo = serializers.SerializerMethodField()
+    
+    categories = LocationCategorySerializer(many=True, read_only=True)
+    tags = LocationTagSerializer(many=True, read_only=True)
 
     moon_phase_info = serializers.SerializerMethodField()
 
@@ -93,7 +143,17 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
                   'moon_phase', 'moon_altitude', 'moon_impact_score',
                   'next_moonrise', 'next_moonset',
                   'next_astronomical_dawn', 'next_astronomical_dusk',
-                  'moon_phase_info'
+                  'moon_phase_info',
+                  
+                  # Verification fields:
+                  'is_verified', 'verification_date', 'verified_by', 'verification_notes',
+                  'times_reported', 'last_visited', 'visitor_count',
+                  
+                  # Photo fields:
+                  'photos', 'primary_photo',
+                  
+                  # Categories and tags:
+                  'categories', 'tags'
                   ]
 
         read_only_fields = ['light_pollution_value', 'quality_score', 'added_by',
@@ -103,7 +163,11 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
                             # Moon fields as read-only since they're calculated
                             'moon_phase', 'moon_altitude', 'moon_impact_score',
                             'next_moonrise', 'next_moonset',
-                            'next_astronomical_dawn', 'next_astronomical_dusk'
+                            'next_astronomical_dawn', 'next_astronomical_dusk',
+                            
+                            # Verification fields are read-only (managed by system)
+                            'is_verified', 'verification_date', 'verified_by', 'verification_notes',
+                            'times_reported', 'last_visited', 'visitor_count'
                             ]
 
     def get_added_by(self, obj):
@@ -140,6 +204,24 @@ class ViewingLocationSerializer(serializers.ModelSerializer):
             'short_name': phase_info['short_name'],
             'description': phase_info['description']
         }
+    
+    def get_verified_by(self, obj):
+        if obj.verified_by:
+            return {
+                'id': obj.verified_by.id,
+                'username': obj.verified_by.username
+            }
+        return None
+    
+    def get_primary_photo(self, obj):
+        primary = obj.photos.filter(is_primary=True, is_approved=True).first()
+        if primary:
+            return LocationPhotoSerializer(primary).data
+        # If no primary, get the first approved photo
+        first_photo = obj.photos.filter(is_approved=True).first()
+        if first_photo:
+            return LocationPhotoSerializer(first_photo).data
+        return None
 
 
 # Celestial Event Serializer -------------------------------------- #
@@ -159,8 +241,13 @@ class UserProfileSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = UserProfile
-        fields = ['id', 'user', 'profile_picture', 'profile_picture_url', 'created_at', 'updated_at']
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        fields = ['id', 'user', 'profile_picture', 'profile_picture_url', 
+                  'reputation_score', 'verified_locations_count', 'helpful_reviews_count',
+                  'quality_photos_count', 'is_trusted_contributor',
+                  'created_at', 'updated_at']
+        read_only_fields = ['user', 'reputation_score', 'verified_locations_count', 
+                           'helpful_reviews_count', 'quality_photos_count', 
+                           'is_trusted_contributor', 'created_at', 'updated_at']
 
 
 # User Serializer ------------------------------------------------ #
@@ -209,3 +296,18 @@ class ForecastSerializer(serializers.ModelSerializer):
 
 
 # Note: defaultforecast is a function, not a model, so no serializer needed
+
+
+# Location Report Serializer ------------------------------------- #
+class LocationReportSerializer(serializers.ModelSerializer):
+    reported_by = serializers.ReadOnlyField(source='reported_by.username')
+    reviewed_by = serializers.ReadOnlyField(source='reviewed_by.username')
+    location_name = serializers.ReadOnlyField(source='location.name')
+    duplicate_of_name = serializers.ReadOnlyField(source='duplicate_of.name')
+    
+    class Meta:
+        model = LocationReport
+        fields = ['id', 'location', 'location_name', 'reported_by', 'report_type', 
+                  'description', 'status', 'duplicate_of', 'duplicate_of_name',
+                  'reviewed_by', 'review_notes', 'reviewed_at', 'created_at']
+        read_only_fields = ['reported_by', 'reviewed_by', 'reviewed_at', 'created_at', 'status']

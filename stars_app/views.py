@@ -34,6 +34,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from stars_app.serializers import *
+from stars_app.filters import ViewingLocationFilter
+from stars_app.serializers_bulk import BulkLocationImportSerializer
+from stars_app.services.clustering_service import ClusteringService
+from stars_app.models.locationphoto import LocationPhoto
+from stars_app.models.locationreport import LocationReport
 
 # Tile libraries:
 import os
@@ -103,9 +108,9 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['quality_score', 'light_pollution_value', 'country', 'administrative_area']
+    filterset_class = ViewingLocationFilter  # Use custom filter class
     search_fields = ['name', 'formatted_address', 'locality']
-    ordering_fields = ['quality_score', 'light_pollution_value', 'created_at']
+    ordering_fields = ['quality_score', 'light_pollution_value', 'created_at', 'visitor_count', 'rating_count']
     ordering = ['-quality_score']
 
     def get_queryset(self):
@@ -120,10 +125,56 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         latitude = serializer.validated_data['latitude']
         longitude = serializer.validated_data['longitude']
         elevation = serializer.validated_data.get('elevation', 0)
+        
+        # Check for nearby duplicates before creating
+        duplicates = self.check_for_duplicates(latitude, longitude)
+        if duplicates and not self.request.data.get('force_create', False):
+            # Manually create nearby_locations data to ensure IDs are integers
+            nearby_locations = []
+            for location in duplicates:
+                nearby_locations.append({
+                    'id': location.id,  # Ensure ID is integer
+                    'name': location.name,
+                    'latitude': location.latitude,
+                    'longitude': location.longitude,
+                    'quality_score': location.quality_score,
+                    'light_pollution_value': location.light_pollution_value,
+                })
+            
+            raise serializers.ValidationError({
+                'duplicates_found': True,
+                'nearby_locations': nearby_locations,
+                'message': 'Similar locations found nearby. Add force_create=true to create anyway.'
+            })
 
         serializer.save(
             added_by=self.request.user,
         )
+    
+    def check_for_duplicates(self, latitude, longitude, radius_km=0.5):
+        """Check for duplicate locations within a radius"""
+        from geopy.distance import geodesic
+        
+        # Query for locations within a rough bounding box first
+        lat_range = 0.01  # Roughly 1.1 km
+        lng_range = 0.01
+        
+        nearby_locations = ViewingLocation.objects.filter(
+            latitude__range=(latitude - lat_range, latitude + lat_range),
+            longitude__range=(longitude - lng_range, longitude + lng_range)
+        )
+        
+        # Calculate precise distances
+        duplicates = []
+        for location in nearby_locations:
+            distance = geodesic(
+                (latitude, longitude),
+                (location.latitude, location.longitude)
+            ).km
+            if distance <= radius_km:
+                duplicates.append(location)
+        
+        return duplicates
 
     @action(detail=True, methods=['POST'])
     def update_elevation(self, request, pk=None):
@@ -141,6 +192,211 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             {'detail': 'Failed to update elevation'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
+    def bulk_import(self, request):
+        """Bulk import locations from CSV or JSON file/data"""
+        serializer = BulkLocationImportSerializer(data=request.data)
+        
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        validated_data = serializer.validated_data
+        format_type = validated_data.get('format', 'json')
+        dry_run = validated_data.get('dry_run', True)
+        
+        try:
+            # Parse the data based on format
+            validation_errors = []
+            if validated_data.get('file'):
+                file_content = validated_data['file'].read()
+                if format_type == 'csv':
+                    locations = serializer.parse_csv(file_content)
+                else:
+                    locations, validation_errors = serializer.parse_json(file_content.decode('utf-8'))
+            else:
+                locations, validation_errors = serializer.parse_json(validated_data['data'])
+            
+            # Check for duplicates only for valid locations
+            duplicate_check_results = []
+            if locations:  # Only if we have valid locations
+                duplicate_check_results = serializer.check_duplicates(locations, request.user)
+            
+            # Prepare response
+            response_data = {
+                'total_submitted': len(validated_data.get('data', [])) if not validated_data.get('file') else 'unknown',
+                'total_valid_locations': len(locations),
+                'validation_errors': validation_errors,
+                'validation_errors_count': len(validation_errors),
+                'duplicates_found': sum(1 for r in duplicate_check_results if r['is_duplicate']),
+                'dry_run': dry_run,
+                'results': duplicate_check_results
+            }
+            
+            # If not dry run and no duplicates, create the locations
+            if not dry_run:
+                non_duplicate_locations = [
+                    r['location'] for r in duplicate_check_results 
+                    if not r['is_duplicate']
+                ]
+                
+                if non_duplicate_locations:
+                    created_locations = serializer.create_locations(non_duplicate_locations, request.user)
+                    response_data['created_count'] = len(created_locations)
+                    response_data['created_ids'] = [loc.id for loc in created_locations]
+                else:
+                    response_data['created_count'] = 0
+                    response_data['created_ids'] = []
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'detail': f'Import failed: {str(e)}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=False, methods=['GET'])
+    def clustered(self, request):
+        """Get clustered locations for map view based on zoom level and bounds"""
+        zoom_level = request.query_params.get('zoom', 10)
+        
+        try:
+            zoom_level = int(zoom_level)
+            zoom_level = max(0, min(20, zoom_level))  # Clamp between 0-20
+        except (TypeError, ValueError):
+            zoom_level = 10
+        
+        # Get optional bounds
+        bounds = None
+        if all(param in request.query_params for param in ['north', 'south', 'east', 'west']):
+            try:
+                bounds = {
+                    'north': float(request.query_params['north']),
+                    'south': float(request.query_params['south']),
+                    'east': float(request.query_params['east']),
+                    'west': float(request.query_params['west'])
+                }
+            except (TypeError, ValueError):
+                pass
+        
+        # Get locations - use the filtered queryset
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Convert to list of dicts for clustering
+        locations = []
+        for location in queryset:
+            locations.append({
+                'id': location.id,
+                'name': location.name,
+                'latitude': location.latitude,
+                'longitude': location.longitude,
+                'quality_score': location.quality_score,
+                'is_verified': location.is_verified,
+                'light_pollution_value': location.light_pollution_value,
+                'rating_count': location.rating_count,
+                'average_rating': float(location.average_rating) if location.average_rating else 0
+            })
+        
+        # Perform clustering
+        clusters = ClusteringService.cluster_locations(locations, zoom_level, bounds)
+        
+        # Calculate the actual number of locations that were processed
+        # (after bounds filtering in clustering service)
+        total_processed = sum(1 for c in clusters if c.get('type') == 'location') + \
+                         sum(c.get('count', 0) for c in clusters if c.get('type') == 'cluster')
+        
+        return Response({
+            'zoom_level': zoom_level,
+            'total_locations': total_processed,
+            'cluster_count': len([c for c in clusters if c.get('type') == 'cluster']),
+            'individual_count': len([c for c in clusters if c.get('type') == 'location']),
+            'clusters': clusters
+        })
+
+    @action(detail=False, methods=['GET'])
+    def check_duplicates(self, request):
+        """Check for duplicate locations before creating"""
+        latitude = request.query_params.get('latitude')
+        longitude = request.query_params.get('longitude')
+        radius_km = float(request.query_params.get('radius_km', 0.5))
+        
+        if not latitude or not longitude:
+            return Response(
+                {'detail': 'latitude and longitude are required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            latitude = float(latitude)
+            longitude = float(longitude)
+        except (TypeError, ValueError):
+            return Response(
+                {'detail': 'Invalid latitude or longitude values'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        duplicates = self.check_for_duplicates(latitude, longitude, radius_km)
+        
+        return Response({
+            'duplicates_found': len(duplicates) > 0,
+            'count': len(duplicates),
+            'radius_km': radius_km,
+            'locations': ViewingLocationSerializer(duplicates, many=True).data
+        })
+
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
+    def report(self, request, pk=None):
+        """Submit a report about this location"""
+        location = self.get_object()
+        
+        # Prepare report data
+        report_data = {
+            'location': location.id,
+            'report_type': request.data.get('report_type'),
+            'description': request.data.get('description'),
+            'duplicate_of': request.data.get('duplicate_of_id')
+        }
+        
+        serializer = LocationReportSerializer(data=report_data)
+        if serializer.is_valid():
+            try:
+                report = serializer.save(reported_by=request.user)
+                
+                # Increment report counter
+                location.times_reported += 1
+                location.save()
+                
+                return Response(
+                    LocationReportSerializer(report).data,
+                    status=status.HTTP_201_CREATED
+                )
+            except Exception as e:
+                # Handle unique constraint violation (duplicate report)
+                if 'unique constraint' in str(e).lower():
+                    return Response(
+                        {'detail': 'You have already submitted this type of report for this location'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                raise
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
+    def reports(self, request, pk=None):
+        """Get all reports for this location (admin only)"""
+        location = self.get_object()
+        
+        # Only staff can see all reports
+        if not request.user.is_staff:
+            return Response(
+                {'detail': 'You do not have permission to view reports'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        reports = location.reports.all()
+        serializer = LocationReportSerializer(reports, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['POST', 'GET'])
     def favorite(self, request, pk=None):
@@ -265,6 +521,84 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             {'detail': 'Failed to update address'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
+    def upload_photo(self, request, pk=None):
+        """Upload a photo for this location"""
+        location = self.get_object()
+        
+        # Check if image was provided
+        if 'image' not in request.FILES:
+            return Response(
+                {'detail': 'No image file provided'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create photo object
+        data = {
+            'location': location.id,
+            'image': request.FILES['image'],
+            'caption': request.data.get('caption', ''),
+            'is_primary': request.data.get('is_primary', False)
+        }
+        
+        serializer = LocationPhotoSerializer(data=data)
+        if serializer.is_valid():
+            # Extract EXIF data if available
+            photo = serializer.save(uploaded_by=request.user)
+            
+            # TODO: Extract EXIF data from image
+            # This would require PIL/Pillow library
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['GET'])
+    def photos(self, request, pk=None):
+        """Get all photos for this location"""
+        location = self.get_object()
+        photos = location.photos.filter(is_approved=True)
+        serializer = LocationPhotoSerializer(photos, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
+    def set_primary_photo(self, request, pk=None):
+        """Set a photo as the primary photo for this location"""
+        location = self.get_object()
+        photo_id = request.data.get('photo_id')
+        
+        if not photo_id:
+            return Response(
+                {'detail': 'photo_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            photo = LocationPhoto.objects.get(
+                id=photo_id,
+                location=location,
+                is_approved=True
+            )
+            
+            # Only the uploader or location owner can set primary photo
+            if photo.uploaded_by != request.user and location.added_by != request.user:
+                return Response(
+                    {'detail': 'You do not have permission to set this as primary'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            photo.is_primary = True
+            photo.save()  # This will unset other primary photos automatically
+            
+            serializer = LocationPhotoSerializer(photo)
+            return Response(serializer.data)
+            
+        except LocationPhoto.DoesNotExist:
+            return Response(
+                {'detail': 'Photo not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
 
     @action(detail=True, methods=['POST'])
     def add_review(self, request, pk=None):
@@ -460,11 +794,11 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
     
     def get_queryset(self):
-        return User.objects.filter(id=self.request.user.id)
+        return User.objects.all()
 
 
 class FavoriteLocationViewSet(viewsets.ModelViewSet):

@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='celestialevent',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, null=True),
+            field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AddField(
             model_name='celestialevent',
@@ -25,7 +25,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='created_at',
-            field=models.DateTimeField(auto_now_add=True, null=True),
+            field=models.DateTimeField(auto_now_add=True),
         ),
         migrations.AddField(
             model_name='userprofile',

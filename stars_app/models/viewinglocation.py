@@ -46,6 +46,31 @@ class ViewingLocation(ViewingLocationBase):
     next_astronomical_dawn = models.DateTimeField(null=True, blank=True)
     next_astronomical_dusk = models.DateTimeField(null=True, blank=True)
 
+    # Verification fields
+    is_verified = models.BooleanField(default=False, help_text="Whether this location has been verified")
+    verification_date = models.DateTimeField(null=True, blank=True, help_text="When the location was verified")
+    verified_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='verified_locations', help_text="User who verified this location")
+    verification_notes = models.TextField(blank=True, help_text="Notes about the verification process")
+    
+    # Quality control fields
+    times_reported = models.IntegerField(default=0, help_text="Number of times this location has been reported")
+    last_visited = models.DateTimeField(null=True, blank=True, help_text="Last time someone reported visiting this location")
+    visitor_count = models.IntegerField(default=0, help_text="Number of unique visitors who have reviewed this location")
+    
+    # Categories and Tags
+    categories = models.ManyToManyField(
+        'LocationCategory',
+        blank=True,
+        related_name='locations',
+        help_text="Categories this location belongs to"
+    )
+    tags = models.ManyToManyField(
+        'LocationTag',
+        blank=True,
+        related_name='locations',
+        help_text="Tags associated with this location"
+    )
+
     # Custom manager
     objects = models.Manager()  # Default manager
     locations = ViewingLocationManager()  # Custom manager
