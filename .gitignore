@@ -247,3 +247,9 @@ fabric.properties
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
 
+# Event Horizon specific
+logs/
+bandit-report.json
+.pre-commit-config.yaml.bak
+staticfiles/
+

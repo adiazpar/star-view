@@ -6,8 +6,8 @@ services:
   # This contains our Django app
   webapp:
     build:
-      context: ./webapp
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: config/Dockerfile
 
     ports:
       # Maps port 8000 inside the container to port 8000 on my computer
@@ -17,12 +17,12 @@ services:
     volumes:
       # Mounts the webapp directory to /app inside the container
       # This means we can edit files on our computer and they will be reflected in the container
-      - ./webapp:/app
+      - ..:/app
 
     environment:
       # Configuration for Django webapp
       - DEBUG=1
-      - DJANGO_SETTINGS_MODULE=docker_settings
+      - DJANGO_SETTINGS_MODULE=config.docker_settings
       - TILE_SERVER_URL=http://143.198.25.144:3001
       - DATABASE_URL=sqlite:///db.sqlite3
 
@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
 
     # Override the default command to use your Django project's manage.py
-    command: python manage.py runserver 0.0.0.0:8000 --settings=docker_settings
+    command: python manage.py runserver 0.0.0.0:8000 --settings=config.docker_settings
     
   # Redis for caching tile metadata and processing status
   # This speeds up repeated operations and provides a place to store job status

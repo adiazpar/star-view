@@ -2,10 +2,21 @@
 # Minimal Docker-specific settings that inherit from your existing settings.py
 # This approach preserves all your existing configuration while adding Docker optimizations
 
-from django_project.settings import *  # Import everything from your existing settings
+from django_project.settings.base import *  # Import everything from base settings
 
 # Override only what's needed for Docker static file serving
 DEBUG = True  # Ensure debug mode for development container
+
+# Docker database configuration (SQLite for simplicity)
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'TEST': {
+            'NAME': ':memory:'
+        },
+    }
+}
 
 # Add WhiteNoise to the beginning of middleware for static file serving
 MIDDLEWARE = [

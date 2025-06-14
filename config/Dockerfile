@@ -32,7 +32,7 @@ RUN mkdir -p /app/staticfiles && chmod 755 /app/staticfiles
 
 # Collect static files using Docker settings
 # This ensures WhiteNoise can find and serve your CSS files
-RUN python manage.py collectstatic --noinput --settings=docker_settings
+RUN python manage.py collectstatic --noinput --settings=config.docker_settings
 
 # Expose port
 EXPOSE 8000
@@ -42,4 +42,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
 
 # Run Django with Docker-specific settings
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000", "--settings=docker_settings"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000", "--settings=config.docker_settings"]
