@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django_crontab',
     'drf_spectacular',
+    'django_filters',
 ]
 
 # Ensure logs directory exists
@@ -294,6 +295,10 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+    'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
+    'DEFAULT_VERSION': 'v1',
+    'ALLOWED_VERSIONS': ['v1'],
+    'VERSION_PARAM': 'version',
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
 }
 

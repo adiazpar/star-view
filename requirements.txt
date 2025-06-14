@@ -10,6 +10,7 @@ django-crontab==0.7.1
 django-sendgrid-v5==1.2.4
 djangorestframework==3.15.2
 drf-nested-routers==0.94.1
+django-filter==24.3
 ephem==4.1.6
 geographiclib==2.0
 geopy==2.4.1

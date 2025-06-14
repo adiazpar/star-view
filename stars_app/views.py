@@ -29,6 +29,10 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.pagination import PageNumberPagination
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from stars_app.serializers import *
 
 # Tile libraries:
@@ -52,11 +56,31 @@ from django.core.paginator import Paginator
 from .models.reviewvote import ReviewVote
 
 # -------------------------------------------------------------- #
+# Pagination Classes:
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 20
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+# -------------------------------------------------------------- #
 # Location Management Views:
+@extend_schema_view(
+    list=extend_schema(description="Retrieve a list of celestial events with filtering and search capabilities"),
+    create=extend_schema(description="Create a new celestial event"),
+    retrieve=extend_schema(description="Retrieve a specific celestial event by ID"),
+    update=extend_schema(description="Update a celestial event"),
+    destroy=extend_schema(description="Delete a celestial event")
+)
 class CelestialEventViewSet(viewsets.ModelViewSet):
     queryset = CelestialEvent.objects.all()
     serializer_class = CelestialEventSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['event_type']
+    search_fields = ['name', 'description']
+    ordering_fields = ['start_time', 'end_time', 'created_at']
+    ordering = ['start_time']
 
     def perform_create(self, serializer):
         # Set elevation to 0 if not provided
@@ -66,10 +90,23 @@ class CelestialEventViewSet(viewsets.ModelViewSet):
 # -------------------------------------------------------------- #
 # Viewing Location Views:
 
+@extend_schema_view(
+    list=extend_schema(description="Retrieve viewing locations with quality scores, light pollution data, and filtering"),
+    create=extend_schema(description="Add a new viewing location"),
+    retrieve=extend_schema(description="Get detailed information about a viewing location"),
+    update=extend_schema(description="Update viewing location details"),
+    destroy=extend_schema(description="Remove a viewing location")
+)
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
     serializer_class = ViewingLocationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['quality_score', 'light_pollution_value', 'country', 'administrative_area']
+    search_fields = ['name', 'formatted_address', 'locality']
+    ordering_fields = ['quality_score', 'light_pollution_value', 'created_at']
+    ordering = ['-quality_score']
 
     def get_queryset(self):
         queryset = ViewingLocation.objects.all()
@@ -291,6 +328,11 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
 class LocationReviewViewSet(viewsets.ModelViewSet):
     serializer_class = LocationReviewSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['rating']
+    ordering_fields = ['rating', 'created_at', 'updated_at']
+    ordering = ['-created_at']
 
     def get_queryset(self):
         return LocationReview.objects.filter(
@@ -348,6 +390,7 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
 class ReviewCommentViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewCommentSerializer
     permission_classes = [IsAuthenticated]  # Require authentication for all comment operations
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         return ReviewComment.objects.filter(
@@ -398,6 +441,68 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
         if instance.user != self.request.user:
             raise PermissionDenied("You can only delete your own comments")
         instance.delete()
+
+
+# -------------------------------------------------------------- #
+# Additional API ViewSets:
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    
+    def get_queryset(self):
+        return UserProfile.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    
+    def get_queryset(self):
+        return User.objects.filter(id=self.request.user.id)
+
+
+class FavoriteLocationViewSet(viewsets.ModelViewSet):
+    serializer_class = FavoriteLocationSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['nickname', 'location__name']
+    ordering_fields = ['created_at']
+    ordering = ['-created_at']
+    
+    def get_queryset(self):
+        return FavoriteLocation.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ReviewVoteViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewVoteSerializer
+    permission_classes = [IsAuthenticated]
+    pagination_class = StandardResultsSetPagination
+    
+    def get_queryset(self):
+        return ReviewVote.objects.filter(user=self.request.user)
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class ForecastViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ForecastSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = Forecast.objects.all()
+    pagination_class = StandardResultsSetPagination
+
+
+# Note: defaultforecast is a function, not a model, so no ViewSet needed
 
 class ViewingLocationCreateView(LoginRequiredMixin, View):
     def post(self, request):

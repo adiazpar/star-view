@@ -17,6 +17,12 @@ from .views import (
 router = DefaultRouter()
 router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
 router.register(r'celestial-events', views.CelestialEventViewSet, basename='celestial-events')
+router.register(r'user-profiles', views.UserProfileViewSet, basename='user-profiles')
+router.register(r'users', views.UserViewSet, basename='users')
+router.register(r'favorite-locations', views.FavoriteLocationViewSet, basename='favorite-locations')
+router.register(r'review-votes', views.ReviewVoteViewSet, basename='review-votes')
+router.register(r'forecasts', views.ForecastViewSet, basename='forecasts')
+# defaultforecast is a function, not a model, so no endpoint needed
 
 # Nested router for reviews
 locations_router = routers.NestedDefaultRouter(router, r'viewing-locations', lookup='location')
@@ -64,9 +70,9 @@ urlpatterns = [
     path('delete-review/<int:review_id>/', views.delete_review, name='delete_review'),
 
     # Django Rest Framework:
-    path('api/', include(router.urls)),
-    path('api/', include(locations_router.urls)),
-    path('api/', include(reviews_router.urls)),
+    path('api/v1/', include(router.urls)),
+    path('api/v1/', include(locations_router.urls)),
+    path('api/v1/', include(reviews_router.urls)),
 
     # Other:
     path('api/viewing-locations/', views.ViewingLocationCreateView.as_view(), name='viewing-location-create'),

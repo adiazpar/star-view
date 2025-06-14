@@ -5,10 +5,9 @@ export class LocationService {
     }
 
     static async getLocationStatus(locationId) {
-        const response = await fetch(`/api/viewing-locations/${locationId}/favorite/`, {
+        const response = await fetch(`/api/v1/viewing-locations/${locationId}/favorite/`, {
             headers: {
-                'Content-Type': 'applications/json',
-                'X-CSRFToken': this.getCsrfToken()
+                'Content-Type': 'application/json'
             }
         });
         if (!response.ok) throw new Error('Failed to get location status');
@@ -17,10 +16,10 @@ export class LocationService {
 
     static async toggleFavorite(locationID, currentlyFavorited) {
         const endpoint = currentlyFavorited ? 'unfavorite' : 'favorite';
-        const response = await fetch(`/api/viewing-locations/${locationID}/${endpoint}/`, {
+        const response = await fetch(`/api/v1/viewing-locations/${locationID}/${endpoint}/`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'applications/json',
+                'Content-Type': 'application/json',
                 'X-CSRFToken': this.getCsrfToken()
             }
         });
@@ -29,24 +28,28 @@ export class LocationService {
     }
 
     static async getViewingLocations() {
-        const response = await fetch('/api/viewing-locations/', {
+        // Request up to 100 locations (max allowed by the API)
+        const response = await fetch('/api/v1/viewing-locations/?page_size=100', {
             headers: {
-                'Content-Type': 'applications/json',
-                'X-CSRFToken': this.getCsrfToken()
+                'Content-Type': 'application/json'
             }
         });
         if (!response.ok) throw new Error('Failed to fetch viewing locations');
-        return response.json();
+        const data = await response.json();
+        // Handle paginated response - return just the results array
+        return data.results || data;
     }
 
     static async getCelestialEvents() {
-        const response = await fetch('/api/celestial-events/', {
+        // Request up to 100 events (max allowed by the API)
+        const response = await fetch('/api/v1/celestial-events/?page_size=100', {
             headers: {
-                'Content-Type': 'applications/json',
-                'X-CSRFToken': this.getCsrfToken()
+                'Content-Type': 'application/json'
             }
         });
         if (!response.ok) throw new Error('Failed to fetch celestial events');
-        return response.json();
+        const data = await response.json();
+        // Handle paginated response - return just the results array
+        return data.results || data;
     }
 }

@@ -7,6 +7,9 @@ from stars_app.models.reviewvote import ReviewVote
 from stars_app.models.reviewcomment import ReviewComment
 from stars_app.models.viewinglocation import ViewingLocation
 from stars_app.models.locationreview import LocationReview
+from stars_app.models.userprofile import UserProfile
+from stars_app.models.forecast import Forecast
+from django.contrib.auth.models import User
 
 
 # Review Comment Serializer --------------------------------------- #
@@ -147,3 +150,62 @@ class CelestialEventSerializer(serializers.ModelSerializer):
                   'latitude', 'longitude', 'elevation',
                   'start_time', 'end_time',
                   'viewing_radius']
+
+
+# User Profile Serializer ---------------------------------------- #
+class UserProfileSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    profile_picture_url = serializers.ReadOnlyField(source='get_profile_picture_url')
+    
+    class Meta:
+        model = UserProfile
+        fields = ['id', 'user', 'profile_picture', 'profile_picture_url', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at']
+
+
+# User Serializer ------------------------------------------------ #
+class UserSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(source='userprofile', read_only=True)
+    
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'profile']
+        read_only_fields = ['date_joined']
+
+
+# Favorite Location Serializer ----------------------------------- #
+class FavoriteLocationSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    location = ViewingLocationSerializer(read_only=True)
+    location_id = serializers.PrimaryKeyRelatedField(
+        queryset=ViewingLocation.objects.all(),
+        source='location',
+        write_only=True
+    )
+    display_name = serializers.ReadOnlyField(source='get_display_name')
+    
+    class Meta:
+        model = FavoriteLocation
+        fields = ['id', 'user', 'location', 'location_id', 'nickname', 'display_name', 'created_at']
+        read_only_fields = ['user', 'created_at']
+
+
+# Review Vote Serializer ----------------------------------------- #
+class ReviewVoteSerializer(serializers.ModelSerializer):
+    user = serializers.ReadOnlyField(source='user.username')
+    
+    class Meta:
+        model = ReviewVote
+        fields = ['id', 'user', 'review', 'is_upvote', 'created_at']
+        read_only_fields = ['user', 'created_at']
+
+
+# Forecast Serializer -------------------------------------------- #
+class ForecastSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Forecast
+        fields = ['id', 'forecast', 'createTime']
+        read_only_fields = ['createTime']
+
+
+# Note: defaultforecast is a function, not a model, so no serializer needed

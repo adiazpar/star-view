@@ -440,6 +440,9 @@ export class MapController {
                 LocationService.getCelestialEvents()
             ]);
 
+            console.log('Loaded locations:', locations);
+            console.log('Loaded events:', events);
+
             if (locations?.length) this.displayLocations(locations);
             if (events?.length) this.displayEvents(events);
 
@@ -673,7 +676,7 @@ export class MapController {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             // Send POST request
-            const response = await fetch('/api/viewing-locations/', {
+            const response = await fetch('/api/v1/viewing-locations/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -799,7 +802,7 @@ export class MapController {
                 .addTo(this.map);
 
                 try {
-                    const response = await fetch(`/api/viewing-locations/${locationId}/`, {
+                    const response = await fetch(`/api/v1/viewing-locations/${locationId}/`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': csrfToken
@@ -908,7 +911,7 @@ export class MapController {
 
         if (isLoggedIn) {
             try {
-                const response = await fetch(`/api/viewing-locations/${location.id}/favorite/`, {
+                const response = await fetch(`/api/v1/viewing-locations/${location.id}/favorite/`, {
                     method: 'GET',
                     credentials: 'same-origin'
                 });
@@ -1160,7 +1163,7 @@ export class MapController {
 
 
             const action = location.is_favorited ? 'unfavorite' : 'favorite';
-            const response = await fetch(`/api/viewing-locations/${locationId}/${action}/`, {
+            const response = await fetch(`/api/v1/viewing-locations/${locationId}/${action}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,
@@ -1376,14 +1379,17 @@ export class MapController {
         try {
             // First, fetch the updated list of locations from the server
             const locationsList = document.querySelector('.location-list');
-            const response = await fetch('/api/viewing-locations/');
+            const response = await fetch('/api/v1/viewing-locations/?page_size=100');
             const data = await response.json();
+            
+            // Handle paginated response
+            const locations = data.results || data;
 
             // Clear existing items
             locationsList.innerHTML = '';
 
             // Add each location to the list
-            data.forEach(location => {
+            locations.forEach(location => {
                 const locationElement = document.createElement('div');
                 locationElement.className = 'location-item';
                 locationElement.setAttribute('data-type', 'location');
@@ -1419,7 +1425,7 @@ export class MapController {
             });
 
             // Recalculate pagination
-            this.pagination.totalItems = data.length;
+            this.pagination.totalItems = locations.length;
             this.pagination.currentPage = 1;  // Reset to first page
 
             // Apply filters and pagination
