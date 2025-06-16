@@ -1,5 +1,7 @@
 {% extends 'stars_app/base.html' %}
 {% load static %}
+{% load markdown_extras %}
+{% load custom_filters %}
 {% block body_class %}location-details-page{% endblock %}
 
 
@@ -7,99 +9,243 @@
 {% block extra_head %}
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
 <script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<link href="{% static 'css/components/photo-gallery.css' %}" rel="stylesheet">
 
 <style>
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: var(--space-lg);
+/* Hero Section Styles */
+.hero-section {
+    margin: calc(-1 * var(--space-lg));
+    margin-bottom: var(--space-xl);
 }
 
-.title-section {
-    flex: 1;
-}
-
-.header-actions {
-    display: flex;
-    gap: var(--space-md);
-    align-items: center;
-}
-
-.action-button {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-sm);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    border: 1px solid var(--text-tertiary);
-    background: var(--surface);
-    color: var(--text-primary);
-    text-decoration: none;
-}
-
-.favorite-button {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-sm);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    border: 1px solid var(--text-tertiary);
-    background: var(--surface);
-    color: var(--text-primary);
-}
-
-/* Style for when favorited */
-.favorite-button.favorited {
-    background: var(--surface);
-    border-color: var(--pink);
-    color: var(--pink);
-}
-
-.favorite-button:hover {
-    border-color: var(--pink);
-    color: var(--pink);
-}
-
-.favorite-button.favorited:hover {
-    background: var(--pink);
-    color: var(--text-primary);
-}
-
-.favorite-button i {
-    color: inherit;
-}
-
-.view-map-button:hover {
-    background: var(--primary);
-    border-color: var(--primary);
-}
-
-/* Ensure the map container has a fixed size */
-.location-map-container {
-    width: 100%;
-    height: 400px;
-    overflow: hidden;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--text-tertiary);
+.hero-carousel {
     position: relative;
+    height: 500px;
+    overflow: hidden;
+    border-radius: var(--radius-md);
 }
 
-.location-static-map {
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.carousel-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.carousel-slide.active {
+    opacity: 1;
+}
+
+.carousel-slide img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    z-index: 2;
+}
+
+.carousel-nav:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav.prev {
+    left: var(--space-md);
+}
+
+.carousel-nav.next {
+    right: var(--space-md);
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--space-lg);
+}
+
+.hero-title-section h1 {
+    color: var(--text-primary);
+    font-size: var(--font-size-3xl);
+    margin: 0 0 var(--space-sm) 0;
+    text-shadow: var(--text-shadow);
+}
+
+.hero-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.hero-rating .rating-display {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.hero-rating .rating-display i {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-base);
+    text-shadow: var(--text-shadow);
+}
+
+.hero-rating .rating-display i.filled {
+    color: var(--golden);
+}
+
+.hero-rating .rating-count {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    text-shadow: var(--text-shadow);
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: flex-start;
+}
+
+.hero-action-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(45, 45, 45, 0.9);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+}
+
+.hero-action-btn:hover {
+    background: rgba(45, 45, 45, 1);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.hero-action-btn.favorite-button.favorited {
+    background: rgba(255, 105, 180, 0.9);
+    border-color: var(--pink);
+}
+
+.photo-credit {
+    padding: var(--space-md) var(--space-lg);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    text-shadow: var(--text-shadow);
+}
+
+/* Photos Section */
+.photos-section {
+    margin-bottom: var(--space-xl);
+}
+
+.photos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.photos-header h2 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-md);
+}
+
+.photo-thumbnail {
+    aspect-ratio: 4/3;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform var(--transition-base);
+}
+
+.photo-thumbnail:hover {
+    transform: scale(1.05);
+}
+
+.photo-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.photo-thumbnail.primary {
+    border: 2px solid var(--primary);
+}
+
+/* About Section */
+.about-section {
+    margin-bottom: var(--space-xl);
+}
+
+.about-section h2 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+}
+
+.location-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    margin: 0;
+}
+
 /* Location Details Page Styling */
 .location-details-page {
-    padding: var(--space-md);
     background-color: var(--background-dark);
     min-height: 100vh;
 }
@@ -110,79 +256,23 @@
     padding: var(--space-lg);
 }
 
-/* Location Header */
-.location-header {
-    margin-bottom: var(--space-xl);
-    border-bottom: 1px solid var(--text-tertiary);
-}
-
-.location-header h3 {
-    color: var(--text-primary);
-    margin-bottom: var(--space-xs);
-}
-
-.location-header .subtitle {
-    font-size: var(--font-size-sm);
-    color: var(--text-secondary);
-    margin-bottom: var(--space-md);
-}
-
-/* Main Content Layout */
-.location-main-content {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-xl);
-    margin-bottom: var(--space-xl);
-}
-
-/* Map Container */
-.location-map-container {
-    height: 400px;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-}
-
-/* Location Information */
-.location-primary-info {
-    background: var(--surface);
-    padding: var(--space-lg);
-    border-radius: var(--radius-sm);
-}
-
-.info-section h4 {
-    color: var(--text-primary);
-    margin-bottom: var(--space-lg);
-}
-
-.info-grid {
-    display: grid;
-    gap: var(--space-md);
-}
-
 /* Reviews Section */
 .reviews-section {
-    background: var(--surface);
-    padding: var(--space-lg);
-    border-radius: var(--radius-sm);
-    margin-top: var(--space-xl);
-}
-
-.reviews-section h4 {
-    color: var(--text-primary);
-    margin-bottom: var(--space-lg);
+    margin-bottom: var(--space-xl);
 }
 
 /* Review Form */
 .review-form-container {
-    background: var(--background-dark);
+    background: var(--surface);
     padding: var(--space-lg);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
     margin-bottom: var(--space-xl);
 }
 
 .review-form-container h5 {
     color: var(--text-primary);
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-lg);
+    font-size: var(--font-size-lg);
 }
 
 .review-form {
@@ -192,13 +282,17 @@
 
 .rating-input {
     display: flex;
-    align-items: center;
-    gap: var(--space-md);
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.rating-input label {
+    color: var(--text-primary);
+    font-weight: normal;
 }
 
 .star-rating {
-    display: flex;
-    flex-direction: row-reverse;
+    display: block;
     gap: var(--space-xs);
 }
 
@@ -206,42 +300,80 @@
     display: none;
 }
 
+.star-rating {
+    display: flex;
+    gap: var(--space-xs);
+}
+
 .star-rating label {
     cursor: pointer;
-    font-size: var(--font-size-xl);
-    color: var(--text-tertiary);
-    transition: color var(--transition-base);
+    position: relative;
 }
 
-.star-rating label:before {
-    content: '★';
+.star-rating label svg {
+    width: 24px;
+    height: 24px;
+    color: var(--background-dark);
+    fill: var(--background-dark);
+    transition: all var(--transition-base);
 }
 
-.star-rating input:checked ~ label,
-.star-rating label:hover,
-.star-rating label:hover ~ label {
+.star-rating label.filled svg {
     color: var(--golden);
+    fill: var(--golden);
 }
 
-.comment-input textarea {
+.star-rating label.hover svg {
+    color: var(--golden);
+    fill: var(--golden);
+}
+
+/* Review Form Comment Input */
+.review-comment-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.review-comment-input label {
+    color: var(--text-primary);
+    font-weight: lighter;
+}
+
+.review-comment-input textarea {
     width: 100%;
-    background: var(--background);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
+    background: var(--background-dark);
+    border: 0px;
+    border-radius: var(--radius-xs);
     padding: var(--space-sm);
     color: var(--text-primary);
     resize: vertical;
+    font-family: inherit;
+    line-height: 1.5;
+    box-sizing: border-box;
+}
+
+.review-comment-input textarea:focus {
+    outline: none;
+    border: 0.5px solid var(--primary);
+}
+
+.review-comment-input textarea::placeholder {
+    color: var(--text-tertiary);
 }
 
 .submit-review {
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--space-sm);
     background-color: var(--primary);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     color: var(--text-primary);
     cursor: pointer;
     transition: background-color var(--transition-base);
     justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 .submit-review:hover {
@@ -314,65 +446,68 @@
 
 /* Review Cards */
 .reviews-list {
-    display: grid;
-    gap: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
 }
 
 .review-card {
-    background: var(--background-dark);
-    padding: var(--space-md);
-    border-radius: var(--radius-sm);
+    background: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--radius-xs);
+    border: none;
+}
+
+.rating-display {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-xs);
+}
+
+.rating-display svg {
+    color: var(--text-tertiary);
+    width: 16px;
+    height: 16px;
+}
+
+.rating-display svg.filled {
+    color: var(--golden);
+}
+
+.review-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+}
+
+.review-author-section {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.review-rating-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-sm);
 }
 
 .review-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-sm);
-}
-
-.rating-display {
-    display: flex;
-    flex-direction: row;  /* Not reversed for display */
-    gap: var(--space-xs);
-}
-
-.rating-display i.fas.fa-star {
-    color: var(--text-tertiary);
-    font-size: var(--font-size-base);
-}
-
-.rating-display i.fas.fa-star.filled {
-    color: var(--golden);
-}
-
-.review-date {
-    font-size: var(--font-size-sm);
-    color: var(--text-tertiary);
-}
-
-.review-author-section {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    margin-bottom: var(--space-sm);
+    margin-bottom: var(--space-md);
 }
 
 .review-profile-picture {
     width: 40px;
     height: 40px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-xs);
     object-fit: cover;
     background-color: var(--background);
-    /* Add a subtle border to make the image pop against dark backgrounds */
-    border: 1px solid var(--text-tertiary);
+    border: 1px solid var(--background-dark);
 }
 
 .review-author {
-    color: var(--text-primary);
-    font-weight: bold;
-    margin-bottom: var(--space-sm);
-
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
@@ -384,8 +519,9 @@
 }
 
 .review-comment {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: var(--font-size-sm);
+    margin-bottom: var(--space-md);
 }
 
 .no-reviews {
@@ -399,6 +535,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    justify-content: flex-end;
 }
 
 .delete-review-btn {
@@ -414,126 +551,157 @@
     color: var(--negate-light);
 }
 
-.review-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--space-sm);
-}
-
 .current-user-review {
-    border: 1px solid var(--primary-light);
-    background: var(--background-dark);
+    border: 0.5px solid var(--primary-light);
+    background: var(--surface);
 }
 
 .your-review-badge {
     font-size: var(--font-size-xs);
-    color: var(--primary);
-    margin-left: var(--space-sm);
-    font-style: italic;
+    color: var(--primary-light);
+    
 }
 
-/* Comments section styling */
 .review-comments-section {
     margin-top: var(--space-md);
     border-top: 1px solid var(--text-tertiary);
-    padding-top: var(--space-md);
 }
 
-.comments-toggle {
+.comments-toggle.inline {
     background: none;
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-xs) 0;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+    font-size: var(--font-size-sm);
+    transition: color var(--transition-base);
 }
 
-.comments-toggle:hover {
+.comments-toggle.inline:hover {
+    color: var(--text-primary);
+}
+.comments-toggle.inline:hover .comments-count {
     color: var(--text-primary);
 }
 
+/* Ensure SVG icon inherits color and transitions smoothly */
+.comments-toggle.inline svg {
+    transition: stroke var(--transition-base);
+}
+.comments-toggle.inline .comments-count {
+    transition: color var(--transition-base);
+}
+
+/* Comments section styling */
 .comments-container {
     margin-top: var(--space-md);
 }
 
 .comment-form {
-    margin-bottom: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xl);
 }
 
 .comment-input {
     width: 100%;
-    background: var(--background);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
+    background: var(--background-dark);
+    border: 0px;
+    border-radius: var(--radius-xs);
     padding: var(--space-sm);
     color: var(--text-primary);
-    resize: vertical;
-    margin-bottom: var(--space-sm);
+    font-family: inherit;
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 60px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: var(--font-size-xs);
+}
+
+.comment-input:focus {
+    outline: none;
+    border: 0.5px solid var(--primary);
+}
+
+.comment-input:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+/* Styling for formatted content in contenteditable */
+.comment-input strong {
+    font-weight: bold;
+}
+
+.comment-input em {
+    font-style: italic;
+}
+
+.comment-input u {
+    text-decoration: underline;
+}
+
+.comment-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.comment-formatting-tools {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.formatting-btn {
+    background: var(--background-dark);
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+    font-weight: bold;
+    font-size: var(--font-size-sm);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.formatting-btn:hover {
+    background: var(--background);
+    color: var(--text-primary);
+}
+
+.formatting-btn.active {
+    background: var(--primary);
+    color: var(--text-primary);
+}
+
+.formatting-btn.active:hover {
+    background: var(--primary-light);
 }
 
 .submit-comment {
-    background: var(--primary);
-    color: var(--text-primary);
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
     border: none;
-    border-radius: var(--radius-sm);
-    padding: var(--space-xs) var(--space-md);
-    cursor: pointer;
-}
-
-.comment {
-    display: flex;
-    gap: var(--space-md);
-    margin-bottom: var(--space-md);
-}
-
-.comment-profile-picture {
-    width: 32px;
-    height: 32px;
-    border-radius: var(--radius-sm);
-    object-fit: cover;
-}
-
-.comment-content {
-    flex: 1;
-}
-
-.comment-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    margin-bottom: var(--space-xs);
-}
-
-.comment-username {
-    font-weight: bold;
+    border-radius: var(--radius-md);
     color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
 }
 
-.comment-date {
-    font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
-}
-
-.comment-text {
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-}
-
-.comment-login-prompt {
-    background: var(--background);
-    border-radius: var(--radius-sm);
-    padding: var(--space-md);
-    text-align: center;
-    margin-bottom: var(--space-md);
-}
-
-.comment-login-prompt p {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-sm);
-    font-size: var(--font-size-sm);
+.submit-comment:hover {
+    background-color: var(--primary-light);
 }
 
 .login-link {
@@ -556,13 +724,65 @@
     font-size: var(--font-size-sm);
 }
 
+.comment {
+    display: flex;
+    gap: var(--space-md);
+    padding: 0 0 var(--space-md) 0;
+}
+
+.comment-profile-picture {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-xs);
+    object-fit: cover;
+    border: 1px solid var(--background-dark);
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.comment-username {
+    font-weight: bold;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.comment-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+}
+
+.comment-text {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+}
+
+.comment-login-prompt {
+    background: var(--background);
+    border-radius: var(--radius-sm);
+    padding: var(--space-md);
+    text-align: center;
+    margin-bottom: var(--space-md);
+}
+
+.comment-login-prompt p {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-sm);
+}
 
 /* Voting system styles */
 .vote-controls {
     display: flex;
     align-items: center;
     gap: var(--space-xs);
-    margin-top: var(--space-sm);
 }
 
 .vote-button {
@@ -574,7 +794,7 @@
     transition: all var(--transition-base);
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
+    
 }
 
 .vote-button:hover {
@@ -598,11 +818,12 @@
     color: var(--negate);
 }
 
-.vote-count {
+.upvote-count, .downvote-count, .comments-count {
     color: var(--text-secondary);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-xs);
     min-width: 2em;
-    text-align: center;
+    text-align: left;
+    display: inline-block;
 }
 
 .vote-button.disabled {
@@ -658,20 +879,625 @@
     color: var(--text-primary);
 }
 
+/* Astronomy Data Section */
+.astronomy-data-section {
+    margin-bottom: var(--space-xl);
+}
+
+.astronomy-data-section h2 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--space-lg);
+}
+
+.data-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--text-tertiary);
+}
+
+.data-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    flex-shrink: 0;
+}
+
+.data-icon.elevation {
+    background: var(--event-aurora);
+}
+
+.data-icon.cloud {
+    background: var(--text-tertiary);
+}
+
+.data-icon.light {
+    background: var(--golden);
+}
+
+.data-icon.calendar {
+    background: var(--event-comet);
+}
+
+.data-icon.access {
+    background: var(--negate-light);
+}
+
+.data-content h3 {
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    margin: 0 0 var(--space-xs) 0;
+}
+
+.data-content p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* Photo Upload Modal Styles */
+.photo-upload-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-upload-modal .modal-content {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    border: 1px solid var(--text-tertiary);
+}
+
+.photo-upload-modal .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-lg);
+    border-bottom: 1px solid var(--text-tertiary);
+}
+
+.photo-upload-modal .modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.photo-upload-modal .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: var(--font-size-xl);
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.photo-upload-modal .modal-close:hover {
+    color: var(--text-primary);
+}
+
+.photo-upload-modal .photo-upload-form {
+    padding: var(--space-lg);
+}
+
+.photo-upload-modal .form-group {
+    margin-bottom: var(--space-md);
+}
+
+.photo-upload-modal .form-group label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-weight: 500;
+}
+
+.photo-upload-modal input[type="file"] {
+    width: 100%;
+    padding: var(--space-sm);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+.photo-upload-modal textarea {
+    width: 100%;
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+    resize: vertical;
+    font-family: inherit;
+}
+
+.photo-upload-modal .form-actions {
+    display: flex;
+    gap: var(--space-md);
+    justify-content: flex-end;
+    margin-top: var(--space-lg);
+}
+
+.photo-upload-modal .btn-cancel,
+.photo-upload-modal .btn-primary {
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    border: none;
+}
+
+.photo-upload-modal .btn-cancel {
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    color: var(--text-primary);
+}
+
+.photo-upload-modal .btn-cancel:hover {
+    background: var(--surface);
+}
+
+.photo-upload-modal .btn-primary {
+    background: var(--primary);
+    color: var(--text-primary);
+}
+
+.photo-upload-modal .btn-primary:hover {
+    background: var(--primary-light);
+}
+
+.photo-upload-modal .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Verification Badge */
+.verification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--success);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    margin-left: var(--space-sm);
+}
+
+.verification-badge i {
+    font-size: var(--font-size-sm);
+}
+
+/* Category and Tags */
+.location-meta-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-md);
+    align-items: center;
+    margin-top: var(--space-sm);
+}
+
+.category-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--surface);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+}
+
+.category-badge i {
+    color: var(--primary);
+}
+
+.tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.tag-chip {
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    text-decoration: none;
+    transition: all var(--transition-base);
+}
+
+.tag-chip:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+/* Visitor Info */
+.visitor-info {
+    display: flex;
+    gap: var(--space-lg);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.visitor-info-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+/* Report Button */
+.report-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: 1px solid var(--negate);
+    background: var(--surface);
+    color: var(--negate);
+}
+
+.report-button:hover {
+    background: var(--negate);
+    color: var(--text-primary);
+}
+
+/* Report Modal */
+.report-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-modal-content {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    max-width: 500px;
+    width: 90%;
+    padding: var(--space-lg);
+}
+
+.report-form .form-group {
+    margin-bottom: var(--space-md);
+}
+
+.report-form label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.report-form select,
+.report-form textarea {
+    width: 100%;
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-    .location-main-content {
+    .carousel-nav {
+        width: 40px;
+        height: 40px;
+        font-size: var(--font-size-base);
+    }
+
+    .photos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .data-grid {
         grid-template-columns: 1fr;
     }
 
-    .location-map-container {
-        height: 300px;
+    .data-item {
+        padding: var(--space-md);
+    }
+}
+
+/* Ellipsis menu button styles */
+.ellipsis-menu-button {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    cursor: pointer;
+    color: var(--text-tertiary);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    margin-left: var(--space-xs);
+}
+
+.ellipsis-menu-button:hover {
+    color: var(--text-primary);
+}
+
+.ellipsis-menu-button svg {
+    width: 16px;
+    height: 16px;
+    transition: stroke var(--transition-base);
+}
+
+.ellipsis-menu-button.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+    color: var(--text-tertiary);
+}
+
+.ellipsis-menu-button.disabled:hover {
+    color: var(--text-tertiary);
+}
+
+/* Reviews header with toggle button */
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.toggle-review-form {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    transition: all var(--transition-base);
+    font-size: var(--font-size-sm);
+}
+
+.toggle-review-form:hover {
+    color: var(--text-primary);
+    background: var(--surface-light);
+}
+
+.toggle-review-form.active {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.toggle-review-form.active:hover {
+    background: var(--primary-light);
+}
+
+.toggle-review-form svg {
+    width: 16px;
+    height: 16px;
+}
+
+.review-form-container {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Review Metrics Card */
+.review-metrics-card {
+    border: 1px solid var(--surface);
+    border-radius: var(--radius-xs);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.metrics-header {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+}
+
+.overall-rating {
+    text-align: center;
+    min-width: 120px;
+    border-right: 0.5px solid var(--text-tertiary);
+}
+
+.rating-number {
+    font-size: var(--font-size-3xl);
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.rating-stars {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xs);
+}
+
+.rating-stars svg {
+    width: 16px;
+    height: 16px;
+    color: var(--golden);
+}
+
+.total-reviews {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.rating-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.rating-breakdown {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 117px; /* Match the overall-rating height */
+}
+
+.rating-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+    max-height: 20px; /* Ensure consistent row height */
+}
+
+.rating-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.rating-bar-fill {
+    height: 100%;
+    background: var(--golden);
+    transition: width var(--transition-base);
+}
+
+.star-label {
+    color: var(--text-primary);
+    font-size: var(--font-size-xs);
+    min-width: 3em;
+    text-align: left;
+}
+
+.rating-count {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    min-width: 6em;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .metrics-header {
+        flex-direction: column;
+        gap: var(--space-md);
+        align-items: stretch;
+    }
+    
+    .overall-rating {
+        width: 100%;
+        border-right: none;
+        padding-right: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        text-align: left;
+        min-width: auto;
+    }
+    
+    .rating-number {
+        margin-bottom: 0;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    
+    .rating-stars {
+        margin-bottom: 0;
     }
 
-    .review-header {
+    .total-reviews {
+        margin: 0;
+    }
+    
+    .rating-info {
+        display: flex;
         flex-direction: column;
+        justify-content: center;
         align-items: flex-start;
-        gap: var(--space-xs);
+        flex: 1;
+        gap: 2px;
+    }
+    
+    .rating-breakdown {
+        height: auto;
+        justify-content: flex-start;
+        gap: var(--space-sm);
+    }
+    
+    .rating-row {
+        margin-bottom: 0;
+        max-height: none;
+        flex: none;
+        gap: var(--space-md);
+    }
+    
+    .rating-bar {
+        flex: 2;
+        min-width: 120px;
+    }
+    
+    .star-label {
+        min-width: 2.5em;
+    }
+    
+    .rating-count {
+        min-width: 5em;
+        text-align: left;
     }
 }
 </style>
@@ -683,69 +1509,154 @@
     {% csrf_token %}
 
     <div class="location-details-container">
-        <!-- Location Header -->
-        <div class="location-header">
-            <div class="header-content">
-                <div class="title-section">
-                    <h3>{{ location.name }}</h3>
-                    <p class="subtitle">{{ location.formatted_address }}</p>
+        <!-- Hero Section with Image Carousel -->
+        <div class="hero-section">
+            <div class="hero-carousel" id="heroCarousel">
+                <div class="carousel-container">
+                    <button class="carousel-nav prev" id="carouselPrev">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="carousel-content" id="carouselContent">
+                        <!-- Photos will be loaded here -->
+                    </div>
+                    <button class="carousel-nav next" id="carouselNext">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
-                <div class="header-actions">
-                    {% if user.is_authenticated %}
-                        <button class="favorite-button" type="button" id="favoriteButton">
-                            <i class="fas fa-heart"></i>
-                            <span id="favoriteText">Add to Favorites</span>
-                        </button>
-                    {% else %}
-                        <div class="action-button disabled">
-                            <i class="fas fa-lock"></i>
-                            Must be logged in to favorite
+                <div class="hero-overlay">
+                    <div class="hero-header">
+                        <div class="hero-title-section">
+                            <h1>{{ location.name }}</h1>
+                            {% if location.is_verified %}
+                                <span class="verification-badge" title="Verified on {{ location.verification_date|date:'M d, Y' }}">
+                                    <i class="fas fa-check-circle"></i>
+                                    Verified
+                                </span>
+                            {% endif %}
+                            <div class="hero-rating">
+                                <div class="rating-display">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= average_rating %}
+                                            {% include 'stars_app/icons/star-filled-icon.svg' %}
+                                        {% else %}
+                                            {% include 'stars_app/icons/star-empty-icon.svg' %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="rating-count">{{ total_reviews }} review{{ total_reviews|pluralize }}</span>
+                            </div>
                         </div>
-                    {% endif %}
-
-                    <a href="{% url 'map' %}?lat={{ location.latitude }}&lng={{ location.longitude }}&zoom=12"
-                       class="action-button view-map-button">
-                        <i class="fas fa-map-marker-alt"></i>
-                        View on Map
-                    </a>
+                        <div class="hero-actions">
+                            {% if user.is_authenticated %}
+                                <button class="hero-action-btn favorite-button" type="button" id="favoriteButton">
+                                    <i class="fas fa-heart"></i>
+                                    <span id="favoriteText">Favorite</span>
+                                </button>
+                                
+                                {% if not is_owner %}
+                                    <button class="hero-action-btn report-button" type="button" id="reportButton">
+                                        <i class="fas fa-flag"></i>
+                                        Report
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                            <a href="{% url 'map' %}?lat={{ location.latitude }}&lng={{ location.longitude }}&zoom=12"
+                               class="hero-action-btn view-map-button">
+                                <i class="fas fa-map"></i>
+                                View on Map
+                            </a>
+                        </div>
+                    </div>
+                    <div class="photo-credit" id="photoCredit">
+                        <!-- Photo credit will be shown here -->
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Map and Primary Info Section -->
-        <div class="location-main-content">
-            <!-- Mapbox Container -->
-            <div class="location-map-container" id="location-map">
-                <img src="https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/static/{{ location.longitude }},{{ location.latitude }},13/800x400@2x?access_token={{ mapbox_token }}"
-                 alt="Map view of {{ location.name }}"
-                 class="location-static-map">
+        <!-- Photo Gallery Section -->
+        <div class="photos-section">
+            <div class="photos-header">
+                <h2 id="photosTitle">Photos (0)</h2>
+                {% if user.is_authenticated %}
+                    <button class="btn-upload-photo" id="openUploadModal">
+                        <i class="fas fa-upload"></i>
+                        Upload Photo
+                    </button>
+                {% endif %}
             </div>
+            <div class="photos-grid" id="photosGrid">
+                <!-- Photos will be loaded here -->
+            </div>
+        </div>
 
-            <!-- Primary Information -->
-            <div class="location-primary-info">
-                <div class="info-section">
-                    <h4>Location Details</h4>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="label">Coordinates</span>
-                            <span class="value">{{ location.latitude|floatformat:4 }}, {{ location.longitude|floatformat:4 }}</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Elevation</span>
-                            <span class="value">{{ location.elevation|floatformat:0 }} meters</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Light Pollution</span>
-                            <span class="value">{{ location.light_pollution_value|floatformat:2 }} mag/arcsec²</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Current Cloud Cover</span>
-                            <span class="value">{{ location.cloudCoverPercentage|floatformat:0 }}%</span>
-                        </div>
-                        <div class="info-item">
-                            <span class="label">Quality Score</span>
-                            <span class="value">{{ location.quality_score|floatformat:1 }}/100</span>
-                        </div>
+        <!-- About Section -->
+        <div class="about-section">
+            <h2>About this Location</h2>
+            <p class="location-description">
+                {% if location.description %}
+                    {{ location.description }}
+                {% else %}
+                    This astronomical viewing location offers exceptional stargazing conditions. Perfect for observing deep sky objects, the Milky Way, and celestial events.
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Astronomy Data Section -->
+        <div class="astronomy-data-section">
+            <div class="data-grid">
+                <div class="data-item">
+                    <div class="data-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Coordinates</h3>
+                        <p>{{ location.latitude|floatformat:4 }}, {{ location.longitude|floatformat:4 }}</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon elevation">
+                        <i class="fas fa-mountain"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Elevation</h3>
+                        <p>{{ location.elevation|floatformat:0 }} meters</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon cloud">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Current Cloud Cover</h3>
+                        <p>{{ location.cloudCoverPercentage|default:"Unknown"|floatformat:0 }}%</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon light">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Light Pollution</h3>
+                        <p>{% if location.light_pollution_value < 18 %}Minimal{% elif location.light_pollution_value < 20 %}Low{% elif location.light_pollution_value < 21 %}Moderate{% else %}High{% endif %}</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Best Viewing Months</h3>
+                        <p>{% if location.administrative_area == "Hawaii" %}Year-round optimal{% elif location.country == "United States" %}April - September{% else %}Check local conditions{% endif %}</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon access">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Access Information</h3>
+                        <p>{% if location.verification_notes %}{{ location.verification_notes }}{% else %}Check local conditions and accessibility before visiting. {% if location.is_verified %}This location has been verified.{% endif %}{% endif %}</p>
                     </div>
                 </div>
             </div>
@@ -753,7 +1664,15 @@
 
         <!-- Reviews Section -->
         <div class="reviews-section">
-            <h4>Reviews</h4>
+            <div class="reviews-header">
+                <h2>Reviews</h2>
+                {% if user.is_authenticated and not is_owner and not user_has_reviewed %}
+                    <button class="toggle-review-form" id="toggleReviewForm">
+                        <span>Write a Review</span>
+                        {% include 'stars_app/icons/square-pen-icon.svg' %}
+                    </button>
+                {% endif %}
+            </div>
 
             {% if user.is_authenticated %}
                 {% if is_owner %}
@@ -764,24 +1683,29 @@
                         </div>
                     </div>
                 {% elif not user_has_reviewed %}
-                    <div class="review-form-container">
-                        <h5>Add Your Review</h5>
+                    <div class="review-form-container" id="reviewFormContainer" style="display: none;">
+                        <h5>Write a Review</h5>
                         <form method="POST" class="review-form">
                             {% csrf_token %}
                             <div class="rating-input">
                                 <label>Rating:</label>
                                 <div class="star-rating">
-                                    {% for i in "54321" %}
+                                    {% for i in "12345" %}
                                     <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
-                                    <label for="star{{ i }}"></label>
+                                    <label for="star{{ i }}">
+                                        {% include 'stars_app/icons/star-filled-icon.svg' %}
+                                    </label>
                                     {% endfor %}
                                 </div>
                             </div>
-                            <div class="comment-input">
+                            <div class="review-comment-input">
                                 <label for="comment">Comment:</label>
-                                <textarea id="comment" name="comment" rows="4"></textarea>
+                                <textarea id="comment" name="comment" rows="4" placeholder="Share your experience at this location..."></textarea>
                             </div>
-                            <button type="submit" class="submit-review">Submit Review</button>
+                            <button type="submit" class="submit-review">
+                                <i class="fas fa-paper-plane"></i>
+                                Submit Review
+                            </button>
                         </form>
                     </div>
                 {% endif %}
@@ -795,35 +1719,76 @@
                 </div>
             {% endif %}
 
+            <!-- Review Metrics Card -->
+            {% if location.rating_count > 0 %}
+            <div class="review-metrics-card">
+                <div class="metrics-header">
+                    <div class="overall-rating">
+                        <h3 class="rating-number">{{ location.average_rating|floatformat:1 }}</h3>
+                        <div class="rating-info">
+                            <div class="rating-stars">
+                                {% for i in "12345"|make_list %}
+                                    {% if forloop.counter <= location.average_rating|floatformat:0|add:0 %}
+                                        {% include 'stars_app/icons/star-filled-icon.svg' %}
+                                    {% else %}
+                                        {% include 'stars_app/icons/star-empty-icon.svg' %}
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="total-reviews">{{ location.rating_count }} review{{ location.rating_count|pluralize }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="rating-breakdown">
+                        {% for star_count in "54321"|make_list %}
+                            <div class="rating-row">
+                                <div class="rating-bar">
+                                    <div class="rating-bar-fill" data-star="{{ star_count }}" style="width: 0%"></div>
+                                </div>
+                                <span class="star-label">{{ star_count }}.0</span>
+                                <span class="rating-count" data-star-count="{{ star_count }}">0 reviews</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
             <div class="reviews-list">
                 {% if page_obj %}
                     {% for review in page_obj %}
                         <div class="review-card {% if review.user == user %}current-user-review{% endif %}">
                             <div class="review-header">
-                                <div class="rating-display">
-                                    {% for i in "12345"|make_list %}
-                                        <i class="fas fa-star {% if forloop.counter <= review.rating %}filled{% endif %}"></i>
-                                    {% endfor %}
+                                <div class="review-author-section">
+                                    <img src="{{ review.user.userprofile.get_profile_picture_url }}"
+                                         alt="{{ review.user.username }}'s profile picture"
+                                         class="review-profile-picture">
+                                    <div class="review-author">
+                                        <span class="review-username">{{ review.user.username }}</span>
+                                        {% if review.user == user %}
+                                            <span class="your-review-badge">Your Review</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                <div class="review-meta">
-                                    <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
-                                    {% if user == review.user %}
-                                        <button class="delete-review-btn" data-review-id="{{ review.id }}">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <div class="review-author-section">
-                                <img src="{{ review.user.userprofile.get_profile_picture_url }}"
-                                     alt="{{ review.user.username }}'s profile picture"
-                                     class="review-profile-picture">
-                                <div class="review-author">
-                                    <span class="review-username">{{ review.user.username }}</span>
-                                    {% if review.user == user %}
-                                        <span class="your-review-badge">(Your Review)</span>
-                                    {% endif %}
+                                
+                                <div class="review-rating-section">
+                                    <div class="rating-display">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                {% include 'stars_app/icons/star-filled-icon.svg' %}
+                                            {% else %}
+                                                {% include 'stars_app/icons/star-empty-icon.svg' %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <div class="review-meta">
+                                        <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                                        {% if user == review.user %}
+                                            <button class="delete-review-btn" data-review-id="{{ review.id }}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
 
@@ -840,45 +1805,80 @@
                                                 data-review-id="{{ review.id }}"
                                                 data-location-id="{{ location.id }}"
                                                 data-vote-type="up">
-                                            <i class="fas fa-thumbs-up"></i>
+                                            {% include 'stars_app/icons/thumbs-up-icon.svg' %}
                                         </button>
 
-                                        <span class="vote-count">{{ review.vote_counts }}</span>
+                                        <span class="upvote-count">{{ review.cached_upvote_count }}</span>
 
                                         <button class="vote-button downvote {% if review.user_vote == 'down' %}voted{% endif %}"
                                                 data-review-id="{{ review.id }}"
                                                 data-location-id="{{ location.id }}"
                                                 data-vote-type="down">
-                                            <i class="fas fa-thumbs-down"></i>
+                                            {% include 'stars_app/icons/thumbs-down-icon.svg' %}
+                                        </button>
+
+                                        <span class="downvote-count">{{ review.cached_downvote_count }}</span>
+                                        
+                                        <!-- Comments toggle button inline with voting -->
+                                        <button class="comments-toggle inline" data-review-id="{{ review.id }}">
+                                            {% include 'stars_app/icons/comment-icon.svg' %}
+                                            <span class="comments-count">{{ review.comments.count }} Comments</span>
+                                        </button>
+                                        
+                                        <!-- Ellipsis menu button -->
+                                        <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
+                                            {% include 'stars_app/icons/ellipsis-icon.svg' %}
                                         </button>
                                     {% else %}
                                         <!-- New disabled buttons for own review -->
                                         <button class="vote-button disabled" disabled>
-                                            <i class="fas fa-thumbs-up"></i>
+                                            {% include 'stars_app/icons/thumbs-up-icon.svg' %}
                                         </button>
-                                        <span class="vote-count">{{ review.vote_count }}</span>
+                                        <span class="upvote-count">{{ review.cached_upvote_count }}</span>
+
                                         <button class="vote-button disabled" disabled>
-                                            <i class="fas fa-thumbs-down"></i>
+                                            {% include 'stars_app/icons/thumbs-down-icon.svg' %}
+                                        </button>
+                                        <span class="downvote-count">{{ review.cached_downvote_count }}</span>
+
+                                        <!-- Comments toggle button inline with voting -->
+                                        <button class="comments-toggle inline" data-review-id="{{ review.id }}">
+                                            {% include 'stars_app/icons/comment-icon.svg' %}
+                                            <span class="comments-count">{{ review.comments.count }} Comments</span>
+                                        </button>
+                                        
+                                        <!-- Ellipsis menu button -->
+                                        <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
+                                            {% include 'stars_app/icons/ellipsis-icon.svg' %}
                                         </button>
                                     {% endif %}
                                 {% else %}
                                     <!-- Disabled buttons for logged out users -->
                                     <button class="vote-button disabled" disabled>
-                                        <i class="fas fa-thumbs-up"></i>
+                                        {% include 'stars_app/icons/thumbs-up-icon.svg' %}
                                     </button>
-                                    <span class="vote-count">{{ review.vote_count }}</span>
+                                    <span class="upvote-count">{{ review.cached_upvote_count }}</span>
+
                                     <button class="vote-button disabled" disabled>
-                                        <i class="fas fa-thumbs-down"></i>
+                                        {% include 'stars_app/icons/thumbs-down-icon.svg' %}
+                                    </button>
+                                    <span class="downvote-count">{{ review.cached_downvote_count }}</span>
+                                    
+                                    <!-- Comments toggle button inline with voting -->
+                                    <button class="comments-toggle inline" data-review-id="{{ review.id }}">
+                                        {% include 'stars_app/icons/comment-icon.svg' %}
+                                        <span class="comments-count">{{ review.comments.count }} Comments</span>
+                                    </button>
+                                    
+                                    <!-- Ellipsis menu button -->
+                                    <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
+                                        {% include 'stars_app/icons/ellipsis-icon.svg' %}
                                     </button>
                                 {% endif %}
                             </div>
 
                             <!-- Add the collapsible comments section -->
                             <div class="review-comments-section">
-                                <button class="comments-toggle" data-review-id="{{ review.id }}">
-                                    <i class="fas fa-comments"></i>
-                                    <span class="comments-count">{{ review.comments.count }} Comments</span>
-                                </button>
 
                                 <div class="comments-container" id="comments-{{ review.id }}" style="display: none;">
                                     {% if user.is_authenticated %}
@@ -886,8 +1886,22 @@
                                               data-review-id="{{ review.id }}"
                                               data-location-id="{{ location.id }}">
                                             {% csrf_token %}
-                                            <textarea class="comment-input" placeholder="Add a comment..." rows="2"></textarea>
-                                            <button type="submit" class="submit-comment">Post</button>
+                                            <div class="comment-input" contenteditable="true" data-placeholder="Add a comment..." data-name="content"></div>
+                                            <input type="hidden" name="content" class="hidden-content">
+                                            <div class="comment-toolbar">
+                                                <div class="comment-formatting-tools">
+                                                    <button type="button" class="formatting-btn" title="Bold">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                                                    </button>
+                                                    <button type="button" class="formatting-btn" title="Italic">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                                                    </button>
+                                                    <button type="button" class="formatting-btn" title="Underline">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                                                    </button>
+                                                </div>
+                                                <button type="submit" class="submit-comment">Post</button>
+                                            </div>
                                         </form>
                                     {% else %}
                                         <div class="comment-login-prompt">
@@ -910,7 +1924,7 @@
                                                         <span class="comment-username">{{ comment.user.username }}</span>
                                                         <span class="comment-date">{{ comment.created_at|date:"M d, Y" }}</span>
                                                     </div>
-                                                    <p class="comment-text">{{ comment.content }}</p>
+                                                    <p class="comment-text">{{ comment.content|markdown_format }}</p>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -950,27 +1964,349 @@
     </div>
 </div>
 
+<!-- Report Modal -->
+<div class="report-modal" id="reportModal">
+    <div class="report-modal-content">
+        <div class="modal-header">
+            <h3>Report Location</h3>
+            <button class="modal-close" id="closeReportModal">&times;</button>
+        </div>
+        <form id="reportForm" class="report-form">
+            <div class="form-group">
+                <label for="reportType">Report Type</label>
+                <select id="reportType" name="report_type" required>
+                    <option value="">Select a reason...</option>
+                    <option value="DUPLICATE">Duplicate location</option>
+                    <option value="INACCURATE">Inaccurate information</option>
+                    <option value="SPAM">Spam or inappropriate</option>
+                    <option value="UNSAFE">Unsafe location</option>
+                    <option value="CLOSED">Location no longer accessible</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reportDescription">Description</label>
+                <textarea id="reportDescription" name="description" rows="4" 
+                          placeholder="Please provide more details about your report..." required></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" id="cancelReport">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-flag"></i> Submit Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-// Initialize map and favorite functionality after DOM loads
+// Initialize carousel and photo functionality after DOM loads
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Mapbox
-    mapboxgl.accessToken = '{{ mapbox_token }}';
+    // Django template variables for JavaScript
+    const locationId = '{{ location.id }}';
+    const isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+    const isOwner = {% if is_owner %}true{% else %}false{% endif %};
+    const currentUsername = '{{ user.username|default:"" }}';
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    const mapboxToken = '{{ mapbox_token }}';
+    const locationLongitude = {{ location.longitude }};
+    const locationLatitude = {{ location.latitude }};
+    const locationName = '{{ location.name|escapejs }}';
+    
+    // Initialize Photo Gallery and Carousel
+    loadPhotosAndInitialize();
+    
+    // Initialize star rating on existing form
+    initializeStarRating();
+    
+    // Initialize review form toggle
+    initializeReviewFormToggle();
 
-    const map = new mapboxgl.Map({
-        container: 'location-map',
-        style: 'mapbox://styles/mapbox/satellite-streets-v11',
-        center: [{{ location.longitude }}, {{ location.latitude }}],
-        zoom: 13,
-        interactive: false
-    });
+    async function loadPhotosAndInitialize() {
+        try {
+            const response = await fetch(`/api/v1/viewing-locations/${locationId}/photos/`, {
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                const photos = data.results || data;
+                
+                initializeHeroCarousel(photos);
+                initializePhotosGrid(photos);
+                
+                if (isAuthenticated) {
+                    initializeUploadModal();
+                }
+            }
+        } catch (error) {
+            console.error('Error loading photos:', error);
+            initializeHeroCarousel([]);
+            initializePhotosGrid([]);
+        }
+    }
 
-    // Add marker
-    new mapboxgl.Marker()
-        .setLngLat([{{ location.longitude }}, {{ location.latitude }}])
-        .addTo(map);
+    function initializeHeroCarousel(photos) {
+        const carouselContent = document.getElementById('carouselContent');
+        const photoCredit = document.getElementById('photoCredit');
+        const prevBtn = document.getElementById('carouselPrev');
+        const nextBtn = document.getElementById('carouselNext');
+        
+        if (!photos || photos.length === 0) {
+            // Show default map view
+            carouselContent.innerHTML = `
+                <div class="carousel-slide active">
+                    <img src="https://api.mapbox.com/styles/v1/mapbox/satellite-streets-v11/static/${locationLongitude},${locationLatitude},13/1200x500@2x?access_token=${mapboxToken}"
+                         alt="Map view of ${locationName}">
+                </div>
+            `;
+            photoCredit.innerHTML = 'Map data © Mapbox';
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+            return;
+        }
+
+        let currentSlide = 0;
+        
+        // Create slides
+        carouselContent.innerHTML = photos.map((photo, index) => `
+            <div class="carousel-slide ${index === 0 ? 'active' : ''}">
+                <img src="${photo.image_url}" alt="${photo.caption || 'Location photo'}">
+            </div>
+        `).join('');
+        
+        function updatePhotoCredit() {
+            const currentPhoto = photos[currentSlide];
+            if (currentPhoto) {
+                photoCredit.innerHTML = `Photo by ${currentPhoto.uploaded_by_username || 'Unknown'} • ${formatDate(currentPhoto.uploaded_at || currentPhoto.created_at)}`;
+            }
+        }
+        
+        function showSlide(index) {
+            const slides = carouselContent.querySelectorAll('.carousel-slide');
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === index);
+            });
+            currentSlide = index;
+            updatePhotoCredit();
+        }
+        
+        prevBtn.addEventListener('click', () => {
+            const newIndex = currentSlide > 0 ? currentSlide - 1 : photos.length - 1;
+            showSlide(newIndex);
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            const newIndex = currentSlide < photos.length - 1 ? currentSlide + 1 : 0;
+            showSlide(newIndex);
+        });
+        
+        updatePhotoCredit();
+        
+        // Auto-advance carousel
+        setInterval(() => {
+            const newIndex = currentSlide < photos.length - 1 ? currentSlide + 1 : 0;
+            showSlide(newIndex);
+        }, 5000);
+    }
+    
+    function initializePhotosGrid(photos) {
+        const photosGrid = document.getElementById('photosGrid');
+        const photosTitle = document.getElementById('photosTitle');
+        
+        photosTitle.textContent = `Photos (${photos.length})`;
+        
+        if (!photos || photos.length === 0) {
+            photosGrid.innerHTML = `
+                <div class="no-photos" style="grid-column: 1 / -1; text-align: center; padding: var(--space-xl); color: var(--text-tertiary);">
+                    <i class="fas fa-image" style="font-size: 3rem; margin-bottom: var(--space-md); opacity: 0.5;"></i>
+                    <p>No photos yet</p>
+                    ${isAuthenticated ? '<p class="text-muted">Be the first to add a photo!</p>' : ''}
+                </div>
+            `;
+            return;
+        }
+        
+        photosGrid.innerHTML = photos.map(photo => `
+            <div class="photo-thumbnail ${photo.is_primary ? 'primary' : ''}" data-photo-id="${photo.id}" onclick="openPhotoLightbox('${photo.image_url}')">
+                <img src="${photo.thumbnail_url || photo.image_url}" alt="${photo.caption || 'Location photo'}" loading="lazy">
+            </div>
+        `).join('');
+    }
+    
+    function initializeUploadModal() {
+        const uploadBtn = document.getElementById('openUploadModal');
+        if (uploadBtn) {
+            uploadBtn.addEventListener('click', () => {
+                // Create and show upload modal
+                const modal = createUploadModal();
+                document.body.appendChild(modal);
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+        }
+    }
+    
+    function createUploadModal() {
+        const modal = document.createElement('div');
+        modal.className = 'photo-upload-modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Upload Photo</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <form class="photo-upload-form">
+                    <div class="form-group">
+                        <label for="photoFile">Select Photo</label>
+                        <input type="file" id="photoFile" name="image" accept="image/*" required>
+                        <div class="file-preview"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="photoCaption">Caption (optional)</label>
+                        <textarea id="photoCaption" name="caption" rows="3" placeholder="Describe this photo..."></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn-cancel">Cancel</button>
+                        <button type="submit" class="btn-primary">
+                            <i class="fas fa-upload"></i> Upload Photo
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        
+        // Add event listeners
+        const closeBtn = modal.querySelector('.modal-close');
+        const cancelBtn = modal.querySelector('.btn-cancel');
+        const form = modal.querySelector('.photo-upload-form');
+        const fileInput = modal.querySelector('#photoFile');
+        
+        function closeModal() {
+            modal.remove();
+            document.body.style.overflow = '';
+        }
+        
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            const preview = modal.querySelector('.file-preview');
+            
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    preview.innerHTML = `<img src="${e.target.result}" alt="Preview" style="max-width: 100%; height: auto; border-radius: var(--radius-sm);">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('.btn-primary');
+            
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            
+            try {
+                const response = await fetch(`/api/v1/viewing-locations/${locationId}/upload_photo/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                
+                if (response.ok) {
+                    closeModal();
+                    // Reload photos
+                    loadPhotosAndInitialize();
+                    showMessage('Photo uploaded successfully!', 'success');
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Upload failed');
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showMessage(error.message || 'Failed to upload photo', 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Photo';
+            }
+        });
+        
+        return modal;
+    }
+    
+    // Global functions
+    window.openPhotoLightbox = function(imageSrc) {
+        const lightbox = document.createElement('div');
+        lightbox.className = 'photo-lightbox';
+        lightbox.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 2000; display: flex;
+            align-items: center; justify-content: center; padding: var(--space-lg);
+        `;
+        lightbox.innerHTML = `
+            <div style="position: relative; max-width: 90%; max-height: 90vh;">
+                <img src="${imageSrc}" style="max-width: 100%; max-height: 90vh; object-fit: contain;">
+                <button style="position: absolute; top: -40px; right: 0; background: none; border: none; color: white; font-size: 2rem; cursor: pointer;">&times;</button>
+            </div>
+        `;
+        
+        document.body.appendChild(lightbox);
+        document.body.style.overflow = 'hidden';
+        
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox || e.target.tagName === 'BUTTON') {
+                lightbox.remove();
+                document.body.style.overflow = '';
+            }
+        });
+    };
+    
+    function showMessage(message, type) {
+        const messageEl = document.createElement('div');
+        messageEl.className = `gallery-message ${type}`;
+        messageEl.textContent = message;
+        messageEl.style.cssText = `
+            position: fixed; top: 20px; right: 20px; z-index: 10000;
+            padding: var(--space-sm) var(--space-md); border-radius: var(--radius-sm);
+            color: white; font-size: var(--font-size-sm); max-width: 300px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            background: ${type === 'success' ? 'var(--success)' : 'var(--negate)'};
+        `;
+        
+        document.body.appendChild(messageEl);
+        
+        setTimeout(() => {
+            messageEl.remove();
+        }, 3000);
+    }
+    
+    function formatDate(dateString) {
+        if (!dateString) return 'Unknown date';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (error) {
+            return 'Invalid date';
+        }
+    }
 
     // Favorite functionality
-    const locationId = '{{ location.id }}';
     let isFavorited = false;
 
     function updateFavoriteButton() {
@@ -984,48 +2320,50 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Check initial favorite status when page loads
-    const favoriteButton = document.querySelector('.favorite-button');
-    if (favoriteButton) {
-        fetch(`/api/viewing-locations/${locationId}/favorite/`, {
-            method: 'GET',
-            headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => response.json())
-        .then(data => {
-            isFavorited = data.is_favorited;
-            updateFavoriteButton();
-        })
-        .catch(error => console.error('Error checking favorite status:', error));
-
-        // Add click handler for favorite button
-        favoriteButton.addEventListener('click', function() {
-            const endpoint = isFavorited ? 'unfavorite' : 'favorite';
-
-            fetch(`/api/viewing-locations/${locationId}/${endpoint}/`, {
-                method: 'POST',
+    if (isAuthenticated) {
+        const favoriteButton = document.querySelector('.favorite-button');
+        if (favoriteButton) {
+            fetch(`/api/v1/viewing-locations/${locationId}/favorite/`, {
+                method: 'GET',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-CSRFToken': csrfToken,
                     'Content-Type': 'application/json'
                 },
                 credentials: 'same-origin'
             })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                isFavorited = !isFavorited;
+                isFavorited = data.is_favorited;
                 updateFavoriteButton();
             })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
+            .catch(error => console.error('Error checking favorite status:', error));
+
+            // Add click handler for favorite button
+            favoriteButton.addEventListener('click', function() {
+                const endpoint = isFavorited ? 'unfavorite' : 'favorite';
+
+                fetch(`/api/v1/viewing-locations/${locationId}/${endpoint}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.json();
+                })
+                .then(data => {
+                    isFavorited = !isFavorited;
+                    updateFavoriteButton();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. Please try again.');
+                });
             });
-        });
+        }
     }
 
     // Initializing review form HTML:
@@ -1033,21 +2371,50 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="review-form-container">
             <h5>Add Your Review</h5>
             <form method="POST" class="review-form">
-                {% csrf_token %}
+                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                 <div class="rating-input">
                     <label>Rating:</label>
                     <div class="star-rating">
-                        {% for i in "54321" %}
-                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
-                        <label for="star{{ i }}"></label>
-                        {% endfor %}
+                        <input type="radio" id="star1" name="rating" value="1" required>
+                        <label for="star1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
+                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                            </svg>
+                        </label>
+                        <input type="radio" id="star2" name="rating" value="2" required>
+                        <label for="star2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                            </svg>
+                        </label>
+                        <input type="radio" id="star3" name="rating" value="3" required>
+                        <label for="star3">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                            </svg>
+                        </label>
+                        <input type="radio" id="star4" name="rating" value="4" required>
+                        <label for="star4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                            </svg>
+                        </label>
+                        <input type="radio" id="star5" name="rating" value="5" required>
+                        <label for="star5">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                            </svg>
+                        </label>
                     </div>
                 </div>
-                <div class="comment-input">
+                <div class="review-comment-input">
                     <label for="comment">Comment:</label>
-                    <textarea id="comment" name="comment" rows="4"></textarea>
+                    <textarea id="comment" name="comment" rows="4" placeholder="Share your experience at this location..."></textarea>
                 </div>
-                <button type="submit" class="submit-review">Submit Review</button>
+                <button type="submit" class="submit-review">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Review
+                </button>
             </form>
         </div>
     `;
@@ -1067,7 +2434,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     fetch(`/delete-review/${reviewId}/`, {
                         method: 'POST',
                         headers: {
-                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                            'X-CSRFToken': csrfToken,
                             'Content-Type': 'application/json'
                         },
                         credentials: 'same-origin'
@@ -1099,7 +2466,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 reviewsSection.insertBefore(formContainer, reviewsListElement);
 
                                 // Initialize star rating functionality
-                                initializeStarRating();
+                                setTimeout(() => initializeStarRating(), 100);
                             }
                         }
                     })
@@ -1120,10 +2487,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const voteType = voteButton.dataset.voteType;
                 const voteContainer = voteButton.closest('.vote-controls')
 
-                fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/vote/`, {
+                fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/vote/`, {
                     method: 'POST',
                     headers: {
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'X-CSRFToken': csrfToken,
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ vote_type: voteType }),
@@ -1134,9 +2501,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     return response.json();
                 })
                 .then(data => {
-                    // Update vote count
-                    const voteCountElement = voteContainer.querySelector('.vote-count');
-                    voteCountElement.textContent = data.vote_count;
+                    // Update vote counts
+                    const upvoteCountElement = voteContainer.querySelector('.upvote-count');
+                    const downvoteCountElement = voteContainer.querySelector('.downvote-count');
+                    
+                    if (upvoteCountElement) {
+                        upvoteCountElement.textContent = data.upvotes;
+                    }
+                    if (downvoteCountElement) {
+                        downvoteCountElement.textContent = data.downvotes;
+                    }
 
                     // Update button states
                     const upvoteButton = voteContainer.querySelector('.upvote');
@@ -1165,28 +2539,111 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function initializeStarRating() {
-        const starLabels = document.querySelectorAll('.star-rating label');
-        starLabels.forEach(label => {
-            label.addEventListener('mouseover', function() {
-                const siblings = [...this.parentElement.children];
-                const index = siblings.indexOf(this);
-                siblings.forEach((sibling, i) => {
-                    if (i >= index && sibling.tagName === 'LABEL') {
-                        sibling.classList.add('hover');
+        const starContainers = document.querySelectorAll('.star-rating');
+        
+        starContainers.forEach(container => {
+            const labels = container.querySelectorAll('label');
+            const inputs = container.querySelectorAll('input');
+            
+            // Handle hover effects
+            labels.forEach((label, index) => {
+                label.addEventListener('mouseover', function() {
+                    // Clear all hover states
+                    labels.forEach(l => l.classList.remove('hover'));
+                    // Add hover to current and all previous stars (left to right)
+                    for (let i = 0; i <= index; i++) {
+                        labels[i].classList.add('hover');
+                    }
+                });
+                
+                label.addEventListener('mouseout', function() {
+                    // Clear all hover states
+                    labels.forEach(l => l.classList.remove('hover'));
+                });
+                
+                label.addEventListener('click', function() {
+                    const value = inputs[index].value;
+                    // Clear all filled states
+                    labels.forEach(l => l.classList.remove('filled'));
+                    // Fill stars from left to right up to selected value
+                    for (let i = 0; i < value; i++) {
+                        labels[i].classList.add('filled');
                     }
                 });
             });
-
-            label.addEventListener('mouseout', function() {
-                const siblings = [...this.parentElement.children];
-                siblings.forEach(sibling => {
-                    if (sibling.tagName === 'LABEL') {
-                        sibling.classList.remove('hover');
+            
+            // Handle input changes to maintain visual state
+            inputs.forEach((input, index) => {
+                input.addEventListener('change', function() {
+                    if (this.checked) {
+                        const value = parseInt(this.value);
+                        // Clear all filled states
+                        labels.forEach(l => l.classList.remove('filled'));
+                        // Fill stars from left to right up to selected value
+                        for (let i = 0; i < value; i++) {
+                            labels[i].classList.add('filled');
+                        }
                     }
                 });
             });
         });
     }
+    
+    function initializeReviewFormToggle() {
+        const toggleBtn = document.getElementById('toggleReviewForm');
+        const formContainer = document.getElementById('reviewFormContainer');
+        
+        if (toggleBtn && formContainer) {
+            toggleBtn.addEventListener('click', function() {
+                const isVisible = formContainer.style.display !== 'none';
+                
+                if (isVisible) {
+                    formContainer.style.display = 'none';
+                    toggleBtn.classList.remove('active');
+                } else {
+                    formContainer.style.display = 'block';
+                    toggleBtn.classList.add('active');
+                }
+            });
+        }
+    }
+    
+    // Calculate and display rating distribution
+    function calculateRatingDistribution() {
+        const reviewCards = document.querySelectorAll('.review-card');
+        const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+        let totalReviews = 0;
+        
+        // Count ratings from review cards
+        reviewCards.forEach(card => {
+            const filledStars = card.querySelectorAll('.rating-display svg.filled, .rating-display svg[style*="color: var(--golden)"]');
+            const rating = filledStars.length;
+            if (rating >= 1 && rating <= 5) {
+                ratingCounts[rating]++;
+                totalReviews++;
+            }
+        });
+        
+        // Update the rating bars and counts
+        for (let star = 1; star <= 5; star++) {
+            const count = ratingCounts[star];
+            const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
+            
+            const barFill = document.querySelector(`.rating-bar-fill[data-star="${star}"]`);
+            const countElement = document.querySelector(`.rating-count[data-star-count="${star}"]`);
+            
+            if (barFill) {
+                barFill.style.width = percentage + '%';
+            }
+            if (countElement) {
+                const reviewText = count === 1 ? 'review' : 'reviews';
+                countElement.textContent = `${count} ${reviewText}`;
+            }
+        }
+    }
+    
+    // Call this after DOM is loaded
+    setTimeout(calculateRatingDistribution, 100);
 
 
     // Handle comment section toggling
@@ -1200,6 +2657,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    // Initialize formatting functionality for comment forms
+    initializeCommentFormatting();
+
     // Handle comment submission
     document.querySelectorAll('.comment-form').forEach(form => {
         form.addEventListener('submit', function(e) {
@@ -1208,7 +2668,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const reviewId = this.dataset.reviewId;
             const locationId = this.dataset.locationId;
             const commentInput = this.querySelector('.comment-input');
-            const content = commentInput.value.trim();
+            const hiddenInput = this.querySelector('.hidden-content');
+            
+            // Get content from hidden input (markdown) or contenteditable div
+            let content;
+            if (hiddenInput && hiddenInput.value.trim()) {
+                content = hiddenInput.value.trim();
+            } else if (commentInput.contentEditable === 'true') {
+                content = htmlToMarkdown(commentInput.innerHTML).trim();
+            } else {
+                content = commentInput.value.trim();
+            }
 
             // Debug logging
             console.log('Submitting comment:', {
@@ -1219,10 +2689,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (!content) return;
 
-            fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/`, {
+            fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-CSRFToken': csrfToken,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ content: content }),
@@ -1245,7 +2715,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 commentsList.appendChild(newComment);
 
                 // Clear the input
-                commentInput.value = '';
+                if (commentInput.contentEditable === 'true') {
+                    commentInput.innerHTML = '';
+                    hiddenInput.value = '';
+                    
+                    // Clear all formatting button states
+                    const form = commentInput.closest('.comment-form');
+                    const buttons = form.querySelectorAll('.formatting-btn');
+                    buttons.forEach(button => button.classList.remove('active'));
+                } else {
+                    commentInput.value = '';
+                }
 
                 // Update comment count
                 const countElement = this.closest('.review-comments-section')
@@ -1277,7 +2757,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <span class="comment-username">${username}</span>
                     <span class="comment-date">${formatDate(comment.created_at)}</span>
                 </div>
-                <p class="comment-text">${comment.content}</p>
+                <p class="comment-text">${comment.formatted_content || comment.content}</p>
             </div>
         `;
         return div;
@@ -1291,6 +2771,238 @@ document.addEventListener('DOMContentLoaded', function() {
             year: 'numeric'
         });
     }
+
+    // Report functionality
+    const reportButton = document.getElementById('reportButton');
+    const reportModal = document.getElementById('reportModal');
+    const closeReportModal = document.getElementById('closeReportModal');
+    const cancelReport = document.getElementById('cancelReport');
+    const reportForm = document.getElementById('reportForm');
+
+    if (reportButton) {
+        reportButton.addEventListener('click', () => {
+            reportModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        });
+    }
+
+    function closeReportModalFunc() {
+        reportModal.style.display = 'none';
+        document.body.style.overflow = '';
+        reportForm.reset();
+    }
+
+    if (closeReportModal) {
+        closeReportModal.addEventListener('click', closeReportModalFunc);
+    }
+
+    if (cancelReport) {
+        cancelReport.addEventListener('click', closeReportModalFunc);
+    }
+
+    if (reportModal) {
+        reportModal.addEventListener('click', (e) => {
+            if (e.target === reportModal) {
+                closeReportModalFunc();
+            }
+        });
+    }
+
+    if (reportForm) {
+        reportForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                report_type: document.getElementById('reportType').value,
+                description: document.getElementById('reportDescription').value
+            };
+
+            try {
+                const response = await fetch(`/api/v1/viewing-locations/${locationId}/report/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify(formData),
+                    credentials: 'same-origin'
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to submit report');
+                }
+
+                const result = await response.json();
+                
+                // Show success message
+                alert('Thank you for your report. It will be reviewed by our moderators.');
+                closeReportModalFunc();
+                
+            } catch (error) {
+                console.error('Report error:', error);
+                alert(error.message || 'Failed to submit report. Please try again.');
+            }
+        });
+    }
+
+    function initializeCommentFormatting() {
+        // Add event listeners to all formatting buttons
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.formatting-btn')) {
+                e.preventDefault();
+                const button = e.target.closest('.formatting-btn');
+                const form = button.closest('.comment-form');
+                const editableDiv = form.querySelector('.comment-input');
+                
+                // Focus the editor first
+                editableDiv.focus();
+                
+                // Get the formatting type from button title
+                const formatType = button.getAttribute('title').toLowerCase();
+                
+                // Apply formatting using simple execCommand
+                applyFormattingSimple(formatType);
+                
+                // Update button states and hidden input
+                setTimeout(() => {
+                    updateButtonStates(form);
+                    updateHiddenInput(editableDiv);
+                }, 10);
+            }
+        });
+
+        // Update button states when selection changes
+        document.addEventListener('selectionchange', function() {
+            const activeElement = document.activeElement;
+            if (activeElement && activeElement.classList.contains('comment-input') && activeElement.contentEditable === 'true') {
+                const form = activeElement.closest('.comment-form');
+                updateButtonStates(form);
+            }
+        });
+        
+        // Update hidden input when content changes
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('comment-input') && e.target.contentEditable === 'true') {
+                updateHiddenInput(e.target);
+            }
+        });
+    }
+
+    function applyFormattingSimple(formatType) {
+        // Use document.execCommand for reliable formatting
+        let command;
+        switch(formatType) {
+            case 'bold':
+                command = 'bold';
+                break;
+            case 'italic':
+                command = 'italic';
+                break;
+            case 'underline':
+                command = 'underline';
+                break;
+            default:
+                return;
+        }
+        
+        // Apply the formatting
+        document.execCommand(command, false, null);
+    }
+
+    function updateHiddenInput(editableDiv) {
+        const form = editableDiv.closest('.comment-form');
+        const hiddenInput = form.querySelector('.hidden-content');
+        
+        // Convert HTML content to markdown for storage
+        const htmlContent = editableDiv.innerHTML;
+        const markdownContent = htmlToMarkdown(htmlContent);
+        
+        // Debug logging to see the conversion
+        console.log('HTML:', htmlContent);
+        console.log('Markdown:', markdownContent);
+        
+        hiddenInput.value = markdownContent;
+    }
+
+    function htmlToMarkdown(html) {
+        // Create a temporary div to work with the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Process the HTML content to extract formatting
+        const result = processNodeForMarkdown(tempDiv);
+        
+        return result.trim();
+    }
+    
+    function processNodeForMarkdown(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent;
+        }
+        
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            let content = '';
+            
+            // Process all child nodes first
+            for (let child of node.childNodes) {
+                content += processNodeForMarkdown(child);
+            }
+            
+            // Apply formatting based on the current element
+            const tagName = node.tagName ? node.tagName.toLowerCase() : '';
+            
+            switch (tagName) {
+                case 'strong':
+                case 'b':
+                    return `**${content}**`;
+                case 'em':
+                case 'i':
+                    return `*${content}*`;
+                case 'u':
+                    return `__${content}__`;
+                case 'br':
+                    return '\n';
+                case 'div':
+                    return content + '\n';
+                default:
+                    return content;
+            }
+        }
+        
+        return '';
+    }
+
+    function updateButtonStates(form) {
+        if (!form) return;
+        
+        const buttons = form.querySelectorAll('.formatting-btn');
+        
+        buttons.forEach(button => {
+            const formatType = button.getAttribute('title').toLowerCase();
+            let command;
+            
+            switch(formatType) {
+                case 'bold':
+                    command = 'bold';
+                    break;
+                case 'italic':
+                    command = 'italic';
+                    break;
+                case 'underline':
+                    command = 'underline';
+                    break;
+                default:
+                    return;
+            }
+            
+            // Use queryCommandState to check if formatting is active
+            const isActive = document.queryCommandState(command);
+            button.classList.toggle('active', isActive);
+        });
+    }
+
+
 });
 </script>
 {% endblock %}

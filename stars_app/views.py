@@ -39,6 +39,7 @@ from stars_app.serializers_bulk import BulkLocationImportSerializer
 from stars_app.services.clustering_service import ClusteringService
 from stars_app.models.locationphoto import LocationPhoto
 from stars_app.models.locationreport import LocationReport
+from stars_app.models.locationcategory import LocationCategory, LocationTag
 
 # Tile libraries:
 import os
@@ -398,7 +399,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         serializer = LocationReportSerializer(reports, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['POST', 'GET'])
+    @action(detail=True, methods=['POST', 'GET'], permission_classes=[IsAuthenticated])
     def favorite(self, request, pk=None):
         location = self.get_object()
 
@@ -434,7 +435,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(location)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['POST', 'GET'])
+    @action(detail=True, methods=['POST', 'GET'], permission_classes=[IsAuthenticated])
     def unfavorite(self, request, pk=None):
         location = self.get_object()
 
@@ -600,6 +601,46 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+    @action(detail=True, methods=['DELETE'], permission_classes=[IsAuthenticated])
+    def delete_photo(self, request, pk=None):
+        """Delete a photo for this location"""
+        location = self.get_object()
+        photo_id = request.data.get('photo_id') or request.query_params.get('photo_id')
+        
+        if not photo_id:
+            return Response(
+                {'detail': 'photo_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            photo = LocationPhoto.objects.get(
+                id=photo_id,
+                location=location
+            )
+            
+            # Only the uploader or location owner can delete the photo
+            if photo.uploaded_by != request.user and location.added_by != request.user:
+                return Response(
+                    {'detail': 'You do not have permission to delete this photo'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            # If this was the primary photo, unset it
+            was_primary = photo.is_primary
+            photo.delete()
+            
+            return Response({
+                'detail': 'Photo deleted successfully',
+                'was_primary': was_primary
+            })
+            
+        except LocationPhoto.DoesNotExist:
+            return Response(
+                {'detail': 'Photo not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
     @action(detail=True, methods=['POST'])
     def add_review(self, request, pk=None):
         location = self.get_object()
@@ -717,9 +758,22 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
                 vote.is_upvote = is_upvote
                 vote.save()
 
-        # Return serialized review data with updated vote information
-        serializer = self.get_serializer(review)
-        return Response(serializer.data)
+        # Calculate updated vote information
+        upvotes = review.votes.filter(is_upvote=True).count()
+        downvotes = review.votes.filter(is_upvote=False).count()
+        vote_count = upvotes - downvotes
+        
+        # Get current user's vote status
+        user_vote = None
+        if vote:
+            user_vote = 'up' if vote.is_upvote else 'down'
+        
+        return Response({
+            'vote_count': vote_count,
+            'user_vote': user_vote,
+            'upvotes': upvotes,
+            'downvotes': downvotes
+        })
 
 class ReviewCommentViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewCommentSerializer
@@ -836,6 +890,32 @@ class ForecastViewSet(viewsets.ReadOnlyModelViewSet):
     pagination_class = StandardResultsSetPagination
 
 
+@extend_schema_view(
+    list=extend_schema(description="List all location categories"),
+    retrieve=extend_schema(description="Get a specific location category"),
+)
+class LocationCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = LocationCategorySerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = LocationCategory.objects.all()
+    pagination_class = StandardResultsSetPagination
+
+
+@extend_schema_view(
+    list=extend_schema(description="List all location tags"),
+    retrieve=extend_schema(description="Get a specific location tag"),
+)
+class LocationTagViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = LocationTagSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    queryset = LocationTag.objects.filter(is_approved=True)  # Only show approved tags
+    pagination_class = StandardResultsSetPagination
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['name']
+    ordering_fields = ['name', 'usage_count']
+    ordering = ['-usage_count', 'name']
+
+
 # Note: defaultforecast is a function, not a model, so no ViewSet needed
 
 class ViewingLocationCreateView(LoginRequiredMixin, View):
@@ -929,9 +1009,10 @@ def location_details(request, location_id):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
-    # Add vote information
-    if request.user.is_authenticated:
-        for review in page_obj:
+    # Add vote information for authenticated users
+    for review in page_obj:
+        # Add user-specific vote information only for authenticated users
+        if request.user.is_authenticated:
             # Get the vote for this review
             vote = ReviewVote.objects.filter(
                 user=request.user,
@@ -940,11 +1021,12 @@ def location_details(request, location_id):
 
             # Add vote information as an attribute (not a property)
             setattr(review, 'user_vote', 'up' if vote and vote.is_upvote else 'down' if vote else None)
+        else:
+            setattr(review, 'user_vote', None)
 
-            # Calculate vote count
-            upvotes = review.votes.filter(is_upvote=True).count()
-            downvotes = review.votes.filter(is_upvote=False).count()
-            setattr(review, 'vote_counts', upvotes - downvotes)  # Using setattr instead of direct assignment
+        # Cache upvote and downvote counts to avoid multiple database queries
+        review.cached_upvote_count = review.votes.filter(is_upvote=True).count()
+        review.cached_downvote_count = review.votes.filter(is_upvote=False).count()
 
     # Handle review submission
     if request.method == 'POST' and request.user.is_authenticated and not is_owner:
@@ -963,12 +1045,22 @@ def location_details(request, location_id):
                 review.save()
             return redirect('location_details', location_id=location_id)
 
+    # Calculate review statistics
+    total_reviews = all_reviews.count()
+    if total_reviews > 0:
+        from django.db.models import Avg
+        avg_rating = all_reviews.aggregate(Avg('rating'))['rating__avg'] or 0
+    else:
+        avg_rating = 0
+    
     context = {
         'location': location,
         'page_obj': page_obj,
-        'user_has_reviewed': user_has_reviewed,  # Fixed: Don't append 'is not None'
+        'user_has_reviewed': user_has_reviewed,
         'is_owner': is_owner,
         'mapbox_token': settings.MAPBOX_TOKEN,
+        'total_reviews': total_reviews,
+        'average_rating': avg_rating,
     }
     return render(request, 'stars_app/location_details.html', context)
 

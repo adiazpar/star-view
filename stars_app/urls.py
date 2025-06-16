@@ -22,6 +22,8 @@ router.register(r'users', views.UserViewSet, basename='users')
 router.register(r'favorite-locations', views.FavoriteLocationViewSet, basename='favorite-locations')
 router.register(r'review-votes', views.ReviewVoteViewSet, basename='review-votes')
 router.register(r'forecasts', views.ForecastViewSet, basename='forecasts')
+router.register(r'location-categories', views.LocationCategoryViewSet, basename='location-categories')
+router.register(r'location-tags', views.LocationTagViewSet, basename='location-tags')
 # defaultforecast is a function, not a model, so no endpoint needed
 
 # Nested router for reviews

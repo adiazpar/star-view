@@ -103,6 +103,228 @@ export class MapController {
         });
     }
 
+    // Advanced Filter Functions: ------------------------------------------ //
+    async applyAdvancedFilters(filters) {
+        try {
+            console.log('Applying advanced filters:', filters);
+            
+            // Check if any advanced filters are actually applied
+            const hasAdvancedFilters = Object.keys(filters).length > 0;
+            
+            if (!hasAdvancedFilters) {
+                // No advanced filters, reload original data
+                await this.loadLocationsAndEvents();
+                return;
+            }
+            
+            // Build API query parameters
+            const queryParams = new URLSearchParams();
+            
+            Object.keys(filters).forEach(key => {
+                if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
+                    queryParams.append(key, filters[key]);
+                }
+            });
+            
+            // Fetch filtered locations
+            const url = `/api/v1/viewing-locations/?${queryParams.toString()}`;
+            const response = await fetch(url, {
+                credentials: 'same-origin'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const locations = data.results || data;
+            
+            // Store that we're using filtered data
+            this.isUsingAdvancedFilters = true;
+            
+            // Update markers on map
+            this.updateMapMarkers(locations);
+            
+            // Update location list in sidebar  
+            this.updateLocationList(locations);
+            
+            // Apply existing frontend filters on top of the API filtered results
+            setTimeout(() => {
+                this.applyFilters();
+            }, 100);
+            
+            console.log(`Applied advanced filters, showing ${locations.length} locations`);
+            
+        } catch (error) {
+            console.error('Error applying advanced filters:', error);
+        }
+    }
+
+    async resetAdvancedFilters() {
+        console.log('Resetting to original data');
+        this.isUsingAdvancedFilters = false;
+        await this.loadLocationsAndEvents();
+        this.applyFilters(); // Apply any existing frontend filters
+    }
+
+    updateMapMarkers(locations) {
+        // Clear existing location markers
+        this.markerManager.locations.forEach(marker => marker.remove());
+        this.markerManager.locations.clear();
+        
+        // Add new markers
+        locations.forEach(location => {
+            const marker = this.createLocationMarker(location);
+            this.markerManager.locations.set(location.id, marker);
+        });
+    }
+
+    createLocationMarker(location) {
+        // Create marker element with category-based styling
+        const el = document.createElement('div');
+        el.className = 'map-marker location-marker';
+        
+        // Add category-specific styling if available
+        if (location.category) {
+            el.classList.add(`category-${location.category.slug}`);
+            el.innerHTML = `<i class="${location.category.icon}"></i>`;
+        } else {
+            el.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
+        }
+        
+        // Add verification badge if verified
+        if (location.is_verified) {
+            el.classList.add('verified');
+        }
+        
+        // Create popup content
+        const popupContent = this.createLocationPopup(location);
+        
+        const popup = new mapboxgl.Popup({
+            offset: 25,
+            closeButton: true,
+            closeOnClick: false
+        }).setHTML(popupContent);
+        
+        // Create and add marker
+        const marker = new mapboxgl.Marker(el)
+            .setLngLat([location.longitude, location.latitude])
+            .setPopup(popup)
+            .addTo(this.map);
+            
+        // Add click handler
+        el.addEventListener('click', () => {
+            this.handleLocationSelection(location);
+        });
+        
+        return marker;
+    }
+
+    createLocationPopup(location) {
+        const verificationBadge = location.is_verified ? 
+            '<span class="popup-verified"><i class="fas fa-check-circle"></i> Verified</span>' : '';
+        
+        const categoryInfo = location.category ? 
+            `<div class="popup-category"><i class="${location.category.icon}"></i> ${location.category.name}</div>` : '';
+        
+        const qualityScore = location.quality_score ? 
+            `<div class="popup-quality">Quality: ${location.quality_score.toFixed(1)}/100</div>` : '';
+        
+        return `
+            <div class="location-popup">
+                <h3>${location.name}</h3>
+                ${verificationBadge}
+                ${categoryInfo}
+                ${qualityScore}
+                <div class="popup-coordinates">${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}</div>
+                <a href="/location/${location.id}/" class="popup-link">View Details</a>
+            </div>
+        `;
+    }
+
+    updateLocationList(locations) {
+        const locationList = document.querySelector('.location-list');
+        if (!locationList) return;
+        
+        // Clear existing items (keep only pagination)
+        const existingItems = locationList.querySelectorAll('.location-item');
+        existingItems.forEach(item => item.remove());
+        
+        // Add filtered locations
+        locations.forEach(location => {
+            const locationElement = this.createLocationListItem(location);
+            locationList.insertBefore(locationElement, locationList.querySelector('.pagination'));
+        });
+        
+        // Update pagination if needed
+        this.updatePaginationForFiltered(locations.length);
+    }
+
+    createLocationListItem(location) {
+        const div = document.createElement('div');
+        div.className = 'location-item';
+        div.setAttribute('data-lat', location.latitude);
+        div.setAttribute('data-lng', location.longitude);
+        div.setAttribute('data-type', 'location');
+        div.setAttribute('data-id', location.id);
+        div.setAttribute('data-is-favorite', location.is_favorited || 'false');
+        div.setAttribute('data-added-by', location.added_by || '');
+        
+        const verificationBadge = location.is_verified ? 
+            '<span class="verification-mini-badge"><i class="fas fa-check-circle"></i></span>' : '';
+        
+        const categoryIcon = location.category ? 
+            `<i class="${location.category.icon}"></i>` : '<i class="fas fa-map-marker-alt"></i>';
+        
+        div.innerHTML = `
+            <div class="item-snapshot">
+                <div class="favorite-indicator">
+                    <i class="fas fa-heart"></i>
+                </div>
+                <img class="location-map"
+                     src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/${location.longitude},${location.latitude},6/150x150@2x?access_token=${mapboxgl.accessToken}&attribution=false"
+                     alt="Map view of ${location.name}">
+            </div>
+            <div class="item-content">
+                <h3 class="location-title">
+                    ${location.name}
+                    ${verificationBadge}
+                </h3>
+                <div class="location-type">
+                    ${categoryIcon}
+                    ${location.category ? location.category.name : 'Viewing Location'}
+                </div>
+                <div class="location-info">
+                    <div class="star-rating">
+                        <div class="star-rating-stars">
+                            ${this.generateStarRating(location.average_rating || 0)}
+                        </div>
+                        <span class="star-rating-count">(${location.review_count || 0})</span>
+                    </div>
+                    <div class="info-item">
+                        SEE DETAILS
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        return div;
+    }
+
+    generateStarRating(rating) {
+        let stars = '';
+        for (let i = 1; i <= 5; i++) {
+            const filled = i <= Math.round(rating) ? 'filled' : '';
+            stars += `<i class="fas fa-star ${filled}"></i>`;
+        }
+        return stars;
+    }
+
+    updatePaginationForFiltered(totalItems) {
+        this.pagination.totalItems = totalItems;
+        this.updatePagination();
+    }
+
     async initializeMap() {
         mapboxgl.accessToken = MAPBOX_CONFIG.accessToken;
         this.map = new mapboxgl.Map({
@@ -1024,7 +1246,7 @@ export class MapController {
                                 </div>
                                 <div class="info-content">
                                     <label>Elevation</label>
-                                    <span>${location.elevation.toFixed(0)} m</span>
+                                    <span>${location.elevation ? location.elevation.toFixed(0) + ' m' : 'Not available'}</span>
                                 </div>
                             </div>
                         </div>
@@ -1040,7 +1262,7 @@ export class MapController {
                                 </div>
                                 <div class="info-content">
                                     <label>Moon Phase</label>
-                                    <span>${location.moon_phase_info.short_name} - ${location.moon_phase.toFixed(1)}%</span>                                   
+                                    <span>${location.moon_phase_info ? location.moon_phase_info.short_name : 'Unknown'}${location.moon_phase ? ' - ' + location.moon_phase.toFixed(1) + '%' : ''}</span>                                   
                                 </div>
                             </div>
                             
@@ -1155,18 +1377,34 @@ export class MapController {
 
     async toggleFavorite(locationId) {
         try {
+            // Check if user is authenticated
+            const mapContainer = document.querySelector('.map-container');
+            const isAuthenticated = mapContainer && mapContainer.dataset.currentUser === 'true';
+            
+            if (!isAuthenticated) {
+                this.showErrorMessage('You must be logged in to favorite locations');
+                return;
+            }
+
             const location = this.findLocationById(locationId);
-            if (!location) return;
+            if (!location) {
+                this.showErrorMessage('Location not found');
+                return;
+            }
 
             // Get CSRF token
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+            if (!csrfToken) {
+                this.showErrorMessage('Security token not found. Please refresh the page.');
+                return;
+            }
 
 
             const action = location.is_favorited ? 'unfavorite' : 'favorite';
             const response = await fetch(`/api/v1/viewing-locations/${locationId}/${action}/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': csrfToken,
+                    'X-CSRFToken': csrfToken.value,
                     'Content-Type': 'application/json'
                 },
                 credentials: 'same-origin'
@@ -1209,11 +1447,19 @@ export class MapController {
             }
             else {
                 console.error('Server responded with:', response.status);
-                const errorData = await response.json();
-                console.error('Error details:', errorData);
+                let errorMessage = `HTTP ${response.status}`;
+                try {
+                    const errorData = await response.json();
+                    console.error('Error details:', errorData);
+                    errorMessage = errorData.detail || errorData.message || `HTTP ${response.status}`;
+                } catch (parseError) {
+                    console.error('Could not parse error response:', parseError);
+                }
+                this.showErrorMessage(`Failed to ${action} location: ${errorMessage}`);
             }
         } catch (error) {
             console.error('Error toggling favorite:', error);
+            this.showErrorMessage(`Network error: ${error.message}`);
         }
     }
 
@@ -1882,5 +2128,51 @@ export class MapController {
 
         // Important: Update item visibility with the current visible items
         this.updateItemVisibility(visibleItems);
+    }
+
+    showErrorMessage(message) {
+        // Remove any existing error messages first
+        const existingErrors = document.querySelectorAll('.error-message');
+        existingErrors.forEach(error => error.remove());
+
+        // Create error message element
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'error-message';
+        errorMessage.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: #dc3545;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            max-width: 300px;
+            font-size: 14px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-out;
+        `;
+        errorMessage.textContent = message;
+
+        // Add to body
+        document.body.appendChild(errorMessage);
+
+        // Animate in
+        setTimeout(() => {
+            errorMessage.style.transform = 'translateX(0)';
+        }, 10);
+
+        // Auto-remove after 4 seconds
+        setTimeout(() => {
+            if (errorMessage.parentNode) {
+                errorMessage.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (errorMessage.parentNode) {
+                        errorMessage.remove();
+                    }
+                }, 300);
+            }
+        }, 4000);
     }
 }

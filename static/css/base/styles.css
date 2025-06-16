@@ -27,7 +27,8 @@
 
     --background: black;
     --background-dark: #181818;
-    --surface: #2d2d2d;
+    --surface: #2e2e2e;
+    --surface-light: #3e3e3e;
     
     --text-primary: white;
     --text-secondary: #afafaf;
@@ -62,6 +63,7 @@
     --transition-slow: 300ms ease;
 
     /* Border Radius */
+    --radius-xs: 1px;
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 16px;
@@ -90,7 +92,7 @@ body {
 
 /* ---------- Typography ---------- */
 h1, h2, h3, h4, h5, h6 {
-    margin: 0 0 var(--space-md);
+    margin: 0 0 0;
     line-height: 1.2;
 }
 
@@ -1435,4 +1437,27 @@ h4 { font-size: var(--font-size-lg); }
     background-position: center;
     background-size: cover;
     margin: auto;
+}
+
+/* Error message animations */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }

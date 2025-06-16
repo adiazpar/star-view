@@ -23,3 +23,8 @@ def average_rating(reviews):
     result = reviews.aggregate(Avg('rating'))
     # Safely get the value with a default of 0
     return result.get('rating__avg', 0) or 0  # Note the double underscore
+
+@register.filter
+def get_item(dictionary, key):
+    """Get an item from a dictionary in templates"""
+    return dictionary.get(str(key), 0) if dictionary else 0

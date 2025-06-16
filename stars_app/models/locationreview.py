@@ -1,8 +1,10 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
+from django.db.models import Avg
 from .viewinglocation import ViewingLocation
 from .base import TimestampedModel
+
 
 class LocationReview(TimestampedModel):
     location = models.ForeignKey(
@@ -46,3 +48,57 @@ class LocationReview(TimestampedModel):
         upvotes = self.votes.filter(is_upvote=True).count()
         downvotes = self.votes.filter(is_upvote=False).count()
         return upvotes - downvotes
+
+    @property
+    def upvote_count(self):
+        """Returns the number of upvotes"""
+        return self.votes.filter(is_upvote=True).count()
+
+    @property
+    def downvote_count(self):
+        """Returns the number of downvotes"""
+        return self.votes.filter(is_upvote=False).count()
+    
+    def save(self, *args, **kwargs):
+        """Override save to update location rating statistics"""
+        is_new = self.pk is None
+        old_rating = None
+        
+        # If updating existing review, get the old rating
+        if not is_new:
+            old_review = LocationReview.objects.get(pk=self.pk)
+            old_rating = old_review.rating
+        
+        # Save the review
+        super().save(*args, **kwargs)
+        
+        # Update location statistics
+        self.update_location_ratings()
+    
+    def delete(self, *args, **kwargs):
+        """Override delete to update location rating statistics"""
+        location = self.location
+        super().delete(*args, **kwargs)
+        
+        # Update location statistics after deletion
+        self.update_location_ratings(location=location)
+    
+    def update_location_ratings(self, location=None):
+        """Update the location's rating count and average"""
+        if location is None:
+            location = self.location
+        
+        # Get all reviews for this location
+        reviews = location.reviews.all()
+        
+        # Update rating count
+        location.rating_count = reviews.count()
+        
+        # Calculate and update average rating
+        if location.rating_count > 0:
+            avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
+            location.average_rating = round(avg_rating, 2) if avg_rating else 0
+        else:
+            location.average_rating = 0
+        
+        location.save(update_fields=['rating_count', 'average_rating'])

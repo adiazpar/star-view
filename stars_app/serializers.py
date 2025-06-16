@@ -19,10 +19,11 @@ from django.contrib.auth.models import User
 class ReviewCommentSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     user_profile_picture = serializers.SerializerMethodField()
+    formatted_content = serializers.SerializerMethodField()
 
     class Meta:
         model = ReviewComment
-        fields = ['id', 'review', 'user', 'user_profile_picture', 'content', 'created_at']
+        fields = ['id', 'review', 'user', 'user_profile_picture', 'content', 'formatted_content', 'created_at']
         read_only_fields = ['user', 'review']
 
     def get_user(self, obj):
@@ -36,19 +37,43 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
         # Get the user's profile picture URL
         return obj.user.userprofile.get_profile_picture_url
 
+    def get_formatted_content(self, obj):
+        # Convert markdown to HTML for display
+        return self._markdown_format(obj.content)
+    
+    def _markdown_format(self, text):
+        """Convert basic markdown to HTML"""
+        if not text:
+            return ""
+        
+        import re
+        
+        # Handle bold (**text**)
+        text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
+        
+        # Handle underline (__text__)  
+        text = re.sub(r'__(.*?)__', r'<u>\1</u>', text)
+        
+        # Handle italic (*text*) - but avoid touching content inside ** 
+        text = re.sub(r'(?<!\*)\*([^*]+?)\*(?!\*)', r'<em>\1</em>', text)
+        
+        return text
+
 
 # Location Review Serializer -------------------------------------- #
 class LocationReviewSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     user_full_name = serializers.SerializerMethodField()
     vote_count = serializers.SerializerMethodField()
+    upvote_count = serializers.SerializerMethodField()
+    downvote_count = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
 
     class Meta:
         model = LocationReview
         fields = ['id', 'location', 'user', 'user_full_name',
                  'rating', 'comment', 'created_at', 'updated_at',
-                  'vote_count', 'user_vote']
+                  'vote_count', 'upvote_count', 'downvote_count', 'user_vote']
 
     def get_user_full_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}".strip()
@@ -71,6 +96,14 @@ class LocationReviewSerializer(serializers.ModelSerializer):
         upvotes = obj.votes.filter(is_upvote=True).count()
         downvotes = obj.votes.filter(is_upvote=False).count()
         return upvotes - downvotes
+
+    def get_upvote_count(self, obj):
+        # Get the number of upvotes
+        return obj.votes.filter(is_upvote=True).count()
+
+    def get_downvote_count(self, obj):
+        # Get the number of downvotes
+        return obj.votes.filter(is_upvote=False).count()
 
 
 # Location Category Serializer ---------------------------------- #
@@ -99,14 +132,19 @@ class LocationTagSerializer(serializers.ModelSerializer):
 # Location Photo Serializer -------------------------------------- #
 class LocationPhotoSerializer(serializers.ModelSerializer):
     uploaded_by = serializers.ReadOnlyField(source='uploaded_by.username')
+    uploaded_by_username = serializers.ReadOnlyField(source='uploaded_by.username')
+    uploaded_at = serializers.ReadOnlyField(source='created_at')
     image_url = serializers.ReadOnlyField()
+    thumbnail_url = serializers.ReadOnlyField()
     
     class Meta:
         model = LocationPhoto
-        fields = ['id', 'location', 'uploaded_by', 'image', 'image_url', 
-                  'caption', 'is_primary', 'is_approved', 'taken_at', 
-                  'camera_make', 'camera_model', 'created_at']
-        read_only_fields = ['uploaded_by', 'is_approved', 'created_at', 'image_url']
+        fields = ['id', 'location', 'uploaded_by', 'uploaded_by_username', 'uploaded_at', 
+                  'image', 'image_url', 'thumbnail_url', 'caption', 'is_primary', 'is_approved', 
+                  'taken_at', 'camera_make', 'camera_model', 'camera_settings', 'created_at']
+        read_only_fields = ['uploaded_by', 'uploaded_by_username', 'uploaded_at', 'is_approved', 
+                           'created_at', 'image_url', 'thumbnail_url', 'taken_at', 'camera_make', 
+                           'camera_model', 'camera_settings']
         extra_kwargs = {
             'image': {'write_only': True}
         }

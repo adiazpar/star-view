@@ -13,6 +13,7 @@
 
     <!-- Map-specific styles -->
     <link href="{% static 'css/pages/map/map.css' %}" rel="stylesheet">
+    <link href="{% static 'css/components/filter-panel.css' %}" rel="stylesheet">
 {% endblock %}
 
 <!-- Replace block content in base_template.html -->
@@ -211,6 +212,7 @@
 {% block extra_scripts %}
 <script type="module">
     import {MapController} from "../../../static/js/pages/map/MapController.js";
+    import {FilterPanel} from "../../../static/js/components/FilterPanel.js";
 
     function initializePage() {
         if (typeof initNavbar === 'function') {
@@ -231,6 +233,19 @@
         console.log('🚀 Initializing map controller...');
 
         window.mapController = new MapController();
+        
+        // Initialize filter panel with callback
+        window.filterPanel = new FilterPanel({
+            container: document.querySelector('.filter-panel'),
+            onFilterChange: (filters) => {
+                // Apply advanced filters to map controller
+                if (window.mapController && window.mapController.applyAdvancedFilters) {
+                    window.mapController.applyAdvancedFilters(filters);
+                }
+            },
+            csrfToken: document.querySelector('[name=csrfmiddlewaretoken]').value
+        });
+        
         window.mapController.initialize();
     }
     setTimeout(initializePage, 0);
