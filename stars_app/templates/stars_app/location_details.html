@@ -704,6 +704,40 @@
     background-color: var(--primary-light);
 }
 
+/* Disabled comment form styles */
+.comment-form.disabled {
+    opacity: 0.7;
+}
+
+.comment-form.disabled .comment-input {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.comment-form.disabled .formatting-btn {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.comment-form.disabled .formatting-btn:hover {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+}
+
+.comment-form.disabled .submit-comment {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.comment-form.disabled .submit-comment:hover {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+}
+
 .login-link {
     display: inline-flex;
     align-items: center;
@@ -760,7 +794,7 @@
 }
 
 .comment-text {
-    color: var(--text-secondary);
+    color: var(--text-primary);
     font-size: var(--font-size-xs);
 }
 
@@ -1678,11 +1712,21 @@
         <div class="reviews-section">
             <div class="reviews-header">
                 <h2>Reviews</h2>
-                <!-- Show toggle button for all users -->
-                {% if user.is_authenticated and user_has_reviewed %}
+                <!-- Show toggle button for all users with appropriate state -->
+                {% if not user.is_authenticated %}
+                    <button class="toggle-review-form disabled" id="toggleReviewForm" disabled>
+                        <span>Login to Review</span>
+                        {% include 'stars_app/icons/lock-icon.svg' %}
+                    </button>
+                {% elif user.is_authenticated and user_has_reviewed %}
                     <button class="toggle-review-form disabled" id="toggleReviewForm" disabled>
                         <span>Already Reviewed</span>
-                        {% include 'stars_app/icons/square-pen-icon.svg' %}
+                        {% include 'stars_app/icons/lock-icon.svg' %}
+                    </button>
+                {% elif is_owner %}
+                    <button class="toggle-review-form disabled" id="toggleReviewForm" disabled>
+                        <span>You own this location</span>
+                        {% include 'stars_app/icons/lock-icon.svg' %}
                     </button>
                 {% else %}
                     <button class="toggle-review-form" id="toggleReviewForm">
@@ -1692,50 +1736,33 @@
                 {% endif %}
             </div>
 
-            <!-- Unified review form container for all user states -->
+            <!-- Review form container - only shows for authenticated users who can review -->
             <div class="review-form-container" id="reviewFormContainer" style="display: none;">
-                {% if user.is_authenticated %}
-                    {% if is_owner %}
-                        <!-- Owner warning message -->
-                        <div class="owner-message">
-                            <i class="fas fa-info-circle"></i>
-                            <p>As the creator of this location, you cannot submit a review. This helps maintain the integrity of our rating system.</p>
+                {% if user.is_authenticated and not user_has_reviewed and not is_owner %}
+                    <!-- Review form for authenticated users who haven't reviewed -->
+                    <h5>Write a Review</h5>
+                    <form method="POST" class="review-form">
+                        {% csrf_token %}
+                        <div class="rating-input">
+                            <label>Rating:</label>
+                            <div class="star-rating">
+                                {% for i in "12345" %}
+                                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
+                                <label for="star{{ i }}">
+                                    {% include 'stars_app/icons/star-filled-icon.svg' %}
+                                </label>
+                                {% endfor %}
+                            </div>
                         </div>
-                    {% elif not user_has_reviewed %}
-                        <!-- Review form for authenticated users who haven't reviewed -->
-                        <h5>Write a Review</h5>
-                        <form method="POST" class="review-form">
-                            {% csrf_token %}
-                            <div class="rating-input">
-                                <label>Rating:</label>
-                                <div class="star-rating">
-                                    {% for i in "12345" %}
-                                    <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
-                                    <label for="star{{ i }}">
-                                        {% include 'stars_app/icons/star-filled-icon.svg' %}
-                                    </label>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                            <div class="review-comment-input">
-                                <label for="comment">Comment:</label>
-                                <textarea id="comment" name="comment" rows="4" placeholder="Share your experience at this location..."></textarea>
-                            </div>
-                            <button type="submit" class="submit-review">
-                                <i class="fas fa-paper-plane"></i>
-                                Submit Review
-                            </button>
-                        </form>
-                    {% endif %}
-                {% else %}
-                    <!-- Login prompt for non-authenticated users -->
-                    <div class="login-prompt">
-                        <p class="login-prompt-message">You must be logged in to submit a review</p>
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="login-prompt-button">
-                            <i class="fas fa-sign-in-alt"></i>
-                            Log in to Review
-                        </a>
-                    </div>
+                        <div class="review-comment-input">
+                            <label for="comment">Comment:</label>
+                            <textarea id="comment" name="comment" rows="4" placeholder="Share your experience at this location..."></textarea>
+                        </div>
+                        <button type="submit" class="submit-review">
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Review
+                        </button>
+                    </form>
                 {% endif %}
             </div>
 
@@ -1901,37 +1928,33 @@
                             <div class="review-comments-section">
 
                                 <div class="comments-container" id="comments-{{ review.id }}" style="display: none;">
-                                    {% if user.is_authenticated %}
-                                        <form class="comment-form"
-                                              data-review-id="{{ review.id }}"
-                                              data-location-id="{{ location.id }}">
-                                            {% csrf_token %}
-                                            <div class="comment-input" contenteditable="true" data-placeholder="Add a comment..." data-name="content"></div>
-                                            <input type="hidden" name="content" class="hidden-content">
-                                            <div class="comment-toolbar">
-                                                <div class="comment-formatting-tools">
-                                                    <button type="button" class="formatting-btn" title="Bold">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-                                                    </button>
-                                                    <button type="button" class="formatting-btn" title="Italic">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
-                                                    </button>
-                                                    <button type="button" class="formatting-btn" title="Underline">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
-                                                    </button>
-                                                </div>
-                                                <button type="submit" class="submit-comment">Post</button>
+                                    <!-- Comment form for all users - disabled state for non-authenticated -->
+                                    <form class="comment-form {% if not user.is_authenticated %}disabled{% endif %}"
+                                          data-review-id="{{ review.id }}"
+                                          data-location-id="{{ location.id }}">
+                                        {% csrf_token %}
+                                        <div class="comment-input" 
+                                             {% if user.is_authenticated %}contenteditable="true"{% else %}contenteditable="false"{% endif %}
+                                             data-placeholder="{% if user.is_authenticated %}Add a comment...{% else %}Login to comment...{% endif %}" 
+                                             data-name="content"></div>
+                                        <input type="hidden" name="content" class="hidden-content">
+                                        <div class="comment-toolbar">
+                                            <div class="comment-formatting-tools">
+                                                <button type="button" class="formatting-btn" title="Bold" {% if not user.is_authenticated %}disabled{% endif %}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                                                </button>
+                                                <button type="button" class="formatting-btn" title="Italic" {% if not user.is_authenticated %}disabled{% endif %}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                                                </button>
+                                                <button type="button" class="formatting-btn" title="Underline" {% if not user.is_authenticated %}disabled{% endif %}>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                                                </button>
                                             </div>
-                                        </form>
-                                    {% else %}
-                                        <div class="comment-login-prompt">
-                                            <p>You must be logged in to leave a comment</p>
-                                            <a href="{% url 'login' %}?next={{ request.path }}" class="login-link">
-                                                <i class="fas fa-sign-in-alt"></i>
-                                                Log in to comment
-                                            </a>
+                                            <button type="submit" class="submit-comment" {% if not user.is_authenticated %}disabled{% endif %}>
+                                                {% if user.is_authenticated %}Post{% else %}Login to comment{% endif %}
+                                            </button>
                                         </div>
-                                    {% endif %}
+                                    </form>
 
                                     <div class="comments-list" id="comments-list-{{ review.id }}">
                                         {% for comment in review.comments.all %}
