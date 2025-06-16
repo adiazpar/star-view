@@ -380,6 +380,12 @@
     background-color: var(--primary-light);
 }
 
+/* Submit review button when in toolbar */
+.comment-toolbar .submit-review {
+    padding: var(--space-sm) var(--space-md);
+    justify-self: auto;
+}
+
 /* Login Prompt styling */
 .login-prompt-container {
     background: var(--background-dark);
@@ -466,12 +472,14 @@
 
 .rating-display svg {
     color: var(--text-tertiary);
+    fill: none; /* Consistent outline style for empty stars */
     width: 16px;
     height: 16px;
 }
 
 .rating-display svg.filled {
     color: var(--golden);
+    fill: var(--golden);
 }
 
 .review-date {
@@ -1386,7 +1394,8 @@
 .rating-stars svg {
     width: 16px;
     height: 16px;
-    color: var(--golden);
+    color: var(--text-tertiary); /* Default to empty state */
+    fill: none; /* Default to outline style */
 }
 
 .total-reviews {
@@ -1618,6 +1627,82 @@
 .dropdown-item span {
     flex: 1;
 }
+
+/* Universal Edit Mode Styles */
+.edit-mode {
+    display: none !important;
+}
+
+.edit-controls {
+    margin-top: var(--space-sm);
+}
+
+.edit-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+.save-edit, .cancel-edit {
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    font-size: var(--font-size-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.save-edit {
+    background-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.save-edit:hover {
+    background-color: var(--primary-light);
+}
+
+.cancel-edit {
+    background-color: var(--background-dark);
+    color: var(--text-secondary);
+}
+
+.cancel-edit:hover {
+    background-color: var(--surface-light);
+    color: var(--text-primary);
+}
+
+/* Comment edit button */
+.comment-edit-btn {
+    background: none;
+    border: none;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    margin-left: var(--space-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+}
+
+.comment:hover .comment-edit-btn {
+    opacity: 1;
+}
+
+.comment-edit-btn:hover {
+    color: var(--text-primary);
+    background: var(--surface-light);
+}
+
+.comment-edit-btn svg {
+    width: 14px;
+    height: 14px;
+}
 </style>
 {% endblock %}
 
@@ -1828,12 +1913,31 @@
                         </div>
                         <div class="review-comment-input">
                             <label for="comment">Comment:</label>
-                            <textarea id="comment" name="comment" rows="4" placeholder="Share your experience at this location..."></textarea>
+                            <div class="comment-form">
+                                <div class="comment-input" 
+                                     contenteditable="true"
+                                     data-placeholder="Share your experience at this location..." 
+                                     data-name="comment"></div>
+                                <input type="hidden" name="comment" class="hidden-content">
+                                <div class="comment-toolbar">
+                                    <div class="comment-formatting-tools">
+                                        <button type="button" class="formatting-btn" title="Bold">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                                        </button>
+                                        <button type="button" class="formatting-btn" title="Italic">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                                        </button>
+                                        <button type="button" class="formatting-btn" title="Underline">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                                        </button>
+                                    </div>
+                                    <button type="submit" class="submit-review">
+                                        <i class="fas fa-paper-plane"></i>
+                                        Submit Review
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                        <button type="submit" class="submit-review">
-                            <i class="fas fa-paper-plane"></i>
-                            Submit Review
-                        </button>
                     </form>
                 {% endif %}
             </div>
@@ -1907,7 +2011,14 @@
                             </div>
 
                             {% if review.comment %}
-                                <div class="review-comment">{{ review.comment }}</div>
+                                <div class="review-comment" 
+                                     data-editable="review" 
+                                     data-location-id="{{ location.id }}"
+                                     data-review-id="{{ review.id }}" 
+                                     data-original-content="{{ review.comment }}"
+                                     data-rating="{{ review.rating }}">
+                                    {{ review.comment|markdown_format }}
+                                </div>
                             {% endif %}
 
                             <!-- Add voting controls -->
@@ -2057,8 +2168,24 @@
                                                     <div class="comment-header">
                                                         <span class="comment-username">{{ comment.user.username }}</span>
                                                         <span class="comment-date">{{ comment.created_at|date:"M d, Y" }}</span>
+                                                        {% if user == comment.user %}
+                                                            <button class="comment-edit-btn" 
+                                                                    data-comment-id="{{ comment.id }}"
+                                                                    data-review-id="{{ review.id }}"
+                                                                    data-location-id="{{ location.id }}"
+                                                                    title="Edit comment">
+                                                                {% include 'stars_app/icons/pencil-icon.svg' %}
+                                                            </button>
+                                                        {% endif %}
                                                     </div>
-                                                    <p class="comment-text">{{ comment.content|markdown_format }}</p>
+                                                    <p class="comment-text" 
+                                                       data-editable="comment" 
+                                                       data-location-id="{{ location.id }}"
+                                                       data-review-id="{{ review.id }}"
+                                                       data-comment-id="{{ comment.id }}" 
+                                                       data-original-content="{{ comment.content }}">
+                                                        {{ comment.content|markdown_format }}
+                                                    </p>
                                                 </div>
                                             </div>
                                         {% endfor %}
@@ -2155,6 +2282,76 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize review form toggle
     initializeReviewFormToggle();
+    
+    // Define the review form HTML with rich text editor (for use after deletion)
+    const reviewFormHTML = `
+        <h5>Write a Review</h5>
+        <form method="POST" class="review-form">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <div class="rating-input">
+                <label>Rating:</label>
+                <div class="star-rating">
+                    <input type="radio" id="new-star1" name="rating" value="1" required>
+                    <label for="new-star1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="new-star2" name="rating" value="2" required>
+                    <label for="new-star2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="new-star3" name="rating" value="3" required>
+                    <label for="new-star3">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="new-star4" name="rating" value="4" required>
+                    <label for="new-star4">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="new-star5" name="rating" value="5" required>
+                    <label for="new-star5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                </div>
+            </div>
+            <div class="review-comment-input">
+                <label for="comment">Comment:</label>
+                <div class="comment-form">
+                    <div class="comment-input" 
+                         contenteditable="true"
+                         data-placeholder="Share your experience at this location..." 
+                         data-name="comment"></div>
+                    <input type="hidden" name="comment" class="hidden-content">
+                    <div class="comment-toolbar">
+                        <div class="comment-formatting-tools">
+                            <button type="button" class="formatting-btn" title="Bold">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Italic">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Underline">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                            </button>
+                        </div>
+                        <button type="submit" class="submit-review">
+                            <i class="fas fa-paper-plane"></i>
+                            Submit Review
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    `;
 
     async function loadPhotosAndInitialize() {
         try {
@@ -2500,56 +2697,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Initializing review form HTML:
-    const reviewFormHTML = `
-        <h5>Write a Review</h5>
-        <form method="POST" class="review-form">
-                <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-                <div class="rating-input">
-                    <label>Rating:</label>
-                    <div class="star-rating">
-                        <input type="radio" id="star1" name="rating" value="1" required>
-                        <label for="star1">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
-                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                            </svg>
-                        </label>
-                        <input type="radio" id="star2" name="rating" value="2" required>
-                        <label for="star2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                            </svg>
-                        </label>
-                        <input type="radio" id="star3" name="rating" value="3" required>
-                        <label for="star3">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                            </svg>
-                        </label>
-                        <input type="radio" id="star4" name="rating" value="4" required>
-                        <label for="star4">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                            </svg>
-                        </label>
-                        <input type="radio" id="star5" name="rating" value="5" required>
-                        <label for="star5">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                                <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                            </svg>
-                        </label>
-                    </div>
-                </div>
-                <div class="review-comment-input">
-                    <label for="comment">Comment:</label>
-                    <textarea id="comment" name="comment" rows="4" placeholder="Share your experience at this location..."></textarea>
-                </div>
-                <button type="submit" class="submit-review">
-                    <i class="fas fa-paper-plane"></i>
-                    Submit Review
-                </button>
-        </form>
-    `;
 
     // Add delete review functionality
     const reviewsList = document.querySelector('.reviews-list');
@@ -2575,6 +2722,64 @@ document.addEventListener('DOMContentLoaded', function() {
                     // Toggle current dropdown
                     dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
                 }
+            }
+            
+            // Comment edit button handling
+            const commentEditBtn = e.target.closest('.comment-edit-btn');
+            if (commentEditBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const commentId = commentEditBtn.dataset.commentId;
+                const reviewId = commentEditBtn.dataset.reviewId;
+                const locationIdVal = commentEditBtn.dataset.locationId;
+                
+                // Find the comment text element to make editable
+                const commentElement = document.querySelector(`[data-comment-id="${commentId}"][data-editable="comment"]`);
+                
+                if (commentElement) {
+                    const originalContent = commentElement.getAttribute('data-original-content');
+                    const ids = {
+                        locationId: locationIdVal,
+                        reviewId: reviewId,
+                        commentId: commentId
+                    };
+                    
+                    makeEditable(commentElement, 'comment', ids, originalContent);
+                }
+                
+                return;
+            }
+            
+            // Edit item in dropdown handling
+            const editItem = e.target.closest('.edit-item');
+            if (editItem) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const reviewId = editItem.dataset.reviewId;
+                // locationId is already available in scope
+                
+                // Find the review comment element to make editable
+                const reviewElement = document.querySelector(`[data-review-id="${reviewId}"][data-editable="review"]`);
+                
+                if (reviewElement) {
+                    const originalContent = reviewElement.getAttribute('data-original-content');
+                    const ids = {
+                        locationId: locationId,
+                        reviewId: reviewId
+                    };
+                    
+                    makeEditable(reviewElement, 'review', ids, originalContent);
+                    
+                    // Close the dropdown menu
+                    const dropdown = editItem.closest('.dropdown-menu');
+                    if (dropdown) {
+                        dropdown.style.display = 'none';
+                    }
+                }
+                
+                return;
             }
             
             // Delete item in dropdown handling
@@ -2649,7 +2854,40 @@ document.addEventListener('DOMContentLoaded', function() {
                                 existingFormContainer.innerHTML = reviewFormHTML;
 
                                 // Initialize star rating functionality
-                                setTimeout(() => initializeStarRating(), 100);
+                                setTimeout(() => {
+                                    initializeStarRating();
+                                    
+                                    // Initialize comment formatting for the rich text editor
+                                    const form = existingFormContainer.querySelector('.comment-form');
+                                    if (form) {
+                                        const editableDiv = form.querySelector('.comment-input');
+                                        const hiddenInput = form.querySelector('.hidden-content');
+                                        
+                                        // Set up the placeholder behavior
+                                        if (editableDiv) {
+                                            editableDiv.addEventListener('focus', function() {
+                                                if (this.classList.contains('empty')) {
+                                                    this.classList.remove('empty');
+                                                    this.innerHTML = '';
+                                                }
+                                            });
+                                            
+                                            editableDiv.addEventListener('blur', function() {
+                                                if (this.innerHTML.trim() === '') {
+                                                    this.classList.add('empty');
+                                                    this.innerHTML = '';
+                                                }
+                                            });
+                                            
+                                            editableDiv.addEventListener('input', function() {
+                                                updateHiddenInput(this);
+                                            });
+                                            
+                                            // Initialize as empty
+                                            editableDiv.classList.add('empty');
+                                        }
+                                    }
+                                }, 100);
                             }
                             
                             // Recalculate and update the metrics card
@@ -2724,54 +2962,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function initializeStarRating() {
-        const starContainers = document.querySelectorAll('.star-rating');
+    function initializeStarRatingForContainer(container) {
+        const labels = container.querySelectorAll('label');
+        const inputs = container.querySelectorAll('input');
         
-        starContainers.forEach(container => {
-            const labels = container.querySelectorAll('label');
-            const inputs = container.querySelectorAll('input');
+        // Handle hover effects
+        labels.forEach((label, index) => {
+            label.addEventListener('mouseover', function() {
+                // Clear all hover states
+                labels.forEach(l => l.classList.remove('hover'));
+                // Add hover to current and all previous stars (left to right)
+                for (let i = 0; i <= index; i++) {
+                    labels[i].classList.add('hover');
+                }
+            });
             
-            // Handle hover effects
-            labels.forEach((label, index) => {
-                label.addEventListener('mouseover', function() {
-                    // Clear all hover states
-                    labels.forEach(l => l.classList.remove('hover'));
-                    // Add hover to current and all previous stars (left to right)
-                    for (let i = 0; i <= index; i++) {
-                        labels[i].classList.add('hover');
-                    }
-                });
-                
-                label.addEventListener('mouseout', function() {
-                    // Clear all hover states
-                    labels.forEach(l => l.classList.remove('hover'));
-                });
-                
-                label.addEventListener('click', function() {
-                    const value = inputs[index].value;
+            label.addEventListener('mouseout', function() {
+                // Clear all hover states
+                labels.forEach(l => l.classList.remove('hover'));
+            });
+            
+            label.addEventListener('click', function() {
+                const value = inputs[index].value;
+                // Clear all filled states
+                labels.forEach(l => l.classList.remove('filled'));
+                // Fill stars from left to right up to selected value
+                for (let i = 0; i < value; i++) {
+                    labels[i].classList.add('filled');
+                }
+            });
+        });
+        
+        // Handle input changes to maintain visual state
+        inputs.forEach((input, index) => {
+            input.addEventListener('change', function() {
+                if (this.checked) {
+                    const value = parseInt(this.value);
                     // Clear all filled states
                     labels.forEach(l => l.classList.remove('filled'));
                     // Fill stars from left to right up to selected value
                     for (let i = 0; i < value; i++) {
                         labels[i].classList.add('filled');
                     }
-                });
+                }
             });
-            
-            // Handle input changes to maintain visual state
-            inputs.forEach((input, index) => {
-                input.addEventListener('change', function() {
-                    if (this.checked) {
-                        const value = parseInt(this.value);
-                        // Clear all filled states
-                        labels.forEach(l => l.classList.remove('filled'));
-                        // Fill stars from left to right up to selected value
-                        for (let i = 0; i < value; i++) {
-                            labels[i].classList.add('filled');
-                        }
-                    }
-                });
-            });
+        });
+    }
+
+    function initializeStarRating() {
+        const starContainers = document.querySelectorAll('.star-rating');
+        
+        starContainers.forEach(container => {
+            initializeStarRatingForContainer(container);
         });
     }
     
@@ -2849,7 +3091,7 @@ document.addEventListener('DOMContentLoaded', function() {
             totalReviewsElement.textContent = `${totalReviews} ${reviewText}`;
         }
         
-        // Update star display
+        // Update star display with consistent styling
         const starContainer = document.querySelector('.rating-stars');
         if (starContainer) {
             const stars = starContainer.querySelectorAll('svg');
@@ -2858,8 +3100,10 @@ document.addEventListener('DOMContentLoaded', function() {
             stars.forEach((star, index) => {
                 if (index < filledStars) {
                     star.style.color = 'var(--golden)';
+                    star.style.fill = 'var(--golden)';
                 } else {
                     star.style.color = 'var(--text-tertiary)';
+                    star.style.fill = 'none'; // Consistent outline style for empty stars
                 }
             });
         }
@@ -2920,12 +3164,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 content = commentInput.value.trim();
             }
 
-            // Debug logging
-            console.log('Submitting comment:', {
-                locationId,
-                reviewId,
-                content
-            });
 
             if (!content) return;
 
@@ -2941,8 +3179,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => {
                 if (!response.ok) {
                     return response.json().then(error => {
-                        // Log the error details
-                        console.error('Server error:', error);
                         throw new Error(error.detail || 'Failed to post comment');
                     });
                 }
@@ -2967,11 +3203,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     commentInput.value = '';
                 }
 
-                // Update comment count
-                const countElement = this.closest('.review-comments-section')
-                    .querySelector('.comments-count');
-                const currentCount = parseInt(countElement.textContent);
-                countElement.textContent = `${currentCount + 1} Comments`;
+                // Update comment count in the voting controls
+                const reviewCard = this.closest('.review-card');
+                const countElement = reviewCard.querySelector('.comments-count');
+                if (countElement) {
+                    const currentCount = parseInt(countElement.textContent);
+                    countElement.textContent = `${currentCount + 1} Comments`;
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -2987,6 +3225,21 @@ document.addEventListener('DOMContentLoaded', function() {
         // Handle both the old and new response formats
         const username = comment.user.username || comment.user;
         const profilePicUrl = comment.user.profile_picture_url || comment.user_profile_picture;
+        
+        // Check if this comment is from the current user
+        const isCurrentUser = username === currentUsername;
+        const editButton = isCurrentUser ? `
+            <button class="comment-edit-btn" 
+                    data-comment-id="${comment.id}"
+                    data-review-id="${comment.review || comment.review_id}"
+                    data-location-id="${comment.location || locationId}"
+                    title="Edit comment">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil">
+                    <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
+                    <path d="m15 5 4 4"/>
+                </svg>
+            </button>
+        ` : '';
 
         div.innerHTML = `
             <img src="${profilePicUrl}"
@@ -2996,8 +3249,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="comment-header">
                     <span class="comment-username">${username}</span>
                     <span class="comment-date">${formatDate(comment.created_at)}</span>
+                    ${editButton}
                 </div>
-                <p class="comment-text">${comment.formatted_content || comment.content}</p>
+                <p class="comment-text" 
+                   data-editable="comment" 
+                   data-location-id="${comment.location || locationId}"
+                   data-review-id="${comment.review || comment.review_id}"
+                   data-comment-id="${comment.id}" 
+                   data-original-content="${comment.content || comment.formatted_content}">
+                    ${comment.formatted_content || comment.content}
+                </p>
             </div>
         `;
         return div;
@@ -3250,6 +3511,280 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+
+    // Universal Editing System
+    function makeEditable(element, type, ids, originalContent) {
+        // Check if already in edit mode
+        if (element.classList.contains('edit-mode')) {
+            return; // Already editing, do nothing
+        }
+        
+        // Hide the original content
+        element.classList.add('edit-mode');
+        
+        // Create edit controls container
+        const editControls = document.createElement('div');
+        editControls.className = 'edit-controls';
+        
+        // Generate star rating section for reviews
+        const starRatingSection = type === 'review' ? `
+            <div class="rating-input">
+                <label>Rating:</label>
+                <div class="star-rating" data-current-rating="">
+                    <input type="radio" id="edit-star1-${ids.reviewId}" name="rating" value="1" required>
+                    <label for="edit-star1-${ids.reviewId}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="edit-star2-${ids.reviewId}" name="rating" value="2" required>
+                    <label for="edit-star2-${ids.reviewId}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="edit-star3-${ids.reviewId}" name="rating" value="3" required>
+                    <label for="edit-star3-${ids.reviewId}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="edit-star4-${ids.reviewId}" name="rating" value="4" required>
+                    <label for="edit-star4-${ids.reviewId}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                    <input type="radio" id="edit-star5-${ids.reviewId}" name="rating" value="5" required>
+                    <label for="edit-star5-${ids.reviewId}">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                    </label>
+                </div>
+            </div>
+        ` : '';
+        
+        editControls.innerHTML = `
+            <div class="comment-form">
+                ${starRatingSection}
+                <div class="comment-input" 
+                     contenteditable="true"
+                     data-placeholder="Edit your ${type}..." 
+                     data-name="content"></div>
+                <input type="hidden" name="content" class="hidden-content">
+                <div class="comment-toolbar">
+                    <div class="comment-formatting-tools">
+                        <button type="button" class="formatting-btn" title="Bold">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                        </button>
+                        <button type="button" class="formatting-btn" title="Italic">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                        </button>
+                        <button type="button" class="formatting-btn" title="Underline">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                        </button>
+                    </div>
+                    <div class="edit-actions">
+                        <button type="button" class="save-edit" data-type="${type}" data-ids='${JSON.stringify(ids)}'>
+                            <i class="fas fa-check"></i>
+                            Save
+                        </button>
+                        <button type="button" class="cancel-edit">
+                            <i class="fas fa-times"></i>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Insert edit controls after the original element
+        element.parentNode.insertBefore(editControls, element.nextSibling);
+        
+        // Pre-populate the editor with original markdown content converted to HTML
+        const commentInput = editControls.querySelector('.comment-input');
+        const hiddenInput = editControls.querySelector('.hidden-content');
+        
+        // Convert markdown to HTML for editing
+        const htmlContent = markdownToHtml(originalContent);
+        commentInput.innerHTML = htmlContent;
+        hiddenInput.value = originalContent;
+        
+        // Set current rating for reviews
+        if (type === 'review') {
+            // Get current rating from data attribute
+            let currentRating = parseInt(element.getAttribute('data-rating')) || 3;
+            
+            // Set the radio button and visual state
+            const ratingInput = editControls.querySelector(`input[name="rating"][value="${currentRating}"]`);
+            if (ratingInput) {
+                ratingInput.checked = true;
+                
+                // Set visual state for star rating
+                const starContainer = editControls.querySelector('.star-rating');
+                const labels = starContainer.querySelectorAll('label');
+                for (let i = 0; i < currentRating; i++) {
+                    labels[i].classList.add('filled');
+                }
+            }
+            
+            // Initialize star rating functionality for the edit form
+            setTimeout(() => {
+                const starContainer = editControls.querySelector('.star-rating');
+                if (starContainer) {
+                    initializeStarRatingForContainer(starContainer);
+                }
+            }, 100);
+        }
+        
+        // Focus the editor
+        commentInput.focus();
+        
+        // Set up event handlers
+        const saveBtn = editControls.querySelector('.save-edit');
+        const cancelBtn = editControls.querySelector('.cancel-edit');
+        
+        saveBtn.addEventListener('click', function() {
+            const newContent = hiddenInput.value.trim();
+            if (newContent) {
+                // Get rating for reviews
+                let rating = null;
+                if (type === 'review') {
+                    const ratingInput = editControls.querySelector('input[name="rating"]:checked');
+                    if (ratingInput) {
+                        rating = parseInt(ratingInput.value);
+                    }
+                }
+                
+                saveEdit(element, editControls, type, ids, newContent, rating);
+            }
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            cancelEdit(element, editControls);
+        });
+    }
+    
+    function markdownToHtml(markdown) {
+        if (!markdown) return '';
+        
+        // Enhanced markdown to HTML conversion with browser-compatible patterns
+        let result = markdown;
+        
+        // Create unique placeholders for bold text to avoid conflicts
+        const boldPlaceholders = [];
+        result = result.replace(/\*\*(.*?)\*\*/g, function(match, content) {
+            const placeholder = `__BOLD_${boldPlaceholders.length}__`;
+            boldPlaceholders.push(content);
+            return placeholder;
+        });
+        
+        // Now handle italic (single asterisks)
+        result = result.replace(/\*([^*\n]+?)\*/g, '<em>$1</em>');
+        
+        // Restore bold text
+        boldPlaceholders.forEach((content, index) => {
+            result = result.replace(`__BOLD_${index}__`, `<strong>${content}</strong>`);
+        });
+        
+        // Handle underline
+        result = result.replace(/__(.*?)__/g, '<u>$1</u>');
+        
+        // Handle line breaks
+        result = result.replace(/\n/g, '<br>');
+        
+        // Clean up multiple spaces
+        result = result.replace(/  +/g, ' ');
+        
+        return result;
+    }
+    
+    function saveEdit(element, editControls, type, ids, newContent, rating = null) {
+        // Determine API endpoint based on type
+        let endpoint;
+        if (type === 'review') {
+            endpoint = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/`;
+        } else if (type === 'comment') {
+            endpoint = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
+        }
+        
+        // Prepare request body
+        const requestBody = {
+            [type === 'review' ? 'comment' : 'content']: newContent
+        };
+        
+        // Add rating for reviews
+        if (type === 'review' && rating !== null) {
+            requestBody.rating = rating;
+        }
+        
+        // Send update request
+        fetch(endpoint, {
+            method: 'PATCH',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody),
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(error => {
+                    throw new Error(error.detail || 'Failed to update');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Update the original element with new formatted content
+            const contentField = type === 'review' ? 'comment' : 'content';
+            // Prefer formatted_content from backend, fallback to markdown conversion
+            const formattedContent = data.formatted_content || markdownToHtml(data[contentField]);
+            element.innerHTML = formattedContent;
+            
+            // Update data attribute
+            element.setAttribute('data-original-content', data[contentField]);
+            
+            // Update star rating display for reviews
+            if (type === 'review' && data.rating) {
+                const reviewCard = element.closest('.review-card');
+                const starElements = reviewCard.querySelectorAll('.rating-display svg');
+                
+                // Update star display with consistent styling
+                starElements.forEach((star, index) => {
+                    if (index < data.rating) {
+                        star.style.color = 'var(--golden)';
+                        star.style.fill = 'var(--golden)';
+                        star.classList.add('filled');
+                    } else {
+                        star.style.color = 'var(--text-tertiary)';
+                        star.style.fill = 'none'; // Ensure outline style for empty stars
+                        star.classList.remove('filled');
+                    }
+                });
+                
+                // Recalculate and update metrics
+                setTimeout(() => calculateRatingDistribution(), 100);
+            }
+            
+            // Clean up edit mode
+            cancelEdit(element, editControls);
+        })
+        .catch(error => {
+            console.error('Error updating:', error);
+            alert(`Failed to update ${type}. Please try again.`);
+        });
+    }
+    
+    function cancelEdit(element, editControls) {
+        // Remove edit controls
+        editControls.remove();
+        
+        // Show original content
+        element.classList.remove('edit-mode');
+    }
 
 });
 </script>
