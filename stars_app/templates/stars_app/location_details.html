@@ -1322,6 +1322,18 @@
     height: 16px;
 }
 
+.toggle-review-form.disabled {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.toggle-review-form.disabled:hover {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+}
+
 .review-form-container {
     animation: slideDown 0.3s ease-out;
 }
@@ -1666,7 +1678,13 @@
         <div class="reviews-section">
             <div class="reviews-header">
                 <h2>Reviews</h2>
-                {% if user.is_authenticated and not is_owner and not user_has_reviewed %}
+                <!-- Show toggle button for all users -->
+                {% if user.is_authenticated and user_has_reviewed %}
+                    <button class="toggle-review-form disabled" id="toggleReviewForm" disabled>
+                        <span>Already Reviewed</span>
+                        {% include 'stars_app/icons/square-pen-icon.svg' %}
+                    </button>
+                {% else %}
                     <button class="toggle-review-form" id="toggleReviewForm">
                         <span>Write a Review</span>
                         {% include 'stars_app/icons/square-pen-icon.svg' %}
@@ -1674,16 +1692,17 @@
                 {% endif %}
             </div>
 
-            {% if user.is_authenticated %}
-                {% if is_owner %}
-                    <div class="owner-message-container">
+            <!-- Unified review form container for all user states -->
+            <div class="review-form-container" id="reviewFormContainer" style="display: none;">
+                {% if user.is_authenticated %}
+                    {% if is_owner %}
+                        <!-- Owner warning message -->
                         <div class="owner-message">
                             <i class="fas fa-info-circle"></i>
                             <p>As the creator of this location, you cannot submit a review. This helps maintain the integrity of our rating system.</p>
                         </div>
-                    </div>
-                {% elif not user_has_reviewed %}
-                    <div class="review-form-container" id="reviewFormContainer" style="display: none;">
+                    {% elif not user_has_reviewed %}
+                        <!-- Review form for authenticated users who haven't reviewed -->
                         <h5>Write a Review</h5>
                         <form method="POST" class="review-form">
                             {% csrf_token %}
@@ -1707,17 +1726,18 @@
                                 Submit Review
                             </button>
                         </form>
+                    {% endif %}
+                {% else %}
+                    <!-- Login prompt for non-authenticated users -->
+                    <div class="login-prompt">
+                        <p class="login-prompt-message">You must be logged in to submit a review</p>
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="login-prompt-button">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Log in to Review
+                        </a>
                     </div>
                 {% endif %}
-            {% else %}
-                <div class="login-prompt-container">
-                    <p class="login-prompt-message">You must be logged in to submit a review</p>
-                    <a href="{% url 'login' %}?next={{ request.path }}" class="login-prompt-button">
-                        <i class="fas fa-sign-in-alt"></i>
-                        Log in to Review
-                    </a>
-                </div>
-            {% endif %}
+            </div>
 
             <!-- Review Metrics Card -->
             {% if location.rating_count > 0 %}
@@ -2368,9 +2388,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initializing review form HTML:
     const reviewFormHTML = `
-        <div class="review-form-container">
-            <h5>Add Your Review</h5>
-            <form method="POST" class="review-form">
+        <h5>Write a Review</h5>
+        <form method="POST" class="review-form">
                 <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
                 <div class="rating-input">
                     <label>Rating:</label>
@@ -2415,8 +2434,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <i class="fas fa-paper-plane"></i>
                     Submit Review
                 </button>
-            </form>
-        </div>
+        </form>
     `;
 
     // Add delete review functionality
@@ -2453,21 +2471,35 @@ document.addEventListener('DOMContentLoaded', function() {
                                 reviewsList.innerHTML = '<div class="no-reviews">No reviews yet</div>';
                             }
 
-                            // Insert the review form before the reviews list:
-                            if (data.should_show_form) {
-                                const reviewsSection = document.querySelector('.reviews-section');
-                                const reviewsListElement = document.querySelector('.reviews-list');
+                            // Update the toggle button state if it exists
+                            const toggleBtn = document.getElementById('toggleReviewForm');
+                            if (toggleBtn) {
+                                // Remove disabled state and class
+                                toggleBtn.disabled = false;
+                                toggleBtn.classList.remove('disabled', 'active');
+                                
+                                // Update button text
+                                const buttonSpan = toggleBtn.querySelector('span');
+                                if (buttonSpan) {
+                                    buttonSpan.textContent = 'Write a Review';
+                                }
+                            }
 
-                                // Create a container for the form
-                                const formContainer = document.createElement('div');
-                                formContainer.innerHTML = reviewFormHTML;
-
-                                // Insert the form before the reviews list
-                                reviewsSection.insertBefore(formContainer, reviewsListElement);
+                            // Update the existing review form container
+                            const existingFormContainer = document.getElementById('reviewFormContainer');
+                            if (existingFormContainer && data.should_show_form) {
+                                // Hide the container initially
+                                existingFormContainer.style.display = 'none';
+                                
+                                // Update the container content with the review form
+                                existingFormContainer.innerHTML = reviewFormHTML;
 
                                 // Initialize star rating functionality
                                 setTimeout(() => initializeStarRating(), 100);
                             }
+                            
+                            // Recalculate and update the metrics card
+                            setTimeout(() => calculateRatingDistribution(), 100);
                         }
                     })
                     .catch(error => {
@@ -2595,6 +2627,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (toggleBtn && formContainer) {
             toggleBtn.addEventListener('click', function() {
+                // Don't allow interaction if button is disabled
+                if (this.disabled || this.classList.contains('disabled')) {
+                    return;
+                }
+                
                 const isVisible = formContainer.style.display !== 'none';
                 
                 if (isVisible) {
@@ -2613,6 +2650,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const reviewCards = document.querySelectorAll('.review-card');
         const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         let totalReviews = 0;
+        let totalRating = 0;
         
         // Count ratings from review cards
         reviewCards.forEach(card => {
@@ -2621,8 +2659,56 @@ document.addEventListener('DOMContentLoaded', function() {
             if (rating >= 1 && rating <= 5) {
                 ratingCounts[rating]++;
                 totalReviews++;
+                totalRating += rating;
             }
         });
+        
+        // Get the metrics card
+        const metricsCard = document.querySelector('.review-metrics-card');
+        
+        if (totalReviews === 0) {
+            // Hide metrics card if no reviews
+            if (metricsCard) {
+                metricsCard.style.display = 'none';
+            }
+            return;
+        }
+        
+        // Show metrics card if it was hidden
+        if (metricsCard) {
+            metricsCard.style.display = 'block';
+        }
+        
+        // Calculate average rating
+        const averageRating = totalRating / totalReviews;
+        
+        // Update overall rating number
+        const ratingNumberElement = document.querySelector('.rating-number');
+        if (ratingNumberElement) {
+            ratingNumberElement.textContent = averageRating.toFixed(1);
+        }
+        
+        // Update total reviews count
+        const totalReviewsElement = document.querySelector('.total-reviews');
+        if (totalReviewsElement) {
+            const reviewText = totalReviews === 1 ? 'review' : 'reviews';
+            totalReviewsElement.textContent = `${totalReviews} ${reviewText}`;
+        }
+        
+        // Update star display
+        const starContainer = document.querySelector('.rating-stars');
+        if (starContainer) {
+            const stars = starContainer.querySelectorAll('svg');
+            const filledStars = Math.round(averageRating);
+            
+            stars.forEach((star, index) => {
+                if (index < filledStars) {
+                    star.style.color = 'var(--golden)';
+                } else {
+                    star.style.color = 'var(--text-tertiary)';
+                }
+            });
+        }
         
         // Update the rating bars and counts
         for (let star = 1; star <= 5; star++) {
