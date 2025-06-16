@@ -1281,40 +1281,6 @@
     }
 }
 
-/* Ellipsis menu button styles */
-.ellipsis-menu-button {
-    background: none;
-    border: none;
-    padding: var(--space-xs);
-    cursor: pointer;
-    color: var(--text-tertiary);
-    transition: all var(--transition-base);
-    display: flex;
-    align-items: center;
-    margin-left: var(--space-xs);
-}
-
-.ellipsis-menu-button:hover {
-    color: var(--text-primary);
-}
-
-.ellipsis-menu-button svg {
-    width: 16px;
-    height: 16px;
-    transition: stroke var(--transition-base);
-}
-
-.ellipsis-menu-button.disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-    pointer-events: none;
-    color: var(--text-tertiary);
-}
-
-.ellipsis-menu-button.disabled:hover {
-    color: var(--text-tertiary);
-}
-
 /* Reviews header with toggle button */
 .reviews-header {
     display: flex;
@@ -1545,6 +1511,112 @@
         min-width: 5em;
         text-align: left;
     }
+}
+
+/* Ellipsis menu styles */
+.ellipsis-menu-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.ellipsis-menu-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    margin-left: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ellipsis-menu-button:hover {
+    color: var(--text-primary);
+    background: var(--surface-light);
+}
+
+.ellipsis-menu-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Dropdown menu styles */
+.dropdown-menu {
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    margin-left: var(--space-sm);
+    background: var(--background-dark);
+    border-radius: var(--radius-sm);
+    min-width: 100px;
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-sm) var(--space-sm);
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    text-align: left;
+    font-size: var(--font-size-xs);
+}
+
+.dropdown-item:hover {
+    background: var(--surface-light);
+}
+
+.dropdown-item.edit-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.edit-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item.delete-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.delete-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item.report-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.report-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item i,
+.dropdown-item svg {
+    font-size: var(--font-size-sm);
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.dropdown-item span {
+    flex: 1;
 }
 </style>
 {% endblock %}
@@ -1830,11 +1902,6 @@
                                     </div>
                                     <div class="review-meta">
                                         <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
-                                        {% if user == review.user %}
-                                            <button class="delete-review-btn" data-review-id="{{ review.id }}">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        {% endif %}
                                     </div>
                                 </div>
                             </div>
@@ -1873,9 +1940,17 @@
                                         </button>
                                         
                                         <!-- Ellipsis menu button -->
-                                        <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
-                                            {% include 'stars_app/icons/ellipsis-icon.svg' %}
-                                        </button>
+                                        <div class="ellipsis-menu-wrapper">
+                                            <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
+                                                {% include 'stars_app/icons/ellipsis-icon.svg' %}
+                                            </button>
+                                            <div class="dropdown-menu" data-review-id="{{ review.id }}" style="display: none;">
+                                                <button class="dropdown-item report-item" data-action="report" data-review-id="{{ review.id }}">
+                                                    {% include 'stars_app/icons/flag-icon.svg' %}
+                                                    <span>Report</span>
+                                                </button>
+                                            </div>
+                                        </div>
                                     {% else %}
                                         <!-- New disabled buttons for own review -->
                                         <button class="vote-button disabled" disabled>
@@ -1895,9 +1970,23 @@
                                         </button>
                                         
                                         <!-- Ellipsis menu button -->
-                                        <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
-                                            {% include 'stars_app/icons/ellipsis-icon.svg' %}
-                                        </button>
+                                        <div class="ellipsis-menu-wrapper">
+                                            <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
+                                                {% include 'stars_app/icons/ellipsis-icon.svg' %}
+                                            </button>
+                                            {% if user == review.user %}
+                                            <div class="dropdown-menu" data-review-id="{{ review.id }}" style="display: none;">
+                                                <button class="dropdown-item delete-item" data-action="delete" data-review-id="{{ review.id }}">
+                                                    {% include 'stars_app/icons/trash-icon.svg' %}
+                                                    <span>Delete</span>
+                                                </button>
+                                                <button class="dropdown-item edit-item" data-action="edit" data-review-id="{{ review.id }}">
+                                                    {% include 'stars_app/icons/pencil-icon.svg' %}
+                                                    <span>Edit</span>
+                                                </button>
+                                            </div>
+                                            {% endif %}
+                                        </div>
                                     {% endif %}
                                 {% else %}
                                     <!-- Disabled buttons for logged out users -->
@@ -1918,9 +2007,11 @@
                                     </button>
                                     
                                     <!-- Ellipsis menu button -->
-                                    <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
-                                        {% include 'stars_app/icons/ellipsis-icon.svg' %}
-                                    </button>
+                                    <div class="ellipsis-menu-wrapper">
+                                        <button class="ellipsis-menu-button" data-review-id="{{ review.id }}">
+                                            {% include 'stars_app/icons/ellipsis-icon.svg' %}
+                                        </button>
+                                    </div>
                                 {% endif %}
                             </div>
 
@@ -2464,13 +2555,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const reviewsList = document.querySelector('.reviews-list');
     if (reviewsList) {
         reviewsList.addEventListener('click', function(e) {
-
-            // Delete button handling:
-            const deleteButton = e.target.closest('.delete-review-btn');
-            if (deleteButton) {
+            // Ellipsis menu button handling
+            const ellipsisButton = e.target.closest('.ellipsis-menu-button');
+            if (ellipsisButton) {
                 e.preventDefault();
-                const reviewId = deleteButton.dataset.reviewId;
-
+                e.stopPropagation();
+                
+                const reviewId = ellipsisButton.dataset.reviewId;
+                const dropdown = document.querySelector(`.dropdown-menu[data-review-id="${reviewId}"]`);
+                
+                if (dropdown) {
+                    // Close all other dropdowns first
+                    document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                        if (menu !== dropdown) {
+                            menu.style.display = 'none';
+                        }
+                    });
+                    
+                    // Toggle current dropdown
+                    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+                }
+            }
+            
+            // Delete item in dropdown handling
+            const deleteItem = e.target.closest('.delete-item');
+            if (deleteItem) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const reviewId = deleteItem.dataset.reviewId;
+                
                 if (confirm('Are you sure you want to delete your review?')) {
                     fetch(`/delete-review/${reviewId}/`, {
                         method: 'POST',
@@ -2486,8 +2600,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                     .then(data => {
                         if (data.success) {
+                            // Close the dropdown menu
+                            const dropdown = deleteItem.closest('.dropdown-menu');
+                            if (dropdown) {
+                                dropdown.style.display = 'none';
+                            }
+                            
                             // Remove the review card
-                            deleteButton.closest('.review-card').remove();
+                            deleteItem.closest('.review-card').remove();
 
                             // Check if there are any reviews left
                             if (!document.querySelector('.review-card')) {
@@ -2505,6 +2625,17 @@ document.addEventListener('DOMContentLoaded', function() {
                                 const buttonSpan = toggleBtn.querySelector('span');
                                 if (buttonSpan) {
                                     buttonSpan.textContent = 'Write a Review';
+                                }
+                                
+                                // Update the icon from lock to pencil
+                                const currentIcon = toggleBtn.querySelector('svg');
+                                if (currentIcon) {
+                                    // Create the square-pen icon SVG
+                                    const newIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen">
+                                        <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
+                                    </svg>`;
+                                    currentIcon.outerHTML = newIcon;
                                 }
                             }
 
@@ -3111,6 +3242,14 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.ellipsis-menu-wrapper')) {
+            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                menu.style.display = 'none';
+            });
+        }
+    });
 
 });
 </script>
