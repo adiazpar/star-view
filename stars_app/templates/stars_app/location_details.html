@@ -1893,53 +1893,69 @@
                 {% endif %}
             </div>
 
-            <!-- Review form container - only shows for authenticated users who can review -->
+            <!-- Review form container - will be populated dynamically -->
             <div class="review-form-container" id="reviewFormContainer" style="display: none;">
-                {% if user.is_authenticated and not user_has_reviewed and not is_owner %}
-                    <!-- Review form for authenticated users who haven't reviewed -->
-                    <h5>Write a Review</h5>
-                    <form method="POST" class="review-form">
-                        {% csrf_token %}
-                        <div class="rating-input">
-                            <label>Rating:</label>
-                            <div class="star-rating">
-                                {% for i in "12345" %}
-                                <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
-                                <label for="star{{ i }}">
-                                    {% include 'stars_app/icons/star-filled-icon.svg' %}
-                                </label>
-                                {% endfor %}
-                            </div>
+                <!-- Form will be inserted here by JavaScript -->
+            </div>
+
+            <!-- Hidden Review Form Template (for cloning after deletion) -->
+            <div id="reviewFormTemplate" style="display: none;">
+                <h5>Write a Review</h5>
+                <form method="POST" class="review-form">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    <div class="rating-input">
+                        <label>Rating:</label>
+                        <div class="star-rating">
+                            <input type="radio" id="template-star1" name="rating" value="1" required>
+                            <label for="template-star1">
+                                {% include 'stars_app/icons/star-filled-icon.svg' %}
+                            </label>
+                            <input type="radio" id="template-star2" name="rating" value="2" required>
+                            <label for="template-star2">
+                                {% include 'stars_app/icons/star-filled-icon.svg' %}
+                            </label>
+                            <input type="radio" id="template-star3" name="rating" value="3" required>
+                            <label for="template-star3">
+                                {% include 'stars_app/icons/star-filled-icon.svg' %}
+                            </label>
+                            <input type="radio" id="template-star4" name="rating" value="4" required>
+                            <label for="template-star4">
+                                {% include 'stars_app/icons/star-filled-icon.svg' %}
+                            </label>
+                            <input type="radio" id="template-star5" name="rating" value="5" required>
+                            <label for="template-star5">
+                                {% include 'stars_app/icons/star-filled-icon.svg' %}
+                            </label>
                         </div>
-                        <div class="review-comment-input">
-                            <label for="comment">Comment:</label>
-                            <div class="comment-form">
-                                <div class="comment-input" 
-                                     contenteditable="true"
-                                     data-placeholder="Share your experience at this location..." 
-                                     data-name="comment"></div>
-                                <input type="hidden" name="comment" class="hidden-content">
-                                <div class="comment-toolbar">
-                                    <div class="comment-formatting-tools">
-                                        <button type="button" class="formatting-btn" title="Bold">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-                                        </button>
-                                        <button type="button" class="formatting-btn" title="Italic">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
-                                        </button>
-                                        <button type="button" class="formatting-btn" title="Underline">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
-                                        </button>
-                                    </div>
-                                    <button type="submit" class="submit-review">
-                                        <i class="fas fa-paper-plane"></i>
-                                        Submit Review
+                    </div>
+                    <div class="review-comment-input">
+                        <label for="comment">Comment:</label>
+                        <div class="comment-form">
+                            <div class="comment-input" 
+                                 contenteditable="true"
+                                 data-placeholder="Share your experience at this location..." 
+                                 data-name="comment"></div>
+                            <input type="hidden" name="comment" class="hidden-content">
+                            <div class="comment-toolbar">
+                                <div class="comment-formatting-tools">
+                                    <button type="button" class="formatting-btn" title="Bold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                                    </button>
+                                    <button type="button" class="formatting-btn" title="Italic">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                                    </button>
+                                    <button type="button" class="formatting-btn" title="Underline">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
                                     </button>
                                 </div>
+                                <button type="submit" class="submit-review">
+                                    <i class="fas fa-paper-plane"></i>
+                                    Submit Review
+                                </button>
                             </div>
                         </div>
-                    </form>
-                {% endif %}
+                    </div>
+                </form>
             </div>
 
             <!-- Review Metrics Card -->
@@ -2277,81 +2293,57 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize Photo Gallery and Carousel
     loadPhotosAndInitialize();
     
+    // Initialize review form if user can write a review
+    if (isAuthenticated && !{% if user_has_reviewed %}true{% else %}false{% endif %} && !isOwner) {
+        const formContainer = document.getElementById('reviewFormContainer');
+        if (formContainer) {
+            const reviewForm = createReviewForm();
+            if (reviewForm) {
+                formContainer.innerHTML = reviewForm.innerHTML;
+            }
+        }
+    }
+    
     // Initialize star rating on existing form
     initializeStarRating();
     
     // Initialize review form toggle
     initializeReviewFormToggle();
     
-    // Define the review form HTML with rich text editor (for use after deletion)
-    const reviewFormHTML = `
-        <h5>Write a Review</h5>
-        <form method="POST" class="review-form">
-            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
-            <div class="rating-input">
-                <label>Rating:</label>
-                <div class="star-rating">
-                    <input type="radio" id="new-star1" name="rating" value="1" required>
-                    <label for="new-star1">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="new-star2" name="rating" value="2" required>
-                    <label for="new-star2">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="new-star3" name="rating" value="3" required>
-                    <label for="new-star3">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="new-star4" name="rating" value="4" required>
-                    <label for="new-star4">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="new-star5" name="rating" value="5" required>
-                    <label for="new-star5">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star">
-                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
-                        </svg>
-                    </label>
-                </div>
-            </div>
-            <div class="review-comment-input">
-                <label for="comment">Comment:</label>
-                <div class="comment-form">
-                    <div class="comment-input" 
-                         contenteditable="true"
-                         data-placeholder="Share your experience at this location..." 
-                         data-name="comment"></div>
-                    <input type="hidden" name="comment" class="hidden-content">
-                    <div class="comment-toolbar">
-                        <div class="comment-formatting-tools">
-                            <button type="button" class="formatting-btn" title="Bold">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-                            </button>
-                            <button type="button" class="formatting-btn" title="Italic">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
-                            </button>
-                            <button type="button" class="formatting-btn" title="Underline">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
-                            </button>
-                        </div>
-                        <button type="submit" class="submit-review">
-                            <i class="fas fa-paper-plane"></i>
-                            Submit Review
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-    `;
+    // Function to create a review form from the template
+    function createReviewForm() {
+        const template = document.getElementById('reviewFormTemplate');
+        if (!template) {
+            console.error('Review form template not found');
+            return null;
+        }
+        
+        // Clone the template content
+        const formContent = template.cloneNode(true);
+        formContent.style.display = ''; // Remove the display: none
+        formContent.id = ''; // Remove the ID to avoid duplicates
+        
+        // Update the CSRF token in the cloned form
+        const csrfInput = formContent.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (csrfInput) {
+            csrfInput.value = csrfToken;
+        }
+        
+        // Generate unique IDs for the star inputs to avoid conflicts
+        const starInputs = formContent.querySelectorAll('.star-rating input[type="radio"]');
+        const starLabels = formContent.querySelectorAll('.star-rating label');
+        const uniqueId = Date.now(); // Use timestamp for uniqueness
+        
+        starInputs.forEach((input, index) => {
+            const newId = `star${index + 1}-${uniqueId}`;
+            input.id = newId;
+            if (starLabels[index]) {
+                starLabels[index].setAttribute('for', newId);
+            }
+        });
+        
+        return formContent;
+    }
 
     async function loadPhotosAndInitialize() {
         try {
@@ -2850,8 +2842,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 // Hide the container initially
                                 existingFormContainer.style.display = 'none';
                                 
-                                // Update the container content with the review form
-                                existingFormContainer.innerHTML = reviewFormHTML;
+                                // Clear the container and add the cloned review form
+                                existingFormContainer.innerHTML = '';
+                                const newForm = createReviewForm();
+                                if (newForm) {
+                                    // Extract just the inner content (not the wrapper div)
+                                    existingFormContainer.innerHTML = newForm.innerHTML;
+                                }
 
                                 // Initialize star rating functionality
                                 setTimeout(() => {
