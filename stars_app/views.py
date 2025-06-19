@@ -1094,7 +1094,10 @@ def location_details(request, location_id):
                     user=request.user,
                     comment=comment
                 ).first()
-                setattr(comment, 'user_vote', 'up' if comment_vote and comment_vote.is_upvote else 'down' if comment_vote else None)
+                if comment_vote:
+                    setattr(comment, 'user_vote', 'up' if comment_vote.is_upvote else 'down')
+                else:
+                    setattr(comment, 'user_vote', None)
             else:
                 setattr(comment, 'user_vote', None)
 

@@ -2246,6 +2246,7 @@
                                                         {% if user.is_authenticated %}
                                                             {% if comment.user != user %}
                                                                 <!-- Interactive voting buttons for authenticated users (not comment owner) -->
+                                                                <!-- Debug: user_vote = {{ comment.user_vote|default:"None" }} -->
                                                                 <button class="vote-button upvote {% if comment.user_vote == 'up' %}voted{% endif %}"
                                                                         data-comment-id="{{ comment.id }}"
                                                                         data-review-id="{{ review.id }}"
