@@ -1095,18 +1095,10 @@ def location_details(request, location_id):
                     comment=comment
                 ).first()
                 
-                # Debug logging
-                print(f"Debug: Comment {comment.id}, User {request.user.username}")
-                print(f"Debug: Found comment vote: {comment_vote}")
-                if comment_vote:
-                    print(f"Debug: Vote is_upvote: {comment_vote.is_upvote}")
-                
                 if comment_vote:
                     setattr(comment, 'user_vote', 'up' if comment_vote.is_upvote else 'down')
                 else:
                     setattr(comment, 'user_vote', None)
-                    
-                print(f"Debug: Set user_vote to: {getattr(comment, 'user_vote', 'NOT_SET')}")
             else:
                 setattr(comment, 'user_vote', None)
 
