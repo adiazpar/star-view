@@ -776,6 +776,20 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
             'downvotes': downvotes
         })
 
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user != request.user:
+            return Response({'detail': 'You can only edit your own reviews.'}, 
+                           status=status.HTTP_403_FORBIDDEN)
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user != request.user:
+            return Response({'detail': 'You can only edit your own reviews.'}, 
+                           status=status.HTTP_403_FORBIDDEN)
+        return super().partial_update(request, *args, **kwargs)
+
 class ReviewCommentViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewCommentSerializer
     permission_classes = [IsAuthenticated]  # Require authentication for all comment operations

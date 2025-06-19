@@ -351,6 +351,7 @@
     font-family: inherit;
     line-height: 1.5;
     box-sizing: border-box;
+    min-height: 120px;
 }
 
 .review-comment-input textarea:focus {
@@ -642,6 +643,16 @@
     pointer-events: none;
 }
 
+/* Make review comment input taller for better distinction */
+.review-comment-input .comment-input {
+    min-height: 120px;
+}
+
+/* Make edit mode review textarea same height as new review textarea */
+.review-comment[data-editable="review"] + .edit-controls .comment-input {
+    min-height: 120px;
+}
+
 /* Styling for formatted content in contenteditable */
 .comment-input strong {
     font-weight: bold;
@@ -706,6 +717,7 @@
     color: var(--text-primary);
     cursor: pointer;
     transition: background-color var(--transition-base);
+    font-size: var(--font-size-xs);
 }
 
 .submit-comment:hover {
@@ -1988,7 +2000,7 @@
                                 </div>
                                 <button type="submit" class="submit-review">
                                     <i class="fas fa-paper-plane"></i>
-                                    Submit Review
+                                    Submit
                                 </button>
                             </div>
                         </div>
@@ -2064,16 +2076,16 @@
                                 </div>
                             </div>
 
-                            {% if review.comment %}
-                                <div class="review-comment" 
-                                     data-editable="review" 
-                                     data-location-id="{{ location.id }}"
-                                     data-review-id="{{ review.id }}" 
-                                     data-original-content="{{ review.comment }}"
-                                     data-rating="{{ review.rating }}">
+                            <div class="review-comment" 
+                                 data-editable="review" 
+                                 data-location-id="{{ location.id }}"
+                                 data-review-id="{{ review.id }}" 
+                                 data-original-content="{{ review.comment|default:'' }}"
+                                 data-rating="{{ review.rating }}">
+                                {% if review.comment %}
                                     {{ review.comment|markdown_format }}
-                                </div>
-                            {% endif %}
+                                {% endif %}
+                            </div>
 
                             <!-- Add voting controls -->
                             <div class="vote-controls">
@@ -2386,6 +2398,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const reviewForm = createReviewForm();
             if (reviewForm) {
                 formContainer.innerHTML = reviewForm.innerHTML;
+                
+                // Initialize contenteditable event listeners
+                const commentInput = formContainer.querySelector('.comment-input');
+                const hiddenInput = formContainer.querySelector('.hidden-content');
+                
+                if (commentInput && hiddenInput) {
+                    // Set initial empty state
+                    hiddenInput.value = '';
+                    
+                    // Add placeholder behavior
+                    commentInput.addEventListener('focus', function() {
+                        if (this.textContent.trim() === '' && !this.querySelector('*')) {
+                            this.textContent = '';
+                        }
+                    });
+                    
+                    commentInput.addEventListener('blur', function() {
+                        if (this.textContent.trim() === '' && !this.querySelector('*')) {
+                            this.innerHTML = '';
+                        }
+                    });
+                    
+                    // Update hidden input on content change
+                    commentInput.addEventListener('input', function() {
+                        updateHiddenInput(this);
+                    });
+                }
             }
         }
     }
@@ -3801,16 +3840,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         saveBtn.addEventListener('click', function() {
             const newContent = hiddenInput.value.trim();
-            if (newContent) {
-                // Get rating for reviews
-                let rating = null;
-                if (type === 'review') {
-                    const ratingInput = editControls.querySelector('input[name="rating"]:checked');
-                    if (ratingInput) {
-                        rating = parseInt(ratingInput.value);
-                    }
+            
+            // Get rating for reviews
+            let rating = null;
+            if (type === 'review') {
+                const ratingInput = editControls.querySelector('input[name="rating"]:checked');
+                if (ratingInput) {
+                    rating = parseInt(ratingInput.value);
                 }
-                
+            }
+            
+            // For reviews, allow saving with empty content as long as there's a rating
+            // For comments, require content
+            if (type === 'review' || newContent) {
                 saveEdit(element, editControls, type, ids, newContent, rating);
             }
         });
@@ -3898,8 +3940,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedContent = data.formatted_content || markdownToHtml(data[contentField]);
             element.innerHTML = formattedContent;
             
-            // Update data attribute
+            // Update data attributes
             element.setAttribute('data-original-content', data[contentField]);
+            
+            // Update rating data attribute for reviews
+            if (type === 'review' && data.rating) {
+                element.setAttribute('data-rating', data.rating);
+            }
             
             // Update star rating display for reviews
             if (type === 'review' && data.rating) {
