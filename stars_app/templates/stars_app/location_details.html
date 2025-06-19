@@ -2246,7 +2246,7 @@
                                                         {% if user.is_authenticated %}
                                                             {% if comment.user != user %}
                                                                 <!-- Interactive voting buttons for authenticated users (not comment owner) -->
-                                                                <button class="vote-button upvote {% if comment.user_vote == 'up' %}voted{% endif %}"
+                                                                <button class="vote-button upvote {% if comment_votes|get_item:comment.id == 1 %}voted{% endif %}"
                                                                         data-comment-id="{{ comment.id }}"
                                                                         data-review-id="{{ review.id }}"
                                                                         data-location-id="{{ location.id }}"
@@ -2255,7 +2255,7 @@
                                                                 </button>
                                                                 <span class="upvote-count">{{ comment.upvote_count }}</span>
                                                                 
-                                                                <button class="vote-button downvote {% if comment.user_vote == 'down' %}voted{% endif %}"
+                                                                <button class="vote-button downvote {% if comment_votes|get_item:comment.id == -1 %}voted{% endif %}"
                                                                         data-comment-id="{{ comment.id }}"
                                                                         data-review-id="{{ review.id }}"
                                                                         data-location-id="{{ location.id }}"

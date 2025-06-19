@@ -27,4 +27,17 @@ def average_rating(reviews):
 @register.filter
 def get_item(dictionary, key):
     """Get an item from a dictionary in templates"""
-    return dictionary.get(str(key), 0) if dictionary else 0
+    if not dictionary:
+        return None
+    
+    # Try both string and integer keys
+    result = dictionary.get(key)
+    if result is None:
+        result = dictionary.get(str(key))
+    if result is None:
+        try:
+            result = dictionary.get(int(str(key)))
+        except (ValueError, TypeError):
+            pass
+    
+    return result

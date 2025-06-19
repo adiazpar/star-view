@@ -859,14 +859,17 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
                 comment=comment
             ).first()
             
+            user_vote = None
             if existing_vote:
                 if existing_vote.is_upvote == is_upvote:
                     # Same vote type - remove the vote (toggle off)
                     existing_vote.delete()
+                    user_vote = None
                 else:
                     # Different vote type - update the vote
                     existing_vote.is_upvote = is_upvote
                     existing_vote.save()
+                    user_vote = 'up' if is_upvote else 'down'
             else:
                 # Create new vote
                 CommentVote.objects.create(
@@ -874,12 +877,13 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
                     comment=comment,
                     is_upvote=is_upvote
                 )
+                user_vote = 'up' if is_upvote else 'down'
             
             # Return updated vote counts and user's vote status
             return Response({
                 'upvotes': comment.upvote_count,
                 'downvotes': comment.downvote_count,
-                'user_vote': comment.get_user_vote(request.user)
+                'user_vote': user_vote
             })
             
         except Exception as e:
@@ -1067,6 +1071,9 @@ def location_details(request, location_id):
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
 
+    # Create vote dictionaries to pass to template
+    comment_votes = {}
+    
     # Add vote information for authenticated users
     for review in page_obj:
         # Add user-specific vote information only for authenticated users
@@ -1086,8 +1093,9 @@ def location_details(request, location_id):
         review.cached_upvote_count = review.votes.filter(is_upvote=True).count()
         review.cached_downvote_count = review.votes.filter(is_upvote=False).count()
         
-        # Add vote information for comments
-        for comment in review.comments.all():
+        # Prefetch comments with vote information
+        comments = review.comments.all()
+        for comment in comments:
             if request.user.is_authenticated:
                 # Get user's vote on this comment
                 comment_vote = CommentVote.objects.filter(
@@ -1096,11 +1104,12 @@ def location_details(request, location_id):
                 ).first()
                 
                 if comment_vote:
-                    setattr(comment, 'user_vote', 'up' if comment_vote.is_upvote else 'down')
+                    user_vote_value = 1 if comment_vote.is_upvote else -1
+                    comment_votes[comment.id] = user_vote_value
                 else:
-                    setattr(comment, 'user_vote', None)
+                    comment_votes[comment.id] = 0
             else:
-                setattr(comment, 'user_vote', None)
+                comment_votes[comment.id] = 0
 
     # Handle review submission
     if request.method == 'POST' and request.user.is_authenticated and not is_owner:
@@ -1135,6 +1144,7 @@ def location_details(request, location_id):
         'mapbox_token': settings.MAPBOX_TOKEN,
         'total_reviews': total_reviews,
         'average_rating': avg_rating,
+        'comment_votes': comment_votes,
     }
     return render(request, 'stars_app/location_details.html', context)
 
