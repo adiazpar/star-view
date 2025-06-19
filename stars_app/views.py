@@ -1085,6 +1085,18 @@ def location_details(request, location_id):
         # Cache upvote and downvote counts to avoid multiple database queries
         review.cached_upvote_count = review.votes.filter(is_upvote=True).count()
         review.cached_downvote_count = review.votes.filter(is_upvote=False).count()
+        
+        # Add vote information for comments
+        for comment in review.comments.all():
+            if request.user.is_authenticated:
+                # Get user's vote on this comment
+                comment_vote = CommentVote.objects.filter(
+                    user=request.user,
+                    comment=comment
+                ).first()
+                setattr(comment, 'user_vote', 'up' if comment_vote and comment_vote.is_upvote else 'down' if comment_vote else None)
+            else:
+                setattr(comment, 'user_vote', None)
 
     # Handle review submission
     if request.method == 'POST' and request.user.is_authenticated and not is_owner:

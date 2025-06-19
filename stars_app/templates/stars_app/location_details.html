@@ -2240,6 +2240,54 @@
                                                        data-original-content="{{ comment.content }}">
                                                         {{ comment.content|markdown_format }}
                                                     </p>
+                                                    
+                                                    <!-- Comment voting controls -->
+                                                    <div class="comment-vote-controls">
+                                                        {% if user.is_authenticated %}
+                                                            {% if comment.user != user %}
+                                                                <!-- Interactive voting buttons for authenticated users (not comment owner) -->
+                                                                <button class="vote-button upvote {% if comment.user_vote == 'up' %}voted{% endif %}"
+                                                                        data-comment-id="{{ comment.id }}"
+                                                                        data-review-id="{{ review.id }}"
+                                                                        data-location-id="{{ location.id }}"
+                                                                        data-vote-type="up">
+                                                                    {% include 'stars_app/icons/thumbs-up-icon.svg' %}
+                                                                </button>
+                                                                <span class="upvote-count">{{ comment.upvote_count }}</span>
+                                                                
+                                                                <button class="vote-button downvote {% if comment.user_vote == 'down' %}voted{% endif %}"
+                                                                        data-comment-id="{{ comment.id }}"
+                                                                        data-review-id="{{ review.id }}"
+                                                                        data-location-id="{{ location.id }}"
+                                                                        data-vote-type="down">
+                                                                    {% include 'stars_app/icons/thumbs-down-icon.svg' %}
+                                                                </button>
+                                                                <span class="downvote-count">{{ comment.downvote_count }}</span>
+                                                            {% else %}
+                                                                <!-- Disabled buttons for comment owner -->
+                                                                <button class="vote-button disabled" disabled>
+                                                                    {% include 'stars_app/icons/thumbs-up-icon.svg' %}
+                                                                </button>
+                                                                <span class="upvote-count">{{ comment.upvote_count }}</span>
+                                                                
+                                                                <button class="vote-button disabled" disabled>
+                                                                    {% include 'stars_app/icons/thumbs-down-icon.svg' %}
+                                                                </button>
+                                                                <span class="downvote-count">{{ comment.downvote_count }}</span>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            <!-- Disabled buttons for non-authenticated users -->
+                                                            <button class="vote-button disabled" disabled>
+                                                                {% include 'stars_app/icons/thumbs-up-icon.svg' %}
+                                                            </button>
+                                                            <span class="upvote-count">{{ comment.upvote_count }}</span>
+                                                            
+                                                            <button class="vote-button disabled" disabled>
+                                                                {% include 'stars_app/icons/thumbs-down-icon.svg' %}
+                                                            </button>
+                                                            <span class="downvote-count">{{ comment.downvote_count }}</span>
+                                                        {% endif %}
+                                                    </div>
                                                 </div>
                                             </div>
                                         {% endfor %}
