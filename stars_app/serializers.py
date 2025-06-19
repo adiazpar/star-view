@@ -20,10 +20,14 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     user_profile_picture = serializers.SerializerMethodField()
     formatted_content = serializers.SerializerMethodField()
+    upvote_count = serializers.SerializerMethodField()
+    downvote_count = serializers.SerializerMethodField()
+    user_vote = serializers.SerializerMethodField()
 
     class Meta:
         model = ReviewComment
-        fields = ['id', 'review', 'user', 'user_profile_picture', 'content', 'formatted_content', 'created_at']
+        fields = ['id', 'review', 'user', 'user_profile_picture', 'content', 'formatted_content', 
+                  'created_at', 'upvote_count', 'downvote_count', 'user_vote']
         read_only_fields = ['user', 'review']
 
     def get_user(self, obj):
@@ -40,6 +44,18 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
     def get_formatted_content(self, obj):
         # Convert markdown to HTML for display
         return self._markdown_format(obj.content)
+    
+    def get_upvote_count(self, obj):
+        return obj.upvote_count
+    
+    def get_downvote_count(self, obj):
+        return obj.downvote_count
+    
+    def get_user_vote(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.get_user_vote(request.user)
+        return None
     
     def _markdown_format(self, text):
         """Convert basic markdown to HTML"""

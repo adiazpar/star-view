@@ -24,3 +24,24 @@ class ReviewComment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.user.username} on {self.review}"
+    
+    @property
+    def upvote_count(self):
+        """Get the number of upvotes for this comment"""
+        return self.votes.filter(is_upvote=True).count()
+    
+    @property
+    def downvote_count(self):
+        """Get the number of downvotes for this comment"""
+        return self.votes.filter(is_upvote=False).count()
+    
+    def get_user_vote(self, user):
+        """Get the vote status for a specific user"""
+        if not user.is_authenticated:
+            return None
+        
+        try:
+            vote = self.votes.get(user=user)
+            return 'up' if vote.is_upvote else 'down'
+        except:
+            return None

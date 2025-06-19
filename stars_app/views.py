@@ -60,6 +60,7 @@ import json
 from itertools import chain
 from django.core.paginator import Paginator
 from .models.reviewvote import ReviewVote
+from .models.commentvote import CommentVote
 
 # -------------------------------------------------------------- #
 # Pagination Classes:
@@ -829,6 +830,63 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
         if instance.user != self.request.user:
             raise PermissionDenied("You can only delete your own comments")
         instance.delete()
+    
+    @action(detail=True, methods=['POST'])
+    def vote(self, request, pk=None, location_pk=None, review_pk=None):
+        """Handle voting on comments"""
+        try:
+            comment = self.get_object()
+            vote_type = request.data.get('vote_type')
+            
+            if vote_type not in ['up', 'down']:
+                return Response(
+                    {'detail': 'Vote type must be "up" or "down"'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Prevent users from voting on their own comments
+            if comment.user == request.user:
+                return Response(
+                    {'detail': 'You cannot vote on your own comment'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            is_upvote = vote_type == 'up'
+            
+            # Check if user already voted
+            existing_vote = CommentVote.objects.filter(
+                user=request.user,
+                comment=comment
+            ).first()
+            
+            if existing_vote:
+                if existing_vote.is_upvote == is_upvote:
+                    # Same vote type - remove the vote (toggle off)
+                    existing_vote.delete()
+                else:
+                    # Different vote type - update the vote
+                    existing_vote.is_upvote = is_upvote
+                    existing_vote.save()
+            else:
+                # Create new vote
+                CommentVote.objects.create(
+                    user=request.user,
+                    comment=comment,
+                    is_upvote=is_upvote
+                )
+            
+            # Return updated vote counts and user's vote status
+            return Response({
+                'upvotes': comment.upvote_count,
+                'downvotes': comment.downvote_count,
+                'user_vote': comment.get_user_vote(request.user)
+            })
+            
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 # -------------------------------------------------------------- #

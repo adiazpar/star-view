@@ -572,7 +572,7 @@
 
 .review-comments-section {
     margin-top: var(--space-md);
-    border-top: 1px solid var(--text-tertiary);
+    border-top: 0.5px solid var(--text-tertiary);
 }
 
 .comments-toggle.inline {
@@ -804,6 +804,44 @@
 .comment-text {
     color: var(--text-primary);
     font-size: var(--font-size-xs);
+    margin-bottom: var(--space-sm);
+}
+
+.comment-vote-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-xs);
+}
+
+/* Simplified vertical line for comments section */
+.comments-list {
+    position: relative;
+    margin-left: 16px; /* Align with center of B button (32px / 2) */
+    padding-left: 24px; /* Space between line and comments */
+}
+
+/* Create vertical line with pseudo-element */
+.comments-list::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0.5px;
+    opacity: 0.8;
+    background-color: var(--text-tertiary);
+}
+
+/* Hide line when there are no comments */
+.comments-list:empty::before {
+    display: none;
+}
+
+/* Ensure proper spacing */
+.comments-container[style*="block"] .comments-list {
+    margin-top: 20px;
 }
 
 .comment-login-prompt {
@@ -2904,11 +2942,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 e.preventDefault();
 
                 const reviewId = voteButton.dataset.reviewId;
+                const commentId = voteButton.dataset.commentId;
                 const locationId = voteButton.dataset.locationId;
                 const voteType = voteButton.dataset.voteType;
-                const voteContainer = voteButton.closest('.vote-controls')
+                
+                // Determine if this is a review vote or comment vote
+                const isCommentVote = !!commentId;
+                const voteContainer = voteButton.closest(isCommentVote ? '.comment-vote-controls' : '.vote-controls');
+                
+                // Build the appropriate API endpoint
+                let endpoint;
+                if (isCommentVote) {
+                    endpoint = `/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/vote/`;
+                } else {
+                    endpoint = `/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/vote/`;
+                }
 
-                fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/vote/`, {
+                fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': csrfToken,
@@ -3238,6 +3288,64 @@ document.addEventListener('DOMContentLoaded', function() {
             </button>
         ` : '';
 
+        // Create vote controls based on user authentication and ownership
+        const isCommentOwner = isAuthenticated && username === currentUsername;
+        const upvoteCount = comment.upvote_count || 0;
+        const downvoteCount = comment.downvote_count || 0;
+        const userVote = comment.user_vote;
+        
+        // SVG icons as strings for JavaScript
+        const thumbsUpIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-thumbs-up">
+            <path d="M7 10v12"/>
+            <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>
+        </svg>`;
+        
+        const thumbsDownIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-thumbs-down">
+            <path d="M17 14V2"/>
+            <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/>
+        </svg>`;
+
+        let voteControls = '';
+        if (isAuthenticated && !isCommentOwner) {
+            // Interactive voting buttons for authenticated users (not comment owner)
+            voteControls = `
+                <div class="comment-vote-controls">
+                    <button class="vote-button upvote ${userVote === 'up' ? 'voted' : ''}"
+                            data-comment-id="${comment.id}"
+                            data-review-id="${comment.review || comment.review_id}"
+                            data-location-id="${comment.location || locationId}"
+                            data-vote-type="up">
+                        ${thumbsUpIcon}
+                    </button>
+                    <span class="upvote-count">${upvoteCount}</span>
+                    
+                    <button class="vote-button downvote ${userVote === 'down' ? 'voted' : ''}"
+                            data-comment-id="${comment.id}"
+                            data-review-id="${comment.review || comment.review_id}"
+                            data-location-id="${comment.location || locationId}"
+                            data-vote-type="down">
+                        ${thumbsDownIcon}
+                    </button>
+                    <span class="downvote-count">${downvoteCount}</span>
+                </div>
+            `;
+        } else {
+            // Disabled buttons for comment owners or non-authenticated users
+            voteControls = `
+                <div class="comment-vote-controls">
+                    <button class="vote-button disabled" disabled>
+                        ${thumbsUpIcon}
+                    </button>
+                    <span class="upvote-count">${upvoteCount}</span>
+                    
+                    <button class="vote-button disabled" disabled>
+                        ${thumbsDownIcon}
+                    </button>
+                    <span class="downvote-count">${downvoteCount}</span>
+                </div>
+            `;
+        }
+
         div.innerHTML = `
             <img src="${profilePicUrl}"
                  alt="${username}'s profile picture"
@@ -3256,6 +3364,7 @@ document.addEventListener('DOMContentLoaded', function() {
                    data-original-content="${comment.content || comment.formatted_content}">
                     ${comment.formatted_content || comment.content}
                 </p>
+                ${voteControls}
             </div>
         `;
         return div;

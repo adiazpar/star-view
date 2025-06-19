@@ -12,6 +12,7 @@ from .userprofile import UserProfile
 from .locationreview import LocationReview
 from .reviewvote import ReviewVote
 from .reviewcomment import ReviewComment
+from .commentvote import CommentVote
 from .favoritelocation import FavoriteLocation
 from .forecast import Forecast
 from .defaultforecast import defaultforecast
