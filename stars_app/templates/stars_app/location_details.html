@@ -2247,6 +2247,7 @@
                                                             {% if comment.user != user %}
                                                                 <!-- Interactive voting buttons for authenticated users (not comment owner) -->
                                                                 <!-- Debug: user_vote = {{ comment.user_vote|default:"None" }} -->
+                                                                <script>console.log('Comment {{ comment.id }} user_vote:', '{{ comment.user_vote|default:"None" }}');</script>
                                                                 <button class="vote-button upvote {% if comment.user_vote == 'up' %}voted{% endif %}"
                                                                         data-comment-id="{{ comment.id }}"
                                                                         data-review-id="{{ review.id }}"
@@ -2255,6 +2256,7 @@
                                                                     {% include 'stars_app/icons/thumbs-up-icon.svg' %}
                                                                 </button>
                                                                 <span class="upvote-count">{{ comment.upvote_count }}</span>
+                                                                <small style="color: yellow;">[{{ comment.user_vote|default:"none" }}]</small>
                                                                 
                                                                 <button class="vote-button downvote {% if comment.user_vote == 'down' %}voted{% endif %}"
                                                                         data-comment-id="{{ comment.id }}"
