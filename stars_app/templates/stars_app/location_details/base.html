@@ -1,0 +1,228 @@
+{% extends 'stars_app/base.html' %}
+{% load static %}
+{% load markdown_extras %}
+{% load custom_filters %}
+{% block body_class %}location-details-page{% endblock %}
+
+<!-- Extra header content -->
+{% block extra_head %}
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js"></script>
+<link href="{% static 'css/components/photo-gallery.css' %}" rel="stylesheet">
+<link href="{% static 'css/pages/location_details/location_details.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="location-details-page">
+    {% csrf_token %}
+
+    <div class="location-details-container">
+        <!-- Hero Section with Image Carousel -->
+        <div class="hero-section">
+            <div class="hero-carousel" id="heroCarousel">
+                <div class="carousel-container">
+                    <button class="carousel-nav prev" id="carouselPrev">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="carousel-content" id="carouselContent">
+                        <!-- Photos will be loaded here -->
+                    </div>
+                    <button class="carousel-nav next" id="carouselNext">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                <div class="hero-overlay">
+                    <div class="hero-header">
+                        <div class="hero-title-section">
+                            <h1>{{ location.name }}</h1>
+                            {% if location.is_verified %}
+                                <span class="verification-badge" title="Verified on {{ location.verification_date|date:'M d, Y' }}">
+                                    <i class="fas fa-check-circle"></i>
+                                    Verified
+                                </span>
+                            {% endif %}
+                            <div class="hero-rating">
+                                <div class="rating-display">
+                                    {% for i in "12345"|make_list %}
+                                        {% if forloop.counter <= average_rating %}
+                                            {% include 'stars_app/icons/star-filled-icon.svg' %}
+                                        {% else %}
+                                            {% include 'stars_app/icons/star-empty-icon.svg' %}
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <span class="rating-count">{{ total_reviews }} review{{ total_reviews|pluralize }}</span>
+                            </div>
+                        </div>
+                        <div class="hero-actions">
+                            {% if user.is_authenticated %}
+                                <button class="hero-action-btn favorite-button" type="button" id="favoriteButton">
+                                    <i class="fas fa-heart"></i>
+                                    <span id="favoriteText">Favorite</span>
+                                </button>
+                                
+                                {% if not is_owner %}
+                                    <button class="hero-action-btn report-button" type="button" id="reportButton">
+                                        <i class="fas fa-flag"></i>
+                                        Report
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                            <a href="{% url 'map' %}?lat={{ location.latitude }}&lng={{ location.longitude }}&zoom=12"
+                               class="hero-action-btn view-map-button">
+                                <i class="fas fa-map"></i>
+                                View on Map
+                            </a>
+                        </div>
+                    </div>
+                    <div class="photo-credit" id="photoCredit">
+                        <!-- Photo credit will be shown here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo Gallery Section -->
+        <div class="photos-section">
+            <div class="photos-header">
+                <h2 id="photosTitle">Photos (0)</h2>
+                {% if user.is_authenticated %}
+                    <button class="btn-upload-photo" id="openUploadModal">
+                        <i class="fas fa-upload"></i>
+                        Upload Photo
+                    </button>
+                {% endif %}
+            </div>
+            <div class="photos-grid" id="photosGrid">
+                <!-- Photos will be loaded here -->
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="about-section">
+            <h2>About this Location</h2>
+            <p class="location-description">
+                {% if location.description %}
+                    {{ location.description }}
+                {% else %}
+                    This astronomical viewing location offers exceptional stargazing conditions. Perfect for observing deep sky objects, the Milky Way, and celestial events.
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Astronomy Data Section -->
+        <div class="astronomy-data-section">
+            <div class="data-grid">
+                <div class="data-item">
+                    <div class="data-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Coordinates</h3>
+                        <p>{{ location.latitude|floatformat:4 }}, {{ location.longitude|floatformat:4 }}</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon elevation">
+                        <i class="fas fa-mountain"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Elevation</h3>
+                        <p>{{ location.elevation|floatformat:0 }} meters</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon cloud">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Current Cloud Cover</h3>
+                        <p>{{ location.cloudCoverPercentage|default:"Unknown"|floatformat:0 }}%</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon light">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Light Pollution</h3>
+                        <p>{% if location.light_pollution_value < 18 %}Minimal{% elif location.light_pollution_value < 20 %}Low{% elif location.light_pollution_value < 21 %}Moderate{% else %}High{% endif %}</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon calendar">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Best Viewing Months</h3>
+                        <p>{% if location.administrative_area == "Hawaii" %}Year-round optimal{% elif location.country == "United States" %}April - September{% else %}Check local conditions{% endif %}</p>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-icon access">
+                        <i class="fas fa-info-circle"></i>
+                    </div>
+                    <div class="data-content">
+                        <h3>Access Information</h3>
+                        <p>{% if location.verification_notes %}{{ location.verification_notes }}{% else %}Check local conditions and accessibility before visiting. {% if location.is_verified %}This location has been verified.{% endif %}{% endif %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        {% include './components/reviews_section.html' %}
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="report-modal" id="reportModal">
+    <div class="report-modal-content">
+        <div class="modal-header">
+            <h3>Report Location</h3>
+            <button class="modal-close" id="closeReportModal">&times;</button>
+        </div>
+        <form id="reportForm" class="report-form">
+            <div class="form-group">
+                <label for="reportType">Report Type</label>
+                <select id="reportType" name="report_type" required>
+                    <option value="">Select a reason...</option>
+                    <option value="DUPLICATE">Duplicate location</option>
+                    <option value="INACCURATE">Inaccurate information</option>
+                    <option value="SPAM">Spam or inappropriate</option>
+                    <option value="UNSAFE">Unsafe location</option>
+                    <option value="CLOSED">Location no longer accessible</option>
+                    <option value="OTHER">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="reportDescription">Description</label>
+                <textarea id="reportDescription" name="description" rows="4" 
+                          placeholder="Please provide more details about your report..." required></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" id="cancelReport">Cancel</button>
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-flag"></i> Submit Report
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Pass Django template variables to JavaScript
+    window.locationDetailsConfig = {
+        locationId: '{{ location.id }}',
+        isAuthenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
+        isOwner: {% if is_owner %}true{% else %}false{% endif %},
+        currentUsername: '{{ user.username|default:"" }}',
+        mapboxToken: '{{ mapbox_token }}',
+        locationLongitude: {{ location.longitude }},
+        locationLatitude: {{ location.latitude }},
+        locationName: '{{ location.name|escapejs }}',
+        userHasReviewed: {% if user_has_reviewed %}true{% else %}false{% endif %}
+    };
+</script>
+<script src="{% static 'js/pages/location_details/location_details.js' %}"></script>
+{% endblock %}
