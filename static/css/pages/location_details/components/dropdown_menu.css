@@ -1,0 +1,108 @@
+/* Dropdown Menu Styles */
+
+/* Ellipsis Menu */
+.ellipsis-menu-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.ellipsis-menu-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    margin-left: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ellipsis-menu-button:hover {
+    color: var(--text-primary);
+    background: var(--surface-light);
+}
+
+.ellipsis-menu-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    margin-left: var(--space-sm);
+    background: var(--background-dark);
+    border-radius: var(--radius-sm);
+    min-width: 100px;
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+}
+
+/* Dropdown Items */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-sm) var(--space-sm);
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    text-align: left;
+    font-size: var(--font-size-xs);
+}
+
+.dropdown-item:hover {
+    background: var(--surface-light);
+}
+
+.dropdown-item.edit-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.edit-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item.delete-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.delete-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item.report-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.report-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item i,
+.dropdown-item svg {
+    font-size: var(--font-size-sm);
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.dropdown-item span {
+    flex: 1;
+}

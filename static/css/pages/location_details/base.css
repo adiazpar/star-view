@@ -1,0 +1,372 @@
+/* Import Component Styles */
+@import url('./components/photo_gallery.css');
+@import url('./components/review_form.css');
+@import url('./components/review_cards.css');
+@import url('./components/review_metrics.css');
+@import url('./components/comments_system.css');
+@import url('./components/voting_system.css');
+@import url('./components/pagination.css');
+@import url('./components/edit_controls.css');
+@import url('./components/dropdown_menu.css');
+
+/* Hero Section Styles */
+.hero-section {
+    margin: calc(-1 * var(--space-lg));
+    margin-bottom: var(--space-xl);
+}
+
+.hero-carousel {
+    position: relative;
+    height: 500px;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+}
+
+.carousel-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.carousel-content {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    z-index: 2;
+}
+
+.carousel-nav:hover {
+    background: rgba(0, 0, 0, 0.9);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav.prev {
+    left: var(--space-md);
+}
+
+.carousel-nav.next {
+    right: var(--space-md);
+}
+
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    z-index: 1;
+}
+
+.hero-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: var(--space-lg);
+}
+
+.hero-title-section h1 {
+    color: var(--text-primary);
+    font-size: var(--font-size-3xl);
+    margin: 0 0 var(--space-sm) 0;
+    text-shadow: var(--text-shadow);
+}
+
+.hero-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+}
+
+.hero-rating .rating-display {
+    display: flex;
+    gap: var(--space-xs);
+}
+.hero-rating .rating-count {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    text-shadow: var(--text-shadow);
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: flex-start;
+}
+
+.hero-action-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(45, 45, 45, 0.9);
+    color: var(--text-primary);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+}
+
+.hero-action-btn:hover {
+    background: rgba(45, 45, 45, 1);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.hero-action-btn.favorite-button.favorited {
+    background: rgba(255, 105, 180, 0.9);
+    border-color: var(--pink);
+}
+
+.photo-credit {
+    padding: var(--space-md) var(--space-lg);
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    text-shadow: var(--text-shadow);
+}
+
+/* Photos Section */
+.photos-section {
+    margin-bottom: var(--space-xl);
+}
+
+.photos-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.photos-header h2 {
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.photos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-md);
+}
+/* About Section */
+.about-section {
+    margin-bottom: var(--space-xl);
+}
+
+.about-section h2 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-md);
+}
+
+.location-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* Location Details Page Styling */
+.location-details-page {
+    background-color: var(--background-dark);
+    min-height: 100vh;
+}
+
+.location-details-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+/* Reviews Section */
+.reviews-section {
+    margin-bottom: var(--space-xl);
+}
+/* Astronomy Data Section */
+.astronomy-data-section {
+    margin-bottom: var(--space-xl);
+}
+
+.astronomy-data-section h2 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+}
+
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--space-lg);
+}
+
+.data-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--text-tertiary);
+}
+
+.data-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary);
+    color: var(--text-primary);
+    font-size: var(--font-size-lg);
+    flex-shrink: 0;
+}
+
+.data-icon.elevation {
+    background: var(--event-aurora);
+}
+
+.data-icon.cloud {
+    background: var(--text-tertiary);
+}
+
+.data-icon.light {
+    background: var(--golden);
+}
+
+.data-icon.calendar {
+    background: var(--event-comet);
+}
+
+.data-icon.access {
+    background: var(--negate-light);
+}
+
+.data-content h3 {
+    color: var(--text-primary);
+    font-size: var(--font-size-base);
+    margin: 0 0 var(--space-xs) 0;
+}
+
+.data-content p {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    margin: 0;
+    line-height: 1.4;
+}
+/* Verification Badge */
+.verification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background: var(--success);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-xs);
+    margin-left: var(--space-sm);
+}
+
+/* Report Button */
+.report-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: 1px solid var(--negate);
+    background: var(--surface);
+    color: var(--negate);
+}
+
+.report-button:hover {
+    background: var(--negate);
+    color: var(--text-primary);
+}
+
+/* Report Modal */
+.report-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-modal-content {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    max-width: 500px;
+    width: 90%;
+    padding: var(--space-lg);
+}
+
+.report-form .form-group {
+    margin-bottom: var(--space-md);
+}
+
+.report-form label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+}
+
+.report-form select,
+.report-form textarea {
+    width: 100%;
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .carousel-nav {
+        width: 40px;
+        height: 40px;
+        font-size: var(--font-size-base);
+    }
+
+    .photos-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+
+    .data-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .data-item {
+        padding: var(--space-md);
+    }
+}
+
+

@@ -1,0 +1,175 @@
+/* Review Form Styles */
+
+/* Review Form Container */
+.review-form-container {
+    background: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--radius-xs);
+    margin-bottom: var(--space-xl);
+}
+
+.review-form-container h5 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    font-size: var(--font-size-lg);
+}
+
+.review-form {
+    display: grid;
+    gap: var(--space-md);
+}
+
+/* Rating Input Section */
+.rating-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.rating-input label {
+    color: var(--text-primary);
+    font-weight: normal;
+}
+
+/* Star Rating System */
+.star-rating {
+    display: block;
+    gap: var(--space-xs);
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.star-rating label {
+    cursor: pointer;
+    position: relative;
+}
+
+.star-rating label svg {
+    width: 24px;
+    height: 24px;
+    color: var(--background-dark);
+    fill: var(--background-dark);
+    transition: all var(--transition-base);
+}
+
+.star-rating label.filled svg {
+    color: var(--golden);
+    fill: var(--golden);
+}
+
+.star-rating label.hover svg {
+    color: var(--golden);
+    fill: var(--golden);
+}
+
+/* Review Comment Input */
+.review-comment-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.review-comment-input label {
+    color: var(--text-primary);
+    font-weight: lighter;
+}
+
+/* Submit Review Button */
+.submit-review {
+    padding: var(--space-sm);
+    background-color: var(--primary);
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    justify-self: start;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.submit-review:hover {
+    background-color: var(--primary-light);
+}
+
+/* Submit review button when in toolbar */
+.comment-toolbar .submit-review {
+    padding: var(--space-sm) var(--space-md);
+    justify-self: auto;
+}
+
+/* Reviews header with toggle button */
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.toggle-review-form {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    transition: all var(--transition-base);
+    font-size: var(--font-size-sm);
+}
+
+.toggle-review-form:hover {
+    color: var(--text-primary);
+    background: var(--surface-light);
+}
+
+.toggle-review-form.active {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.toggle-review-form.active:hover {
+    background: var(--primary-light);
+}
+
+.toggle-review-form svg {
+    width: 16px;
+    height: 16px;
+}
+
+.toggle-review-form.disabled {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.toggle-review-form.disabled:hover {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+}
+
+.review-form-container {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -1,0 +1,121 @@
+/* Review Cards Styles */
+
+/* Reviews List Container */
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+/* Individual Review Card */
+.review-card {
+    background: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--radius-xs);
+    border: none;
+}
+
+/* Review Header */
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+/* Review Author Section */
+.review-author-section {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.review-profile-picture {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-xs);
+    object-fit: cover;
+    background-color: var(--background);
+    border: 1px solid var(--background-dark);
+}
+
+.review-author {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.review-username {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+/* Review Rating Section */
+.review-rating-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-sm);
+}
+
+/* Rating Display */
+.rating-display {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-xs);
+}
+
+.rating-display svg {
+    color: var(--text-tertiary);
+    fill: none; /* Consistent outline style for empty stars */
+    width: 16px;
+    height: 16px;
+}
+
+.rating-display svg.filled {
+    color: var(--golden);
+    fill: var(--golden);
+}
+
+/* Review Content */
+.review-comment {
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-md);
+}
+
+/* Review Meta Information */
+.review-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+}
+
+.review-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+}
+
+/* Current User Review Styling */
+.current-user-review {
+    border: 0.5px solid var(--primary-light);
+    background: var(--surface);
+}
+
+.your-review-badge {
+    font-size: var(--font-size-xs);
+    color: var(--primary-light);
+}
+
+/* No Reviews State */
+.no-reviews {
+    text-align: center;
+    color: var(--text-tertiary);
+    padding: var(--space-xl);
+}
+
+/* Review Comments Section */
+.review-comments-section {
+    margin-top: var(--space-md);
+    border-top: 0.5px solid var(--text-tertiary);
+}
