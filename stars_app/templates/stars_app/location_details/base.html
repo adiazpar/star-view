@@ -223,5 +223,12 @@
         userHasReviewed: {% if user_has_reviewed %}true{% else %}false{% endif %}
     };
 </script>
-<script src="{% static 'js/pages/location_details/location_details.js' %}"></script>
+<!-- Component Scripts -->
+<script src="{% static 'js/pages/location_details/components/utils.js' %}"></script>
+<script src="{% static 'js/pages/location_details/components/editing_system.js' %}"></script>
+<script src="{% static 'js/pages/location_details/components/voting_system.js' %}"></script>
+<script src="{% static 'js/pages/location_details/components/review_system.js' %}"></script>
+<script src="{% static 'js/pages/location_details/components/comment_system.js' %}"></script>
+<!-- Main Orchestrator -->
+<script src="{% static 'js/pages/location_details/base.js' %}"></script>
 {% endblock %}
