@@ -3,8 +3,6 @@
 {% load markdown_extras %}
 {% load custom_filters %}
 {% block body_class %}location-details-page{% endblock %}
-
-
 <!-- Extra header content -->
 {% block extra_head %}
 <link href="https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css" rel="stylesheet">
@@ -37,27 +35,6 @@
     position: relative;
     overflow: hidden;
 }
-
-.carousel-slide {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
-}
-
-.carousel-slide.active {
-    opacity: 1;
-}
-
-.carousel-slide img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
 .carousel-nav {
     position: absolute;
     top: 50%;
@@ -125,17 +102,6 @@
     display: flex;
     gap: var(--space-xs);
 }
-
-.hero-rating .rating-display i {
-    color: var(--text-tertiary);
-    font-size: var(--font-size-base);
-    text-shadow: var(--text-shadow);
-}
-
-.hero-rating .rating-display i.filled {
-    color: var(--golden);
-}
-
 .hero-rating .rating-count {
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
@@ -204,29 +170,6 @@
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: var(--space-md);
 }
-
-.photo-thumbnail {
-    aspect-ratio: 4/3;
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    cursor: pointer;
-    transition: transform var(--transition-base);
-}
-
-.photo-thumbnail:hover {
-    transform: scale(1.05);
-}
-
-.photo-thumbnail img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.photo-thumbnail.primary {
-    border: 2px solid var(--primary);
-}
-
 /* About Section */
 .about-section {
     margin-bottom: var(--space-xl);
@@ -317,17 +260,6 @@
     fill: var(--background-dark);
     transition: all var(--transition-base);
 }
-
-.star-rating label.filled svg {
-    color: var(--golden);
-    fill: var(--golden);
-}
-
-.star-rating label.hover svg {
-    color: var(--golden);
-    fill: var(--golden);
-}
-
 /* Review Form Comment Input */
 .review-comment-input {
     display: flex;
@@ -339,30 +271,6 @@
     color: var(--text-primary);
     font-weight: lighter;
 }
-
-.review-comment-input textarea {
-    width: 100%;
-    background: var(--background-dark);
-    border: 0px;
-    border-radius: var(--radius-xs);
-    padding: var(--space-sm);
-    color: var(--text-primary);
-    resize: vertical;
-    font-family: inherit;
-    line-height: 1.5;
-    box-sizing: border-box;
-    min-height: 120px;
-}
-
-.review-comment-input textarea:focus {
-    outline: none;
-    border: 0.5px solid var(--primary);
-}
-
-.review-comment-input textarea::placeholder {
-    color: var(--text-tertiary);
-}
-
 .submit-review {
     padding: var(--space-sm);
     background-color: var(--primary);
@@ -386,71 +294,6 @@
     padding: var(--space-sm) var(--space-md);
     justify-self: auto;
 }
-
-/* Login Prompt styling */
-.login-prompt-container {
-    background: var(--background-dark);
-    border-radius: var(--radius-sm);
-    padding: var(--space-lg);
-    text-align: center;
-    margin-bottom: var(--space-xl);
-}
-
-.login-prompt-message {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-md);
-    font-size: var(--font-size-sm);
-}
-
-.login-prompt-button {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    background: var(--primary);
-    color: var(--text-primary);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: background-color var(--transition-base);
-}
-
-.login-prompt-button:hover {
-    background: var(--primary-light);
-}
-
-.login-prompt-button i {
-    font-size: var(--font-size-sm);
-}
-
-/* Owner message styling */
-.owner-message-container {
-    background: var(--background-dark);
-    border-radius: var(--radius-sm);
-    padding: var(--space-lg);
-    text-align: center;
-    margin-bottom: var(--space-xl);
-    border: 1px solid var(--text-tertiary);
-}
-
-.owner-message {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-md);
-}
-
-.owner-message p {
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-.owner-message i {
-    font-size: var(--font-size-xl);
-    color: var(--negate-light);
-}
-
 /* Review Cards */
 .reviews-list {
     display: flex;
@@ -545,19 +388,6 @@
     align-items: center;
     gap: var(--space-sm);
     justify-content: flex-end;
-}
-
-.delete-review-btn {
-    background: none;
-    border: none;
-    padding: var(--space-xs);
-    color: var(--text-tertiary);
-    cursor: pointer;
-    transition: color var(--transition-base);
-}
-
-.delete-review-btn:hover {
-    color: var(--negate-light);
 }
 
 .current-user-review {
@@ -757,27 +587,6 @@
     background: var(--background-dark);
     color: var(--text-tertiary);
 }
-
-.login-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    background: var(--primary);
-    color: var(--text-primary);
-    text-decoration: none;
-    border-radius: var(--radius-sm);
-    transition: background-color var(--transition-base);
-}
-
-.login-link:hover {
-    background: var(--primary-light);
-}
-
-.login-link i {
-    font-size: var(--font-size-sm);
-}
-
 .comment {
     display: flex;
     gap: var(--space-md);
@@ -855,21 +664,6 @@
 .comments-container[style*="block"] .comments-list {
     margin-top: 20px;
 }
-
-.comment-login-prompt {
-    background: var(--background);
-    border-radius: var(--radius-sm);
-    padding: var(--space-md);
-    text-align: center;
-    margin-bottom: var(--space-md);
-}
-
-.comment-login-prompt p {
-    color: var(--text-secondary);
-    margin-bottom: var(--space-sm);
-    font-size: var(--font-size-sm);
-}
-
 /* Voting system styles */
 .vote-controls {
     display: flex;
@@ -963,14 +757,6 @@
     color: var(--text-secondary);
     font-size: var(--font-size-sm);
 }
-
-.current-page {
-    padding: var(--space-sm) var(--space-md);
-    background: var(--primary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-}
-
 /* Astronomy Data Section */
 .astronomy-data-section {
     margin-bottom: var(--space-xl);
@@ -1042,141 +828,6 @@
     margin: 0;
     line-height: 1.4;
 }
-
-/* Photo Upload Modal Styles */
-.photo-upload-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 2000;
-    align-items: center;
-    justify-content: center;
-}
-
-.photo-upload-modal .modal-content {
-    background: var(--surface);
-    border-radius: var(--radius-md);
-    max-width: 500px;
-    width: 90%;
-    max-height: 90vh;
-    overflow-y: auto;
-    border: 1px solid var(--text-tertiary);
-}
-
-.photo-upload-modal .modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: var(--space-lg);
-    border-bottom: 1px solid var(--text-tertiary);
-}
-
-.photo-upload-modal .modal-header h3 {
-    margin: 0;
-    color: var(--text-primary);
-}
-
-.photo-upload-modal .modal-close {
-    background: none;
-    border: none;
-    color: var(--text-secondary);
-    font-size: var(--font-size-xl);
-    cursor: pointer;
-    padding: 0;
-    width: 30px;
-    height: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.photo-upload-modal .modal-close:hover {
-    color: var(--text-primary);
-}
-
-.photo-upload-modal .photo-upload-form {
-    padding: var(--space-lg);
-}
-
-.photo-upload-modal .form-group {
-    margin-bottom: var(--space-md);
-}
-
-.photo-upload-modal .form-group label {
-    display: block;
-    color: var(--text-primary);
-    margin-bottom: var(--space-sm);
-    font-weight: 500;
-}
-
-.photo-upload-modal input[type="file"] {
-    width: 100%;
-    padding: var(--space-sm);
-    background: var(--background-dark);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    cursor: pointer;
-}
-
-.photo-upload-modal textarea {
-    width: 100%;
-    background: var(--background-dark);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
-    padding: var(--space-sm);
-    color: var(--text-primary);
-    resize: vertical;
-    font-family: inherit;
-}
-
-.photo-upload-modal .form-actions {
-    display: flex;
-    gap: var(--space-md);
-    justify-content: flex-end;
-    margin-top: var(--space-lg);
-}
-
-.photo-upload-modal .btn-cancel,
-.photo-upload-modal .btn-primary {
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    border: none;
-}
-
-.photo-upload-modal .btn-cancel {
-    background: var(--background-dark);
-    border: 1px solid var(--text-tertiary);
-    color: var(--text-primary);
-}
-
-.photo-upload-modal .btn-cancel:hover {
-    background: var(--surface);
-}
-
-.photo-upload-modal .btn-primary {
-    background: var(--primary);
-    color: var(--text-primary);
-}
-
-.photo-upload-modal .btn-primary:hover {
-    background: var(--primary-light);
-}
-
-.photo-upload-modal .btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
 /* Verification Badge */
 .verification-badge {
     display: inline-flex;
@@ -1188,72 +839,6 @@
     border-radius: var(--radius-sm);
     font-size: var(--font-size-xs);
     margin-left: var(--space-sm);
-}
-
-.verification-badge i {
-    font-size: var(--font-size-sm);
-}
-
-/* Category and Tags */
-.location-meta-info {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-md);
-    align-items: center;
-    margin-top: var(--space-sm);
-}
-
-.category-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-sm);
-    background: var(--surface);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-}
-
-.category-badge i {
-    color: var(--primary);
-}
-
-.tags-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
-}
-
-.tag-chip {
-    padding: var(--space-xs) var(--space-sm);
-    background: var(--background-dark);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: var(--font-size-xs);
-    text-decoration: none;
-    transition: all var(--transition-base);
-}
-
-.tag-chip:hover {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: var(--text-primary);
-}
-
-/* Visitor Info */
-.visitor-info {
-    display: flex;
-    gap: var(--space-lg);
-    color: var(--text-secondary);
-    font-size: var(--font-size-sm);
-}
-
-.visitor-info-item {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
 }
 
 /* Report Button */
@@ -1677,52 +1262,6 @@
 .dropdown-item span {
     flex: 1;
 }
-
-/* Universal Edit Mode Styles */
-.edit-mode {
-    display: none !important;
-}
-
-.edit-controls {
-    margin-top: var(--space-sm);
-}
-
-.edit-actions {
-    display: flex;
-    gap: var(--space-sm);
-}
-
-.save-edit, .cancel-edit {
-    padding: var(--space-sm) var(--space-md);
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: background-color var(--transition-base);
-    font-size: var(--font-size-xs);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-}
-
-.save-edit {
-    background-color: var(--primary);
-    color: var(--text-primary);
-}
-
-.save-edit:hover {
-    background-color: var(--primary-light);
-}
-
-.cancel-edit {
-    background-color: var(--background-dark);
-    color: var(--text-secondary);
-}
-
-.cancel-edit:hover {
-    background-color: var(--surface-light);
-    color: var(--text-primary);
-}
-
 /* Comment edit button */
 .comment-edit-btn {
     background: none;
@@ -1755,8 +1294,6 @@
 }
 </style>
 {% endblock %}
-
-
 {% block content %}
 <div class="location-details-page">
     {% csrf_token %}
@@ -2813,8 +2350,6 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
-
-
     // Add delete review functionality
     const reviewsList = document.querySelector('.reviews-list');
     if (reviewsList) {
@@ -3262,8 +2797,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Call this after DOM is loaded
     setTimeout(calculateRatingDistribution, 100);
-
-
     // Handle comment section toggling
     document.querySelectorAll('.comments-toggle').forEach(button => {
         button.addEventListener('click', function() {
@@ -3297,8 +2830,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 content = commentInput.value.trim();
             }
-
-
             if (!content) return;
 
             fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/`, {
