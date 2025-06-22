@@ -24,11 +24,12 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
     upvote_count = serializers.SerializerMethodField()
     downvote_count = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
+    is_edited = serializers.ReadOnlyField()
 
     class Meta:
         model = ReviewComment
         fields = ['id', 'review', 'user', 'user_profile_picture', 'content', 'formatted_content', 
-                  'created_at', 'upvote_count', 'downvote_count', 'user_vote']
+                  'created_at', 'upvote_count', 'downvote_count', 'user_vote', 'is_edited']
         read_only_fields = ['user', 'review']
 
     def get_user(self, obj):
@@ -110,12 +111,13 @@ class LocationReviewSerializer(serializers.ModelSerializer):
     downvote_count = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
     photos = ReviewPhotoSerializer(many=True, read_only=True)
+    is_edited = serializers.ReadOnlyField()
 
     class Meta:
         model = LocationReview
         fields = ['id', 'location', 'user', 'user_full_name',
                  'rating', 'comment', 'created_at', 'updated_at',
-                  'vote_count', 'upvote_count', 'downvote_count', 'user_vote', 'photos']
+                  'vote_count', 'upvote_count', 'downvote_count', 'user_vote', 'photos', 'is_edited']
 
     def get_user_full_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}".strip()

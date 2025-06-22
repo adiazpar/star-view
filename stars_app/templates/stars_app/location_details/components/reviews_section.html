@@ -83,10 +83,6 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
                             </button>
                         </div>
-                        <button type="submit" class="submit-review">
-                            <i class="fas fa-paper-plane"></i>
-                            Submit
-                        </button>
                     </div>
                 </div>
             </div>
@@ -112,6 +108,17 @@
                         </button>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="cancel-review">
+                    Cancel
+                </button>
+                <button type="submit" class="submit-review">
+                    <i class="fas fa-paper-plane"></i>
+                    Submit Review
+                </button>
             </div>
         </form>
     </div>
@@ -180,6 +187,9 @@
                             </div>
                             <div class="review-meta">
                                 <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                                {% if review.is_edited %}
+                                    <span class="edited-indicator">(edited)</span>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -360,6 +370,9 @@
                                             <div class="comment-header">
                                                 <span class="comment-username">{{ comment.user.username }}</span>
                                                 <span class="comment-date">{{ comment.created_at|date:"M d, Y" }}</span>
+                                                {% if comment.is_edited %}
+                                                    <span class="edited-indicator">(edited)</span>
+                                                {% endif %}
                                                 {% if user == comment.user %}
                                                     <button class="comment-edit-btn" 
                                                             data-comment-id="{{ comment.id }}"

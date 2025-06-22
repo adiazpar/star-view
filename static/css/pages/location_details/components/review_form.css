@@ -82,26 +82,59 @@
     font-weight: lighter;
 }
 
-/* Submit Review Button */
-.submit-review {
-    padding: var(--space-sm);
+/* Form Actions Container */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--background-dark);
+}
+
+/* Shared Cancel Button Styles */
+.cancel-review,
+.cancel-edit {
+    padding: var(--space-sm) var(--space-lg);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-md);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-size: var(--font-size-xs);
+}
+
+.cancel-review:hover,
+.cancel-edit:hover {
+    background: var(--surface-light);
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+/* Shared Submit/Save Button Styles */
+.submit-review,
+.save-edit {
+    padding: var(--space-sm) var(--space-lg);
     background-color: var(--primary);
     border: none;
     border-radius: var(--radius-md);
-    color: var(--text-primary);
+    color: var(--white);
     cursor: pointer;
     transition: background-color var(--transition-base);
-    justify-self: start;
     display: flex;
     align-items: center;
     gap: var(--space-sm);
+    font-size: var(--font-size-xs);
 }
 
-.submit-review:hover {
+.submit-review:hover,
+.save-edit:hover {
     background-color: var(--primary-light);
 }
 
-/* Submit review button when in toolbar */
+/* Submit review button when in toolbar (for comments) */
 .comment-toolbar .submit-review {
     padding: var(--space-sm) var(--space-md);
     justify-self: auto;
@@ -510,87 +543,11 @@
     height: 16px;
 }
 
-/* Edit Controls Styling - Match Original Form */
+/* Edit Controls Container */
 .edit-controls {
-    margin-top: var(--space-md);
+    margin-top: var(--space-sm);
 }
 
-.edit-controls .review-form {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-}
-
-.edit-controls .rating-input {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-}
-
-.edit-controls .review-comment-input {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-}
-
-.edit-controls .review-images-input {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-    width: 100%;
-}
-
-.edit-controls .image-upload-container {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-    width: 100%;
-}
-
-.edit-controls .images-grid-container {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    width: 100%;
-}
-
-.edit-controls .image-preview-container {
-    display: contents;
-}
-
-.edit-controls .image-preview-item {
-    position: relative;
-    width: 96px;
-    height: 96px;
-    border-radius: var(--radius-xs);
-    overflow: hidden;
-    background: var(--background-dark);
-    border: 1px solid var(--background-dark);
-    margin-right: var(--space-sm);
-    margin-bottom: var(--space-sm);
-}
-
-.edit-controls .add-image-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 96px;
-    height: 96px;
-    background: var(--background-dark);
-    border: 1px dashed var(--text-tertiary);
-    border-radius: var(--radius-xs);
-    color: var(--text-tertiary);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    flex-shrink: 0;
-}
-
-.edit-controls .image-upload-hint {
-    font-size: var(--font-size-sm);
-    color: var(--text-tertiary);
-    margin-bottom: var(--space-sm);
-    margin-top: 0;
-}
 
 /* Add margin above voting buttons when in edit mode */
 .edit-controls + .vote-controls {

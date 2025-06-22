@@ -103,48 +103,91 @@ window.EditingSystem = (function() {
             </div>
         ` : '';
         
-        editControls.innerHTML = `
-            <div class="review-form">
-                ${starRatingSection}
-                <div class="review-comment-input">
-                    <label for="comment">Comment:</label>
-                    <div class="comment-form">
-                        <div class="comment-input" 
-                             contenteditable="true"
-                             data-placeholder="Edit your ${type}..." 
-                             data-name="content"></div>
-                        <input type="hidden" name="content" class="hidden-content">
-                        <div class="comment-toolbar">
-                    <div class="comment-formatting-tools">
-                        <button type="button" class="formatting-btn" title="Bold">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-                        </button>
-                        <button type="button" class="formatting-btn" title="Italic">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
-                        </button>
-                        <button type="button" class="formatting-btn" title="Underline">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
-                        </button>
+        // Different structure for comments vs reviews
+        if (type === 'comment') {
+            editControls.innerHTML = `
+                <div class="comment-form">
+                    <div class="comment-input" 
+                         contenteditable="true"
+                         data-placeholder="Edit your comment..." 
+                         data-name="content"></div>
+                    <input type="hidden" name="content" class="hidden-content">
+                    <div class="comment-toolbar">
+                        <div class="comment-formatting-tools">
+                            <button type="button" class="formatting-btn" title="Bold">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Italic">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Underline">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                            </button>
+                        </div>
+                        <div class="edit-actions">
+                            <button type="button" class="cancel-edit-comment">
+                                Cancel
+                            </button>
+                            <button type="button" class="save-edit-comment" data-type="${type}" data-ids='${JSON.stringify(ids)}'>
+                                <i class="fas fa-check"></i>
+                                Save
+                            </button>
+                        </div>
                     </div>
-                    <div class="edit-actions">
+                </div>
+            `;
+        } else {
+            // Review editing structure
+            editControls.innerHTML = `
+                <div class="review-form">
+                    ${starRatingSection}
+                    <div class="review-comment-input">
+                        <label for="comment">Comment:</label>
+                        <div class="comment-form">
+                            <div class="comment-input" 
+                                 contenteditable="true"
+                                 data-placeholder="Edit your review..." 
+                                 data-name="content"></div>
+                            <input type="hidden" name="content" class="hidden-content">
+                            <div class="comment-toolbar">
+                                <div class="comment-formatting-tools">
+                                    <button type="button" class="formatting-btn" title="Bold">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                                    </button>
+                                    <button type="button" class="formatting-btn" title="Italic">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                                    </button>
+                                    <button type="button" class="formatting-btn" title="Underline">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    ${imageEditingSection}
+                    
+                    <!-- Form Actions -->
+                    <div class="form-actions">
+                        <button type="button" class="cancel-edit">
+                            Cancel
+                        </button>
                         <button type="button" class="save-edit" data-type="${type}" data-ids='${JSON.stringify(ids)}'>
                             <i class="fas fa-check"></i>
                             Save
                         </button>
-                        <button type="button" class="cancel-edit">
-                            <i class="fas fa-times"></i>
-                            Cancel
-                        </button>
-                        </div>
                     </div>
                 </div>
-                </div>
-                ${imageEditingSection}
-            </div>
-        `;
+            `;
+        }
         
-        // Insert edit controls after the original element
-        element.parentNode.insertBefore(editControls, element.nextSibling);
+        // Different insertion strategy for comments vs reviews
+        if (type === 'comment') {
+            // For comments, replace the comment text element entirely
+            element.parentNode.replaceChild(editControls, element);
+        } else {
+            // For reviews, insert after the original element
+            element.parentNode.insertBefore(editControls, element.nextSibling);
+        }
         
         // Pre-populate the editor with original markdown content converted to HTML
         const commentInput = editControls.querySelector('.comment-input');
@@ -196,9 +239,9 @@ window.EditingSystem = (function() {
         // Focus the editor
         commentInput.focus();
         
-        // Set up event handlers
-        const saveBtn = editControls.querySelector('.save-edit');
-        const cancelBtn = editControls.querySelector('.cancel-edit');
+        // Set up event handlers - different selectors based on type
+        const saveBtn = editControls.querySelector(type === 'comment' ? '.save-edit-comment' : '.save-edit');
+        const cancelBtn = editControls.querySelector(type === 'comment' ? '.cancel-edit-comment' : '.cancel-edit');
         
         saveBtn.addEventListener('click', function() {
             const newContent = hiddenInput.value.trim();
@@ -345,14 +388,48 @@ window.EditingSystem = (function() {
             const contentField = type === 'review' ? 'comment' : 'content';
             // Prefer formatted_content from backend, fallback to markdown conversion
             const formattedContent = data.formatted_content || markdownToHtml(data[contentField]);
+            
+            if (type === 'comment') {
+                // For comments, we need to restore the original element first
+                editControls.parentNode.replaceChild(element, editControls);
+                element.classList.remove('edit-mode');
+            }
+            
             element.innerHTML = formattedContent;
             
             // Update data attributes
             element.setAttribute('data-original-content', data[contentField]);
             
+            // Add edited indicator for comments - since we just edited it, we know it's edited
+            if (type === 'comment') {
+                const commentHeader = element.closest('.comment-content').querySelector('.comment-header');
+                const existingIndicator = commentHeader.querySelector('.edited-indicator');
+                if (!existingIndicator) {
+                    const editedIndicator = document.createElement('span');
+                    editedIndicator.className = 'edited-indicator';
+                    editedIndicator.textContent = '(edited)';
+                    // Insert immediately after the date span
+                    const dateSpan = commentHeader.querySelector('.comment-date');
+                    dateSpan.insertAdjacentElement('afterend', editedIndicator);
+                }
+            }
+            
             // Update rating data attribute for reviews
             if (type === 'review' && data.rating) {
                 element.setAttribute('data-rating', data.rating);
+            }
+            
+            // Add edited indicator for reviews - since we just edited it, we know it's edited
+            if (type === 'review') {
+                const reviewCard = element.closest('.review-card');
+                const reviewMeta = reviewCard.querySelector('.review-meta');
+                const existingIndicator = reviewMeta.querySelector('.edited-indicator');
+                if (!existingIndicator) {
+                    const editedIndicator = document.createElement('span');
+                    editedIndicator.className = 'edited-indicator';
+                    editedIndicator.textContent = '(edited)';
+                    reviewMeta.appendChild(editedIndicator);
+                }
             }
             
             // Update star rating display for reviews
@@ -392,8 +469,10 @@ window.EditingSystem = (function() {
                 imagesToRemove.length = 0;
             }
             
-            // Clean up edit mode
-            cancelEdit(element, editControls);
+            // Clean up edit mode for reviews only (comments already handled above)
+            if (type === 'review') {
+                cancelEdit(element, editControls);
+            }
             
             // Emit update event
             if (eventBus) {
@@ -412,18 +491,28 @@ window.EditingSystem = (function() {
     
     // Cancel editing
     function cancelEdit(element, editControls) {
-        // Remove edit controls
-        editControls.remove();
+        // Get the type from the edit controls
+        const saveBtn = editControls.querySelector('.save-edit-comment, .save-edit');
+        const type = saveBtn ? saveBtn.dataset.type : null;
         
-        // Show original content
-        element.classList.remove('edit-mode');
-        
-        // Restore original photos visibility for reviews
-        const reviewCard = element.closest('.review-card');
-        const originalPhotos = reviewCard ? reviewCard.querySelector('.review-photos[data-hidden-for-edit="true"]') : null;
-        if (originalPhotos) {
-            originalPhotos.style.display = '';
-            originalPhotos.removeAttribute('data-hidden-for-edit');
+        if (type === 'comment') {
+            // For comments, we need to restore the original element
+            editControls.parentNode.replaceChild(element, editControls);
+            element.classList.remove('edit-mode');
+        } else {
+            // For reviews, just remove edit controls
+            editControls.remove();
+            
+            // Show original content
+            element.classList.remove('edit-mode');
+            
+            // Restore original photos visibility for reviews
+            const reviewCard = element.closest('.review-card');
+            const originalPhotos = reviewCard ? reviewCard.querySelector('.review-photos[data-hidden-for-edit="true"]') : null;
+            if (originalPhotos) {
+                originalPhotos.style.display = '';
+                originalPhotos.removeAttribute('data-hidden-for-edit');
+            }
         }
         
         // Clear images to remove array when canceling

@@ -18,6 +18,7 @@ class ReviewComment(models.Model):
         help_text="Comment content"
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['created_at']
@@ -45,3 +46,10 @@ class ReviewComment(models.Model):
             return 'up' if vote.is_upvote else 'down'
         except:
             return None
+    
+    @property
+    def is_edited(self):
+        """Check if the comment has been edited"""
+        # Consider it edited if updated_at is more than 10 seconds after created_at
+        from datetime import timedelta
+        return self.updated_at - self.created_at > timedelta(seconds=10)

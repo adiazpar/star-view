@@ -311,3 +311,54 @@
     width: 14px;
     height: 14px;
 }
+
+/* Edit Actions for Comment Inline Editing */
+.edit-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+/* Comment Edit Save and Cancel Buttons */
+.save-edit-comment, 
+.cancel-edit-comment {
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    font-size: var(--font-size-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.save-edit-comment {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+.save-edit-comment:hover {
+    background-color: var(--primary-light);
+}
+
+.cancel-edit-comment {
+    background-color: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    color: var(--text-secondary);
+}
+
+.cancel-edit-comment:hover {
+    background-color: var(--surface-light);
+    border: 1px solid var(--text-primary);
+    color: var(--text-primary);
+}
+
+/* Comment Edit Mode Styling */
+.comment .edit-controls {
+    margin-top: var(--space-sm);
+    flex: 1;
+}
+
+.comment .edit-controls .comment-form {
+    width: 100%;
+}

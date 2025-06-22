@@ -229,6 +229,7 @@ window.CommentSystem = (function() {
                 <div class="comment-header">
                     <span class="comment-username">${username}</span>
                     <span class="comment-date">${formatDate(comment.created_at)}</span>
+                    ${comment.is_edited ? '<span class="edited-indicator">(edited)</span>' : ''}
                     ${editButton}
                 </div>
                 <p class="comment-text" 

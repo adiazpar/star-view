@@ -96,6 +96,13 @@
     justify-content: flex-end;
 }
 
+/* Edited Indicator */
+.edited-indicator {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    font-style: italic;
+}
+
 /* Current User Review Styling */
 .current-user-review {
     border: 0.5px solid var(--primary-light);

@@ -56,6 +56,14 @@ window.ReviewSystem = (function() {
                             updateHiddenInput(this);
                         });
                     }
+                    
+                    // Add cancel button functionality
+                    const cancelButton = formContainer.querySelector('.cancel-review');
+                    if (cancelButton) {
+                        cancelButton.addEventListener('click', function() {
+                            handleCancelReview();
+                        });
+                    }
                 }
             }
         }
@@ -493,6 +501,14 @@ window.ReviewSystem = (function() {
                         editableDiv.classList.add('empty');
                     }
                 }
+                
+                // Add cancel button functionality
+                const cancelButton = existingFormContainer.querySelector('.cancel-review');
+                if (cancelButton) {
+                    cancelButton.addEventListener('click', function() {
+                        handleCancelReview();
+                    });
+                }
             }, 100);
         }
     }
@@ -557,6 +573,45 @@ window.ReviewSystem = (function() {
         }
         
         return '';
+    }
+    
+    // Handle cancel review action
+    function handleCancelReview() {
+        const formContainer = document.getElementById('reviewFormContainer');
+        const toggleBtn = document.getElementById('toggleReviewForm');
+        
+        if (formContainer && toggleBtn) {
+            // Clear the form
+            const form = formContainer.querySelector('.review-form');
+            if (form) {
+                form.reset();
+                
+                // Clear star rating visual state
+                const labels = form.querySelectorAll('.star-rating label');
+                labels.forEach(label => label.classList.remove('filled'));
+                
+                // Clear comment input
+                const commentInput = form.querySelector('.comment-input');
+                const hiddenInput = form.querySelector('.hidden-content');
+                if (commentInput) {
+                    commentInput.innerHTML = '';
+                }
+                if (hiddenInput) {
+                    hiddenInput.value = '';
+                }
+                
+                // Clear any uploaded images
+                if (window.ImageUploadSystem && window.ImageUploadSystem.clearAllImages) {
+                    window.ImageUploadSystem.clearAllImages();
+                }
+            }
+            
+            // Hide the form container
+            formContainer.style.display = 'none';
+            
+            // Update toggle button state
+            toggleBtn.classList.remove('active');
+        }
     }
     
     // Close dropdown when clicking outside

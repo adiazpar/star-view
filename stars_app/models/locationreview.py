@@ -59,6 +59,13 @@ class LocationReview(TimestampedModel):
         """Returns the number of downvotes"""
         return self.votes.filter(is_upvote=False).count()
     
+    @property
+    def is_edited(self):
+        """Check if the review has been edited"""
+        # Consider it edited if updated_at is more than 10 seconds after created_at
+        from datetime import timedelta
+        return self.updated_at - self.created_at > timedelta(seconds=10)
+    
     def save(self, *args, **kwargs):
         """Override save to update location rating statistics"""
         is_new = self.pk is None
