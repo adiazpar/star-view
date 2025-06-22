@@ -15,7 +15,8 @@
 }
 
 .review-form {
-    display: grid;
+    display: flex;
+    flex-direction: column;
     gap: var(--space-md);
 }
 
@@ -172,4 +173,426 @@
         opacity: 1;
         transform: translateY(0);
     }
+}
+
+/* Image Upload Section */
+.review-images-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.images-grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.image-preview-container {
+    display: contents;
+}
+
+.image-preview-item {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+    background: var(--background-dark);
+    border: 1px solid var(--background-dark);
+    margin-right: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: var(--space-xs);
+    right: var(--space-xs);
+    background: var(--negate);
+    border: none;
+    border-radius: var(--radius-xs);
+    padding: 4px;
+    cursor: pointer;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    z-index: 2;
+}
+
+.remove-image-btn:hover {
+    background: var(--negate-light);
+}
+
+.remove-image-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.add-image-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    background: var(--background-dark);
+    border: 1px dashed var(--text-tertiary);
+    border-radius: var(--radius-xs);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    flex-shrink: 0;
+}
+
+.add-image-btn:hover {
+    background: var(--surface-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.add-image-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.image-upload-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-sm);
+    margin-top: 0;
+}
+
+.upload-error-message {
+    background: var(--danger-light);
+    color: var(--danger);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-sm);
+}
+
+/* Review Photos Display */
+.review-photos {
+    display: flex;
+    gap: var(--space-xs);
+    margin-top: var(--space-md);
+    margin-bottom: var(--space-md);
+    width: 100%;
+}
+
+.review-photo-item {
+    position: relative;
+    cursor: pointer;
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+    transition: all var(--transition-base);
+    background: var(--background-dark);
+    flex: 1;
+    min-width: 0; /* Allows flex items to shrink below their content size */
+}
+
+.review-photo-item:hover {
+    transform: scale(1.05);
+    z-index: 1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Dynamic height based on number of images and screen size */
+.review-photos[data-image-count="1"] .review-photo-item {
+    height: 300px;
+}
+
+.review-photos[data-image-count="2"] .review-photo-item {
+    height: 200px;
+}
+
+.review-photos[data-image-count="3"] .review-photo-item {
+    height: 170px;
+}
+
+.review-photos[data-image-count="4"] .review-photo-item {
+    height: 150px;
+}
+
+.review-photos[data-image-count="5"] .review-photo-item {
+    height: 130px;
+}
+
+.review-photo-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Responsive height adjustments */
+@media (max-width: 768px) {
+    .review-photos[data-image-count="1"] .review-photo-item {
+        height: 250px;
+    }
+    
+    .review-photos[data-image-count="2"] .review-photo-item {
+        height: 160px;
+    }
+    
+    .review-photos[data-image-count="3"] .review-photo-item {
+        height: 130px;
+    }
+    
+    .review-photos[data-image-count="4"] .review-photo-item {
+        height: 110px;
+    }
+    
+    .review-photos[data-image-count="5"] .review-photo-item {
+        height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .review-photos[data-image-count="1"] .review-photo-item {
+        height: 200px;
+    }
+    
+    .review-photos[data-image-count="2"] .review-photo-item {
+        height: 120px;
+    }
+    
+    .review-photos[data-image-count="3"] .review-photo-item {
+        height: 100px;
+    }
+    
+    .review-photos[data-image-count="4"] .review-photo-item {
+        height: 80px;
+    }
+    
+    .review-photos[data-image-count="5"] .review-photo-item {
+        height: 70px;
+    }
+}
+
+.photo-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--white);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-xs);
+    text-align: center;
+}
+
+/* Lightbox Styles */
+.image-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-base);
+}
+
+.image-lightbox.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+}
+
+.lightbox-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+}
+
+.lightbox-close {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    background: rgba(0, 0, 0, 0.7);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-sm);
+    cursor: pointer;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 0, 0, 0.8);
+}
+
+.lightbox-close svg {
+    width: 24px;
+    height: 24px;
+}
+
+/* Editable Image Styles for Edit Mode */
+.current-images-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+}
+
+.editable-photo-item {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--background-dark);
+    border: 2px solid var(--background-dark);
+}
+
+/* Editable photos are now fixed size squares */
+
+.editable-photo-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.remove-current-image-btn {
+    position: absolute;
+    top: var(--space-xs);
+    right: var(--space-xs);
+    background: rgba(255, 0, 0, 0.8);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs);
+    cursor: pointer;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    z-index: 2;
+}
+
+.remove-current-image-btn:hover {
+    background: rgba(255, 0, 0, 1);
+    transform: scale(1.1);
+}
+
+.remove-current-image-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Edit Controls Styling - Match Original Form */
+.edit-controls {
+    margin-top: var(--space-md);
+}
+
+.edit-controls .review-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.edit-controls .rating-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.edit-controls .review-comment-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.edit-controls .review-images-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.edit-controls .image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.edit-controls .images-grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.edit-controls .image-preview-container {
+    display: contents;
+}
+
+.edit-controls .image-preview-item {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+    background: var(--background-dark);
+    border: 1px solid var(--background-dark);
+    margin-right: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.edit-controls .add-image-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    background: var(--background-dark);
+    border: 1px dashed var(--text-tertiary);
+    border-radius: var(--radius-xs);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    flex-shrink: 0;
+}
+
+.edit-controls .image-upload-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-sm);
+    margin-top: 0;
+}
+
+/* Add margin above voting buttons when in edit mode */
+.edit-controls + .vote-controls {
+    margin-top: var(--space-md);
 }

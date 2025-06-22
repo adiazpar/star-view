@@ -14,6 +14,7 @@ window.ReviewSystem = (function() {
         initializeStarRating();
         initializeReviewFormToggle();
         setupEventListeners();
+        setupOutsideClickHandler();
         calculateRatingDistribution();
         
         // Initialize after a short delay to ensure DOM is ready
@@ -91,6 +92,21 @@ window.ReviewSystem = (function() {
                 starLabels[index].setAttribute('for', newId);
             }
         });
+        
+        // Update image upload element IDs to avoid conflicts
+        const imageInput = formContent.querySelector('#review-images-input');
+        const addImageBtn = formContent.querySelector('#add-image-btn');
+        const previewContainer = formContent.querySelector('#image-preview-container');
+        
+        if (imageInput) {
+            imageInput.id = `review-images-input-${uniqueId}`;
+        }
+        if (addImageBtn) {
+            addImageBtn.id = `add-image-btn-${uniqueId}`;
+        }
+        if (previewContainer) {
+            previewContainer.id = `image-preview-container-${uniqueId}`;
+        }
         
         return formContent;
     }

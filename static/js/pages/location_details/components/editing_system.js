@@ -21,6 +21,16 @@ window.EditingSystem = (function() {
         // Hide the original content
         element.classList.add('edit-mode');
         
+        // Hide original photos container for reviews to avoid duplication
+        if (type === 'review') {
+            const reviewCard = element.closest('.review-card');
+            const originalPhotos = reviewCard ? reviewCard.querySelector('.review-photos') : null;
+            if (originalPhotos) {
+                originalPhotos.style.display = 'none';
+                originalPhotos.setAttribute('data-hidden-for-edit', 'true');
+            }
+        }
+        
         // Create edit controls container
         const editControls = document.createElement('div');
         editControls.className = 'edit-controls';
@@ -63,6 +73,35 @@ window.EditingSystem = (function() {
                 </div>
             </div>
         ` : '';
+
+        // Generate image editing section for reviews
+        const imageEditingSection = type === 'review' ? `
+            <div class="review-images-input">
+                <div class="image-upload-hint">You can upload up to 5 photos (JPEG, PNG, GIF)</div>
+                <div class="image-upload-container">
+                    <input type="file" 
+                           name="review_images" 
+                           id="edit-review-images-input-${ids.reviewId}" 
+                           class="image-file-input" 
+                           accept="image/*" 
+                           multiple 
+                           style="display: none;">
+                    <div class="images-grid-container">
+                        <div class="current-images-container" id="current-images-container-${ids.reviewId}">
+                            <!-- Current images will be loaded here -->
+                        </div>
+                        <div class="image-preview-container" id="edit-image-preview-container-${ids.reviewId}"></div>
+                        <button type="button" class="add-image-btn square" id="edit-add-image-btn-${ids.reviewId}">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        ` : '';
         
         editControls.innerHTML = `
             <div class="review-form">
@@ -99,6 +138,8 @@ window.EditingSystem = (function() {
                         </div>
                     </div>
                 </div>
+                </div>
+                ${imageEditingSection}
             </div>
         `;
         
@@ -137,6 +178,17 @@ window.EditingSystem = (function() {
                 const starContainer = editControls.querySelector('.star-rating');
                 if (starContainer && window.ReviewSystem) {
                     window.ReviewSystem.initializeStarRatingForContainer(starContainer);
+                }
+            }, 100);
+            
+            // Load current images for the review
+            loadCurrentImages(ids.reviewId, ids.locationId);
+            
+            // Initialize image upload system for the edit form
+            setTimeout(() => {
+                if (window.ImageUploadSystem) {
+                    // The ImageUploadSystem should work with the new edit form elements
+                    console.log('Image upload system should be handling edit form elements');
                 }
             }, 100);
         }
@@ -217,26 +269,69 @@ window.EditingSystem = (function() {
             endpoint = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
         }
         
-        // Prepare request body
-        const requestBody = {
+        // Handle images for reviews
+        let formData = null;
+        let useFormData = false;
+        
+        if (type === 'review') {
+            // Check if there are new images to upload or images to remove
+            const fileInput = document.getElementById(`edit-review-images-input-${ids.reviewId}`);
+            const hasNewImages = fileInput && fileInput.files.length > 0;
+            const hasImagesToRemove = imagesToRemove.length > 0;
+            
+            if (hasNewImages || hasImagesToRemove) {
+                useFormData = true;
+                formData = new FormData();
+                
+                // Add text content and rating
+                formData.append('comment', newContent);
+                if (rating !== null) {
+                    formData.append('rating', rating);
+                }
+                
+                // Add new images
+                if (hasNewImages) {
+                    Array.from(fileInput.files).forEach((file, index) => {
+                        formData.append('review_images', file);
+                    });
+                }
+                
+                // Add images to remove
+                if (hasImagesToRemove) {
+                    console.log('Images to remove:', imagesToRemove);
+                    formData.append('remove_images', JSON.stringify(imagesToRemove));
+                }
+            }
+        }
+        
+        // Prepare request body for non-image updates
+        const requestBody = useFormData ? null : {
             [type === 'review' ? 'comment' : 'content']: newContent
         };
         
-        // Add rating for reviews
-        if (type === 'review' && rating !== null) {
+        // Add rating for reviews (non-FormData case)
+        if (type === 'review' && rating !== null && !useFormData) {
             requestBody.rating = rating;
         }
         
         // Send update request
-        fetch(endpoint, {
+        const fetchOptions = {
             method: 'PATCH',
             headers: {
-                'X-CSRFToken': config.csrfToken,
-                'Content-Type': 'application/json'
+                'X-CSRFToken': config.csrfToken
             },
-            body: JSON.stringify(requestBody),
             credentials: 'same-origin'
-        })
+        };
+        
+        if (useFormData) {
+            fetchOptions.body = formData;
+            // Don't set Content-Type header for FormData, let browser set it
+        } else {
+            fetchOptions.headers['Content-Type'] = 'application/json';
+            fetchOptions.body = JSON.stringify(requestBody);
+        }
+        
+        fetch(endpoint, fetchOptions)
         .then(response => {
             if (!response.ok) {
                 return response.json().then(error => {
@@ -289,6 +384,14 @@ window.EditingSystem = (function() {
                 }
             }
             
+            // Update photos for reviews if photos were modified
+            if (type === 'review' && data.photos) {
+                updateReviewPhotos(ids.reviewId, data.photos);
+                
+                // Clear the images to remove array
+                imagesToRemove.length = 0;
+            }
+            
             // Clean up edit mode
             cancelEdit(element, editControls);
             
@@ -314,11 +417,150 @@ window.EditingSystem = (function() {
         
         // Show original content
         element.classList.remove('edit-mode');
+        
+        // Restore original photos visibility for reviews
+        const reviewCard = element.closest('.review-card');
+        const originalPhotos = reviewCard ? reviewCard.querySelector('.review-photos[data-hidden-for-edit="true"]') : null;
+        if (originalPhotos) {
+            originalPhotos.style.display = '';
+            originalPhotos.removeAttribute('data-hidden-for-edit');
+        }
+        
+        // Clear images to remove array when canceling
+        imagesToRemove.length = 0;
     }
+    
+    // Load current images for editing
+    function loadCurrentImages(reviewId, locationId) {
+        // Find the original review photos container
+        const reviewCard = document.querySelector(`[data-review-id="${reviewId}"]`).closest('.review-card');
+        const photosContainer = reviewCard ? reviewCard.querySelector('.review-photos') : null;
+        
+        if (photosContainer) {
+            const currentImagesContainer = document.getElementById(`current-images-container-${reviewId}`);
+            if (currentImagesContainer) {
+                // Get all current photos
+                const photoItems = photosContainer.querySelectorAll('.review-photo-item');
+                
+                // Set the image count attribute for CSS styling
+                currentImagesContainer.setAttribute('data-image-count', photoItems.length);
+                
+                photoItems.forEach((photoItem, index) => {
+                    const img = photoItem.querySelector('.review-photo-thumbnail');
+                    const photoId = photoItem.dataset.photoId;
+                    
+                    if (img && photoId) {
+                        const editablePhotoItem = document.createElement('div');
+                        editablePhotoItem.className = 'editable-photo-item';
+                        editablePhotoItem.innerHTML = `
+                            <img src="${img.src}" alt="Review photo ${index + 1}" class="editable-photo-thumbnail">
+                            <button type="button" class="remove-current-image-btn" data-photo-id="${photoId}" title="Remove image">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        `;
+                        currentImagesContainer.appendChild(editablePhotoItem);
+                    }
+                });
+            }
+        }
+    }
+    
+    // Update review photos display after edit
+    function updateReviewPhotos(reviewId, photos) {
+        const reviewCard = document.querySelector(`[data-review-id="${reviewId}"]`).closest('.review-card');
+        const existingPhotosContainer = reviewCard ? reviewCard.querySelector('.review-photos') : null;
+        
+        if (photos.length === 0) {
+            // Remove photos container if no photos
+            if (existingPhotosContainer) {
+                existingPhotosContainer.remove();
+            }
+        } else {
+            // Update or create photos container
+            let photosContainer = existingPhotosContainer;
+            
+            if (!photosContainer) {
+                // Create new photos container
+                photosContainer = document.createElement('div');
+                photosContainer.className = 'review-photos';
+                
+                // Insert after review comment
+                const commentElement = reviewCard.querySelector('.review-comment');
+                if (commentElement) {
+                    commentElement.parentNode.insertBefore(photosContainer, commentElement.nextSibling);
+                }
+            }
+            
+            // Update data attribute and rebuild photos
+            photosContainer.setAttribute('data-image-count', photos.length);
+            photosContainer.innerHTML = '';
+            
+            photos.forEach(photo => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'review-photo-item';
+                photoItem.setAttribute('data-photo-id', photo.id);
+                photoItem.innerHTML = `
+                    <img src="${photo.thumbnail_url}" 
+                         alt="Review photo"
+                         class="review-photo-thumbnail"
+                         data-full-url="${photo.image_url}"
+                         loading="lazy">
+                    ${photo.caption ? `<span class="photo-caption">${photo.caption}</span>` : ''}
+                `;
+                photosContainer.appendChild(photoItem);
+            });
+        }
+    }
+    
+    // Track images to be removed
+    let imagesToRemove = [];
+    
+    // Handle image removal in edit mode
+    function handleImageRemoval() {
+        document.addEventListener('click', function(e) {
+            const removeBtn = e.target.closest('.remove-current-image-btn');
+            if (removeBtn) {
+                e.preventDefault();
+                const photoId = removeBtn.dataset.photoId;
+                const photoItem = removeBtn.closest('.editable-photo-item');
+                
+                if (photoId && photoItem) {
+                    // Add to removal list
+                    imagesToRemove.push(photoId);
+                    
+                    // Remove from UI
+                    const container = photoItem.closest('.current-images-container');
+                    photoItem.remove();
+                    
+                    // Update image count attribute
+                    if (container) {
+                        const remainingImages = container.querySelectorAll('.editable-photo-item').length;
+                        container.setAttribute('data-image-count', remainingImages);
+                    }
+                    
+                    // Update UI state
+                    updateImageEditingUI();
+                }
+            }
+        });
+    }
+    
+    // Update image editing UI state
+    function updateImageEditingUI() {
+        // This function can be enhanced to update hints about image count limits
+    }
+    
+    // Initialize image removal handler
+    handleImageRemoval();
     
     // Public API
     return {
         init: init,
-        makeEditable: makeEditable
+        makeEditable: makeEditable,
+        getImagesToRemove: () => imagesToRemove,
+        clearImagesToRemove: () => { imagesToRemove = []; }
     };
 })();

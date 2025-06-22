@@ -12,6 +12,7 @@ from stars_app.models.forecast import Forecast
 from stars_app.models.locationphoto import LocationPhoto
 from stars_app.models.locationcategory import LocationCategory, LocationTag
 from stars_app.models.locationreport import LocationReport
+from stars_app.models.reviewphoto import ReviewPhoto
 from django.contrib.auth.models import User
 
 
@@ -76,6 +77,30 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
         return text
 
 
+# Review Photo Serializer ----------------------------------------- #
+class ReviewPhotoSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReviewPhoto
+        fields = ['id', 'image', 'thumbnail', 'caption', 'order', 
+                  'image_url', 'thumbnail_url', 'created_at']
+        read_only_fields = ['thumbnail', 'created_at']
+
+    def get_image_url(self, obj):
+        request = self.context.get('request')
+        if obj.image and request:
+            return request.build_absolute_uri(obj.image.url)
+        return obj.image_url if obj.image else None
+
+    def get_thumbnail_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail and request:
+            return request.build_absolute_uri(obj.thumbnail.url)
+        return obj.thumbnail_url if obj.thumbnail else None
+
+
 # Location Review Serializer -------------------------------------- #
 class LocationReviewSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
@@ -84,12 +109,13 @@ class LocationReviewSerializer(serializers.ModelSerializer):
     upvote_count = serializers.SerializerMethodField()
     downvote_count = serializers.SerializerMethodField()
     user_vote = serializers.SerializerMethodField()
+    photos = ReviewPhotoSerializer(many=True, read_only=True)
 
     class Meta:
         model = LocationReview
         fields = ['id', 'location', 'user', 'user_full_name',
                  'rating', 'comment', 'created_at', 'updated_at',
-                  'vote_count', 'upvote_count', 'downvote_count', 'user_vote']
+                  'vote_count', 'upvote_count', 'downvote_count', 'user_vote', 'photos']
 
     def get_user_full_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}".strip()

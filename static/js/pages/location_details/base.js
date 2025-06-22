@@ -41,6 +41,10 @@ function initializeComponents(config, eventBus) {
         window.CommentSystem.init(config, eventBus);
     }
     
+    if (window.ImageUploadSystem) {
+        window.ImageUploadSystem.init();
+    }
+    
     console.log('Location details components initialized');
 }
 

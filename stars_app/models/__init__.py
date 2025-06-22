@@ -19,3 +19,4 @@ from .defaultforecast import defaultforecast
 from .locationphoto import LocationPhoto
 from .locationcategory import LocationCategory, LocationTag
 from .locationreport import LocationReport
+from .reviewphoto import ReviewPhoto

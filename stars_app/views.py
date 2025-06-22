@@ -660,7 +660,36 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
 
         serializer = LocationReviewSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user, location=location)
+            review = serializer.save(user=request.user, location=location)
+            
+            # Handle image uploads
+            uploaded_images = request.FILES.getlist('images') or request.FILES.getlist('review_images')
+            if uploaded_images:
+                from stars_app.models.reviewphoto import ReviewPhoto
+                
+                # Validate number of images
+                if len(uploaded_images) > 5:
+                    # Delete the review if too many images
+                    review.delete()
+                    return Response(
+                        {'detail': 'You can upload a maximum of 5 photos per review'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Process each uploaded image
+                for idx, image in enumerate(uploaded_images[:5]):
+                    try:
+                        ReviewPhoto.objects.create(
+                            review=review,
+                            image=image,
+                            order=idx
+                        )
+                    except Exception as e:
+                        # Log the error but continue processing other images
+                        print(f"Error uploading review image: {str(e)}")
+            
+            # Return the review with photos included
+            serializer = LocationReviewSerializer(review)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -681,6 +710,36 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         serializer = LocationReviewSerializer(review, data=request.data)
         if serializer.is_valid():
             serializer.save()
+            
+            # Handle image uploads for review updates
+            uploaded_images = request.FILES.getlist('images') or request.FILES.getlist('review_images')
+            if uploaded_images:
+                from stars_app.models.reviewphoto import ReviewPhoto
+                
+                # Check existing photos count
+                existing_photos_count = review.photos.count()
+                if existing_photos_count + len(uploaded_images) > 5:
+                    return Response(
+                        {'detail': f'You can only have up to 5 photos per review. You already have {existing_photos_count} photos.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Process each uploaded image
+                for idx, image in enumerate(uploaded_images[:5-existing_photos_count]):
+                    try:
+                        ReviewPhoto.objects.create(
+                            review=review,
+                            image=image,
+                            order=existing_photos_count + idx
+                        )
+                    except Exception as e:
+                        print(f"Error uploading review image during update: {str(e)}")
+            
+            # Handle image deletions if specified
+            delete_photo_ids = request.data.get('delete_photo_ids', [])
+            if delete_photo_ids:
+                review.photos.filter(id__in=delete_photo_ids).delete()
+            
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -1140,6 +1199,30 @@ def location_details(request, location_id):
                 review.rating = rating
                 review.comment = comment
                 review.save()
+            
+            # Handle image uploads
+            uploaded_images = request.FILES.getlist('review_images')
+            if uploaded_images:
+                from stars_app.models.reviewphoto import ReviewPhoto
+                
+                # Validate number of images
+                existing_photos_count = review.photos.count()
+                if existing_photos_count + len(uploaded_images) > 5:
+                    messages.error(request, f'You can only upload up to 5 photos per review. You already have {existing_photos_count} photos.')
+                    return redirect('location_details', location_id=location_id)
+                
+                # Process each uploaded image
+                for idx, image in enumerate(uploaded_images[:5-existing_photos_count]):  # Limit to remaining slots
+                    try:
+                        ReviewPhoto.objects.create(
+                            review=review,
+                            image=image,
+                            order=existing_photos_count + idx
+                        )
+                    except Exception as e:
+                        messages.error(request, f'Error uploading image: {str(e)}')
+            
+            messages.success(request, 'Your review has been submitted successfully!')
             return redirect('location_details', location_id=location_id)
 
     # Calculate review statistics

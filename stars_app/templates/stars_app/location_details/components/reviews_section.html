@@ -36,7 +36,7 @@
     <!-- Hidden Review Form Template (for cloning after deletion) -->
     <div id="reviewFormTemplate" style="display: none;">
         <h5>Write a Review</h5>
-        <form method="POST" class="review-form">
+        <form method="POST" class="review-form" enctype="multipart/form-data">
             <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
             <div class="rating-input">
                 <label>Rating:</label>
@@ -86,6 +86,29 @@
                         <button type="submit" class="submit-review">
                             <i class="fas fa-paper-plane"></i>
                             Submit
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <!-- Image Upload Section -->
+            <div class="review-images-input">
+                <div class="image-upload-hint">You can upload up to 5 photos (JPEG, PNG, GIF)</div>
+                <div class="image-upload-container">
+                    <input type="file" 
+                           name="review_images" 
+                           id="review-images-input" 
+                           class="image-file-input" 
+                           accept="image/*" 
+                           multiple 
+                           style="display: none;">
+                    <div class="images-grid-container">
+                        <div class="image-preview-container" id="image-preview-container"></div>
+                        <button type="button" class="add-image-btn square" id="add-image-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
                         </button>
                     </div>
                 </div>
@@ -171,6 +194,24 @@
                             {{ review.comment|markdown_format }}
                         {% endif %}
                     </div>
+
+                    <!-- Review Photos -->
+                    {% if review.photos.exists %}
+                    <div class="review-photos" data-image-count="{{ review.photos.count }}">
+                        {% for photo in review.photos.all %}
+                            <div class="review-photo-item" data-photo-id="{{ photo.id }}">
+                                <img src="{{ photo.thumbnail_url }}" 
+                                     alt="Review photo {{ forloop.counter }}"
+                                     class="review-photo-thumbnail"
+                                     data-full-url="{{ photo.image_url }}"
+                                     loading="lazy">
+                                {% if photo.caption %}
+                                    <span class="photo-caption">{{ photo.caption }}</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
 
                     <!-- Add voting controls -->
                     <div class="vote-controls">
