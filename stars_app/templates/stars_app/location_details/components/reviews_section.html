@@ -258,10 +258,13 @@
                                         {% include 'stars_app/icons/ellipsis-icon.svg' %}
                                     </button>
                                     <div class="dropdown-menu" data-review-id="{{ review.id }}" style="display: none;">
-                                        <button class="dropdown-item report-item" data-action="report" data-review-id="{{ review.id }}">
-                                            {% include 'stars_app/icons/flag-icon.svg' %}
-                                            <span>Report</span>
-                                        </button>
+                                        <!-- Show Report option for non-authors (including location owners) -->
+                                        {% if review.user != user %}
+                                            <button class="dropdown-item report-item" data-action="report" data-review-id="{{ review.id }}">
+                                                {% include 'stars_app/icons/flag-icon.svg' %}
+                                                <span>Report</span>
+                                            </button>
+                                        {% endif %}
                                     </div>
                                 </div>
                             {% else %}
@@ -297,6 +300,13 @@
                                             {% include 'stars_app/icons/trash-icon.svg' %}
                                             <span>Delete</span>
                                         </button>
+                                        <!-- Allow location owners to report reviews on their property (even their own) -->
+                                        {% if is_owner and review.user != user %}
+                                            <button class="dropdown-item report-item" data-action="report" data-review-id="{{ review.id }}">
+                                                {% include 'stars_app/icons/flag-icon.svg' %}
+                                                <span>Report</span>
+                                            </button>
+                                        {% endif %}
                                     </div>
                                     {% endif %}
                                 </div>
@@ -447,8 +457,15 @@
                                                                     {% include 'stars_app/icons/trash-icon.svg' %}
                                                                     <span>Delete</span>
                                                                 </button>
+                                                                <!-- Allow location owners to report comments on their property -->
+                                                                {% if is_owner and comment.user != user %}
+                                                                    <button class="dropdown-item report-comment-item" data-action="report" data-comment-id="{{ comment.id }}" data-review-id="{{ review.id }}" data-location-id="{{ location.id }}">
+                                                                        {% include 'stars_app/icons/flag-icon.svg' %}
+                                                                        <span>Report</span>
+                                                                    </button>
+                                                                {% endif %}
                                                             {% else %}
-                                                                <!-- Non-owner options: Report only -->
+                                                                <!-- Non-owner options: Report only (includes location owners) -->
                                                                 <button class="dropdown-item report-comment-item" data-action="report" data-comment-id="{{ comment.id }}" data-review-id="{{ review.id }}" data-location-id="{{ location.id }}">
                                                                     {% include 'stars_app/icons/flag-icon.svg' %}
                                                                     <span>Report</span>
@@ -492,5 +509,92 @@
         {% else %}
             <div class="no-reviews">No reviews yet</div>
         {% endif %}
+    </div>
+</div>
+
+<!-- Report Modal -->
+<div class="report-modal-overlay" id="contentReportModal">
+    <div class="report-modal">
+        <div class="report-modal-header">
+            <h3 class="report-modal-title">Report Content</h3>
+            <button class="report-modal-close" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+        <div class="report-modal-content">
+            <p class="report-modal-description">
+                Help us understand what's happening. Your report is anonymous and helps keep our community safe.
+            </p>
+            
+            <div class="report-categories">
+                <button class="report-category" data-report-type="SPAM">
+                    <div class="report-category-icon">
+                        {% include 'stars_app/icons/trash-icon.svg' %}
+                    </div>
+                    <div class="report-category-content">
+                        <div class="report-category-title">Spam or Low Quality</div>
+                        <div class="report-category-description">Unwanted promotional content, repetitive posts, or low-effort contributions</div>
+                    </div>
+                </button>
+                
+                <button class="report-category" data-report-type="HARASSMENT">
+                    <div class="report-category-icon">
+                        {% include 'stars_app/icons/users-icon.svg' %}
+                    </div>
+                    <div class="report-category-content">
+                        <div class="report-category-title">Harassment or Bullying</div>
+                        <div class="report-category-description">Targeted harassment, bullying, or threatening behavior toward individuals</div>
+                    </div>
+                </button>
+                
+                <button class="report-category" data-report-type="INAPPROPRIATE">
+                    <div class="report-category-icon">
+                        {% include 'stars_app/icons/ban-icon.svg' %}
+                    </div>
+                    <div class="report-category-content">
+                        <div class="report-category-title">Inappropriate Content</div>
+                        <div class="report-category-description">Content that violates community standards or contains offensive material</div>
+                    </div>
+                </button>
+                
+                <button class="report-category" data-report-type="MISINFORMATION">
+                    <div class="report-category-icon">
+                        {% include 'stars_app/icons/circle-alert-icon.svg' %}
+                    </div>
+                    <div class="report-category-content">
+                        <div class="report-category-title">False or Misleading Information</div>
+                        <div class="report-category-description">Factually incorrect information that could mislead other users</div>
+                    </div>
+                </button>
+                
+                <button class="report-category" data-report-type="OTHER">
+                    <div class="report-category-icon">
+                        {% include 'stars_app/icons/ellipsis-icon.svg' %}
+                    </div>
+                    <div class="report-category-content">
+                        <div class="report-category-title">Other</div>
+                        <div class="report-category-description">Something else that doesn't fit the above categories</div>
+                    </div>
+                </button>
+            </div>
+            
+            <div class="report-description-section" id="reportDescriptionSection">
+                <label class="report-description-label" for="reportDescription">
+                    Additional details (optional)
+                </label>
+                <textarea 
+                    class="report-description-input" 
+                    id="reportDescription" 
+                    placeholder="Provide additional context about why you're reporting this content..."
+                    maxlength="500"></textarea>
+            </div>
+        </div>
+        
+        <div class="report-modal-footer">
+            <button class="report-modal-button cancel" type="button">Cancel</button>
+            <button class="report-modal-button submit" type="button" disabled>Submit Report</button>
+        </div>
     </div>
 </div>

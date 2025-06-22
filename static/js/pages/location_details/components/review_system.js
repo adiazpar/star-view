@@ -410,32 +410,15 @@ window.ReviewSystem = (function() {
     function handleReviewReport(reportItem) {
         const reviewId = reportItem.dataset.reviewId;
         
-        // Confirm reporting
-        if (confirm('Report this review for inappropriate content?')) {
-            fetch(`/api/v1/viewing-locations/${config.locationId}/reviews/${reviewId}/report/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': config.csrfToken,
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to report review');
-                }
-                
-                // Close the dropdown menu
-                const dropdown = reportItem.closest('.dropdown-menu');
-                if (dropdown) {
-                    dropdown.style.display = 'none';
-                }
-                
-                alert('Review reported successfully. Thank you for helping keep our community safe.');
-            })
-            .catch(error => {
-                console.error('Error reporting review:', error);
-                alert('Failed to report review. Please try again.');
-            });
+        // Close the dropdown menu
+        const dropdown = reportItem.closest('.dropdown-menu');
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+        
+        // Open report modal
+        if (window.ReportModal) {
+            window.ReportModal.openModal('review', reviewId, config.locationId);
         }
     }
     

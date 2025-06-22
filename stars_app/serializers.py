@@ -13,6 +13,8 @@ from stars_app.models.locationphoto import LocationPhoto
 from stars_app.models.locationcategory import LocationCategory, LocationTag
 from stars_app.models.locationreport import LocationReport
 from stars_app.models.reviewphoto import ReviewPhoto
+from stars_app.models.reviewreport import ReviewReport
+from stars_app.models.commentreport import CommentReport
 from django.contrib.auth.models import User
 
 
@@ -398,4 +400,33 @@ class LocationReportSerializer(serializers.ModelSerializer):
         fields = ['id', 'location', 'location_name', 'reported_by', 'report_type', 
                   'description', 'status', 'duplicate_of', 'duplicate_of_name',
                   'reviewed_by', 'review_notes', 'reviewed_at', 'created_at']
+        read_only_fields = ['reported_by', 'reviewed_by', 'reviewed_at', 'created_at', 'status']
+
+
+class ReviewReportSerializer(serializers.ModelSerializer):
+    reported_by = serializers.ReadOnlyField(source='reported_by.username')
+    reviewed_by = serializers.ReadOnlyField(source='reviewed_by.username')
+    review_user = serializers.ReadOnlyField(source='review.user.username')
+    review_location = serializers.ReadOnlyField(source='review.location.name')
+    
+    class Meta:
+        model = ReviewReport
+        fields = ['id', 'review', 'review_user', 'review_location', 'reported_by', 
+                  'report_type', 'description', 'status', 'reviewed_by', 'review_notes', 
+                  'reviewed_at', 'created_at']
+        read_only_fields = ['reported_by', 'reviewed_by', 'reviewed_at', 'created_at', 'status']
+
+
+class CommentReportSerializer(serializers.ModelSerializer):
+    reported_by = serializers.ReadOnlyField(source='reported_by.username')
+    reviewed_by = serializers.ReadOnlyField(source='reviewed_by.username')
+    comment_user = serializers.ReadOnlyField(source='comment.user.username')
+    comment_review_user = serializers.ReadOnlyField(source='comment.review.user.username')
+    comment_location = serializers.ReadOnlyField(source='comment.review.location.name')
+    
+    class Meta:
+        model = CommentReport
+        fields = ['id', 'comment', 'comment_user', 'comment_review_user', 'comment_location', 
+                  'reported_by', 'report_type', 'description', 'status', 'reviewed_by', 
+                  'review_notes', 'reviewed_at', 'created_at']
         read_only_fields = ['reported_by', 'reviewed_by', 'reviewed_at', 'created_at', 'status']

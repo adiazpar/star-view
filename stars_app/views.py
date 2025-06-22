@@ -848,6 +848,55 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'You can only edit your own reviews.'}, 
                            status=status.HTTP_403_FORBIDDEN)
         return super().partial_update(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['POST'])
+    def report(self, request, pk=None, location_pk=None):
+        """Handle reporting reviews"""
+        try:
+            review = self.get_object()
+            
+            # Prevent users from reporting their own reviews
+            if review.user == request.user:
+                return Response(
+                    {'detail': 'You cannot report your own review'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if user already reported this review
+            from stars_app.models.reviewreport import ReviewReport
+            existing_report = ReviewReport.objects.filter(
+                review=review,
+                reported_by=request.user
+            ).first()
+            
+            if existing_report:
+                return Response(
+                    {'detail': 'You have already reported this review'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create the report
+            report_data = {
+                'review': review.id,
+                'report_type': request.data.get('report_type', 'OTHER'),
+                'description': request.data.get('description', '')
+            }
+            
+            serializer = ReviewReportSerializer(data=report_data)
+            if serializer.is_valid():
+                serializer.save(reported_by=request.user)
+                return Response(
+                    {'detail': 'Review reported successfully'},
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class ReviewCommentViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewCommentSerializer
@@ -959,6 +1008,55 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
                 'user_vote': user_vote
             })
             
+        except Exception as e:
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @action(detail=True, methods=['POST'])
+    def report(self, request, pk=None, location_pk=None, review_pk=None):
+        """Handle reporting comments"""
+        try:
+            comment = self.get_object()
+            
+            # Prevent users from reporting their own comments
+            if comment.user == request.user:
+                return Response(
+                    {'detail': 'You cannot report your own comment'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if user already reported this comment
+            from stars_app.models.commentreport import CommentReport
+            existing_report = CommentReport.objects.filter(
+                comment=comment,
+                reported_by=request.user
+            ).first()
+            
+            if existing_report:
+                return Response(
+                    {'detail': 'You have already reported this comment'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create the report
+            report_data = {
+                'comment': comment.id,
+                'report_type': request.data.get('report_type', 'OTHER'),
+                'description': request.data.get('description', '')
+            }
+            
+            serializer = CommentReportSerializer(data=report_data)
+            if serializer.is_valid():
+                serializer.save(reported_by=request.user)
+                return Response(
+                    {'detail': 'Comment reported successfully'},
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
         except Exception as e:
             return Response(
                 {'detail': str(e)},

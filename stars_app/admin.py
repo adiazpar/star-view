@@ -10,6 +10,8 @@ from stars_app.models.reviewvote import ReviewVote
 from stars_app.models.reviewcomment import ReviewComment
 from stars_app.models.commentvote import CommentVote
 from stars_app.models.reviewphoto import ReviewPhoto
+from stars_app.models.reviewreport import ReviewReport
+from stars_app.models.commentreport import CommentReport
 
 # Register your models here.
 admin.site.register(ViewingLocation)
@@ -30,3 +32,28 @@ class ReviewPhotoAdmin(admin.ModelAdmin):
     readonly_fields = ['thumbnail', 'created_at', 'updated_at']
 
 admin.site.register(ReviewPhoto, ReviewPhotoAdmin)
+
+# Custom admin for ReviewReport with better display
+class ReviewReportAdmin(admin.ModelAdmin):
+    list_display = ['id', 'review', 'reported_by', 'report_type', 'status', 'created_at']
+    list_filter = ['report_type', 'status', 'created_at']
+    search_fields = ['review__user__username', 'reported_by__username', 'description']
+    ordering = ['-created_at']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('review', 'reported_by', 'reviewed_by')
+
+# Custom admin for CommentReport with better display  
+class CommentReportAdmin(admin.ModelAdmin):
+    list_display = ['id', 'comment', 'reported_by', 'report_type', 'status', 'created_at']
+    list_filter = ['report_type', 'status', 'created_at']
+    search_fields = ['comment__user__username', 'reported_by__username', 'description']
+    ordering = ['-created_at']
+    readonly_fields = ['created_at', 'updated_at']
+    
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('comment', 'reported_by', 'reviewed_by')
+
+admin.site.register(ReviewReport, ReviewReportAdmin)
+admin.site.register(CommentReport, CommentReportAdmin)

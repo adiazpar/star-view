@@ -20,3 +20,5 @@ from .locationphoto import LocationPhoto
 from .locationcategory import LocationCategory, LocationTag
 from .locationreport import LocationReport
 from .reviewphoto import ReviewPhoto
+from .reviewreport import ReviewReport
+from .commentreport import CommentReport

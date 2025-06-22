@@ -1,0 +1,294 @@
+/* Report Modal Styles */
+.report-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.report-modal-overlay.active {
+    display: flex;
+}
+
+.report-modal {
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.report-modal::-webkit-scrollbar {
+    display: none; /* WebKit */
+}
+
+.report-modal-header {
+    padding: var(--space-lg) var(--space-lg) var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--background-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.report-modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.report-modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-base);
+}
+
+.report-modal-close:hover {
+    background-color: var(--surface-light);
+}
+
+.report-modal-content {
+    padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+}
+
+.report-modal-description {
+    color: var(--text-primary);
+    margin: 0 0 var(--space-lg) 0;
+    line-height: 1.5;
+    font-size: var(--font-size-sm);
+}
+
+.report-categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.report-category {
+    display: flex;
+    align-items: center;
+    padding: var(--space-lg);
+    background: var(--background-dark);
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-align: left;
+    width: 100%;
+    height: 80px;
+    box-sizing: border-box;
+}
+
+.report-category:hover {
+    background-color: var(--surface-light);
+    border-color: var(--primary);
+}
+
+.report-category.selected {
+    background-color: var(--surface-light);
+    border-color: var(--primary);
+}
+
+.report-category-icon {
+    width: 48px;
+    height: 48px;
+    margin-right: var(--space-lg);
+    color: var(--text-primary);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-category-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.report-category-content {
+    flex: 1;
+    padding-right: var(--space-lg);
+}
+
+.report-category-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-xs) 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.2;
+}
+
+.report-category-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.report-description-section {
+    margin-top: var(--space-lg);
+    display: none;
+}
+
+.report-description-section.active {
+    display: block;
+}
+
+.report-description-label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-sm);
+}
+
+.report-description-input {
+    width: 100%;
+    background: var(--background-dark);
+    border: 0px;
+    border-radius: var(--radius-xs);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: var(--font-size-xs);
+    resize: none;
+    transition: border-color var(--transition-base);
+}
+
+.report-description-input:focus {
+    outline: none;
+    border: 0.5px solid var(--primary);
+}
+
+.report-description-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.report-modal-footer {
+    padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+}
+
+.report-modal-button {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: none;
+    font-size: var(--font-size-xs);
+}
+
+.report-modal-button.cancel {
+    background: var(--background-dark);
+    color: var(--text-primary);
+}
+
+.report-modal-button.cancel:hover {
+    background: var(--surface-light);
+}
+
+.report-modal-button.submit {
+    background: var(--primary);
+    color: white;
+}
+
+.report-modal-button.submit:hover {
+    background: var(--primary-light);
+}
+
+.report-modal-button.submit:disabled {
+    background: var(--surface-light);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+/* Animation for smooth transitions */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.report-modal-overlay.active {
+    animation: fadeIn var(--transition-base) ease;
+}
+
+.report-modal-overlay.active .report-modal {
+    animation: slideUp var(--transition-slow) ease;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .report-modal {
+        width: 95%;
+        margin: 20px;
+        max-height: 90vh;
+    }
+    
+    .report-modal-header {
+        padding: var(--space-lg) var(--space-lg) var(--space-md) var(--space-lg);
+    }
+    
+    .report-modal-content {
+        padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+    }
+    
+    .report-modal-footer {
+        padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+    }
+    
+    .report-category {
+        padding: var(--space-md);
+        height: 70px;
+    }
+    
+    .report-category-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: var(--space-md);
+    }
+    
+    .report-category-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .report-category-content {
+        padding-right: var(--space-md);
+    }
+}

@@ -45,6 +45,10 @@ function initializeComponents(config, eventBus) {
         window.ImageUploadSystem.init();
     }
     
+    if (window.ReportModal) {
+        window.ReportModal.init(config, eventBus);
+    }
+    
     console.log('Location details components initialized');
 }
 
@@ -57,8 +61,6 @@ function initializeRemainingFeatures(config, eventBus) {
         initializeFavoriteSystem(config);
     }
     
-    // Initialize report system
-    initializeReportSystem(config);
 }
 
 // Photo Gallery and Carousel functionality (to be moved to separate component later)
@@ -376,78 +378,3 @@ function initializeFavoriteSystem(config) {
     }
 }
 
-// Report functionality
-function initializeReportSystem(config) {
-    const reportButton = document.getElementById('reportButton');
-    const reportModal = document.getElementById('reportModal');
-    const closeReportModal = document.getElementById('closeReportModal');
-    const cancelReport = document.getElementById('cancelReport');
-    const reportForm = document.getElementById('reportForm');
-
-    if (reportButton) {
-        reportButton.addEventListener('click', () => {
-            reportModal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        });
-    }
-
-    function closeReportModalFunc() {
-        reportModal.style.display = 'none';
-        document.body.style.overflow = '';
-        reportForm.reset();
-    }
-
-    if (closeReportModal) {
-        closeReportModal.addEventListener('click', closeReportModalFunc);
-    }
-
-    if (cancelReport) {
-        cancelReport.addEventListener('click', closeReportModalFunc);
-    }
-
-    if (reportModal) {
-        reportModal.addEventListener('click', (e) => {
-            if (e.target === reportModal) {
-                closeReportModalFunc();
-            }
-        });
-    }
-
-    if (reportForm) {
-        reportForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = {
-                report_type: document.getElementById('reportType').value,
-                description: document.getElementById('reportDescription').value
-            };
-
-            try {
-                const response = await fetch(`/api/v1/viewing-locations/${config.locationId}/report/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': config.csrfToken
-                    },
-                    body: JSON.stringify(formData),
-                    credentials: 'same-origin'
-                });
-
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.detail || 'Failed to submit report');
-                }
-
-                const result = await response.json();
-                
-                // Show success message
-                alert('Thank you for your report. It will be reviewed by our moderators.');
-                closeReportModalFunc();
-                
-            } catch (error) {
-                console.error('Report error:', error);
-                alert(error.message || 'Failed to submit report. Please try again.');
-            }
-        });
-    }
-}

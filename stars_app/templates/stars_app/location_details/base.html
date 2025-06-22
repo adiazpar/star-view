@@ -60,12 +60,6 @@
                                     <span id="favoriteText">Favorite</span>
                                 </button>
                                 
-                                {% if not is_owner %}
-                                    <button class="hero-action-btn report-button" type="button" id="reportButton">
-                                        <i class="fas fa-flag"></i>
-                                        Report
-                                    </button>
-                                {% endif %}
                             {% endif %}
                             <a href="{% url 'map' %}?lat={{ location.latitude }}&lng={{ location.longitude }}&zoom=12"
                                class="hero-action-btn view-map-button">
@@ -174,40 +168,6 @@
     </div>
 </div>
 
-<!-- Report Modal -->
-<div class="report-modal" id="reportModal">
-    <div class="report-modal-content">
-        <div class="modal-header">
-            <h3>Report Location</h3>
-            <button class="modal-close" id="closeReportModal">&times;</button>
-        </div>
-        <form id="reportForm" class="report-form">
-            <div class="form-group">
-                <label for="reportType">Report Type</label>
-                <select id="reportType" name="report_type" required>
-                    <option value="">Select a reason...</option>
-                    <option value="DUPLICATE">Duplicate location</option>
-                    <option value="INACCURATE">Inaccurate information</option>
-                    <option value="SPAM">Spam or inappropriate</option>
-                    <option value="UNSAFE">Unsafe location</option>
-                    <option value="CLOSED">Location no longer accessible</option>
-                    <option value="OTHER">Other</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="reportDescription">Description</label>
-                <textarea id="reportDescription" name="description" rows="4" 
-                          placeholder="Please provide more details about your report..." required></textarea>
-            </div>
-            <div class="form-actions">
-                <button type="button" class="btn-cancel" id="cancelReport">Cancel</button>
-                <button type="submit" class="btn-primary">
-                    <i class="fas fa-flag"></i> Submit Report
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <script>
     // Pass Django template variables to JavaScript
@@ -230,6 +190,7 @@
 <script src="{% static 'js/pages/location_details/components/voting_system.js' %}"></script>
 <script src="{% static 'js/pages/location_details/components/review_system.js' %}"></script>
 <script src="{% static 'js/pages/location_details/components/comment_system.js' %}"></script>
+<script src="{% static 'js/pages/location_details/components/report_modal.js' %}"></script>
 <!-- Main Orchestrator -->
 <script src="{% static 'js/pages/location_details/base.js' %}"></script>
 {% endblock %}

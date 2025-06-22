@@ -7,6 +7,7 @@
 @import url('./components/voting_system.css');
 @import url('./components/pagination.css');
 @import url('./components/dropdown_menu.css');
+@import url('./components/report_modal.css');
 
 /* Hero Section Styles */
 .hero-section {
@@ -285,67 +286,6 @@
     margin-left: var(--space-sm);
 }
 
-/* Report Button */
-.report-button {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-sm);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    border: 1px solid var(--negate);
-    background: var(--surface);
-    color: var(--negate);
-}
-
-.report-button:hover {
-    background: var(--negate);
-    color: var(--text-primary);
-}
-
-/* Report Modal */
-.report-modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    z-index: 1000;
-    align-items: center;
-    justify-content: center;
-}
-
-.report-modal-content {
-    background: var(--surface);
-    border-radius: var(--radius-md);
-    max-width: 500px;
-    width: 90%;
-    padding: var(--space-lg);
-}
-
-.report-form .form-group {
-    margin-bottom: var(--space-md);
-}
-
-.report-form label {
-    display: block;
-    color: var(--text-primary);
-    margin-bottom: var(--space-sm);
-}
-
-.report-form select,
-.report-form textarea {
-    width: 100%;
-    background: var(--background-dark);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
-    padding: var(--space-sm);
-    color: var(--text-primary);
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {

@@ -191,9 +191,9 @@ window.CommentSystem = (function() {
                 deleteComment(commentId, reviewId, locationId);
             }
         } else if (action === 'report') {
-            // Handle comment reporting
-            if (confirm('Report this comment for inappropriate content?')) {
-                reportComment(commentId, reviewId, locationId);
+            // Handle comment reporting - open report modal
+            if (window.ReportModal) {
+                window.ReportModal.openModal('comment', commentId, locationId, reviewId);
             }
         }
     }
@@ -233,27 +233,6 @@ window.CommentSystem = (function() {
         });
     }
     
-    // Report a comment
-    function reportComment(commentId, reviewId, locationId) {
-        fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/report/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': config.csrfToken,
-            },
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Failed to report comment');
-            }
-            
-            alert('Comment reported successfully. Thank you for helping keep our community safe.');
-        })
-        .catch(error => {
-            console.error('Error reporting comment:', error);
-            alert('Failed to report comment. Please try again.');
-        });
-    }
     
     // Handle outside clicks to close comment dropdowns
     function setupOutsideClickHandler() {
@@ -299,7 +278,6 @@ window.CommentSystem = (function() {
         if (config.isAuthenticated && !isCommentOwner) {
             // Interactive voting buttons for authenticated users (not comment owner)
             voteControls = `
-                <div class="comment-vote-controls">
                     <button class="vote-button upvote ${userVote === 'up' ? 'voted' : ''}"
                             data-comment-id="${comment.id}"
                             data-review-id="${comment.review || comment.review_id}"
@@ -317,12 +295,10 @@ window.CommentSystem = (function() {
                         ${thumbsDownIcon}
                     </button>
                     <span class="downvote-count">${downvoteCount}</span>
-                </div>
             `;
         } else {
             // Disabled buttons for comment owners or non-authenticated users
             voteControls = `
-                <div class="comment-vote-controls">
                     <button class="vote-button disabled" disabled>
                         ${thumbsUpIcon}
                     </button>
@@ -332,8 +308,77 @@ window.CommentSystem = (function() {
                         ${thumbsDownIcon}
                     </button>
                     <span class="downvote-count">${downvoteCount}</span>
-                </div>
             `;
+        }
+
+        // Create ellipsis menu for authenticated users
+        let ellipsisMenu = '';
+        if (config.isAuthenticated) {
+            const ellipsisIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ellipsis">
+                <circle cx="12" cy="12" r="1"/>
+                <circle cx="19" cy="12" r="1"/>
+                <circle cx="5" cy="12" r="1"/>
+            </svg>`;
+            
+            const pencilIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+                <path d="m15 5 4 4"/>
+            </svg>`;
+            
+            const trashIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
+                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+                <line x1="10" x2="10" y1="11" y2="17"/>
+                <line x1="14" x2="14" y1="11" y2="17"/>
+            </svg>`;
+            
+            const flagIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flag">
+                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
+                <line x1="4" x2="4" y1="22" y2="15"/>
+            </svg>`;
+
+            if (isCurrentUser) {
+                // Owner options: Edit and Delete
+                ellipsisMenu = `
+                    <div class="ellipsis-menu-wrapper">
+                        <button class="ellipsis-menu-button" data-comment-id="${comment.id}">
+                            ${ellipsisIcon}
+                        </button>
+                        <div class="dropdown-menu" data-comment-id="${comment.id}" style="display: none;">
+                            <button class="dropdown-item edit-comment-item" data-action="edit" data-comment-id="${comment.id}" data-review-id="${comment.review || comment.review_id}" data-location-id="${comment.location || config.locationId}">
+                                ${pencilIcon}
+                                <span>Edit</span>
+                            </button>
+                            <button class="dropdown-item delete-comment-item" data-action="delete" data-comment-id="${comment.id}" data-review-id="${comment.review || comment.review_id}" data-location-id="${comment.location || config.locationId}">
+                                ${trashIcon}
+                                <span>Delete</span>
+                            </button>
+                            ${config.isOwner && !isCurrentUser ? `
+                                <button class="dropdown-item report-comment-item" data-action="report" data-comment-id="${comment.id}" data-review-id="${comment.review || comment.review_id}" data-location-id="${comment.location || config.locationId}">
+                                    ${flagIcon}
+                                    <span>Report</span>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Non-owner options: Report only
+                ellipsisMenu = `
+                    <div class="ellipsis-menu-wrapper">
+                        <button class="ellipsis-menu-button" data-comment-id="${comment.id}">
+                            ${ellipsisIcon}
+                        </button>
+                        <div class="dropdown-menu" data-comment-id="${comment.id}" style="display: none;">
+                            <button class="dropdown-item report-comment-item" data-action="report" data-comment-id="${comment.id}" data-review-id="${comment.review || comment.review_id}" data-location-id="${comment.location || config.locationId}">
+                                ${flagIcon}
+                                <span>Report</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         div.innerHTML = `
@@ -354,7 +399,10 @@ window.CommentSystem = (function() {
                    data-original-content="${comment.content || comment.formatted_content}">
                     ${comment.formatted_content || comment.content}
                 </p>
-                ${voteControls}
+                <div class="comment-vote-controls">
+                    ${voteControls}
+                    ${ellipsisMenu}
+                </div>
             </div>
         `;
         return div;

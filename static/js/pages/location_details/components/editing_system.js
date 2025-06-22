@@ -31,9 +31,10 @@ window.EditingSystem = (function() {
             }
         }
         
-        // Create edit controls container
-        const editControls = document.createElement('div');
+        // Create edit controls container as a form for ImageUploadSystem compatibility
+        const editControls = document.createElement('form');
         editControls.className = 'edit-controls';
+        editControls.onsubmit = (e) => e.preventDefault(); // Prevent form submission
         
         // Generate star rating section for reviews
         const starRatingSection = type === 'review' ? `
@@ -227,13 +228,7 @@ window.EditingSystem = (function() {
             // Load current images for the review
             loadCurrentImages(ids.reviewId, ids.locationId);
             
-            // Initialize image upload system for the edit form
-            setTimeout(() => {
-                if (window.ImageUploadSystem) {
-                    // The ImageUploadSystem should work with the new edit form elements
-                    console.log('Image upload system should be handling edit form elements');
-                }
-            }, 100);
+            // No need to initialize anything - ImageUploadSystem handles via event delegation
         }
         
         // Focus the editor
@@ -242,6 +237,11 @@ window.EditingSystem = (function() {
         // Set up event handlers - different selectors based on type
         const saveBtn = editControls.querySelector(type === 'comment' ? '.save-edit-comment' : '.save-edit');
         const cancelBtn = editControls.querySelector(type === 'comment' ? '.cancel-edit-comment' : '.cancel-edit');
+        
+        if (!saveBtn || !cancelBtn) {
+            console.error('Required buttons not found');
+            return;
+        }
         
         saveBtn.addEventListener('click', function() {
             const newContent = hiddenInput.value.trim();
@@ -318,11 +318,23 @@ window.EditingSystem = (function() {
         // Handle images for reviews
         let formData = null;
         let useFormData = false;
+        let newImages = []; // Define at function scope
         
         if (type === 'review') {
             // Check if there are new images to upload or images to remove
             const fileInput = document.getElementById(`edit-review-images-input-${ids.reviewId}`);
-            const hasNewImages = fileInput && fileInput.files.length > 0;
+            
+            // Get files from ImageUploadSystem instead of directly from input
+            if (window.ImageUploadSystem && editControls) {
+                newImages = window.ImageUploadSystem.getFormFiles(editControls) || [];
+            }
+            
+            // Also check the file input directly as a fallback
+            if (newImages.length === 0 && fileInput && fileInput.files.length > 0) {
+                newImages = Array.from(fileInput.files);
+            }
+            
+            const hasNewImages = newImages.length > 0;
             const hasImagesToRemove = imagesToRemove.length > 0;
             
             if (hasNewImages || hasImagesToRemove) {
@@ -337,14 +349,13 @@ window.EditingSystem = (function() {
                 
                 // Add new images
                 if (hasNewImages) {
-                    Array.from(fileInput.files).forEach((file, index) => {
+                    newImages.forEach((file, index) => {
                         formData.append('review_images', file);
                     });
                 }
                 
                 // Add images to remove
                 if (hasImagesToRemove) {
-                    console.log('Images to remove:', imagesToRemove);
                     formData.append('remove_images', JSON.stringify(imagesToRemove));
                 }
             }
