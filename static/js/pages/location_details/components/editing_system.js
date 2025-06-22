@@ -293,7 +293,10 @@ window.EditingSystem = (function() {
         // Handle underline
         result = result.replace(/__(.*?)__/g, '<u>$1</u>');
         
-        // Handle line breaks
+        // Handle line breaks - convert double newlines to paragraphs for blank lines
+        // First, convert double newlines to a special marker
+        result = result.replace(/\n\n/g, '<br><br>');
+        // Then convert single newlines to <br>
         result = result.replace(/\n/g, '<br>');
         
         // Clean up multiple spaces

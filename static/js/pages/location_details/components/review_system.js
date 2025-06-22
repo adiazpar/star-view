@@ -305,20 +305,29 @@ window.ReviewSystem = (function() {
         }
         
         // Edit item in dropdown handling
-        const editItem = e.target.closest('.edit-item');
-        if (editItem) {
+        const editReviewItem = e.target.closest('.edit-review-item');
+        if (editReviewItem) {
             e.preventDefault();
             e.stopPropagation();
-            handleReviewEdit(editItem);
+            handleReviewEdit(editReviewItem);
             return;
         }
         
         // Delete item in dropdown handling
-        const deleteItem = e.target.closest('.delete-item');
-        if (deleteItem) {
+        const deleteReviewItem = e.target.closest('.delete-review-item');
+        if (deleteReviewItem) {
             e.preventDefault();
             e.stopPropagation();
-            handleReviewDelete(deleteItem);
+            handleReviewDelete(deleteReviewItem);
+            return;
+        }
+        
+        // Report item in dropdown handling
+        const reportItem = e.target.closest('.report-item');
+        if (reportItem) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleReviewReport(reportItem);
             return;
         }
     }
@@ -329,8 +338,8 @@ window.ReviewSystem = (function() {
         const dropdown = document.querySelector(`.dropdown-menu[data-review-id="${reviewId}"]`);
         
         if (dropdown) {
-            // Close all other dropdowns first
-            document.querySelectorAll('.dropdown-menu').forEach(menu => {
+            // Close all other dropdowns first (both review and comment dropdowns)
+            document.querySelectorAll('.dropdown-menu[data-review-id], .dropdown-menu[data-comment-id]').forEach(menu => {
                 if (menu !== dropdown) {
                     menu.style.display = 'none';
                 }
@@ -393,6 +402,39 @@ window.ReviewSystem = (function() {
             .catch(error => {
                 console.error('Error:', error);
                 alert('Failed to delete review. Please try again.');
+            });
+        }
+    }
+    
+    // Handle review report action
+    function handleReviewReport(reportItem) {
+        const reviewId = reportItem.dataset.reviewId;
+        
+        // Confirm reporting
+        if (confirm('Report this review for inappropriate content?')) {
+            fetch(`/api/v1/viewing-locations/${config.locationId}/reviews/${reviewId}/report/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': config.csrfToken,
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to report review');
+                }
+                
+                // Close the dropdown menu
+                const dropdown = reportItem.closest('.dropdown-menu');
+                if (dropdown) {
+                    dropdown.style.display = 'none';
+                }
+                
+                alert('Review reported successfully. Thank you for helping keep our community safe.');
+            })
+            .catch(error => {
+                console.error('Error reporting review:', error);
+                alert('Failed to report review. Please try again.');
             });
         }
     }
@@ -532,9 +574,14 @@ window.ReviewSystem = (function() {
         tempDiv.innerHTML = html;
         
         // Process the HTML content to extract formatting
-        const result = processNodeForMarkdown(tempDiv);
+        let result = processNodeForMarkdown(tempDiv);
         
-        return result.trim();
+        // Handle multiple consecutive line breaks to preserve blank lines
+        // Convert sequences of 2 or more line breaks to double line breaks
+        result = result.replace(/\n{2,}/g, '\n\n');
+        
+        // Don't trim to preserve intentional blank lines at start/end
+        return result;
     }
     
     // Process HTML nodes for markdown conversion
@@ -566,6 +613,10 @@ window.ReviewSystem = (function() {
                 case 'br':
                     return '\n';
                 case 'div':
+                    // If div is empty or only contains whitespace, treat as blank line
+                    if (!content.trim()) {
+                        return '\n';
+                    }
                     return content + '\n';
                 default:
                     return content;
@@ -618,7 +669,7 @@ window.ReviewSystem = (function() {
     function setupOutsideClickHandler() {
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.ellipsis-menu-wrapper')) {
-                document.querySelectorAll('.dropdown-menu').forEach(menu => {
+                document.querySelectorAll('.dropdown-menu[data-review-id]').forEach(menu => {
                     menu.style.display = 'none';
                 });
             }

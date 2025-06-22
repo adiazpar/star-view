@@ -75,6 +75,12 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
         # Handle italic (*text*) - but avoid touching content inside ** 
         text = re.sub(r'(?<!\*)\*([^*]+?)\*(?!\*)', r'<em>\1</em>', text)
         
+        # Handle line breaks - convert \n to <br> and \n\n to <br><br>
+        # First handle double newlines for blank lines
+        text = text.replace('\n\n', '<br><br>')
+        # Then handle single newlines
+        text = text.replace('\n', '<br>')
+        
         return text
 
 

@@ -289,13 +289,13 @@
                                     </button>
                                     {% if user == review.user %}
                                     <div class="dropdown-menu" data-review-id="{{ review.id }}" style="display: none;">
-                                        <button class="dropdown-item delete-item" data-action="delete" data-review-id="{{ review.id }}">
-                                            {% include 'stars_app/icons/trash-icon.svg' %}
-                                            <span>Delete</span>
-                                        </button>
-                                        <button class="dropdown-item edit-item" data-action="edit" data-review-id="{{ review.id }}">
+                                        <button class="dropdown-item edit-review-item" data-action="edit" data-review-id="{{ review.id }}">
                                             {% include 'stars_app/icons/pencil-icon.svg' %}
                                             <span>Edit</span>
+                                        </button>
+                                        <button class="dropdown-item delete-review-item" data-action="delete" data-review-id="{{ review.id }}">
+                                            {% include 'stars_app/icons/trash-icon.svg' %}
+                                            <span>Delete</span>
                                         </button>
                                     </div>
                                     {% endif %}
@@ -373,15 +373,6 @@
                                                 {% if comment.is_edited %}
                                                     <span class="edited-indicator">(edited)</span>
                                                 {% endif %}
-                                                {% if user == comment.user %}
-                                                    <button class="comment-edit-btn" 
-                                                            data-comment-id="{{ comment.id }}"
-                                                            data-review-id="{{ review.id }}"
-                                                            data-location-id="{{ location.id }}"
-                                                            title="Edit comment">
-                                                        {% include 'stars_app/icons/pencil-icon.svg' %}
-                                                    </button>
-                                                {% endif %}
                                             </div>
                                             <p class="comment-text" 
                                                data-editable="comment" 
@@ -437,6 +428,34 @@
                                                         {% include 'stars_app/icons/thumbs-down-icon.svg' %}
                                                     </button>
                                                     <span class="downvote-count">{{ comment.downvote_count }}</span>
+                                                {% endif %}
+                                                
+                                                <!-- Comment ellipsis menu -->
+                                                {% if user.is_authenticated %}
+                                                    <div class="ellipsis-menu-wrapper">
+                                                        <button class="ellipsis-menu-button" data-comment-id="{{ comment.id }}">
+                                                            {% include 'stars_app/icons/ellipsis-icon.svg' %}
+                                                        </button>
+                                                        <div class="dropdown-menu" data-comment-id="{{ comment.id }}" style="display: none;">
+                                                            {% if comment.user == user %}
+                                                                <!-- Owner options: Edit and Delete -->
+                                                                <button class="dropdown-item edit-comment-item" data-action="edit" data-comment-id="{{ comment.id }}" data-review-id="{{ review.id }}" data-location-id="{{ location.id }}">
+                                                                    {% include 'stars_app/icons/pencil-icon.svg' %}
+                                                                    <span>Edit</span>
+                                                                </button>
+                                                                <button class="dropdown-item delete-comment-item" data-action="delete" data-comment-id="{{ comment.id }}" data-review-id="{{ review.id }}" data-location-id="{{ location.id }}">
+                                                                    {% include 'stars_app/icons/trash-icon.svg' %}
+                                                                    <span>Delete</span>
+                                                                </button>
+                                                            {% else %}
+                                                                <!-- Non-owner options: Report only -->
+                                                                <button class="dropdown-item report-comment-item" data-action="report" data-comment-id="{{ comment.id }}" data-review-id="{{ review.id }}" data-location-id="{{ location.id }}">
+                                                                    {% include 'stars_app/icons/flag-icon.svg' %}
+                                                                    <span>Report</span>
+                                                                </button>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
                                                 {% endif %}
                                             </div>
                                         </div>

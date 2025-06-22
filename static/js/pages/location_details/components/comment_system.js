@@ -32,11 +32,14 @@ window.CommentSystem = (function() {
             form.addEventListener('submit', handleCommentSubmission);
         });
         
-        // Handle comment edit buttons
+        // Handle comment edit buttons and ellipsis menus
         const reviewsList = document.querySelector('.reviews-list');
         if (reviewsList) {
-            reviewsList.addEventListener('click', handleCommentEdit);
+            reviewsList.addEventListener('click', handleCommentActions);
         }
+        
+        // Handle outside clicks to close comment dropdowns
+        setupOutsideClickHandler();
     }
     
     // Handle comment form submission
@@ -109,34 +112,158 @@ window.CommentSystem = (function() {
         });
     }
     
-    // Handle comment edit button clicks
-    function handleCommentEdit(e) {
-        const commentEditBtn = e.target.closest('.comment-edit-btn');
-        if (commentEditBtn) {
+    // Handle comment-related click events
+    function handleCommentActions(e) {
+        // Handle comment ellipsis menu buttons
+        const ellipsisButton = e.target.closest('.ellipsis-menu-button[data-comment-id]');
+        if (ellipsisButton) {
             e.preventDefault();
             e.stopPropagation();
+            handleCommentEllipsisMenu(ellipsisButton);
+            return;
+        }
+        
+        // Handle dropdown menu actions
+        const editCommentItem = e.target.closest('.edit-comment-item');
+        const deleteCommentItem = e.target.closest('.delete-comment-item');
+        const reportCommentItem = e.target.closest('.report-comment-item');
+        
+        if (editCommentItem || deleteCommentItem || reportCommentItem) {
+            e.preventDefault();
+            e.stopPropagation();
+            handleCommentDropdownAction(editCommentItem || deleteCommentItem || reportCommentItem);
+            return;
+        }
+        
+    }
+    
+    // Handle comment ellipsis menu toggle
+    function handleCommentEllipsisMenu(ellipsisButton) {
+        const commentId = ellipsisButton.dataset.commentId;
+        const dropdown = document.querySelector(`.dropdown-menu[data-comment-id="${commentId}"]`);
+        
+        if (dropdown) {
+            // Close all other dropdowns first (both review and comment dropdowns)
+            document.querySelectorAll('.dropdown-menu[data-review-id], .dropdown-menu[data-comment-id]').forEach(menu => {
+                if (menu !== dropdown) {
+                    menu.style.display = 'none';
+                }
+            });
             
-            const commentId = commentEditBtn.dataset.commentId;
-            const reviewId = commentEditBtn.dataset.reviewId;
-            const locationIdVal = commentEditBtn.dataset.locationId;
-            
+            // Toggle current dropdown
+            dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+        }
+    }
+    
+    // Handle comment dropdown menu actions
+    function handleCommentDropdownAction(dropdownItem) {
+        const action = dropdownItem.dataset.action;
+        const commentId = dropdownItem.dataset.commentId;
+        const reviewId = dropdownItem.dataset.reviewId;
+        const locationId = dropdownItem.dataset.locationId;
+        
+        // Close the dropdown
+        const dropdown = dropdownItem.closest('.dropdown-menu');
+        if (dropdown) {
+            dropdown.style.display = 'none';
+        }
+        
+        if (action === 'edit') {
             // Find the comment text element to make editable
             const commentElement = document.querySelector(`[data-comment-id="${commentId}"][data-editable="comment"]`);
             
             if (commentElement) {
                 const originalContent = commentElement.getAttribute('data-original-content');
                 const ids = {
-                    locationId: locationIdVal,
+                    locationId: locationId,
                     reviewId: reviewId,
                     commentId: commentId
                 };
                 
-                // Use the editing system (will be moved to separate component later)
+                // Use the editing system
                 if (window.EditingSystem) {
                     window.EditingSystem.makeEditable(commentElement, 'comment', ids, originalContent);
                 }
             }
+        } else if (action === 'delete') {
+            // Confirm deletion
+            if (confirm('Are you sure you want to delete this comment?')) {
+                deleteComment(commentId, reviewId, locationId);
+            }
+        } else if (action === 'report') {
+            // Handle comment reporting
+            if (confirm('Report this comment for inappropriate content?')) {
+                reportComment(commentId, reviewId, locationId);
+            }
         }
+    }
+    
+    // Delete a comment
+    function deleteComment(commentId, reviewId, locationId) {
+        fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': config.csrfToken,
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to delete comment');
+            }
+            
+            // Remove comment from DOM
+            const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`).closest('.comment');
+            if (commentElement) {
+                commentElement.remove();
+            }
+            
+            // Update comment count
+            const reviewCard = document.querySelector(`[data-review-id="${reviewId}"]`).closest('.review-card');
+            const countElement = reviewCard.querySelector('.comments-count');
+            if (countElement) {
+                const currentCount = parseInt(countElement.textContent);
+                const newCount = Math.max(0, currentCount - 1);
+                countElement.textContent = `${newCount} Comment${newCount !== 1 ? 's' : ''}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting comment:', error);
+            alert('Failed to delete comment. Please try again.');
+        });
+    }
+    
+    // Report a comment
+    function reportComment(commentId, reviewId, locationId) {
+        fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/report/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': config.csrfToken,
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to report comment');
+            }
+            
+            alert('Comment reported successfully. Thank you for helping keep our community safe.');
+        })
+        .catch(error => {
+            console.error('Error reporting comment:', error);
+            alert('Failed to report comment. Please try again.');
+        });
+    }
+    
+    // Handle outside clicks to close comment dropdowns
+    function setupOutsideClickHandler() {
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.ellipsis-menu-wrapper')) {
+                document.querySelectorAll('.dropdown-menu[data-comment-id]').forEach(menu => {
+                    menu.style.display = 'none';
+                });
+            }
+        });
     }
     
     // Create a new comment element
@@ -150,18 +277,6 @@ window.CommentSystem = (function() {
         
         // Check if this comment is from the current user
         const isCurrentUser = username === config.currentUsername;
-        const editButton = isCurrentUser ? `
-            <button class="comment-edit-btn" 
-                    data-comment-id="${comment.id}"
-                    data-review-id="${comment.review || comment.review_id}"
-                    data-location-id="${comment.location || config.locationId}"
-                    title="Edit comment">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil">
-                    <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/>
-                    <path d="m15 5 4 4"/>
-                </svg>
-            </button>
-        ` : '';
 
         // Create vote controls based on user authentication and ownership
         const isCommentOwner = config.isAuthenticated && username === config.currentUsername;
@@ -230,7 +345,6 @@ window.CommentSystem = (function() {
                     <span class="comment-username">${username}</span>
                     <span class="comment-date">${formatDate(comment.created_at)}</span>
                     ${comment.is_edited ? '<span class="edited-indicator">(edited)</span>' : ''}
-                    ${editButton}
                 </div>
                 <p class="comment-text" 
                    data-editable="comment" 
@@ -331,9 +445,14 @@ window.CommentSystem = (function() {
         tempDiv.innerHTML = html;
         
         // Process the HTML content to extract formatting
-        const result = processNodeForMarkdown(tempDiv);
+        let result = processNodeForMarkdown(tempDiv);
         
-        return result.trim();
+        // Handle multiple consecutive line breaks to preserve blank lines
+        // Convert sequences of 2 or more line breaks to double line breaks
+        result = result.replace(/\n{2,}/g, '\n\n');
+        
+        // Don't trim to preserve intentional blank lines at start/end
+        return result;
     }
     
     // Process HTML nodes for markdown conversion
@@ -365,6 +484,10 @@ window.CommentSystem = (function() {
                 case 'br':
                     return '\n';
                 case 'div':
+                    // If div is empty or only contains whitespace, treat as blank line
+                    if (!content.trim()) {
+                        return '\n';
+                    }
                     return content + '\n';
                 default:
                     return content;
