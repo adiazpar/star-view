@@ -9,6 +9,10 @@ window.ImageUploadSystem = (function() {
     let formFilesMap = new WeakMap(); // Store files per form
     let formExistingCountMap = new WeakMap(); // Store existing image count per form
     
+    // Lightbox navigation state
+    let currentPhotoIndex = 0;
+    let currentReviewPhotos = [];
+    
     // Initialize the image upload system
     function init() {
         setupImageUploadHandlers();
@@ -299,6 +303,16 @@ window.ImageUploadSystem = (function() {
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
                     </button>
+                    <button class="lightbox-nav lightbox-prev" title="Previous photo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15,18 9,12 15,6"></polyline>
+                        </svg>
+                    </button>
+                    <button class="lightbox-nav lightbox-next" title="Next photo">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9,18 15,12 9,6"></polyline>
+                        </svg>
+                    </button>
                 </div>
             `;
             document.body.appendChild(lightbox);
@@ -310,17 +324,75 @@ window.ImageUploadSystem = (function() {
                 }
             });
             
-            // Close on escape key
+            // Navigation event listeners
+            const prevBtn = lightbox.querySelector('.lightbox-prev');
+            const nextBtn = lightbox.querySelector('.lightbox-next');
+            
+            prevBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                navigateLightbox(-1);
+            });
+            
+            nextBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                navigateLightbox(1);
+            });
+            
+            // Keyboard navigation
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape' && lightbox.classList.contains('active')) {
-                    closeLightbox();
+                if (lightbox.classList.contains('active')) {
+                    if (e.key === 'Escape') {
+                        closeLightbox();
+                    } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        navigateLightbox(-1);
+                    } else if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        navigateLightbox(1);
+                    }
                 }
             });
         }
     }
     
-    // Open lightbox with image
-    function openLightbox(src, metadata = {}) {
+    // Navigate lightbox photos
+    function navigateLightbox(direction) {
+        if (currentReviewPhotos.length <= 1) return;
+        
+        const newIndex = currentPhotoIndex + direction;
+        
+        // Handle wrapping
+        if (newIndex < 0) {
+            currentPhotoIndex = currentReviewPhotos.length - 1;
+        } else if (newIndex >= currentReviewPhotos.length) {
+            currentPhotoIndex = 0;
+        } else {
+            currentPhotoIndex = newIndex;
+        }
+        
+        // Update the lightbox with the new photo
+        const photo = currentReviewPhotos[currentPhotoIndex];
+        updateLightboxContent(photo.src, photo.metadata);
+        updateNavigationState();
+    }
+    
+    // Update navigation button states
+    function updateNavigationState() {
+        const lightbox = document.getElementById('image-lightbox');
+        const prevBtn = lightbox.querySelector('.lightbox-prev');
+        const nextBtn = lightbox.querySelector('.lightbox-next');
+        
+        if (currentReviewPhotos.length <= 1) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = 'flex';
+            nextBtn.style.display = 'flex';
+        }
+    }
+    
+    // Update lightbox content
+    function updateLightboxContent(src, metadata = {}) {
         const lightbox = document.getElementById('image-lightbox');
         const img = lightbox.querySelector('.lightbox-image');
         
@@ -352,6 +424,55 @@ window.ImageUploadSystem = (function() {
                 const locationAddress = lightbox.querySelector('.location-address');
                 if (locationAddress) locationAddress.textContent = metadata.locationAddress;
             }
+        }
+    }
+    
+    // Open lightbox with image
+    function openLightbox(src, metadata = {}) {
+        const lightbox = document.getElementById('image-lightbox');
+        const img = lightbox.querySelector('.lightbox-image');
+        
+        if (lightbox && img) {
+            // Find all photos in the same review
+            const clickedImg = document.querySelector(`img[data-full-url="${src}"], img[src="${src}"]`);
+            if (clickedImg) {
+                const reviewPhotosContainer = clickedImg.closest('.review-photos');
+                if (reviewPhotosContainer) {
+                    // Get all photos in this review
+                    const allPhotos = reviewPhotosContainer.querySelectorAll('.review-photo-thumbnail');
+                    currentReviewPhotos = Array.from(allPhotos).map(photo => ({
+                        src: photo.dataset.fullUrl || photo.src,
+                        metadata: {
+                            author: photo.dataset.author,
+                            authorAvatar: photo.dataset.authorAvatar,
+                            reviewDate: photo.dataset.reviewDate,
+                            locationName: photo.dataset.locationName,
+                            locationAddress: photo.dataset.locationAddress
+                        }
+                    }));
+                    
+                    // Find the index of the clicked photo
+                    currentPhotoIndex = currentReviewPhotos.findIndex(photo => photo.src === src);
+                } else {
+                    // Single photo, not part of a review collection
+                    currentReviewPhotos = [{
+                        src: src,
+                        metadata: metadata
+                    }];
+                    currentPhotoIndex = 0;
+                }
+            } else {
+                // Fallback for single photo
+                currentReviewPhotos = [{
+                    src: src,
+                    metadata: metadata
+                }];
+                currentPhotoIndex = 0;
+            }
+            
+            // Update the lightbox content
+            updateLightboxContent(src, metadata);
+            updateNavigationState();
             
             lightbox.classList.add('active');
             document.body.style.overflow = 'hidden';

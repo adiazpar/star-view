@@ -60,7 +60,7 @@
     /* Animations */
     --transition-fast: 150ms ease;
     --transition-base: 200ms ease;
-    --transition-slow: 300ms ease;
+    --transition-slow: 500ms ease;
 
     /* Border Radius */
     --radius-xs: 1px;
