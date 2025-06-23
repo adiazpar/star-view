@@ -334,6 +334,13 @@ window.EditingSystem = (function() {
             }, 200);
         }
         
+        // Set up input event listener to update hidden field
+        commentInput.addEventListener('input', function() {
+            const htmlContent = this.innerHTML;
+            const markdownContent = htmlToMarkdown(htmlContent);
+            hiddenInput.value = markdownContent;
+        });
+        
         // Focus the editor
         commentInput.focus();
         
@@ -368,6 +375,65 @@ window.EditingSystem = (function() {
         cancelBtn.addEventListener('click', function() {
             cancelEdit(element, editControls);
         });
+    }
+    
+    // Convert HTML to markdown
+    function htmlToMarkdown(html) {
+        // Create a temporary div to work with the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        
+        // Process the HTML content to extract formatting
+        let result = processNodeForMarkdown(tempDiv);
+        
+        // Handle multiple consecutive line breaks to preserve blank lines
+        // Convert sequences of 2 or more line breaks to double line breaks
+        result = result.replace(/\n{2,}/g, '\n\n');
+        
+        // Don't trim to preserve intentional blank lines at start/end
+        return result;
+    }
+    
+    // Process HTML nodes for markdown conversion
+    function processNodeForMarkdown(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            return node.textContent;
+        }
+        
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            let content = '';
+            
+            // Process all child nodes first
+            for (let child of node.childNodes) {
+                content += processNodeForMarkdown(child);
+            }
+            
+            // Apply formatting based on the current element
+            const tagName = node.tagName ? node.tagName.toLowerCase() : '';
+            
+            switch (tagName) {
+                case 'strong':
+                case 'b':
+                    return `**${content}**`;
+                case 'em':
+                case 'i':
+                    return `*${content}*`;
+                case 'u':
+                    return `__${content}__`;
+                case 'br':
+                    return '\n';
+                case 'div':
+                    // If div is empty or only contains whitespace, treat as blank line
+                    if (!content.trim()) {
+                        return '\n';
+                    }
+                    return content + '\n';
+                default:
+                    return content;
+            }
+        }
+        
+        return '';
     }
     
     // Convert markdown to HTML for editing
@@ -413,7 +479,7 @@ window.EditingSystem = (function() {
         // Determine API endpoint based on type
         let endpoint;
         if (type === 'review') {
-            endpoint = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/`;
+            endpoint = `/api/v1/viewing-locations/${ids.locationId}/update_review/`;
         } else if (type === 'comment') {
             endpoint = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
         }
@@ -474,9 +540,19 @@ window.EditingSystem = (function() {
             requestBody.rating = rating;
         }
         
+        // Add review ID for reviews to help backend identify the correct review
+        if (type === 'review' && ids.reviewId && !useFormData) {
+            requestBody.review_id = ids.reviewId;
+        }
+        
+        // Add images to remove for reviews (non-FormData case)
+        if (type === 'review' && imagesToRemove.length > 0 && !useFormData) {
+            requestBody.delete_photo_ids = JSON.stringify(imagesToRemove);
+        }
+        
         // Send update request
         const fetchOptions = {
-            method: 'PATCH',
+            method: type === 'review' ? 'PUT' : 'PATCH',
             headers: {
                 'X-CSRFToken': config.csrfToken
             },
@@ -510,9 +586,25 @@ window.EditingSystem = (function() {
                 // For comments, we need to restore the original element first
                 editControls.parentNode.replaceChild(element, editControls);
                 element.classList.remove('edit-mode');
+            } else {
+                // For reviews, remove edit-mode class first to show the element before updating content
+                element.classList.remove('edit-mode');
             }
             
-            element.innerHTML = formattedContent;
+            // Update content for both comments and reviews
+            if (type === 'review') {
+                // For reviews, find the paragraph element and update it
+                const paragraphElement = element.querySelector('p');
+                if (paragraphElement) {
+                    paragraphElement.innerHTML = formattedContent;
+                } else {
+                    // If no paragraph found, create one
+                    element.innerHTML = `<p>${formattedContent}</p>`;
+                }
+            } else {
+                // For comments, update normally
+                element.innerHTML = formattedContent;
+            }
             
             // Update data attributes
             element.setAttribute('data-original-content', data[contentField]);
@@ -586,9 +678,21 @@ window.EditingSystem = (function() {
                 imagesToRemove.length = 0;
             }
             
-            // Clean up edit mode for reviews only (comments already handled above)
+            // Clean up edit controls for reviews only (comments already handled above)
             if (type === 'review') {
-                cancelEdit(element, editControls);
+                // Remove edit controls and restore photos visibility
+                editControls.remove();
+                
+                // Restore original photos visibility for reviews
+                const reviewCard = element.closest('.review-card');
+                const originalPhotos = reviewCard ? reviewCard.querySelector('.review-photos[data-hidden-for-edit="true"]') : null;
+                if (originalPhotos) {
+                    originalPhotos.style.display = '';
+                    originalPhotos.removeAttribute('data-hidden-for-edit');
+                }
+                
+                // Clear images to remove array
+                imagesToRemove.length = 0;
             }
             
             // Emit update event
@@ -679,6 +783,15 @@ window.EditingSystem = (function() {
         const reviewCard = document.querySelector(`[data-review-id="${reviewId}"]`).closest('.review-card');
         const existingPhotosContainer = reviewCard ? reviewCard.querySelector('.review-photos') : null;
         
+        // Get review metadata for lightbox
+        const reviewAuthor = reviewCard ? reviewCard.querySelector('.review-username')?.textContent : '';
+        const reviewAvatar = reviewCard ? reviewCard.querySelector('.review-profile-picture')?.src : '';
+        const reviewDate = reviewCard ? reviewCard.querySelector('.review-date')?.textContent : '';
+        const locationName = config.locationName || document.querySelector('.hero-title-section h1')?.textContent || '';
+        
+        // Get location formatted address from config
+        const locationAddress = config.locationFormattedAddress || '';
+        
         if (photos.length === 0) {
             // Remove photos container if no photos
             if (existingPhotosContainer) {
@@ -713,6 +826,11 @@ window.EditingSystem = (function() {
                          alt="Review photo"
                          class="review-photo-thumbnail"
                          data-full-url="${photo.image_url}"
+                         data-author="${reviewAuthor}"
+                         data-author-avatar="${reviewAvatar}"
+                         data-review-date="${reviewDate}"
+                         data-location-name="${locationName}"
+                         data-location-address="${locationAddress}"
                          loading="lazy">
                     ${photo.caption ? `<span class="photo-caption">${photo.caption}</span>` : ''}
                 `;

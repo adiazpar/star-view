@@ -696,9 +696,10 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['PUT'])
     def update_review(self, request, pk=None):
         location = self.get_object()
+        
         review = LocationReview.objects.filter(
-            user=request.user,
-            location=location
+            user_id=request.user.id,
+            location_id=location.id
         ).first()
 
         if not review:
@@ -707,7 +708,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = LocationReviewSerializer(review, data=request.data)
+        serializer = LocationReviewSerializer(review, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             
@@ -738,9 +739,20 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             # Handle image deletions if specified
             delete_photo_ids = request.data.get('delete_photo_ids', [])
             if delete_photo_ids:
-                review.photos.filter(id__in=delete_photo_ids).delete()
+                # Parse JSON string if needed
+                import json
+                if isinstance(delete_photo_ids, str):
+                    try:
+                        delete_photo_ids = json.loads(delete_photo_ids)
+                    except json.JSONDecodeError:
+                        delete_photo_ids = []
+                
+                if delete_photo_ids:
+                    review.photos.filter(id__in=delete_photo_ids).delete()
             
             return Response(serializer.data)
+        
+        print(f"Serializer errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['DELETE'])

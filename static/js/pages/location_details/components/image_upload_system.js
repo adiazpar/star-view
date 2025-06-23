@@ -94,7 +94,13 @@ window.ImageUploadSystem = (function() {
             if (e.target.closest('.review-photo-thumbnail')) {
                 e.preventDefault();
                 const img = e.target.closest('.review-photo-thumbnail');
-                openLightbox(img.dataset.fullUrl || img.src);
+                openLightbox(img.dataset.fullUrl || img.src, {
+                    author: img.dataset.author,
+                    authorAvatar: img.dataset.authorAvatar,
+                    reviewDate: img.dataset.reviewDate,
+                    locationName: img.dataset.locationName,
+                    locationAddress: img.dataset.locationAddress
+                });
             }
         });
     }
@@ -270,6 +276,23 @@ window.ImageUploadSystem = (function() {
             lightbox.innerHTML = `
                 <div class="lightbox-content">
                     <img src="" alt="Full size image" class="lightbox-image">
+                    <div class="lightbox-overlay">
+                        <div class="lightbox-metadata">
+                            <div class="lightbox-author">
+                                <img src="" alt="Author avatar" class="author-avatar">
+                                <div class="author-info">
+                                    <span class="author-name"></span>
+                                    <span class="lightbox-review-date"></span>
+                                </div>
+                            </div>
+                            <div class="lightbox-location">
+                                <div class="location-info">
+                                    <span class="location-name"></span>
+                                    <span class="location-address"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <button class="lightbox-close" title="Close">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -297,12 +320,39 @@ window.ImageUploadSystem = (function() {
     }
     
     // Open lightbox with image
-    function openLightbox(src) {
+    function openLightbox(src, metadata = {}) {
         const lightbox = document.getElementById('image-lightbox');
         const img = lightbox.querySelector('.lightbox-image');
         
         if (lightbox && img) {
             img.src = src;
+            
+            // Update metadata if provided
+            if (metadata.author) {
+                const authorName = lightbox.querySelector('.author-name');
+                if (authorName) authorName.textContent = metadata.author;
+            }
+            
+            if (metadata.authorAvatar) {
+                const authorAvatar = lightbox.querySelector('.author-avatar');
+                if (authorAvatar) authorAvatar.src = metadata.authorAvatar;
+            }
+            
+            if (metadata.reviewDate) {
+                const reviewDate = lightbox.querySelector('.lightbox-review-date');
+                if (reviewDate) reviewDate.textContent = metadata.reviewDate;
+            }
+            
+            if (metadata.locationName) {
+                const locationName = lightbox.querySelector('.location-name');
+                if (locationName) locationName.textContent = metadata.locationName;
+            }
+            
+            if (metadata.locationAddress) {
+                const locationAddress = lightbox.querySelector('.location-address');
+                if (locationAddress) locationAddress.textContent = metadata.locationAddress;
+            }
+            
             lightbox.classList.add('active');
             document.body.style.overflow = 'hidden';
         }

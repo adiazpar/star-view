@@ -325,24 +325,29 @@
     margin-top: var(--space-sm);
 }
 
-/* Review Photos Display - Square thumbnails like form upload */
+/* Review Photos Display - Horizontal scrollbar layout */
 .review-photos {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: var(--space-sm);
     margin-top: var(--space-md);
     margin-bottom: var(--space-md);
+    overflow-x: auto;
+    overflow-y: hidden;
     width: 100%;
+    padding-bottom: var(--space-xs); /* Add padding for scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-tertiary) var(--surface-light);
 }
 
 .review-photo-item {
     position: relative;
     cursor: pointer;
-    border-radius: var(--radius-xs);
+    border-radius: var(--radius-sm);
     overflow: hidden;
     transition: all var(--transition-base);
     background: var(--background-dark);
-    border: 1px solid var(--background-dark);
+    border: 1px solid rgba(0,0,0,0);
     /* Square thumbnails - same size as form upload */
     width: 96px;
     height: 96px;
@@ -350,9 +355,8 @@
 }
 
 .review-photo-item:hover {
-    transform: scale(1.05);
-    z-index: 1;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border-color: var(--text-primary);
+    cursor: pointer;
 }
 
 .review-photo-thumbnail {
@@ -362,23 +366,23 @@
     display: block;
 }
 
-/* Responsive scaling - adjust thumbnail size based on screen width */
-@media (max-width: 768px) {
-    .review-photo-item {
-        width: 80px;
-        height: 80px;
-    }
+/* Custom scrollbar styling for webkit browsers */
+.review-photos::-webkit-scrollbar {
+    height: 8px;
 }
 
-@media (max-width: 480px) {
-    .review-photo-item {
-        width: 64px;
-        height: 64px;
-    }
-    
-    .review-photos {
-        gap: var(--space-xs);
-    }
+.review-photos::-webkit-scrollbar-track {
+    background: var(--background-dark);
+    border-radius: var(--radius-xs);
+}
+
+.review-photos::-webkit-scrollbar-thumb {
+    background: var(--surface-light);
+    border-radius: var(--radius-xs);
+}
+
+.review-photos::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
 }
 
 .photo-caption {
@@ -400,7 +404,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -419,22 +423,27 @@
     position: relative;
     max-width: 90vw;
     max-height: 90vh;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .lightbox-image {
     max-width: 100%;
     max-height: 90vh;
     object-fit: contain;
+    border-radius: var(--radius-sm);
 }
 
 .lightbox-close {
     position: absolute;
     top: var(--space-md);
     right: var(--space-md);
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.5);
     border: none;
     border-radius: var(--radius-sm);
-    padding: var(--space-sm);
+    padding: var(--space-xs);
     cursor: pointer;
     color: var(--white);
     display: flex;
@@ -444,12 +453,90 @@
 }
 
 .lightbox-close:hover {
-    background: rgba(255, 0, 0, 0.8);
+    background: rgba(255, 255, 255, 1);
+    color: rgba(0, 0, 0, 1);
 }
 
 .lightbox-close svg {
-    width: 24px;
-    height: 24px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Lightbox overlay with gradient and metadata */
+.lightbox-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+    padding: 0 var(--space-md) var(--space-md) var(--space-md);
+}
+
+.lightbox-metadata {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    min-height: 32px; /* Ensure consistent height with avatar */
+}
+
+.lightbox-author {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.author-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: none;
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.author-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.lightbox-review-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.lightbox-location {
+    display: flex;
+    align-items: center;
+}
+
+.location-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: right;
+}
+
+.location-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.location-address {
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    line-height: 1.2;
+    max-width: 200px;
 }
 
 /* Current Images Container (for edit mode) - uses same styling as preview container */
@@ -462,7 +549,7 @@
     position: relative;
     width: 96px; /* Same as image-preview-item and review-photo-item */
     height: 96px;
-    border-radius: var(--radius-xs);
+    border-radius: var(--radius-sm);
     overflow: hidden;
     background: var(--background-dark);
     border: 1px solid var(--background-dark);
@@ -483,7 +570,7 @@
     right: var(--space-xs);
     background: var(--negate); /* Same as remove-image-btn */
     border: none;
-    border-radius: var(--radius-xs); /* Same as remove-image-btn */
+    border-radius: var(--radius-sm); /* Same as remove-image-btn */
     padding: 4px; /* Same as remove-image-btn */
     cursor: pointer;
     color: var(--white);

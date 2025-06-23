@@ -130,6 +130,11 @@
                                      alt="Review photo {{ forloop.counter }}"
                                      class="review-photo-thumbnail"
                                      data-full-url="{{ photo.image_url }}"
+                                     data-author="{{ review.user.username }}"
+                                     data-author-avatar="{{ review.user.userprofile.get_profile_picture_url }}"
+                                     data-review-date="{{ review.created_at|date:'M d, Y' }}"
+                                     data-location-name="{{ location.name }}"
+                                     data-location-address="{{ location.formatted_address }}"
                                      loading="lazy">
                                 {% if photo.caption %}
                                     <span class="photo-caption">{{ photo.caption }}</span>

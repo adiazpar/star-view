@@ -172,7 +172,7 @@
 <script>
     // Pass Django template variables to JavaScript
     window.locationDetailsConfig = {
-        locationId: '{{ location.id }}',
+        locationId: {{ location.id }},
         isAuthenticated: {% if user.is_authenticated %}true{% else %}false{% endif %},
         isOwner: {% if is_owner %}true{% else %}false{% endif %},
         currentUsername: '{{ user.username|default:"" }}',
@@ -180,6 +180,7 @@
         locationLongitude: {{ location.longitude }},
         locationLatitude: {{ location.latitude }},
         locationName: '{{ location.name|escapejs }}',
+        locationFormattedAddress: '{{ location.formatted_address|escapejs }}',
         userHasReviewed: {% if user_has_reviewed %}true{% else %}false{% endif %}
     };
 </script>
