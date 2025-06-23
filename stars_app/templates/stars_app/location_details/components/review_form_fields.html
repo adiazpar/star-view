@@ -1,0 +1,96 @@
+{% comment %}
+This is a reusable review form content template (form only, no wrapper).
+Variables expected:
+- form_id_prefix: Prefix for form field IDs (e.g., "new", "template", "edit-123")
+- placeholder_text: Placeholder text for the comment field
+- submit_button_text: Text for the submit button
+- submit_button_icon: Icon HTML for the submit button
+- cancel_button_class: CSS class for the cancel button
+- submit_button_class: CSS class for the submit button
+{% endcomment %}
+
+<form method="POST" class="review-form" enctype="multipart/form-data">
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    <div class="rating-input">
+        <label>Rating:</label>
+        <div class="star-rating">
+            <input type="radio" id="{{ form_id_prefix }}-star1" name="rating" value="1" required>
+            <label for="{{ form_id_prefix }}-star1">
+                {% include 'stars_app/icons/star-filled-icon.svg' %}
+            </label>
+            <input type="radio" id="{{ form_id_prefix }}-star2" name="rating" value="2" required>
+            <label for="{{ form_id_prefix }}-star2">
+                {% include 'stars_app/icons/star-filled-icon.svg' %}
+            </label>
+            <input type="radio" id="{{ form_id_prefix }}-star3" name="rating" value="3" required>
+            <label for="{{ form_id_prefix }}-star3">
+                {% include 'stars_app/icons/star-filled-icon.svg' %}
+            </label>
+            <input type="radio" id="{{ form_id_prefix }}-star4" name="rating" value="4" required>
+            <label for="{{ form_id_prefix }}-star4">
+                {% include 'stars_app/icons/star-filled-icon.svg' %}
+            </label>
+            <input type="radio" id="{{ form_id_prefix }}-star5" name="rating" value="5" required>
+            <label for="{{ form_id_prefix }}-star5">
+                {% include 'stars_app/icons/star-filled-icon.svg' %}
+            </label>
+        </div>
+    </div>
+    <div class="review-comment-input">
+        <label for="comment">Comment:</label>
+        <div class="comment-form">
+            <div class="comment-input" 
+                 contenteditable="true"
+                 data-placeholder="{{ placeholder_text|default:'Share your experience at this location...' }}" 
+                 data-name="comment"></div>
+            <input type="hidden" name="comment" class="hidden-content">
+            <div class="comment-toolbar">
+                <div class="comment-formatting-tools">
+                    <button type="button" class="formatting-btn" title="Bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                    </button>
+                    <button type="button" class="formatting-btn" title="Italic">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                    </button>
+                    <button type="button" class="formatting-btn" title="Underline">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Image Upload Section -->
+    <div class="review-images-input">
+        <div class="image-upload-hint">You can upload up to 5 photos (JPEG, PNG, GIF)</div>
+        <div class="image-upload-container">
+            <input type="file" 
+                   name="review_images" 
+                   id="{{ form_id_prefix }}-review-images-input" 
+                   class="image-file-input" 
+                   accept="image/*" 
+                   multiple 
+                   style="display: none;">
+            <div class="images-grid-container">
+                <div class="image-preview-container" id="{{ form_id_prefix }}-image-preview-container"></div>
+                <button type="button" class="add-image-btn square" id="{{ form_id_prefix }}-add-image-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                        <polyline points="21 15 16 10 5 21"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <button type="button" class="{{ cancel_button_class|default:'cancel-review' }}">
+            Cancel
+        </button>
+        <button type="{{ submit_button_type|default:'submit' }}" class="{{ submit_button_class|default:'submit-review' }}">
+            {{ submit_button_icon|safe|default:'<i class="fas fa-paper-plane"></i>' }}
+            {{ submit_button_text|default:'Submit Review' }}
+        </button>
+    </div>
+</form>

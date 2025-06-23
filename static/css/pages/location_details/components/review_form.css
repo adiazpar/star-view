@@ -495,24 +495,23 @@
     height: 24px;
 }
 
-/* Editable Image Styles for Edit Mode */
+/* Current Images Container (for edit mode) - uses same styling as preview container */
 .current-images-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-sm);
+    display: contents; /* Same as image-preview-container */
 }
 
+/* Current images use the same styling as preview images */
 .editable-photo-item {
     position: relative;
-    width: 120px;
-    height: 120px;
-    border-radius: var(--radius-sm);
+    width: 96px; /* Same as image-preview-item */
+    height: 96px;
+    border-radius: var(--radius-xs); /* Same as image-preview-item */
     overflow: hidden;
     background: var(--background-dark);
-    border: 2px solid var(--background-dark);
+    border: 1px solid var(--background-dark); /* Same as image-preview-item */
+    margin-right: var(--space-sm); /* Same as image-preview-item */
+    margin-bottom: var(--space-sm);
 }
-
-/* Editable photos are now fixed size squares */
 
 .editable-photo-thumbnail {
     width: 100%;
@@ -521,14 +520,15 @@
     display: block;
 }
 
+/* Use the same remove button styling as preview images */
 .remove-current-image-btn {
     position: absolute;
     top: var(--space-xs);
     right: var(--space-xs);
-    background: rgba(255, 0, 0, 0.8);
+    background: var(--negate); /* Same as remove-image-btn */
     border: none;
-    border-radius: var(--radius-sm);
-    padding: var(--space-xs);
+    border-radius: var(--radius-xs); /* Same as remove-image-btn */
+    padding: 4px; /* Same as remove-image-btn */
     cursor: pointer;
     color: var(--white);
     display: flex;
@@ -539,8 +539,7 @@
 }
 
 .remove-current-image-btn:hover {
-    background: rgba(255, 0, 0, 1);
-    transform: scale(1.1);
+    background: var(--negate-light); /* Same as remove-image-btn:hover */
 }
 
 .remove-current-image-btn svg {
@@ -548,11 +547,16 @@
     height: 16px;
 }
 
-/* Edit Controls Container */
+/* Edit Controls for reviews - no extra padding since review-card already has padding */
 .edit-controls {
     margin-top: var(--space-sm);
+    animation: slideDown 0.3s ease-out;
 }
 
+/* Ensure edit controls don't add extra margin/padding inside review cards */
+.review-card .edit-controls {
+    margin: 0;
+}
 
 /* Add margin above voting buttons when in edit mode */
 .edit-controls + .vote-controls {

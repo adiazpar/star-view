@@ -31,116 +31,146 @@ window.EditingSystem = (function() {
             }
         }
         
-        // Create edit controls container as a form for ImageUploadSystem compatibility
-        const editControls = document.createElement('form');
+        // Create edit controls container - no wrapper needed for reviews in edit mode
+        const editControls = document.createElement('div');
         editControls.className = 'edit-controls';
-        editControls.onsubmit = (e) => e.preventDefault(); // Prevent form submission
         
-        // Generate star rating section for reviews
-        const starRatingSection = type === 'review' ? `
-            <div class="rating-input">
-                <label>Rating:</label>
-                <div class="star-rating" data-current-rating="">
-                    <input type="radio" id="edit-star1-${ids.reviewId}" name="rating" value="1" required>
-                    <label for="edit-star1-${ids.reviewId}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
-                            <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="edit-star2-${ids.reviewId}" name="rating" value="2" required>
-                    <label for="edit-star2-${ids.reviewId}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
-                            <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="edit-star3-${ids.reviewId}" name="rating" value="3" required>
-                    <label for="edit-star3-${ids.reviewId}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
-                            <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="edit-star4-${ids.reviewId}" name="rating" value="4" required>
-                    <label for="edit-star4-${ids.reviewId}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
-                            <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                        </svg>
-                    </label>
-                    <input type="radio" id="edit-star5-${ids.reviewId}" name="rating" value="5" required>
-                    <label for="edit-star5-${ids.reviewId}">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
-                            <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
-                        </svg>
-                    </label>
-                </div>
-            </div>
-        ` : '';
-
-        // Generate image editing section for reviews
-        const imageEditingSection = type === 'review' ? `
-            <div class="review-images-input">
-                <div class="image-upload-hint">You can upload up to 5 photos (JPEG, PNG, GIF)</div>
-                <div class="image-upload-container">
-                    <input type="file" 
-                           name="review_images" 
-                           id="edit-review-images-input-${ids.reviewId}" 
-                           class="image-file-input" 
-                           accept="image/*" 
-                           multiple 
-                           style="display: none;">
-                    <div class="images-grid-container">
-                        <div class="current-images-container" id="current-images-container-${ids.reviewId}">
-                            <!-- Current images will be loaded here -->
-                        </div>
-                        <div class="image-preview-container" id="edit-image-preview-container-${ids.reviewId}"></div>
-                        <button type="button" class="add-image-btn square" id="edit-add-image-btn-${ids.reviewId}">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                <polyline points="21 15 16 10 5 21"></polyline>
-                            </svg>
-                        </button>
+        // For reviews, try to clone the template form for consistent styling
+        let formHTML = '';
+        if (type === 'review') {
+            const reviewFormTemplate = document.getElementById('reviewFormTemplate');
+            if (reviewFormTemplate) {
+                // Clone the template and extract only the form element
+                const templateClone = reviewFormTemplate.cloneNode(true);
+                const formElement = templateClone.querySelector('.review-form');
+                
+                if (formElement) {
+                    
+                    // Update IDs to avoid conflicts
+                    formElement.querySelectorAll('[id]').forEach(el => {
+                        const oldId = el.id;
+                        if (oldId.startsWith('template-')) {
+                            // For image upload elements, use the pattern ImageUploadSystem expects
+                            if (oldId === 'template-add-image-btn') {
+                                el.id = `edit-add-image-btn-${ids.reviewId}`;
+                            } else if (oldId === 'template-review-images-input') {
+                                el.id = `edit-review-images-input-${ids.reviewId}`;
+                            } else if (oldId === 'template-image-preview-container') {
+                                el.id = `edit-image-preview-container-${ids.reviewId}`;
+                            } else {
+                                // For other template elements (like star inputs)
+                                el.id = oldId.replace('template-', `edit-${ids.reviewId}-`);
+                            }
+                        } else {
+                            el.id = `edit-${ids.reviewId}-${oldId}`;
+                        }
+                    });
+                    
+                    // Update labels to match new IDs
+                    formElement.querySelectorAll('label[for]').forEach(label => {
+                        const oldFor = label.getAttribute('for');
+                        if (oldFor.startsWith('template-')) {
+                            // Match the same ID transformation logic used above
+                            if (oldFor === 'template-add-image-btn') {
+                                label.setAttribute('for', `edit-add-image-btn-${ids.reviewId}`);
+                            } else if (oldFor === 'template-review-images-input') {
+                                label.setAttribute('for', `edit-review-images-input-${ids.reviewId}`);
+                            } else if (oldFor === 'template-image-preview-container') {
+                                label.setAttribute('for', `edit-image-preview-container-${ids.reviewId}`);
+                            } else {
+                                label.setAttribute('for', oldFor.replace('template-', `edit-${ids.reviewId}-`));
+                            }
+                        } else {
+                            label.setAttribute('for', `edit-${ids.reviewId}-${oldFor}`);
+                        }
+                    });
+                    
+                    // Update placeholders
+                    const commentInput = formElement.querySelector('.comment-input');
+                    if (commentInput) {
+                        commentInput.setAttribute('data-placeholder', 'Edit your review...');
+                        commentInput.setAttribute('data-name', 'content');
+                    }
+                    
+                    // Update button classes and text
+                    const cancelBtn = formElement.querySelector('.cancel-review');
+                    if (cancelBtn) {
+                        cancelBtn.className = 'cancel-edit';
+                        cancelBtn.textContent = 'Cancel';
+                    }
+                    
+                    const submitBtn = formElement.querySelector('.submit-review');
+                    if (submitBtn) {
+                        submitBtn.className = 'save-edit';
+                        submitBtn.type = 'button';
+                        submitBtn.innerHTML = '<i class="fas fa-check"></i> Save';
+                        submitBtn.setAttribute('data-type', type);
+                        submitBtn.setAttribute('data-ids', JSON.stringify(ids));
+                    }
+                    
+                    // Add current images container
+                    const imageUploadContainer = formElement.querySelector('.images-grid-container');
+                    if (imageUploadContainer) {
+                        const currentImagesDiv = document.createElement('div');
+                        currentImagesDiv.className = 'current-images-container';
+                        currentImagesDiv.id = `current-images-container-${ids.reviewId}`;
+                        imageUploadContainer.insertBefore(currentImagesDiv, imageUploadContainer.firstChild);
+                    }
+                    
+                    formHTML = formElement.outerHTML;
+                }
+            }
+        }
+        
+        // Fallback to hardcoded HTML if template cloning fails
+        if (!formHTML && type === 'review') {
+            const starRatingSection = `
+                <div class="rating-input">
+                    <label>Rating:</label>
+                    <div class="star-rating" data-current-rating="">
+                        ${[1, 2, 3, 4, 5].map(i => `
+                            <input type="radio" id="edit-star${i}-${ids.reviewId}" name="rating" value="${i}" required>
+                            <label for="edit-star${i}-${ids.reviewId}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star filled">
+                                    <path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"/>
+                                </svg>
+                            </label>
+                        `).join('')}
                     </div>
                 </div>
-            </div>
-        ` : '';
-        
-        // Different structure for comments vs reviews
-        if (type === 'comment') {
-            editControls.innerHTML = `
-                <div class="comment-form">
-                    <div class="comment-input" 
-                         contenteditable="true"
-                         data-placeholder="Edit your comment..." 
-                         data-name="content"></div>
-                    <input type="hidden" name="content" class="hidden-content">
-                    <div class="comment-toolbar">
-                        <div class="comment-formatting-tools">
-                            <button type="button" class="formatting-btn" title="Bold">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-                            </button>
-                            <button type="button" class="formatting-btn" title="Italic">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
-                            </button>
-                            <button type="button" class="formatting-btn" title="Underline">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
-                            </button>
-                        </div>
-                        <div class="edit-actions">
-                            <button type="button" class="cancel-edit-comment">
-                                Cancel
-                            </button>
-                            <button type="button" class="save-edit-comment" data-type="${type}" data-ids='${JSON.stringify(ids)}'>
-                                <i class="fas fa-check"></i>
-                                Save
+            `;
+
+            const imageEditingSection = `
+                <div class="review-images-input">
+                    <div class="image-upload-hint">You can upload up to 5 photos (JPEG, PNG, GIF)</div>
+                    <div class="image-upload-container">
+                        <input type="file" 
+                               name="review_images" 
+                               id="edit-review-images-input-${ids.reviewId}" 
+                               class="image-file-input" 
+                               accept="image/*" 
+                               multiple 
+                               style="display: none;">
+                        <div class="images-grid-container">
+                            <div class="current-images-container" id="current-images-container-${ids.reviewId}">
+                                <!-- Current images will be loaded here -->
+                            </div>
+                            <div class="image-preview-container" id="edit-image-preview-container-${ids.reviewId}"></div>
+                            <button type="button" class="add-image-btn square" id="edit-add-image-btn-${ids.reviewId}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
                             </button>
                         </div>
                     </div>
                 </div>
             `;
-        } else {
-            // Review editing structure
-            editControls.innerHTML = `
-                <div class="review-form">
+            
+            formHTML = `
+                <form method="POST" class="review-form" enctype="multipart/form-data">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="">
                     ${starRatingSection}
                     <div class="review-comment-input">
                         <label for="comment">Comment:</label>
@@ -177,8 +207,54 @@ window.EditingSystem = (function() {
                             Save
                         </button>
                     </div>
+                </form>
+            `;
+        }
+        
+        // Different structure for comments vs reviews
+        if (type === 'comment') {
+            // For comments, we don't need the review-form-container wrapper
+            editControls.className = 'edit-controls';
+            editControls.innerHTML = `
+                <div class="comment-form">
+                    <div class="comment-input" 
+                         contenteditable="true"
+                         data-placeholder="Edit your comment..." 
+                         data-name="content"></div>
+                    <input type="hidden" name="content" class="hidden-content">
+                    <div class="comment-toolbar">
+                        <div class="comment-formatting-tools">
+                            <button type="button" class="formatting-btn" title="Bold">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Italic">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Underline">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                            </button>
+                        </div>
+                        <div class="edit-actions">
+                            <button type="button" class="cancel-edit-comment">
+                                Cancel
+                            </button>
+                            <button type="button" class="save-edit-comment" data-type="${type}" data-ids='${JSON.stringify(ids)}'>
+                                <i class="fas fa-check"></i>
+                                Save
+                            </button>
+                        </div>
+                    </div>
                 </div>
             `;
+        } else {
+            // Review editing - use the cloned template or fallback HTML
+            editControls.innerHTML = formHTML;
+            
+            // Prevent form submission for review edit forms
+            const form = editControls.querySelector('form');
+            if (form) {
+                form.onsubmit = (e) => e.preventDefault();
+            }
         }
         
         // Different insertion strategy for comments vs reviews
@@ -193,6 +269,12 @@ window.EditingSystem = (function() {
         // Pre-populate the editor with original markdown content converted to HTML
         const commentInput = editControls.querySelector('.comment-input');
         const hiddenInput = editControls.querySelector('.hidden-content');
+        
+        // For reviews, find the actual form element for ImageUploadSystem
+        let formElement = editControls;
+        if (type === 'review') {
+            formElement = editControls.querySelector('form.review-form') || editControls;
+        }
         
         // Convert markdown to HTML for editing
         const htmlContent = markdownToHtml(originalContent);
@@ -228,7 +310,25 @@ window.EditingSystem = (function() {
             // Load current images for the review
             loadCurrentImages(ids.reviewId, ids.locationId);
             
-            // No need to initialize anything - ImageUploadSystem handles via event delegation
+            // Initialize ImageUploadSystem for this specific form by triggering the file input setup
+            setTimeout(() => {
+                // Force ImageUploadSystem to recognize this form by simulating form detection
+                const imageInput = formElement.querySelector(`#edit-review-images-input-${ids.reviewId}`);
+                const addBtn = formElement.querySelector(`#edit-add-image-btn-${ids.reviewId}`);
+                if (imageInput && addBtn) {
+                    console.log('Initializing ImageUploadSystem for edit form:', {
+                        inputId: imageInput.id,
+                        btnId: addBtn.id,
+                        formElement: formElement.className
+                    });
+                    
+                    // Ensure the WeakMap entry exists for this form
+                    if (window.ImageUploadSystem && window.ImageUploadSystem.getFormFiles) {
+                        const files = window.ImageUploadSystem.getFormFiles(formElement);
+                        console.log('Form files initialized:', files.length);
+                    }
+                }
+            }, 100);
         }
         
         // Focus the editor
@@ -258,7 +358,7 @@ window.EditingSystem = (function() {
             // For reviews, allow saving with empty content as long as there's a rating
             // For comments, require content
             if (type === 'review' || newContent) {
-                saveEdit(element, editControls, type, ids, newContent, rating);
+                saveEdit(element, editControls, type, ids, newContent, rating, formElement);
             }
         });
         
@@ -306,7 +406,7 @@ window.EditingSystem = (function() {
     }
     
     // Save edited content
-    function saveEdit(element, editControls, type, ids, newContent, rating = null) {
+    function saveEdit(element, editControls, type, ids, newContent, rating = null, formElement = null) {
         // Determine API endpoint based on type
         let endpoint;
         if (type === 'review') {
@@ -325,8 +425,8 @@ window.EditingSystem = (function() {
             const fileInput = document.getElementById(`edit-review-images-input-${ids.reviewId}`);
             
             // Get files from ImageUploadSystem instead of directly from input
-            if (window.ImageUploadSystem && editControls) {
-                newImages = window.ImageUploadSystem.getFormFiles(editControls) || [];
+            if (window.ImageUploadSystem && formElement) {
+                newImages = window.ImageUploadSystem.getFormFiles(formElement) || [];
             }
             
             // Also check the file input directly as a fallback
@@ -356,7 +456,7 @@ window.EditingSystem = (function() {
                 
                 // Add images to remove
                 if (hasImagesToRemove) {
-                    formData.append('remove_images', JSON.stringify(imagesToRemove));
+                    formData.append('delete_photo_ids', JSON.stringify(imagesToRemove));
                 }
             }
         }

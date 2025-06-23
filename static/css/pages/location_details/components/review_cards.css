@@ -109,6 +109,11 @@
     background: var(--surface);
 }
 
+/* Remove border when in edit mode */
+.current-user-review .edit-controls {
+    border: none;
+}
+
 .your-review-badge {
     font-size: var(--font-size-xs);
     color: var(--primary-light);

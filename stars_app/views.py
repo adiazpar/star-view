@@ -847,7 +847,54 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
         if instance.user != request.user:
             return Response({'detail': 'You can only edit your own reviews.'}, 
                            status=status.HTTP_403_FORBIDDEN)
-        return super().partial_update(request, *args, **kwargs)
+        
+        # Handle photo uploads and deletions
+        response = super().partial_update(request, *args, **kwargs)
+        
+        if response.status_code == 200:
+            # Handle image uploads
+            uploaded_images = request.FILES.getlist('images') or request.FILES.getlist('review_images')
+            if uploaded_images:
+                from stars_app.models.reviewphoto import ReviewPhoto
+                
+                # Check existing photos count
+                existing_photos_count = instance.photos.count()
+                if existing_photos_count + len(uploaded_images) > 5:
+                    return Response(
+                        {'detail': f'You can only have up to 5 photos per review. You already have {existing_photos_count} photos.'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                # Process each uploaded image
+                for idx, image in enumerate(uploaded_images[:5-existing_photos_count]):
+                    try:
+                        ReviewPhoto.objects.create(
+                            review=instance,
+                            image=image,
+                            order=existing_photos_count + idx
+                        )
+                    except Exception as e:
+                        print(f"Error uploading review image during update: {str(e)}")
+            
+            # Handle image deletions
+            delete_photo_ids = request.data.get('delete_photo_ids')
+            if delete_photo_ids:
+                try:
+                    # Parse JSON string if needed
+                    if isinstance(delete_photo_ids, str):
+                        import json
+                        delete_photo_ids = json.loads(delete_photo_ids)
+                    
+                    # Delete the specified photos
+                    instance.photos.filter(id__in=delete_photo_ids).delete()
+                except Exception as e:
+                    print(f"Error deleting review photos: {str(e)}")
+            
+            # Re-serialize with updated photos
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+        
+        return response
     
     @action(detail=True, methods=['POST'])
     def report(self, request, pk=None, location_pk=None):

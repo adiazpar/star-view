@@ -47,12 +47,12 @@
 }
 
 /* Make edit mode review textarea same height as new review textarea */
-.review-comment[data-editable="review"] + .edit-controls .comment-input {
+.edit-controls .review-form .comment-input {
     min-height: 120px;
 }
 
 /* Ensure regular comment edits stay at 60px height */
-.comment-text[data-editable="comment"] + .edit-controls .comment-input {
+.edit-controls .comment-input {
     min-height: 60px;
 }
 

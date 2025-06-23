@@ -28,9 +28,14 @@ window.ImageUploadSystem = (function() {
     
     // Setup image upload handlers
     function setupImageUploadHandlers() {
-        // Handle file input changes
+        // Handle file input changes  
         document.addEventListener('change', function(e) {
-            if (e.target.matches('[id^="review-images-input"], [id^="edit-review-images-input"]')) {
+            // Check if it's an image file input for reviews
+            if (e.target.type === 'file' && 
+                e.target.accept && 
+                e.target.accept.includes('image') &&
+                (e.target.matches('[id^="review-images-input"], [id^="edit-review-images-input"]') ||
+                 e.target.name === 'review_images')) {
                 handleFileSelection(e.target);
             }
         });
@@ -40,15 +45,29 @@ window.ImageUploadSystem = (function() {
             const addBtn = e.target.closest('[id^="add-image-btn"], [id^="edit-add-image-btn"]');
             if (addBtn) {
                 e.preventDefault();
-                console.log('Add image button clicked:', addBtn.id);
                 // Find the corresponding file input in the same form or edit controls
                 const container = addBtn.closest('form') || addBtn.closest('.edit-controls');
-                const input = container ? container.querySelector('[id^="review-images-input"], [id^="edit-review-images-input"]') : null;
-                console.log('Found input:', input ? input.id : 'none');
+                // Try multiple selection strategies to find the file input
+                let input = null;
+                if (container) {
+                    // First try the standard selectors
+                    input = container.querySelector('[id^="review-images-input"], [id^="edit-review-images-input"]');
+                    
+                    // If not found, try a more specific approach for edit mode
+                    if (!input && addBtn.id.startsWith('edit-add-image-btn-')) {
+                        const reviewId = addBtn.id.replace('edit-add-image-btn-', '');
+                        input = container.querySelector(`#edit-review-images-input-${reviewId}`);
+                    }
+                    
+                    // As a fallback, try finding any file input in the container
+                    if (!input) {
+                        input = container.querySelector('input[type="file"][accept*="image"]');
+                    }
+                }
                 if (input) {
                     input.click();
                 } else {
-                    console.error('Could not find file input for add button');
+                    console.error('Could not find file input for add button:', addBtn.id);
                 }
             }
             

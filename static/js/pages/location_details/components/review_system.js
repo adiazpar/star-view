@@ -102,18 +102,18 @@ window.ReviewSystem = (function() {
         });
         
         // Update image upload element IDs to avoid conflicts
-        const imageInput = formContent.querySelector('#review-images-input');
-        const addImageBtn = formContent.querySelector('#add-image-btn');
-        const previewContainer = formContent.querySelector('#image-preview-container');
+        const imageInput = formContent.querySelector('#template-review-images-input');
+        const addImageBtn = formContent.querySelector('#template-add-image-btn');
+        const previewContainer = formContent.querySelector('#template-image-preview-container');
         
         if (imageInput) {
-            imageInput.id = `review-images-input-${uniqueId}`;
+            imageInput.id = `review-images-input`;
         }
         if (addImageBtn) {
-            addImageBtn.id = `add-image-btn-${uniqueId}`;
+            addImageBtn.id = `add-image-btn`;
         }
         if (previewContainer) {
-            previewContainer.id = `image-preview-container-${uniqueId}`;
+            previewContainer.id = `image-preview-container`;
         }
         
         return formContent;
