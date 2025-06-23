@@ -376,14 +376,14 @@
     top: -40px;
     right: 0;
     color: var(--text-primary);
-    font-size: 2rem;
+    font-size: var(--font-size-xl);
     cursor: pointer;
     background: none;
     border: none;
 }
 
 .lightbox-close:hover {
-    color: var(--primary);
+    color: var(--text-primary);
 }
 
 /* Messages */

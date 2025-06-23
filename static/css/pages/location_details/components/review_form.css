@@ -92,7 +92,7 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: var(--space-md);
+    gap: var(--space-sm);
     margin-top: var(--space-lg);
     padding-top: var(--space-md);
     border-top: 1px solid var(--background-dark);
@@ -101,10 +101,10 @@
 /* Shared Cancel Button Styles */
 .cancel-review,
 .cancel-edit {
-    padding: var(--space-sm) var(--space-lg);
+    padding: var(--space-sm) var(--space-md);
     background: var(--background-dark);
     border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     color: var(--text-tertiary);
     cursor: pointer;
     transition: all var(--transition-base);
@@ -114,18 +114,18 @@
 .cancel-review:hover,
 .cancel-edit:hover {
     background: var(--surface-light);
-    border-color: var(--text-secondary);
+    border-color: var(--text-primary);
     color: var(--text-primary);
 }
 
 /* Shared Submit/Save Button Styles */
 .submit-review,
 .save-edit {
-    padding: var(--space-sm) var(--space-lg);
+    padding: var(--space-sm) var(--space-md);
     background-color: var(--primary);
     border: none;
-    border-radius: var(--radius-md);
-    color: var(--white);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
     cursor: pointer;
     transition: background-color var(--transition-base);
     display: flex;
@@ -232,6 +232,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: flex-start;
+    gap: var(--space-sm);
     width: 100%;
 }
 
@@ -247,8 +248,7 @@
     overflow: hidden;
     background: var(--background-dark);
     border: 1px solid var(--background-dark);
-    margin-right: var(--space-sm);
-    margin-bottom: var(--space-sm);
+    flex-shrink: 0;
 }
 
 .preview-image {
@@ -325,10 +325,11 @@
     margin-top: var(--space-sm);
 }
 
-/* Review Photos Display */
+/* Review Photos Display - Square thumbnails like form upload */
 .review-photos {
     display: flex;
-    gap: var(--space-xs);
+    flex-wrap: wrap;
+    gap: var(--space-sm);
     margin-top: var(--space-md);
     margin-bottom: var(--space-md);
     width: 100%;
@@ -341,35 +342,17 @@
     overflow: hidden;
     transition: all var(--transition-base);
     background: var(--background-dark);
-    flex: 1;
-    min-width: 0; /* Allows flex items to shrink below their content size */
+    border: 1px solid var(--background-dark);
+    /* Square thumbnails - same size as form upload */
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
 }
 
 .review-photo-item:hover {
     transform: scale(1.05);
     z-index: 1;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-/* Dynamic height based on number of images and screen size */
-.review-photos[data-image-count="1"] .review-photo-item {
-    height: 300px;
-}
-
-.review-photos[data-image-count="2"] .review-photo-item {
-    height: 200px;
-}
-
-.review-photos[data-image-count="3"] .review-photo-item {
-    height: 170px;
-}
-
-.review-photos[data-image-count="4"] .review-photo-item {
-    height: 150px;
-}
-
-.review-photos[data-image-count="5"] .review-photo-item {
-    height: 130px;
 }
 
 .review-photo-thumbnail {
@@ -379,48 +362,22 @@
     display: block;
 }
 
-/* Responsive height adjustments */
+/* Responsive scaling - adjust thumbnail size based on screen width */
 @media (max-width: 768px) {
-    .review-photos[data-image-count="1"] .review-photo-item {
-        height: 250px;
-    }
-    
-    .review-photos[data-image-count="2"] .review-photo-item {
-        height: 160px;
-    }
-    
-    .review-photos[data-image-count="3"] .review-photo-item {
-        height: 130px;
-    }
-    
-    .review-photos[data-image-count="4"] .review-photo-item {
-        height: 110px;
-    }
-    
-    .review-photos[data-image-count="5"] .review-photo-item {
-        height: 100px;
+    .review-photo-item {
+        width: 80px;
+        height: 80px;
     }
 }
 
 @media (max-width: 480px) {
-    .review-photos[data-image-count="1"] .review-photo-item {
-        height: 200px;
+    .review-photo-item {
+        width: 64px;
+        height: 64px;
     }
     
-    .review-photos[data-image-count="2"] .review-photo-item {
-        height: 120px;
-    }
-    
-    .review-photos[data-image-count="3"] .review-photo-item {
-        height: 100px;
-    }
-    
-    .review-photos[data-image-count="4"] .review-photo-item {
-        height: 80px;
-    }
-    
-    .review-photos[data-image-count="5"] .review-photo-item {
-        height: 70px;
+    .review-photos {
+        gap: var(--space-xs);
     }
 }
 
@@ -500,17 +457,16 @@
     display: contents; /* Same as image-preview-container */
 }
 
-/* Current images use the same styling as preview images */
+/* Current images use the same styling as preview images and review photos */
 .editable-photo-item {
     position: relative;
-    width: 96px; /* Same as image-preview-item */
+    width: 96px; /* Same as image-preview-item and review-photo-item */
     height: 96px;
-    border-radius: var(--radius-xs); /* Same as image-preview-item */
+    border-radius: var(--radius-xs);
     overflow: hidden;
     background: var(--background-dark);
-    border: 1px solid var(--background-dark); /* Same as image-preview-item */
-    margin-right: var(--space-sm); /* Same as image-preview-item */
-    margin-bottom: var(--space-sm);
+    border: 1px solid var(--background-dark);
+    flex-shrink: 0;
 }
 
 .editable-photo-thumbnail {
@@ -546,6 +502,7 @@
     width: 16px;
     height: 16px;
 }
+
 
 /* Edit Controls for reviews - no extra padding since review-card already has padding */
 .edit-controls {

@@ -322,13 +322,16 @@ window.EditingSystem = (function() {
                         formElement: formElement.className
                     });
                     
-                    // Ensure the WeakMap entry exists for this form
-                    if (window.ImageUploadSystem && window.ImageUploadSystem.getFormFiles) {
-                        const files = window.ImageUploadSystem.getFormFiles(formElement);
-                        console.log('Form files initialized:', files.length);
+                    // Count existing images to limit new uploads
+                    const currentImagesContainer = formElement.querySelector(`#current-images-container-${ids.reviewId}`);
+                    const existingImageCount = currentImagesContainer ? currentImagesContainer.querySelectorAll('.editable-photo-item').length : 0;
+                    
+                    // Update the UI to reflect the correct remaining slots
+                    if (window.ImageUploadSystem && window.ImageUploadSystem.updateUploadUIWithExisting) {
+                        window.ImageUploadSystem.updateUploadUIWithExisting(formElement, existingImageCount);
                     }
                 }
-            }, 100);
+            }, 200);
         }
         
         // Focus the editor
@@ -742,6 +745,12 @@ window.EditingSystem = (function() {
                     if (container) {
                         const remainingImages = container.querySelectorAll('.editable-photo-item').length;
                         container.setAttribute('data-image-count', remainingImages);
+                        
+                        // Update ImageUploadSystem with new existing count
+                        const form = container.closest('form') || container.closest('.edit-controls');
+                        if (form && window.ImageUploadSystem && window.ImageUploadSystem.updateUploadUIWithExisting) {
+                            window.ImageUploadSystem.updateUploadUIWithExisting(form, remainingImages);
+                        }
                     }
                     
                     // Update UI state

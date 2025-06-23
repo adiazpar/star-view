@@ -84,11 +84,11 @@
 
 .formatting-btn {
     background: var(--background-dark);
-    border: none;
+    border: 1px solid rgb(0,0,0,0);
     color: var(--text-secondary);
     cursor: pointer;
     padding: var(--space-xs);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     transition: all var(--transition-base);
     font-weight: bold;
     font-size: var(--font-size-sm);
@@ -100,16 +100,19 @@
 }
 
 .formatting-btn:hover {
-    background: var(--background);
+    background: var(--surface-light);
+    border-color: var(--primary);
     color: var(--text-primary);
 }
 
 .formatting-btn.active {
+    border: none;
     background: var(--primary);
     color: var(--text-primary);
 }
 
 .formatting-btn.active:hover {
+    border: none;
     background: var(--primary-light);
 }
 
@@ -118,7 +121,7 @@
     padding: var(--space-sm) var(--space-md);
     background-color: var(--primary);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     color: var(--text-primary);
     cursor: pointer;
     transition: background-color var(--transition-base);
@@ -293,7 +296,7 @@
 .cancel-edit-comment {
     padding: var(--space-sm) var(--space-md);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     cursor: pointer;
     transition: background-color var(--transition-base);
     font-size: var(--font-size-xs);

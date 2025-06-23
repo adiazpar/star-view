@@ -7,6 +7,7 @@ window.ImageUploadSystem = (function() {
     const ALLOWED_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
     
     let formFilesMap = new WeakMap(); // Store files per form
+    let formExistingCountMap = new WeakMap(); // Store existing image count per form
     
     // Initialize the image upload system
     function init() {
@@ -24,6 +25,15 @@ window.ImageUploadSystem = (function() {
     
     function setFormFiles(form, files) {
         formFilesMap.set(form, files);
+    }
+    
+    // Helper functions for managing existing image count per form
+    function getFormExistingCount(form) {
+        return formExistingCountMap.get(form) || 0;
+    }
+    
+    function setFormExistingCount(form, count) {
+        formExistingCountMap.set(form, count);
     }
     
     // Setup image upload handlers
@@ -102,18 +112,21 @@ window.ImageUploadSystem = (function() {
         
         // Get current files for this specific form
         const formFiles = getFormFiles(form);
+        const existingCount = getFormExistingCount(form);
+        const totalCurrentImages = existingCount + formFiles.length;
         
         // Validate and process new files
         let validNewFiles = [];
         for (let file of files) {
             const validation = validateFile(file);
             if (validation.valid) {
-                validNewFiles.push(file);
-                // Stop if we would exceed the maximum
-                if (formFiles.length + validNewFiles.length >= MAX_IMAGES) {
-                    validNewFiles = validNewFiles.slice(0, MAX_IMAGES - formFiles.length);
+                // Check if we would exceed the maximum total images
+                if (totalCurrentImages + validNewFiles.length >= MAX_IMAGES) {
+                    // Silently limit to max allowed without showing error
+                    validNewFiles = validNewFiles.slice(0, Math.max(0, MAX_IMAGES - totalCurrentImages));
                     break;
                 }
+                validNewFiles.push(file);
             } else {
                 showError(validation.error, form);
             }
@@ -221,24 +234,26 @@ window.ImageUploadSystem = (function() {
     function updateUploadUI(form, files) {
         const addBtn = form.querySelector('[id^="add-image-btn"], [id^="edit-add-image-btn"]');
         const hint = form.querySelector('.image-upload-hint');
+        const existingCount = getFormExistingCount(form);
+        const totalImages = existingCount + files.length;
         
         if (addBtn) {
-            if (files.length >= MAX_IMAGES) {
+            if (totalImages >= MAX_IMAGES) {
                 addBtn.style.display = 'none';
             } else {
                 addBtn.style.display = 'flex';
-                if (files.length > 0) {
-                    const span = addBtn.querySelector('span');
-                    if (span) {
-                        span.textContent = `Add More (${MAX_IMAGES - files.length} left)`;
-                    }
+                const remainingSlots = MAX_IMAGES - totalImages;
+                const span = addBtn.querySelector('span');
+                if (span) {
+                    span.textContent = `Add More (${remainingSlots} left)`;
                 }
             }
         }
         
         if (hint) {
-            if (files.length > 0) {
-                hint.textContent = `${files.length} of ${MAX_IMAGES} photos selected`;
+            // Simple hint messages like the original form
+            if (totalImages > 0) {
+                hint.textContent = `${totalImages} of ${MAX_IMAGES} photos selected`;
             } else {
                 hint.textContent = 'You can upload up to 5 photos (JPEG, PNG, GIF)';
             }
@@ -323,6 +338,9 @@ window.ImageUploadSystem = (function() {
         const formFiles = getFormFiles(form);
         formFiles.length = 0;
         
+        // Clear existing count for this form
+        setFormExistingCount(form, 0);
+        
         const input = form.querySelector('[id^="review-images-input"], [id^="edit-review-images-input"]');
         const container = form.querySelector('[id^="image-preview-container"], [id^="edit-image-preview-container"]');
         
@@ -335,6 +353,7 @@ window.ImageUploadSystem = (function() {
     // Reset all forms
     function reset() {
         formFilesMap = new WeakMap();
+        formExistingCountMap = new WeakMap();
         
         const inputs = document.querySelectorAll('[id^="review-images-input"], [id^="edit-review-images-input"]');
         const containers = document.querySelectorAll('[id^="image-preview-container"], [id^="edit-image-preview-container"]');
@@ -343,11 +362,19 @@ window.ImageUploadSystem = (function() {
         containers.forEach(container => container.innerHTML = '');
     }
     
+    // Update UI with existing image count
+    function updateUploadUIWithExisting(form, existingCount) {
+        setFormExistingCount(form, existingCount);
+        const files = getFormFiles(form);
+        updateUploadUI(form, files);
+    }
+    
     // Public API
     return {
         init: init,
         reset: reset,
         resetForm: resetForm,
-        getFormFiles: getFormFiles
+        getFormFiles: getFormFiles,
+        updateUploadUIWithExisting: updateUploadUIWithExisting
     };
 })();
