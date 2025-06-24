@@ -1,0 +1,1836 @@
+/* Reviews Section - Consolidated Component Styles */
+
+/* ====================
+   REVIEW FORM STYLES
+   ==================== */
+
+/* Hide original content when in edit mode */
+.edit-mode {
+    display: none;
+}
+
+/* Review Form Container */
+.review-form-container {
+    background: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--radius-xs);
+    margin-bottom: var(--space-xl);
+}
+
+.review-form-container h5 {
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    font-size: var(--font-size-lg);
+}
+
+.review-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+/* Rating Input Section */
+.rating-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.rating-input label {
+    color: var(--text-primary);
+    font-weight: normal;
+}
+
+/* Star Rating System */
+.star-rating {
+    display: block;
+    gap: var(--space-xs);
+}
+
+.star-rating input {
+    display: none;
+}
+
+.star-rating {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.star-rating label {
+    cursor: pointer;
+    position: relative;
+}
+
+.star-rating label svg {
+    width: 24px;
+    height: 24px;
+    color: var(--background-dark);
+    fill: var(--background-dark);
+    transition: all var(--transition-base);
+}
+
+.star-rating label.filled svg {
+    color: var(--golden);
+    fill: var(--golden);
+}
+
+.star-rating label.hover svg {
+    color: var(--golden);
+    fill: var(--golden);
+}
+
+/* Review Comment Input */
+.review-comment-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.review-comment-input label {
+    color: var(--text-primary);
+    font-weight: lighter;
+}
+
+/* Form Actions Container */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-lg);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--background-dark);
+}
+
+/* Shared Cancel Button Styles */
+.cancel-review,
+.cancel-edit {
+    padding: var(--space-sm) var(--space-md);
+    background: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-size: var(--font-size-xs);
+}
+
+.cancel-review:hover,
+.cancel-edit:hover {
+    background: var(--surface-light);
+    border-color: var(--text-primary);
+    color: var(--text-primary);
+}
+
+/* Shared Submit/Save Button Styles */
+.submit-review,
+.save-edit {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-xs);
+}
+
+.submit-review:hover,
+.save-edit:hover {
+    background-color: var(--primary-light);
+}
+
+/* Submit review button when in toolbar (for comments) */
+.comment-toolbar .submit-review {
+    padding: var(--space-sm) var(--space-md);
+    justify-self: auto;
+}
+
+/* Reviews header with toggle button */
+.reviews-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-lg);
+}
+
+.toggle-review-form {
+    background: var(--surface);
+    border: none;
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    transition: all var(--transition-base);
+    font-size: var(--font-size-sm);
+}
+
+.toggle-review-form:hover {
+    color: var(--text-primary);
+    background: var(--surface-light);
+}
+
+.toggle-review-form.active {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.toggle-review-form.active:hover {
+    background: var(--primary-light);
+}
+
+.toggle-review-form svg {
+    width: 16px;
+    height: 16px;
+}
+
+.toggle-review-form.disabled {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.toggle-review-form.disabled:hover {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+}
+
+.review-form-container {
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Image Upload Section */
+.review-images-input {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.image-upload-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.images-grid-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    width: 100%;
+}
+
+.image-preview-container {
+    display: contents;
+}
+
+.image-preview-item {
+    position: relative;
+    width: 96px;
+    height: 96px;
+    border-radius: var(--radius-xs);
+    overflow: hidden;
+    background: var(--background-dark);
+    border: 1px solid var(--background-dark);
+    flex-shrink: 0;
+}
+
+.preview-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: var(--space-xs);
+    right: var(--space-xs);
+    background: var(--negate);
+    border: none;
+    border-radius: var(--radius-xs);
+    padding: 4px;
+    cursor: pointer;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    z-index: 2;
+}
+
+.remove-image-btn:hover {
+    background: var(--negate-light);
+}
+
+.remove-image-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+.add-image-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 96px;
+    background: var(--background-dark);
+    border: 1px dashed var(--text-tertiary);
+    border-radius: var(--radius-xs);
+    color: var(--text-tertiary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    flex-shrink: 0;
+}
+
+.add-image-btn:hover {
+    background: var(--surface-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.add-image-btn svg {
+    width: 24px;
+    height: 24px;
+}
+
+.image-upload-hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-sm);
+    margin-top: 0;
+}
+
+.upload-error-message {
+    background: var(--danger-light);
+    color: var(--danger);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    margin-top: var(--space-sm);
+}
+
+/* Review Photos Display - Horizontal scrollbar layout */
+.review-photos {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+    margin-bottom: var(--space-md);
+    overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    padding-bottom: var(--space-xs); /* Add padding for scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-tertiary) var(--surface-light);
+}
+
+.review-photo-item {
+    position: relative;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: all var(--transition-base);
+    background: var(--background-dark);
+    border: 1px solid rgba(0,0,0,0);
+    /* Square thumbnails - same size as form upload */
+    width: 96px;
+    height: 96px;
+    flex-shrink: 0;
+}
+
+.review-photo-item:hover {
+    border-color: var(--text-primary);
+    cursor: pointer;
+}
+
+.review-photo-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Custom scrollbar styling for webkit browsers */
+.review-photos::-webkit-scrollbar {
+    height: 8px;
+}
+
+.review-photos::-webkit-scrollbar-track {
+    background: var(--background-dark);
+    border-radius: var(--radius-xs);
+}
+
+.review-photos::-webkit-scrollbar-thumb {
+    background: var(--surface-light);
+    border-radius: var(--radius-xs);
+}
+
+.review-photos::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+.photo-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    color: var(--white);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--font-size-xs);
+    text-align: center;
+}
+
+/* Lightbox Styles */
+.image-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-base);
+}
+
+.image-lightbox.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lightbox-image {
+    max-width: 100%;
+    max-height: 90vh;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+}
+
+.lightbox-close {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-xs);
+    cursor: pointer;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+}
+
+.lightbox-close:hover {
+    background: rgba(255, 255, 255, 1);
+    color: rgba(0, 0, 0, 1);
+}
+
+.lightbox-close svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Lightbox navigation buttons */
+.lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: var(--space-md) var(--space-xs) var(--space-md) var(--space-xs);
+    cursor: pointer;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    opacity: 0;
+}
+
+.lightbox-content:hover .lightbox-nav {
+    opacity: 1;
+}
+
+.lightbox-nav:hover {
+    background: rgba(255, 255, 255, 1);
+    color: rgba(0, 0, 0, 1);
+}
+
+.lightbox-nav svg {
+    width: 24px;
+    height: 24px;
+}
+
+.lightbox-prev {
+    left: var(--space-md);
+}
+
+.lightbox-next {
+    right: var(--space-md);
+}
+
+.lightbox-nav:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.lightbox-nav:disabled:hover {
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--white);
+}
+
+/* Lightbox overlay with gradient and metadata */
+.lightbox-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+    padding: 0 var(--space-md) var(--space-md) var(--space-md);
+    opacity: 0;
+    transition: all var(--transition-base);
+}
+
+.lightbox-content:hover .lightbox-overlay {
+    opacity: 1;
+}
+
+.lightbox-metadata {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    width: 100%;
+    min-height: 32px; /* Ensure consistent height with avatar */
+}
+
+.lightbox-author {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.author-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+    border: none;
+}
+
+.author-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.author-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.lightbox-review-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.lightbox-location {
+    display: flex;
+    align-items: center;
+}
+
+.location-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-align: right;
+}
+
+.location-name {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.location-address {
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    line-height: 1.2;
+    max-width: 200px;
+}
+
+/* Current Images Container (for edit mode) - uses same styling as preview container */
+.current-images-container {
+    display: contents; /* Same as image-preview-container */
+}
+
+/* Current images use the same styling as preview images and review photos */
+.editable-photo-item {
+    position: relative;
+    width: 96px; /* Same as image-preview-item and review-photo-item */
+    height: 96px;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--background-dark);
+    border: 1px solid var(--background-dark);
+    flex-shrink: 0;
+}
+
+.editable-photo-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Use the same remove button styling as preview images */
+.remove-current-image-btn {
+    position: absolute;
+    top: var(--space-xs);
+    right: var(--space-xs);
+    background: var(--negate); /* Same as remove-image-btn */
+    border: none;
+    border-radius: var(--radius-sm); /* Same as remove-image-btn */
+    padding: 4px; /* Same as remove-image-btn */
+    cursor: pointer;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-base);
+    z-index: 2;
+}
+
+.remove-current-image-btn:hover {
+    background: var(--negate-light); /* Same as remove-image-btn:hover */
+}
+
+.remove-current-image-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Edit Controls for reviews - no extra padding since review-card already has padding */
+.edit-controls {
+    margin-top: var(--space-sm);
+    animation: slideDown 0.3s ease-out;
+}
+
+/* Ensure edit controls don't add extra margin/padding inside review cards */
+.review-card .edit-controls {
+    margin: 0;
+}
+
+/* Add margin above voting buttons when in edit mode */
+.edit-controls + .vote-controls {
+    margin-top: var(--space-md);
+}
+
+/* ====================
+   REVIEW CARDS STYLES
+   ==================== */
+
+/* Reviews List Container */
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+/* Individual Review Card */
+.review-card {
+    background: var(--surface);
+    padding: var(--space-lg);
+    border-radius: var(--radius-xs);
+    border: none;
+}
+
+/* Review Header */
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-md);
+}
+
+/* Review Author Section */
+.review-author-section {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.review-profile-picture {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-xs);
+    object-fit: cover;
+    background-color: var(--background);
+    border: 1px solid var(--background-dark);
+}
+
+.review-author {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.review-username {
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+/* Review Rating Section */
+.review-rating-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: var(--space-sm);
+}
+
+/* Rating Display */
+.rating-display {
+    display: flex;
+    flex-direction: row;
+    gap: var(--space-xs);
+}
+
+.rating-display svg {
+    color: var(--text-tertiary);
+    fill: none; /* Consistent outline style for empty stars */
+    width: 16px;
+    height: 16px;
+}
+
+.rating-display svg.filled {
+    color: var(--golden);
+    fill: var(--golden);
+}
+
+/* Review Content */
+.review-comment {
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-md);
+}
+
+/* Review Meta Information */
+.review-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+}
+
+.review-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+}
+
+/* Edited Indicator */
+.edited-indicator {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    font-style: italic;
+}
+
+/* Current User Review Styling */
+.current-user-review {
+    border: 0.5px solid var(--primary-light);
+    background: var(--surface);
+}
+
+/* Remove border when in edit mode */
+.current-user-review .edit-controls {
+    border: none;
+}
+
+.your-review-badge {
+    font-size: var(--font-size-xs);
+    color: var(--primary-light);
+}
+
+/* No Reviews State */
+.no-reviews {
+    text-align: center;
+    color: var(--text-tertiary);
+    padding: var(--space-xl);
+}
+
+/* Review Comments Section */
+.review-comments-section {
+    margin-top: var(--space-md);
+    border-top: 0.5px solid var(--text-tertiary);
+}
+
+/* ====================
+   REVIEW METRICS STYLES
+   ==================== */
+
+.review-metrics-card {
+    border: 1px solid var(--surface);
+    border-radius: var(--radius-xs);
+    padding: var(--space-lg);
+    margin-bottom: var(--space-lg);
+}
+
+.metrics-header {
+    display: flex;
+    gap: var(--space-xl);
+    align-items: flex-start;
+}
+
+/* Overall Rating Section */
+.overall-rating {
+    text-align: center;
+    min-width: 120px;
+    border-right: 0.5px solid var(--text-tertiary);
+}
+
+.rating-number {
+    font-size: var(--font-size-3xl);
+    font-weight: bold;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.rating-stars {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xs);
+}
+
+.rating-stars svg {
+    width: 16px;
+    height: 16px;
+    color: var(--text-tertiary); /* Default to empty state */
+    fill: none; /* Default to outline style */
+}
+
+.total-reviews {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.rating-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Rating Breakdown Section */
+.rating-breakdown {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 117px; /* Match the overall-rating height */
+}
+
+.rating-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+    max-height: 20px; /* Ensure consistent row height */
+}
+
+.rating-bar {
+    flex: 1;
+    height: 8px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.rating-bar-fill {
+    height: 100%;
+    background: var(--golden);
+    transition: width var(--transition-base);
+}
+
+.star-label {
+    color: var(--text-primary);
+    font-size: var(--font-size-xs);
+    min-width: 3em;
+    text-align: left;
+}
+
+.rating-count {
+    color: var(--text-tertiary);
+    font-size: var(--font-size-xs);
+    min-width: 6em;
+    text-align: left;
+}
+
+/* Responsive Design for Review Metrics */
+@media (max-width: 768px) {
+    .metrics-header {
+        flex-direction: column;
+        gap: var(--space-md);
+        align-items: stretch;
+    }
+    
+    .overall-rating {
+        width: 100%;
+        border-right: none;
+        padding-right: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+        text-align: left;
+        min-width: auto;
+    }
+    
+    .rating-number {
+        margin-bottom: 0;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+    
+    .rating-stars {
+        margin-bottom: 0;
+    }
+
+    .total-reviews {
+        margin: 0;
+    }
+    
+    .rating-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        flex: 1;
+        gap: 2px;
+    }
+    
+    .rating-breakdown {
+        height: auto;
+        justify-content: flex-start;
+        gap: var(--space-sm);
+    }
+    
+    .rating-row {
+        margin-bottom: 0;
+        max-height: none;
+        flex: none;
+        gap: var(--space-md);
+    }
+    
+    .rating-bar {
+        flex: 2;
+        min-width: 120px;
+    }
+    
+    .star-label {
+        min-width: 2.5em;
+    }
+    
+    .rating-count {
+        min-width: 5em;
+        text-align: left;
+    }
+}
+
+/* ====================
+   COMMENTS SYSTEM STYLES
+   ==================== */
+
+/* Comments Container */
+.comments-container {
+    margin-top: var(--space-md);
+}
+
+/* Comment Form */
+.comment-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+/* Comment Input Field */
+.comment-input {
+    width: 100%;
+    background: var(--background-dark);
+    border: 0px;
+    border-radius: var(--radius-xs);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 60px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: var(--font-size-xs);
+}
+
+.comment-input:focus {
+    outline: none;
+    border: 0.5px solid var(--primary);
+}
+
+.comment-input:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+/* Comment Input Height Variations */
+/* Make review comment input taller for better distinction */
+.review-comment-input .comment-input {
+    min-height: 120px;
+}
+
+/* Make edit mode review textarea same height as new review textarea */
+.edit-controls .review-form .comment-input {
+    min-height: 120px;
+}
+
+/* Ensure regular comment edits stay at 60px height */
+.edit-controls .comment-input {
+    min-height: 60px;
+}
+
+/* Styling for formatted content in contenteditable */
+.comment-input strong {
+    font-weight: bold;
+}
+
+.comment-input em {
+    font-style: italic;
+}
+
+.comment-input u {
+    text-decoration: underline;
+}
+
+/* Comment Toolbar */
+.comment-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.comment-formatting-tools {
+    display: flex;
+    gap: var(--space-xs);
+}
+
+.formatting-btn {
+    background: var(--background-dark);
+    border: 1px solid rgb(0,0,0,0);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    font-weight: bold;
+    font-size: var(--font-size-sm);
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.formatting-btn:hover {
+    background: var(--surface-light);
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.formatting-btn.active {
+    border: none;
+    background: var(--primary);
+    color: var(--text-primary);
+}
+
+.formatting-btn.active:hover {
+    border: none;
+    background: var(--primary-light);
+}
+
+/* Submit Comment Button */
+.submit-comment {
+    padding: var(--space-sm) var(--space-md);
+    background-color: var(--primary);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    font-size: var(--font-size-xs);
+}
+
+.submit-comment:hover {
+    background-color: var(--primary-light);
+}
+
+/* Disabled Comment Form States */
+.comment-form.disabled {
+    opacity: 0.7;
+}
+
+.comment-form.disabled .comment-input {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.comment-form.disabled .formatting-btn {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.comment-form.disabled .formatting-btn:hover {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+}
+
+.comment-form.disabled .submit-comment {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+.comment-form.disabled .submit-comment:hover {
+    background: var(--background-dark);
+    color: var(--text-tertiary);
+}
+
+/* Individual Comment Styles */
+.comment {
+    display: flex;
+    gap: var(--space-md);
+    padding: 0 0 var(--space-md) 0;
+}
+
+.comment-profile-picture {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-xs);
+    object-fit: cover;
+    border: 1px solid var(--background-dark);
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.comment-username {
+    font-weight: bold;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+}
+
+.comment-date {
+    font-size: var(--font-size-xs);
+    color: var(--text-tertiary);
+}
+
+.comment-text {
+    color: var(--text-primary);
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-sm);
+}
+
+.comment-vote-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-xs);
+}
+
+/* Comments List with Vertical Line */
+.comments-list {
+    position: relative;
+    margin-left: 16px; /* Align with center of B button (32px / 2) */
+    padding-left: 24px; /* Space between line and comments */
+}
+
+/* Create vertical line with pseudo-element */
+.comments-list::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0.5px;
+    opacity: 0.8;
+    background-color: var(--text-tertiary);
+}
+
+/* Hide line when there are no comments */
+.comments-list:empty::before {
+    display: none;
+}
+
+/* Ensure proper spacing */
+.comments-container[style*="block"] .comments-list {
+    margin-top: 20px;
+}
+
+/* Comments Toggle Button */
+.comments-toggle.inline {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+    font-size: var(--font-size-sm);
+    transition: color var(--transition-base);
+}
+
+.comments-toggle.inline:hover {
+    color: var(--text-primary);
+}
+
+.comments-toggle.inline:hover .comments-count {
+    color: var(--text-primary);
+}
+
+/* Ensure SVG icon inherits color and transitions smoothly */
+.comments-toggle.inline svg {
+    transition: stroke var(--transition-base);
+}
+
+.comments-toggle.inline .comments-count {
+    transition: color var(--transition-base);
+}
+
+.comments-count {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    min-width: 2em;
+    text-align: left;
+    display: inline-block;
+}
+
+/* Edit Actions for Comment Inline Editing */
+.edit-actions {
+    display: flex;
+    gap: var(--space-sm);
+}
+
+/* Comment Edit Save and Cancel Buttons */
+.save-edit-comment, 
+.cancel-edit-comment {
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    font-size: var(--font-size-xs);
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+.save-edit-comment {
+    background-color: var(--primary);
+    color: var(--white);
+}
+
+.save-edit-comment:hover {
+    background-color: var(--primary-light);
+}
+
+.cancel-edit-comment {
+    background-color: var(--background-dark);
+    border: 1px solid var(--text-tertiary);
+    color: var(--text-secondary);
+}
+
+.cancel-edit-comment:hover {
+    background-color: var(--surface-light);
+    border: 1px solid var(--text-primary);
+    color: var(--text-primary);
+}
+
+/* Comment Edit Mode Styling */
+.comment .edit-controls {
+    margin-top: var(--space-sm);
+    flex: 1;
+}
+
+.comment .edit-controls .comment-form {
+    width: 100%;
+}
+
+/* ====================
+   VOTING SYSTEM STYLES
+   ==================== */
+
+/* Vote Controls */
+.vote-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+}
+
+/* Vote Buttons */
+.vote-button {
+    background: none;
+    border: none;
+    padding: var(--space-xs);
+    cursor: pointer;
+    color: var(--text-tertiary);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+}
+
+.vote-button:hover {
+    color: var(--text-primary);
+}
+
+.vote-button.voted.upvote {
+    color: var(--primary-light);
+}
+
+.vote-button.voted.downvote {
+    color: var(--negate-light);
+}
+
+.vote-button.voted:hover {
+    opacity: 0.8;
+    color: var(--primary);
+}
+
+.vote-button.voted.downvote:hover {
+    opacity: 0.8;
+    color: var(--negate);
+}
+
+/* Vote Counts */
+.upvote-count, 
+.downvote-count {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    min-width: 2em;
+    text-align: left;
+    display: inline-block;
+}
+
+/* Disabled Vote Button States */
+.vote-button.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    pointer-events: none;
+    color: var(--text-tertiary);
+}
+
+.vote-button.disabled:hover {
+    color: var(--text-tertiary);
+    transform: none;
+}
+
+/* Comment Vote Controls */
+.comment-vote-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-xs);
+}
+
+/* ====================
+   DROPDOWN MENU STYLES
+   ==================== */
+
+/* Ellipsis Menu */
+.ellipsis-menu-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.ellipsis-menu-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: var(--space-xs);
+    margin-left: var(--space-xs);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ellipsis-menu-button:hover {
+    color: var(--text-primary);
+    background: var(--surface-light);
+}
+
+.ellipsis-menu-button svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    margin-left: var(--space-sm);
+    background: var(--background-dark);
+    border-radius: var(--radius-sm);
+    min-width: 100px;
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column-reverse;
+    padding-top: var(--space-xs);
+    padding-bottom: var(--space-xs);
+}
+
+/* Dropdown Items */
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    width: 100%;
+    padding: var(--space-sm) var(--space-sm);
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background-color var(--transition-base);
+    text-align: left;
+    font-size: var(--font-size-xs);
+}
+
+.dropdown-item:hover {
+    background: var(--surface-light);
+}
+
+.dropdown-item.edit-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.edit-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item.delete-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.delete-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item.report-item {
+    color: var(--text-primary);
+}
+
+.dropdown-item.report-item:hover {
+    background: var(--surface-light);
+    color: var(--text-primary);
+}
+
+.dropdown-item i,
+.dropdown-item svg {
+    font-size: var(--font-size-sm);
+    width: 16px;
+    height: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.dropdown-item span {
+    flex: 1;
+}
+
+/* ====================
+   PAGINATION STYLES
+   ==================== */
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: var(--space-xl);
+    gap: var(--space-sm);
+}
+
+.pagination-button {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--text-tertiary);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.pagination-button:hover:not(.disabled) {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.pagination-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-info {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+/* ====================
+   REPORT MODAL STYLES
+   ==================== */
+
+.report-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.report-modal-overlay.active {
+    display: flex;
+}
+
+.report-modal {
+    background: var(--surface);
+    border-radius: var(--radius-xs);
+    width: 90%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* Internet Explorer 10+ */
+}
+
+.report-modal::-webkit-scrollbar {
+    display: none; /* WebKit */
+}
+
+.report-modal-header {
+    padding: var(--space-lg) var(--space-lg) var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--background-dark);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.report-modal-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.report-modal-close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    color: var(--text-primary);
+    cursor: pointer;
+    padding: var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-base);
+}
+
+.report-modal-close:hover {
+    background-color: var(--surface-light);
+}
+
+.report-modal-content {
+    padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+}
+
+.report-modal-description {
+    color: var(--text-primary);
+    margin: 0 0 var(--space-lg) 0;
+    line-height: 1.5;
+    font-size: var(--font-size-sm);
+}
+
+.report-categories {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.report-category {
+    display: flex;
+    align-items: center;
+    padding: var(--space-lg);
+    background: var(--background-dark);
+    border: 1px solid transparent;
+    border-radius: var(--radius-xs);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-align: left;
+    width: 100%;
+    height: 80px;
+    box-sizing: border-box;
+}
+
+.report-category:hover {
+    background-color: var(--surface-light);
+    border-color: var(--primary);
+}
+
+.report-category.selected {
+    background-color: var(--surface-light);
+    border-color: var(--primary);
+}
+
+.report-category-icon {
+    width: 48px;
+    height: 48px;
+    margin-right: var(--space-lg);
+    color: var(--text-primary);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-category-icon svg {
+    width: 24px;
+    height: 24px;
+}
+
+.report-category-content {
+    flex: 1;
+    padding-right: var(--space-lg);
+}
+
+.report-category-title {
+    font-weight: 500;
+    color: var(--text-primary);
+    margin: 0 0 var(--space-xs) 0;
+    font-size: var(--font-size-sm);
+    line-height: 1.2;
+}
+
+.report-category-description {
+    color: var(--text-secondary);
+    font-size: var(--font-size-xs);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.report-description-section {
+    margin-top: var(--space-lg);
+    display: none;
+}
+
+.report-description-section.active {
+    display: block;
+}
+
+.report-description-label {
+    display: block;
+    color: var(--text-primary);
+    margin-bottom: var(--space-sm);
+    font-size: var(--font-size-sm);
+}
+
+.report-description-input {
+    width: 100%;
+    background: var(--background-dark);
+    border: 0px;
+    border-radius: var(--radius-xs);
+    padding: var(--space-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: var(--font-size-xs);
+    resize: none;
+    transition: border-color var(--transition-base);
+}
+
+.report-description-input:focus {
+    outline: none;
+    border: 0.5px solid var(--primary);
+}
+
+.report-description-input::placeholder {
+    color: var(--text-tertiary);
+}
+
+.report-modal-footer {
+    padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-sm);
+}
+
+.report-modal-button {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border: none;
+    font-size: var(--font-size-xs);
+}
+
+.report-modal-button.cancel {
+    background: var(--background-dark);
+    color: var(--text-primary);
+}
+
+.report-modal-button.cancel:hover {
+    background: var(--surface-light);
+}
+
+.report-modal-button.submit {
+    background: var(--primary);
+    color: white;
+}
+
+.report-modal-button.submit:hover {
+    background: var(--primary-light);
+}
+
+.report-modal-button.submit:disabled {
+    background: var(--surface-light);
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+}
+
+/* Animation for smooth transitions */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.report-modal-overlay.active {
+    animation: fadeIn var(--transition-base) ease;
+}
+
+.report-modal-overlay.active .report-modal {
+    animation: slideUp var(--transition-slow) ease;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .report-modal {
+        width: 95%;
+        margin: 20px;
+        max-height: 90vh;
+    }
+    
+    .report-modal-header {
+        padding: var(--space-lg) var(--space-lg) var(--space-md) var(--space-lg);
+    }
+    
+    .report-modal-content {
+        padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+    }
+    
+    .report-modal-footer {
+        padding: var(--space-md) var(--space-lg) var(--space-lg) var(--space-lg);
+    }
+    
+    .report-category {
+        padding: var(--space-md);
+        height: 70px;
+    }
+    
+    .report-category-icon {
+        width: 40px;
+        height: 40px;
+        margin-right: var(--space-md);
+    }
+    
+    .report-category-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .report-category-content {
+        padding-right: var(--space-md);
+    }
+}

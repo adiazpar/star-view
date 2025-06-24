@@ -16,80 +16,47 @@
     {% csrf_token %}
 
     <div class="location-details-container">
-        <!-- Hero Section with Image Carousel -->
+        <!-- Hero Section -->
         <div class="hero-section">
-            <div class="hero-carousel" id="heroCarousel">
-                <div class="carousel-container">
-                    <button class="carousel-nav prev" id="carouselPrev">
-                        <i class="fas fa-chevron-left"></i>
-                    </button>
-                    <div class="carousel-content" id="carouselContent">
-                        <!-- Photos will be loaded here -->
+            <div class="hero-header">
+                <div class="hero-title-section">
+                    <h1>{{ location.name }}</h1>
+                    {% if location.is_verified %}
+                        <span class="verification-badge" title="Verified on {{ location.verification_date|date:'M d, Y' }}">
+                            <i class="fas fa-check-circle"></i>
+                            Verified
+                        </span>
+                    {% endif %}
+                    <div class="hero-rating">
+                        <div class="rating-display">
+                            {% for i in "12345"|make_list %}
+                                {% if forloop.counter <= average_rating %}
+                                    {% include 'stars_app/icons/star-filled-icon.svg' %}
+                                {% else %}
+                                    {% include 'stars_app/icons/star-empty-icon.svg' %}
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="rating-count">{{ total_reviews }} review{{ total_reviews|pluralize }}</span>
                     </div>
-                    <button class="carousel-nav next" id="carouselNext">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
                 </div>
-                <div class="hero-overlay">
-                    <div class="hero-header">
-                        <div class="hero-title-section">
-                            <h1>{{ location.name }}</h1>
-                            {% if location.is_verified %}
-                                <span class="verification-badge" title="Verified on {{ location.verification_date|date:'M d, Y' }}">
-                                    <i class="fas fa-check-circle"></i>
-                                    Verified
-                                </span>
-                            {% endif %}
-                            <div class="hero-rating">
-                                <div class="rating-display">
-                                    {% for i in "12345"|make_list %}
-                                        {% if forloop.counter <= average_rating %}
-                                            {% include 'stars_app/icons/star-filled-icon.svg' %}
-                                        {% else %}
-                                            {% include 'stars_app/icons/star-empty-icon.svg' %}
-                                        {% endif %}
-                                    {% endfor %}
-                                </div>
-                                <span class="rating-count">{{ total_reviews }} review{{ total_reviews|pluralize }}</span>
-                            </div>
-                        </div>
-                        <div class="hero-actions">
-                            {% if user.is_authenticated %}
-                                <button class="hero-action-btn favorite-button" type="button" id="favoriteButton">
-                                    <i class="fas fa-heart"></i>
-                                    <span id="favoriteText">Favorite</span>
-                                </button>
-                                
-                            {% endif %}
-                            <a href="{% url 'map' %}?lat={{ location.latitude }}&lng={{ location.longitude }}&zoom=12"
-                               class="hero-action-btn view-map-button">
-                                <i class="fas fa-map"></i>
-                                View on Map
-                            </a>
-                        </div>
-                    </div>
-                    <div class="photo-credit" id="photoCredit">
-                        <!-- Photo credit will be shown here -->
-                    </div>
+                <div class="hero-actions">
+                    {% if user.is_authenticated %}
+                        <button class="hero-action-btn favorite-button" type="button" id="favoriteButton">
+                            <i class="fas fa-heart"></i>
+                            <span id="favoriteText">Favorite</span>
+                        </button>
+                        
+                    {% endif %}
+                    <a href="{% url 'map' %}?lat={{ location.latitude }}&lng={{ location.longitude }}&zoom=12"
+                       class="hero-action-btn view-map-button">
+                        <i class="fas fa-map"></i>
+                        View on Map
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Photo Gallery Section -->
-        <div class="photos-section">
-            <div class="photos-header">
-                <h2 id="photosTitle">Photos (0)</h2>
-                {% if user.is_authenticated %}
-                    <button class="btn-upload-photo" id="openUploadModal">
-                        <i class="fas fa-upload"></i>
-                        Upload Photo
-                    </button>
-                {% endif %}
-            </div>
-            <div class="photos-grid" id="photosGrid">
-                <!-- Photos will be loaded here -->
-            </div>
-        </div>
 
         <!-- About Section -->
         <div class="about-section">
@@ -184,14 +151,8 @@
         userHasReviewed: {% if user_has_reviewed %}true{% else %}false{% endif %}
     };
 </script>
-<!-- Component Scripts -->
-<script src="{% static 'js/pages/location_details/components/utils.js' %}"></script>
-<script src="{% static 'js/pages/location_details/components/image_upload_system.js' %}"></script>
-<script src="{% static 'js/pages/location_details/components/editing_system.js' %}"></script>
-<script src="{% static 'js/pages/location_details/components/voting_system.js' %}"></script>
-<script src="{% static 'js/pages/location_details/components/review_system.js' %}"></script>
-<script src="{% static 'js/pages/location_details/components/comment_system.js' %}"></script>
-<script src="{% static 'js/pages/location_details/components/report_modal.js' %}"></script>
+<!-- Reviews Section Scripts -->
+<script src="{% static 'js/pages/location_details/components/reviews_section.js' %}"></script>
 <!-- Main Orchestrator -->
 <script src="{% static 'js/pages/location_details/base.js' %}"></script>
 {% endblock %}
