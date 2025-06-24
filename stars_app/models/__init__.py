@@ -22,3 +22,6 @@ from .locationreport import LocationReport
 from .reviewphoto import ReviewPhoto
 from .reviewreport import ReviewReport
 from .commentreport import CommentReport
+
+# Import signals to ensure they're registered
+from stars_app import signals
