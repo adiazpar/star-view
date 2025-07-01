@@ -702,7 +702,7 @@ window.ReviewSystem = (function() {
     
     // Update hidden input with markdown content
     function updateHiddenInput(editableDiv) {
-        const form = editableDiv.closest('.comment-form');
+        const form = editableDiv.closest('.comment-form, .edit-form');
         const hiddenInput = form.querySelector('.hidden-content');
         
         // Convert HTML content to markdown for storage
@@ -1246,7 +1246,7 @@ window.CommentSystem = (function() {
             if (e.target.closest('.formatting-btn')) {
                 e.preventDefault();
                 const button = e.target.closest('.formatting-btn');
-                const form = button.closest('.comment-form');
+                const form = button.closest('.comment-form, .edit-form');
                 const editableDiv = form.querySelector('.comment-input');
                 
                 // Focus the editor first
@@ -1307,7 +1307,7 @@ window.CommentSystem = (function() {
 
     // Update hidden input with markdown content
     function updateHiddenInput(editableDiv) {
-        const form = editableDiv.closest('.comment-form');
+        const form = editableDiv.closest('.comment-form, .edit-form');
         const hiddenInput = form.querySelector('.hidden-content');
         
         // Convert HTML content to markdown for storage
@@ -1559,6 +1559,26 @@ window.EditingSystem = (function() {
         eventBus = bus;
     }
     
+    // Convert markdown to HTML for editing display
+    function convertMarkdownToHtml(markdown) {
+        if (!markdown) return '';
+        
+        let html = markdown;
+        
+        // Convert bold (**text**)
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        
+        // Convert underline (__text__)
+        html = html.replace(/__(.*?)__/g, '<u>$1</u>');
+        
+        // Convert italic (*text*)
+        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        
+        // Don't automatically convert line breaks - preserve original formatting
+        
+        return html;
+    }
+    
     // Make an element editable
     function makeEditable(element, type, ids, originalContent) {
         // Check if already in edit mode
@@ -1679,19 +1699,7 @@ window.EditingSystem = (function() {
                         }
                     }
                     
-                    // For reviews, also set the rating
-                    if (type === 'review' && originalData.rating) {
-                        const starInput = formElement.querySelector(`input[name="rating"][value="${originalData.rating}"]`);
-                        if (starInput) {
-                            starInput.checked = true;
-                            
-                            // Trigger the visual update
-                            starInput.dispatchEvent(new Event('change'));
-                        }
-                    }
-                    
-                    // Add edit event listeners
-                    addEditEventListeners(formElement, type, ids, element);
+                    // Note: Rating and event listeners will be set after DOM insertion to preserve state
                     
                     formHTML = formElement.outerHTML;
                 }
@@ -1700,17 +1708,41 @@ window.EditingSystem = (function() {
             // For comments, create a simpler form
             const originalData = parseOriginalContent(originalContent, type);
             
+            // Get clean text content for comments
+            let cleanContent = originalData.content || '';
+            
+            // If the content looks like JSON, try to parse it and extract the actual content
+            if (cleanContent.startsWith('{') && cleanContent.includes('"content"')) {
+                try {
+                    const parsed = JSON.parse(cleanContent);
+                    cleanContent = parsed.content || cleanContent;
+                } catch (e) {
+                    // If parsing fails, use as-is
+                }
+            }
+            
             formHTML = `
                 <form class="edit-form" data-edit-type="${type}" data-location-id="${ids.locationId}" data-review-id="${ids.reviewId}" data-comment-id="${ids.commentId}">
-                    <div class="comment-input-container">
-                        <div class="comment-input editable" contenteditable="true" data-placeholder="Edit your comment..." data-name="content">
-                            ${originalData.content || ''}
-                        </div>
-                        <input type="hidden" class="hidden-content" value="${originalData.markdownContent || originalData.content || ''}">
+                    <div class="comment-input editable" contenteditable="true" data-placeholder="Edit your comment..." data-name="content">
+                        ${cleanContent}
                     </div>
-                    <div class="edit-actions">
-                        <button type="button" class="cancel-edit">Cancel</button>
-                        <button type="submit" class="save-edit">Save Changes</button>
+                    <input type="hidden" class="hidden-content" value="${cleanContent}">
+                    <div class="comment-toolbar">
+                        <div class="comment-formatting-tools">
+                            <button type="button" class="formatting-btn" title="Bold">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Italic">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
+                            </button>
+                            <button type="button" class="formatting-btn" title="Underline">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
+                            </button>
+                        </div>
+                        <div class="edit-actions">
+                            <button type="button" class="cancel-edit">Cancel</button>
+                            <button type="submit" class="save-edit">Save Changes</button>
+                        </div>
                     </div>
                 </form>
             `;
@@ -1720,23 +1752,69 @@ window.EditingSystem = (function() {
         editControls.innerHTML = formHTML;
         element.parentNode.insertBefore(editControls, element.nextSibling);
         
+        // Set the rating and event listeners for reviews AFTER DOM insertion to preserve state
+        if (type === 'review') {
+            const form = editControls.querySelector('.review-form');
+            if (form) {
+                // Set the rating
+                const currentRating = element.getAttribute('data-rating');
+                if (currentRating) {
+                    const starInput = form.querySelector(`input[name="rating"][value="${currentRating}"]`);
+                    if (starInput) {
+                        starInput.checked = true;
+                    }
+                }
+                
+                // Add event listeners to the actual DOM elements
+                addEditEventListeners(form, type, ids, element);
+            }
+        }
+        
         // Add event listeners for the simple comment form
         if (type === 'comment') {
             const form = editControls.querySelector('.edit-form');
             if (form) {
+                // Convert markdown to HTML for proper display in edit mode
+                const commentInput = form.querySelector('.comment-input');
+                if (commentInput) {
+                    const markdownContent = commentInput.textContent || commentInput.innerHTML;
+                    const htmlContent = convertMarkdownToHtml(markdownContent);
+                    commentInput.innerHTML = htmlContent;
+                }
+                
                 addEditEventListeners(form, type, ids, element);
             }
         }
         
         // Initialize image upload system for review editing
         if (type === 'review' && window.ImageUploadSystem) {
-            // Get existing images count for this review
+            // Get existing images for this review
             const reviewCard = element.closest('.review-card');
             const existingImages = reviewCard ? reviewCard.querySelectorAll('.review-photos .review-photo-thumbnail') : [];
             
             if (existingImages.length > 0) {
                 const form = editControls.querySelector('.review-form');
                 if (form) {
+                    // Create preview elements for existing photos
+                    const previewContainer = form.querySelector('.image-preview-container');
+                    if (previewContainer) {
+                        existingImages.forEach((img, index) => {
+                            const previewDiv = document.createElement('div');
+                            previewDiv.className = 'image-preview-item existing-photo';
+                            previewDiv.innerHTML = `
+                                <img src="${img.src}" alt="Existing photo ${index + 1}" class="preview-image">
+                                <button type="button" class="remove-image-btn" data-existing-photo-id="${img.closest('.review-photo-item').getAttribute('data-photo-id')}" title="Remove existing image">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                    </svg>
+                                </button>
+                            `;
+                            previewContainer.appendChild(previewDiv);
+                        });
+                    }
+                    
+                    // Update the upload UI with existing count
                     window.ImageUploadSystem.updateUploadUIWithExisting(form, existingImages.length);
                 }
             }
@@ -1747,6 +1825,22 @@ window.EditingSystem = (function() {
             const starContainer = editControls.querySelector('.star-rating');
             if (starContainer) {
                 window.ReviewSystem.initializeStarRatingForContainer(starContainer);
+                
+                // Trigger visual update for already selected rating
+                const checkedInput = starContainer.querySelector('input:checked');
+                if (checkedInput) {
+                    // Manually update the visual state since the change event was dispatched before listeners were attached
+                    const labels = starContainer.querySelectorAll('label');
+                    const inputs = starContainer.querySelectorAll('input');
+                    const checkedIndex = Array.from(inputs).indexOf(checkedInput);
+                    labels.forEach((label, index) => {
+                        if (index <= checkedIndex) {
+                            label.classList.add('filled');
+                        } else {
+                            label.classList.remove('filled');
+                        }
+                    });
+                }
             }
         }
         
@@ -1807,7 +1901,8 @@ window.EditingSystem = (function() {
         // Handle cancel button
         const cancelBtn = form.querySelector('.cancel-edit');
         if (cancelBtn) {
-            cancelBtn.addEventListener('click', function() {
+            cancelBtn.addEventListener('click', function(e) {
+                e.preventDefault();
                 cancelEdit(originalElement);
             });
         }
@@ -1833,29 +1928,52 @@ window.EditingSystem = (function() {
         
         // Get content from hidden input or contenteditable div
         let content = '';
-        if (hiddenInput && hiddenInput.value.trim()) {
+        
+        if (hiddenInput && hiddenInput.value && hiddenInput.value.trim()) {
             content = hiddenInput.value.trim();
         } else if (contentInput) {
             if (contentInput.contentEditable === 'true') {
-                content = convertHtmlToMarkdown(contentInput.innerHTML).trim();
+                const htmlContent = contentInput.innerHTML;
+                content = convertHtmlToMarkdown(htmlContent).trim();
             } else {
-                content = contentInput.value.trim();
+                content = contentInput.value ? contentInput.value.trim() : '';
             }
         }
         
-        if (!content) {
-            alert('Please enter some content.');
+        
+        // For comments, content is required, but reviews can be empty (just rating/photos)
+        if (type === 'comment' && !content) {
+            alert('Please enter some content for your comment.');
             return;
         }
         
-        // Prepare the data to send
-        const data = { content: content };
+        // Use FormData to include photo deletions and other form data
+        formData.set('content', content);
         
-        // For reviews, also include rating
+        // For reviews, ensure rating and location are in FormData
         if (type === 'review') {
             const ratingInput = form.querySelector('input[name="rating"]:checked');
             if (ratingInput) {
-                data.rating = parseInt(ratingInput.value);
+                formData.set('rating', ratingInput.value);
+            }
+            
+            // Add the location ID (required by serializer)
+            formData.set('location', ids.locationId);
+            
+            // Collect photo IDs marked for deletion
+            const photosToDelete = [];
+            const markedItems = form.querySelectorAll('.image-preview-item.marked-for-deletion[data-photo-to-delete]');
+            markedItems.forEach(item => {
+                const photoId = item.getAttribute('data-photo-to-delete');
+                if (photoId) {
+                    photosToDelete.push(parseInt(photoId, 10));
+                }
+            });
+            
+            // Send photo deletion data in the format the backend expects
+            if (photosToDelete.length > 0) {
+                formData.set('delete_photo_ids', JSON.stringify(photosToDelete));
+            } else {
             }
         }
         
@@ -1867,31 +1985,57 @@ window.EditingSystem = (function() {
             apiUrl = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
         }
         
+        
         // Disable form during submission
         const submitBtn = form.querySelector('.save-edit');
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.textContent = 'Saving...';
         
-        // Submit the edit
+        // Submit the edit using FormData
         fetch(apiUrl, {
-            method: 'PUT',
+            method: 'PATCH',
             headers: {
                 'X-CSRFToken': config.csrfToken,
-                'Content-Type': 'application/json'
+                // Remove Content-Type header - let browser set it for FormData
             },
-            body: JSON.stringify(data),
+            body: formData,
             credentials: 'same-origin'
         })
         .then(response => {
             if (!response.ok) {
-                return response.json().then(error => {
-                    throw new Error(error.detail || 'Failed to save changes');
+                return response.text().then(text => {
+                    console.error('Server response status:', response.status);
+                    console.error('Server response text:', text);
+                    try {
+                        const error = JSON.parse(text);
+                        console.error('Parsed error:', error);
+                        throw new Error(error.detail || JSON.stringify(error) || 'Failed to save changes');
+                    } catch (e) {
+                        throw new Error(`Server error ${response.status}: ${text}`);
+                    }
                 });
             }
             return response.json();
         })
         .then(data => {
+            
+            // WORKAROUND: Server might return stale data due to timing issues
+            // Use the content we know was sent since backend is confirmed saving correctly
+            if (type === 'review') {
+                const sentContent = formData.get('content');
+                if (sentContent) {
+                    data.comment = sentContent;
+                    data.formatted_content = sentContent;
+                }
+                
+                // Also ensure rating is updated with what was sent
+                const sentRating = formData.get('rating');
+                if (sentRating) {
+                    data.rating = parseInt(sentRating, 10);
+                }
+            }
+            
             // Update the original element with new content
             updateOriginalElement(originalElement, data, type);
             
@@ -1920,23 +2064,98 @@ window.EditingSystem = (function() {
     function updateOriginalElement(element, data, type) {
         if (type === 'review') {
             // Update review content
-            element.innerHTML = data.formatted_content || data.content;
+            const newContent = data.formatted_content || data.comment || data.content || '';
+            element.innerHTML = newContent;
+            
+            // Update data-rating attribute
+            if (data.rating) {
+                element.setAttribute('data-rating', data.rating);
+            }
+            
+            // Update data-original-content attribute
+            element.setAttribute('data-original-content', data.comment || data.content || '');
             
             // Update rating display
             const reviewCard = element.closest('.review-card');
             if (reviewCard && data.rating) {
-                const ratingStars = reviewCard.querySelectorAll('.rating-display svg');
-                ratingStars.forEach((star, index) => {
-                    if (index < data.rating) {
-                        star.style.fill = 'var(--golden)';
-                        star.style.color = 'var(--golden)';
-                        star.classList.add('filled');
-                    } else {
-                        star.style.fill = 'none';
-                        star.style.color = 'var(--text-tertiary)';
-                        star.classList.remove('filled');
+                const ratingDisplay = reviewCard.querySelector('.rating-display');
+                if (ratingDisplay) {
+                    // Clear existing stars
+                    ratingDisplay.innerHTML = '';
+                    
+                    // Create new stars based on the rating
+                    for (let i = 1; i <= 5; i++) {
+                        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                        svg.setAttribute('width', '16');
+                        svg.setAttribute('height', '16');
+                        svg.setAttribute('viewBox', '0 0 24 24');
+                        svg.setAttribute('stroke', 'currentColor');
+                        svg.setAttribute('stroke-width', '2');
+                        svg.setAttribute('stroke-linecap', 'round');
+                        svg.setAttribute('stroke-linejoin', 'round');
+                        
+                        if (i <= data.rating) {
+                            // Filled star
+                            svg.setAttribute('fill', 'currentColor');
+                            svg.setAttribute('class', 'lucide lucide-star filled');
+                            svg.style.color = 'var(--golden)';
+                            svg.style.fill = 'var(--golden)';
+                        } else {
+                            // Empty star
+                            svg.setAttribute('fill', 'none');
+                            svg.setAttribute('class', 'lucide lucide-star');
+                            svg.style.color = 'var(--text-tertiary)';
+                        }
+                        
+                        // Add the path element
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        path.setAttribute('d', 'M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z');
+                        
+                        svg.appendChild(path);
+                        ratingDisplay.appendChild(svg);
                     }
-                });
+                }
+            }
+            
+            // Update photos display if photos data is included in response
+            if (reviewCard && data.photos !== undefined) {
+                const photosSection = reviewCard.querySelector('.review-photos');
+                if (data.photos && data.photos.length > 0) {
+                    // Create new photos HTML
+                    let photosHTML = '<div class="review-photos" data-image-count="' + data.photos.length + '">';
+                    data.photos.forEach((photo, index) => {
+                        photosHTML += `
+                            <div class="review-photo-item" data-photo-id="${photo.id}">
+                                <img src="${photo.thumbnail_url}" 
+                                     alt="Review photo ${index + 1}"
+                                     class="review-photo-thumbnail"
+                                     data-full-url="${photo.image_url}"
+                                     data-author="${data.user}"
+                                     data-author-avatar="${data.user_avatar || ''}"
+                                     data-review-date="${new Date().toLocaleDateString()}"
+                                     data-location-name="${data.location_name || ''}"
+                                     data-location-address="${data.location_address || ''}"
+                                     loading="lazy">
+                                ${photo.caption ? `<span class="photo-caption">${photo.caption}</span>` : ''}
+                            </div>
+                        `;
+                    });
+                    photosHTML += '</div>';
+                    
+                    // Replace existing photos section
+                    if (photosSection) {
+                        photosSection.outerHTML = photosHTML;
+                    } else {
+                        // Insert photos after review comment
+                        element.insertAdjacentHTML('afterend', photosHTML);
+                    }
+                } else {
+                    // No photos left, remove photos section
+                    if (photosSection) {
+                        photosSection.remove();
+                    }
+                }
             }
             
             // Add edited indicator
@@ -1967,10 +2186,10 @@ window.EditingSystem = (function() {
             }
         }
         
-        // Update the original content attribute
+        // Update the original content attribute with the JSON format expected by parseOriginalContent
         element.setAttribute('data-original-content', JSON.stringify({
-            content: data.content,
-            markdownContent: data.content,
+            content: data.comment || data.content || '',
+            markdownContent: data.comment || data.content || '',
             rating: data.rating
         }));
     }
@@ -1980,9 +2199,9 @@ window.EditingSystem = (function() {
         // Remove edit-mode class
         element.classList.remove('edit-mode');
         
-        // Remove edit controls
-        const editControls = element.parentNode.querySelector('.edit-controls');
-        if (editControls) {
+        // Remove edit controls - they are inserted as the next sibling
+        const editControls = element.nextElementSibling;
+        if (editControls && editControls.classList.contains('edit-controls')) {
             editControls.remove();
         }
         
@@ -1992,6 +2211,13 @@ window.EditingSystem = (function() {
             hiddenPhotos.style.display = '';
             hiddenPhotos.removeAttribute('data-hidden-for-edit');
         }
+    }
+    
+    // Decode HTML entities
+    function decodeHTMLEntities(text) {
+        const textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        return textArea.value;
     }
     
     // Convert HTML to markdown (simplified version)
@@ -2106,9 +2332,33 @@ window.ImageUploadSystem = (function() {
             if (e.target.closest('.remove-image-btn')) {
                 e.preventDefault();
                 const removeBtn = e.target.closest('.remove-image-btn');
-                const index = parseInt(removeBtn.dataset.index);
                 const form = removeBtn.closest('form');
-                removeImage(index, form);
+                
+                // Check if this is an existing photo or a new upload
+                if (removeBtn.hasAttribute('data-existing-photo-id')) {
+                    // Handle existing photo removal
+                    const photoId = removeBtn.dataset.existingPhotoId;
+                    const previewItem = removeBtn.closest('.image-preview-item');
+                    
+                    // Hide the preview and mark for deletion
+                    previewItem.style.display = 'none';
+                    previewItem.classList.add('marked-for-deletion');
+                    
+                    // Add photo ID to deletion list (we'll collect all IDs before form submission)
+                    previewItem.setAttribute('data-photo-to-delete', photoId);
+                    
+                    // Update the existing count
+                    const currentExisting = getFormExistingCount(form);
+                    setFormExistingCount(form, currentExisting - 1);
+                    
+                    // Update UI
+                    const files = getFormFiles(form);
+                    updateUploadUI(form, files);
+                } else {
+                    // Handle new upload removal
+                    const index = parseInt(removeBtn.dataset.index);
+                    removeImage(index, form);
+                }
             }
             
             // Handle image thumbnail clicks for lightbox

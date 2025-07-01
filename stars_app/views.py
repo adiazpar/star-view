@@ -748,7 +748,9 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                         delete_photo_ids = []
                 
                 if delete_photo_ids:
-                    review.photos.filter(id__in=delete_photo_ids).delete()
+                    deleted_result = review.photos.filter(id__in=delete_photo_ids).delete()
+                else:
+            else:
             
             return Response(serializer.data)
         
@@ -897,10 +899,13 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
                         import json
                         delete_photo_ids = json.loads(delete_photo_ids)
                     
+                    print(f"DEBUG: Parsed delete_photo_ids: {delete_photo_ids}")
+                    
                     # Delete the specified photos
-                    instance.photos.filter(id__in=delete_photo_ids).delete()
+                    deleted_count = instance.photos.filter(id__in=delete_photo_ids).delete()
                 except Exception as e:
                     print(f"Error deleting review photos: {str(e)}")
+            else:
             
             # Re-serialize with updated photos
             serializer = self.get_serializer(instance)
