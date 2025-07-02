@@ -7,5 +7,4 @@ export const MAPBOX_CONFIG = {
     defaultZoom: 2,
     maxSpinZoom: 3,
     spinRevolutionTime: 720,
-    debugEnabled: false,
 };

@@ -572,10 +572,128 @@
     background-color: var(--primary-light);
 }
 
+/* Style Switcher Control */
+.style-switcher-control {
+    position: relative;
+}
+
+.style-switcher-button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--surface);
+    border: 1px solid var(--background);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.style-switcher-button:hover {
+    background: var(--background-light);
+    border-color: var(--primary);
+}
+
+.style-switcher-button i {
+    font-size: var(--font-size-sm);
+    color: var(--primary);
+}
+
+.style-switcher-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--background);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 1000;
+    margin-top: var(--space-xs);
+    overflow: hidden;
+}
+
+.style-switcher-option {
+    display: block;
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    text-align: left;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    border-bottom: 1px solid var(--background);
+}
+
+.style-switcher-option:last-child {
+    border-bottom: none;
+}
+
+.style-switcher-option:hover {
+    background: var(--background-light);
+    color: var(--text-primary);
+}
+
+.style-switcher-option.active {
+    background: var(--primary);
+    color: var(--text-primary);
+}
+
+.style-switcher-option.active:hover {
+    background: var(--primary-light);
+}
+
+/* Light Pollution Toggle Control */
+.light-pollution-toggle-control {
+    margin-top: var(--space-xs);
+}
+
+.light-pollution-toggle-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--background);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-size-base);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.light-pollution-toggle-button:hover {
+    background: var(--background-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.light-pollution-toggle-button.active {
+    background: var(--primary);
+    color: var(--text-primary);
+    border-color: var(--primary);
+}
+
+.light-pollution-toggle-button.active:hover {
+    background: var(--primary-light);
+    border-color: var(--primary-light);
+}
+
+.light-pollution-toggle-button i {
+    font-size: var(--font-size-sm);
+}
+
 /* Legend Styling */
 .legend {
     position: absolute;
-    top: calc(var(--space-sm) + 40px); /* Position below the dark sky button */
+    top: calc(var(--space-sm) + 40px); /* Position below the style switcher */
     left: var(--space-sm);
     padding: var(--space-sm);
     background: var(--background-dark);

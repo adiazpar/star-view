@@ -1,13 +1,11 @@
 import {MAPBOX_CONFIG} from "./mapbox-config.js";
 import {LocationService} from "./LocationService.js";
-import {MapDebugger} from "./MapDebugger.js";
 
 // Map controller class for drawing layers, user interaction:
 export class MapController {
     constructor() {
         this.map = null;
         this.userInteracting = false;
-        this.debugger = null;
         this.transitionDuration = 300;
         this.defaultZoom = MAPBOX_CONFIG.defaultZoom;
 
@@ -21,6 +19,9 @@ export class MapController {
         // Track current login & Creation popups:
         this.currentLoginPopup = null;  // Track the current login popup
         this.currentCreationPopup = null;  // Track the current creation popup
+
+        // Light pollution layer state
+        this.lightPollutionVisible = true;
 
 
         // Existing constructor properties...
@@ -349,22 +350,22 @@ export class MapController {
 
     async loadLightPollutionLayer() {
         try {
-            console.log('🌍 Starting to load light pollution layer...');
+            console.log('Starting to load light pollution layer...');
             
             // Use the tile server URL configured by Django
             const tileServerUrl = window.TILE_SERVER_URL;
                 
-            console.log(`🔗 Fetching tilesets from: ${tileServerUrl}/api/tilesets`);
+            console.log(`Fetching tilesets from: ${tileServerUrl}/api/tilesets`);
             
             const response = await fetch(`${tileServerUrl}/api/tilesets`);
-            console.log(`📡 Response status: ${response.status}`);
+            console.log(`Response status: ${response.status}`);
             
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             
             const data = await response.json();
-            console.log('📊 Received tileset data:', data);
+            console.log('Received tileset data:', data);
     
             // Fix: Use the correct response structure
             if (data && data.tilesets && data.tilesets.length > 0) {
@@ -377,19 +378,19 @@ export class MapController {
                 );
     
                 if (lightPollutionTileset) {
-                    console.log('✅ Found light pollution tileset:', lightPollutionTileset);
+                    console.log('Found light pollution tileset:', lightPollutionTileset);
                     
                     // Construct the tile URL - use the same base URL as the API call
                     const tileUrl = `${tileServerUrl}/tiles/${lightPollutionTileset.id}/{z}/{x}/{y}.png`;
-                    console.log('🗺️ Tile URL template:', tileUrl);
+                    console.log('Tile URL template:', tileUrl);
                     
                     // Check if the layer already exists and remove it
                     if (this.map.getLayer('light-pollution-layer')) {
-                        console.log('🗑️ Removing existing light pollution layer');
+                        console.log('Removing existing light pollution layer');
                         this.map.removeLayer('light-pollution-layer');
                     }
                     if (this.map.getSource('light-pollution')) {
-                        console.log('🗑️ Removing existing light pollution source');
+                        console.log('Removing existing light pollution source');
                         this.map.removeSource('light-pollution');
                     }
                     
@@ -404,7 +405,7 @@ export class MapController {
                         'scheme': 'xyz'
                     });
     
-                    console.log('📍 Added light pollution source with bounds:', lightPollutionTileset.bounds);
+                    console.log('Added light pollution source with bounds:', lightPollutionTileset.bounds);
     
                     // Add the layer
                     this.map.addLayer({
@@ -418,12 +419,12 @@ export class MapController {
                         }
                     });
                     
-                    console.log('🎉 Light pollution layer added successfully!');
+                    console.log('Light pollution layer added successfully!');
                     
                     // Test if tiles are loading by adding load/error listeners
                     this.map.on('sourcedata', (e) => {
                         if (e.sourceId === 'light-pollution' && e.isSourceLoaded) {
-                            console.log('📡 Light pollution tiles are loading...');
+                            console.log('Light pollution tiles are loading...');
                         }
                     });
                     
@@ -442,15 +443,15 @@ export class MapController {
                     });
                     
                 } else {
-                    console.warn('⚠️ No light pollution tileset found in available tilesets');
+                    console.warn('No light pollution tileset found in available tilesets');
                     console.log('Available tilesets:', data.tilesets.map(ts => ({id: ts.id, name: ts.name})));
                 }
             } else {
-                console.warn('⚠️ No tilesets found in API response');
+                console.warn('No tilesets found in API response');
                 console.log('Response data:', data);
             }
         } catch (error) {
-            console.error('❌ Failed to load light pollution layer:', error);
+            console.error('Failed to load light pollution layer:', error);
             console.error('Error details:', {
                 message: error.message,
                 stack: error.stack
@@ -458,8 +459,8 @@ export class MapController {
             
             // Try to provide helpful debugging information
             if (error.message.includes('fetch')) {
-                console.error('💡 This might be a CORS or network connectivity issue');
-                console.error('💡 Make sure the tile server is running and accessible');
+                console.error('This might be a CORS or network connectivity issue');
+                console.error('Make sure the tile server is running and accessible');
             }
         }
     }
@@ -503,21 +504,11 @@ export class MapController {
     async setupMapFeatures() {
         this.setupFilters();
         this.setupMapControls();
-        this.setupStreetViewToggle();
+        this.setupStyleSwitcher();
         await this.loadLocationsAndEvents();
         await this.loadLightPollutionLayer();
 
-        const tileButton = document.getElementById('show-tile-borders');
-        const gridButton = document.getElementById('show-pixel-grid');
-
-        // If debugger is disabled, hide the buttons:
-        if(!MAPBOX_CONFIG.debugEnabled) {
-            tileButton.style.display = 'none';
-            gridButton.style.display = 'none';
-        }
-        else {
-            this.setupDebugger();
-        }
+        // Debug functionality has been completely removed
     }
 
     setupEventListeners() {
@@ -608,51 +599,223 @@ export class MapController {
         this.map.addControl(new OrbitControl(), 'top-right');
     }
 
-    setupStreetViewToggle() {
-        // Street view toggle state
-        this.streetViewMode = false;
-        
-        const toggleButton = document.getElementById('toggle-dark-sky');
-        if (!toggleButton) {
-            console.warn('Toggle button not found');
-            return;
+    setupStyleSwitcher() {
+        // Define available map styles
+        const styles = [
+            { id: 'standard', name: 'Standard', url: 'mapbox://styles/mapbox/standard' },
+            { id: 'satellite', name: 'Satellite', url: 'mapbox://styles/mapbox/satellite-streets-v12' },
+            { id: 'outdoors', name: 'Outdoors', url: 'mapbox://styles/mapbox/outdoors-v12' },
+            { id: 'light', name: 'Light', url: 'mapbox://styles/mapbox/light-v11' },
+            { id: 'dark', name: 'Dark', url: 'mapbox://styles/mapbox/dark-v11' }
+        ];
+
+        // Track current style
+        this.currentStyleId = 'standard';
+
+        // Create custom control class
+        class StyleSwitcherControl {
+            constructor(styles, mapController) {
+                this.styles = styles;
+                this.mapController = mapController;
+            }
+
+            onAdd(map) {
+                this.map = map;
+                this.container = document.createElement('div');
+                this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group style-switcher-control';
+
+                // Create the main button
+                this.button = document.createElement('button');
+                this.button.className = 'style-switcher-button';
+                this.button.type = 'button';
+                this.button.setAttribute('aria-label', 'Switch map style');
+                this.button.innerHTML = '<i class="fas fa-layer-group"></i><span>Standard</span>';
+                
+                // Create the dropdown menu
+                this.menu = document.createElement('div');
+                this.menu.className = 'style-switcher-menu';
+                this.menu.style.display = 'none';
+
+                // Add style options to menu
+                this.styles.forEach(style => {
+                    const option = document.createElement('button');
+                    option.className = 'style-switcher-option';
+                    option.type = 'button';
+                    option.textContent = style.name;
+                    option.setAttribute('data-style-id', style.id);
+                    
+                    if (style.id === this.mapController.currentStyleId) {
+                        option.classList.add('active');
+                    }
+
+                    option.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.selectStyle(style);
+                    });
+
+                    this.menu.appendChild(option);
+                });
+
+                // Toggle menu on button click
+                this.button.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this.toggleMenu();
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', () => {
+                    this.menu.style.display = 'none';
+                });
+
+                this.container.appendChild(this.button);
+                this.container.appendChild(this.menu);
+                return this.container;
+            }
+
+            toggleMenu() {
+                const isVisible = this.menu.style.display === 'block';
+                this.menu.style.display = isVisible ? 'none' : 'block';
+            }
+
+            selectStyle(style) {
+                // Update active state
+                this.menu.querySelectorAll('.style-switcher-option').forEach(opt => {
+                    opt.classList.remove('active');
+                });
+                this.menu.querySelector(`[data-style-id="${style.id}"]`).classList.add('active');
+
+                // Update button text
+                this.button.innerHTML = `<i class="fas fa-layer-group"></i><span>${style.name}</span>`;
+
+                // Close menu
+                this.menu.style.display = 'none';
+
+                // Update current style
+                this.mapController.currentStyleId = style.id;
+
+                // Change map style
+                this.map.setStyle(style.url);
+
+                // Re-apply map features after style load
+                this.map.once('style.load', () => {
+                    // Re-setup terrain (only for non-satellite styles)
+                    if (style.id !== 'satellite') {
+                        // Check if terrain source already exists to avoid duplicate
+                        if (!this.map.getSource('mapbox-dem')) {
+                            this.mapController.setupMapTerrain();
+                        } else {
+                            // Re-apply existing terrain
+                            this.map.setTerrain({ 'source': 'mapbox-dem', 'exaggeration': 1.5 });
+                        }
+                    } else {
+                        this.map.setTerrain(null);
+                    }
+
+                    // Re-load light pollution layer and apply current visibility state
+                    this.mapController.loadLightPollutionLayer().then(() => {
+                        // Apply current visibility state after layer is loaded
+                        if (this.mapController.map.getLayer('light-pollution-layer')) {
+                            this.mapController.map.setLayoutProperty(
+                                'light-pollution-layer', 
+                                'visibility', 
+                                this.mapController.lightPollutionVisible ? 'visible' : 'none'
+                            );
+                        }
+                    });
+
+                    // Re-display markers
+                    if (this.mapController.locations?.length) {
+                        this.mapController.displayLocations(this.mapController.locations);
+                    }
+                    if (this.mapController.events?.length) {
+                        this.mapController.displayEvents(this.mapController.events);
+                    }
+                });
+            }
+
+            onRemove() {
+                this.container.parentNode.removeChild(this.container);
+                this.map = undefined;
+            }
         }
 
-        // Set up click handler for the toggle button
-        toggleButton.addEventListener('click', () => {
-            this.streetViewMode = !this.streetViewMode;
-            
-            if (this.streetViewMode) {
-                // Switch to satellite view for street view mode
-                this.map.setStyle('mapbox://styles/mapbox/satellite-streets-v12');
-                toggleButton.textContent = 'Globe View';
-                toggleButton.classList.add('active');
-                
-                // Disable terrain for street view
-                this.map.setTerrain(null);
-                
-                console.log('Switched to street view mode');
-            } else {
-                // Switch back to original globe view
-                this.map.setStyle(MAPBOX_CONFIG.style);
-                toggleButton.textContent = 'Street View';
-                toggleButton.classList.remove('active');
-                
-                // Re-enable terrain when switching back
-                this.map.once('style.load', () => {
-                    this.setupMapTerrain();
-                });
-                
-                console.log('Switched to globe view mode');
-            }
-        });
-
-        console.log('Street view toggle initialized');
+        // Add the control to the map
+        this.map.addControl(new StyleSwitcherControl(styles, this), 'top-left');
+        
+        // Add light pollution toggle control
+        this.setupLightPollutionToggle();
+        
+        console.log('Style switcher initialized');
     }
 
-    setupDebugger() {
-        this.debugger = new MapDebugger(this.map);
-        this.debugger.addDebugControls();
+    setupLightPollutionToggle() {
+        // Create custom control class for light pollution toggle
+        class LightPollutionToggleControl {
+            constructor(mapController) {
+                this.mapController = mapController;
+            }
+
+            onAdd(map) {
+                this.map = map;
+                this.container = document.createElement('div');
+                this.container.className = 'mapboxgl-ctrl mapboxgl-ctrl-group light-pollution-toggle-control';
+
+                // Create the toggle button
+                this.button = document.createElement('button');
+                this.button.className = 'light-pollution-toggle-button active';
+                this.button.type = 'button';
+                this.button.setAttribute('aria-label', 'Toggle light pollution layer');
+                this.button.innerHTML = '<i class="fas fa-moon"></i>';
+                this.button.title = 'Toggle Light Pollution Layer';
+
+                // Add click handler
+                this.button.addEventListener('click', () => {
+                    this.mapController.toggleLightPollutionLayer();
+                });
+
+                this.container.appendChild(this.button);
+                return this.container;
+            }
+
+            updateButtonState(isVisible) {
+                if (isVisible) {
+                    this.button.classList.add('active');
+                    this.button.title = 'Hide Light Pollution Layer';
+                } else {
+                    this.button.classList.remove('active');
+                    this.button.title = 'Show Light Pollution Layer';
+                }
+            }
+
+            onRemove() {
+                this.container.parentNode.removeChild(this.container);
+                this.map = undefined;
+            }
+        }
+
+        // Store reference to the control so we can update its state
+        this.lightPollutionToggleControl = new LightPollutionToggleControl(this);
+        this.map.addControl(this.lightPollutionToggleControl, 'top-left');
+        
+        console.log('Light pollution toggle initialized');
+    }
+
+    toggleLightPollutionLayer() {
+        this.lightPollutionVisible = !this.lightPollutionVisible;
+        
+        // Update button state
+        this.lightPollutionToggleControl.updateButtonState(this.lightPollutionVisible);
+        
+        // Toggle layer visibility
+        if (this.map.getLayer('light-pollution-layer')) {
+            this.map.setLayoutProperty(
+                'light-pollution-layer', 
+                'visibility', 
+                this.lightPollutionVisible ? 'visible' : 'none'
+            );
+        }
+        
+        console.log(`Light pollution layer ${this.lightPollutionVisible ? 'shown' : 'hidden'}`);
     }
 
     async loadLocationsAndEvents() {
