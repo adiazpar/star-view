@@ -62,17 +62,30 @@ export class MapController {
     // Map Functions: ------------------------------------------ //
     async initialize() {
         try {
+            // Setup UI elements immediately when DOM is ready (before map loads)
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.setupLocationCardListeners();
+                    this.initializePagination();
+                    this.applyInitialState();
+                });
+            } else {
+                // If DOM is already loaded, setup immediately
+                this.setupLocationCardListeners();
+                this.initializePagination();
+                this.applyInitialState();
+            }
+
             await this.initializeMap();
             await this.setupMapFeatures();
 
-            // Initialize UI only after DOM is fully loaded
+            // Initialize remaining UI after map loads
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', () => {
-                    this.initializeUI();
+                    this.initializeRemainingUI();
                 });
             } else {
-                // If DOM is already loaded, initialize UI immediately
-                this.initializeUI();
+                this.initializeRemainingUI();
             }
 
         } catch(error) {
@@ -1660,31 +1673,36 @@ export class MapController {
         }
     }
 
-    // Set up the location card listeners to read click inputs
+    // Set up the location card listeners using event delegation
     setupLocationCardListeners() {
-        // Get all location cards
-        const locationCards = document.querySelectorAll('.location-item[data-type="location"]');
+        const locationList = document.querySelector('.location-list');
+        if (!locationList) {
+            console.warn('Location list container not found');
+            return;
+        }
 
-        locationCards.forEach(card => {
-            // First, remove any existing click listeners
-            const newCard = card.cloneNode(true);
-            card.parentNode.replaceChild(newCard, card);
+        // Use event delegation - single listener on parent container
+        locationList.addEventListener('click', (event) => {
+            // Find the clicked location card (if any)
+            const card = event.target.closest('.location-item[data-type="location"]');
 
-            newCard.addEventListener('click', (event) => {
-                // Prevent event handling if clicking the favorite heart
-                if (event.target.closest('.favorite-indicator')) {
-                    return;
-                }
-                const locationId = newCard.getAttribute('data-id');
-                const isFavorited = newCard.getAttribute('is-favorite') === 'true';
+            // If click wasn't on a location card, ignore it
+            if (!card) return;
 
-                const location = this.findLocationById(locationId);
+            // Prevent event handling if clicking the favorite heart
+            if (event.target.closest('.favorite-indicator')) {
+                return;
+            }
 
-                if (location) {
-                    location.is_favorited = isFavorited;
-                    this.handleLocationSelection(location, newCard);
-                }
-            });
+            const locationId = card.getAttribute('data-id');
+            const isFavorited = card.getAttribute('is-favorite') === 'true';
+
+            const location = this.findLocationById(locationId);
+
+            if (location) {
+                location.is_favorited = isFavorited;
+                this.handleLocationSelection(location, card);
+            }
         });
     }
 
@@ -1840,8 +1858,7 @@ export class MapController {
             // Apply filters and pagination
             this.applyFilters();
 
-            // Reattach event listeners to the new elements
-            this.setupLocationCardListeners();
+            // No need to reattach listeners - event delegation handles this
 
         } catch (error) {
             console.error('Error refreshing locations list:', error);
@@ -1860,12 +1877,8 @@ export class MapController {
     }
 
     // Filtering: ---------------------------------------------- //
-    initializeUI() {
-        this.setupFilters();
-        this.initializePagination();
-        this.setupFilters();
-        this.applyInitialState();
-        this.setupLocationCardListeners();
+    initializeRemainingUI() {
+        // setupFilters() is already called in setupMapFeatures()
         this.setupFilterToggle();
     }
 
