@@ -359,10 +359,11 @@ window.ReviewSystem = (function() {
         const ratingCounts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
         let totalReviews = 0;
         let totalRating = 0;
-        
+
         // Count ratings from review cards
         reviewCards.forEach(card => {
-            const filledStars = card.querySelectorAll('.rating-display svg.filled, .rating-display svg[style*="color: var(--golden)"]');
+            // Look for Font Awesome filled stars (fas) vs outline stars (far)
+            const filledStars = card.querySelectorAll('.rating-display i.fas.fa-star');
             const rating = filledStars.length;
             if (rating >= 1 && rating <= 5) {
                 ratingCounts[rating]++;
