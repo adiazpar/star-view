@@ -1321,10 +1321,6 @@ def location_details(request, location_id):
         else:
             setattr(review, 'user_vote', None)
 
-        # Cache upvote and downvote counts to avoid multiple database queries
-        review.cached_upvote_count = review.votes.filter(is_upvote=True).count()
-        review.cached_downvote_count = review.votes.filter(is_upvote=False).count()
-        
         # Prefetch comments with vote information
         comments = review.comments.all()
         for comment in comments:

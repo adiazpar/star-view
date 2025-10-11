@@ -1512,16 +1512,16 @@ window.VotingSystem = (function() {
     function updateVoteDisplay(clickedButton, data, isReviewVote) {
         const container = clickedButton.closest('.vote-controls, .comment-vote-controls');
         if (!container) return;
-        
+
         // Get the vote count elements
         const upvoteCount = container.querySelector('.upvote-count');
         const downvoteCount = container.querySelector('.downvote-count');
         const upvoteButton = container.querySelector('.vote-button.upvote');
         const downvoteButton = container.querySelector('.vote-button.downvote');
-        
+
         // Update vote counts
-        if (upvoteCount) upvoteCount.textContent = data.upvote_count;
-        if (downvoteCount) downvoteCount.textContent = data.downvote_count;
+        if (upvoteCount) upvoteCount.textContent = data.upvotes;
+        if (downvoteCount) downvoteCount.textContent = data.downvotes;
         
         // Update button states based on user's current vote
         if (upvoteButton) {

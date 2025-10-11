@@ -156,7 +156,7 @@
                                     {% include 'stars_app/icons/thumbs-up-icon.svg' %}
                                 </button>
 
-                                <span class="upvote-count">{{ review.cached_upvote_count }}</span>
+                                <span class="upvote-count">{{ review.upvote_count }}</span>
 
                                 <button class="vote-button downvote {% if review.user_vote == 'down' %}voted{% endif %}"
                                         data-review-id="{{ review.id }}"
@@ -165,7 +165,7 @@
                                     {% include 'stars_app/icons/thumbs-down-icon.svg' %}
                                 </button>
 
-                                <span class="downvote-count">{{ review.cached_downvote_count }}</span>
+                                <span class="downvote-count">{{ review.downvote_count }}</span>
                                 
                                 <!-- Comments toggle button inline with voting -->
                                 <button class="comments-toggle inline" data-review-id="{{ review.id }}">
@@ -193,12 +193,12 @@
                                 <button class="vote-button disabled" disabled>
                                     {% include 'stars_app/icons/thumbs-up-icon.svg' %}
                                 </button>
-                                <span class="upvote-count">{{ review.cached_upvote_count }}</span>
+                                <span class="upvote-count">{{ review.upvote_count }}</span>
 
                                 <button class="vote-button disabled" disabled>
                                     {% include 'stars_app/icons/thumbs-down-icon.svg' %}
                                 </button>
-                                <span class="downvote-count">{{ review.cached_downvote_count }}</span>
+                                <span class="downvote-count">{{ review.downvote_count }}</span>
 
                                 <!-- Comments toggle button inline with voting -->
                                 <button class="comments-toggle inline" data-review-id="{{ review.id }}">
@@ -237,12 +237,12 @@
                             <button class="vote-button disabled" disabled>
                                 {% include 'stars_app/icons/thumbs-up-icon.svg' %}
                             </button>
-                            <span class="upvote-count">{{ review.cached_upvote_count }}</span>
+                            <span class="upvote-count">{{ review.upvote_count }}</span>
 
                             <button class="vote-button disabled" disabled>
                                 {% include 'stars_app/icons/thumbs-down-icon.svg' %}
                             </button>
-                            <span class="downvote-count">{{ review.cached_downvote_count }}</span>
+                            <span class="downvote-count">{{ review.downvote_count }}</span>
                             
                             <!-- Comments toggle button inline with voting -->
                             <button class="comments-toggle inline" data-review-id="{{ review.id }}">
