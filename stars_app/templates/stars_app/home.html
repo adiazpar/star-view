@@ -37,14 +37,18 @@
             <h1 class="hero-title"><a>DISCOVER</a><br>THE PERFECT VIEW<br></h1>
             <div class="hero-subtitle">
                 <h2>Event Horizon</h2>
-                <p>Your Personal Guide to Celestial Events</p>
+                <p>Your Personal Guide to Stargazing Locations</p>
             </div>
             <div class="hero-description">
-                <p>Never miss a cosmic spectacle again. Track celestial events worldwide and find the best viewing locations with optimal conditions. From meteor showers to eclipses, we'll guide you to the perfect spot under the stars.</p>
+                <p>Discover the best stargazing locations worldwide with optimal viewing conditions. Find dark sky spots, check light pollution levels, and explore locations perfect for astronomy. We'll guide you to the perfect spot under the stars.</p>
             </div>
             <div class="cta-buttons">
-                <a href="{% url 'map' %}" class="cta-button">View Map</a>
-                <a href="{% url 'event_list' %}" class="cta-button secondary">Browse Events</a>
+                <a href="{% url 'map' %}" class="cta-button">Explore Map</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'account' user.pk %}?tab=favorites" class="cta-button secondary">My Favorites</a>
+                {% else %}
+                <a href="{% url 'register' %}" class="cta-button secondary">Get Started</a>
+                {% endif %}
             </div>
         </div>
     </div>

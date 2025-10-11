@@ -1,1 +1,0 @@
-# Stars App Tests

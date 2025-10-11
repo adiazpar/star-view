@@ -12,9 +12,8 @@ export class MapController {
         this.activeInfoPanel = null;
         this.infoPanelVisible = false;
         
-        // Initialize locations and events arrays to prevent undefined errors
+        // Initialize locations array to prevent undefined errors
         this.locations = [];
-        this.events = [];
 
         // Track current login & Creation popups:
         this.currentLoginPopup = null;  // Track the current login popup
@@ -34,17 +33,7 @@ export class MapController {
         // Marker management:
         this.markerManager = {
             locations: new Map(),
-            events: new Map(),
             data: new Map(),
-        };
-
-        // Filter state management:
-        this.filters = {
-            activeTab: 'all',
-            eventTypes: new Set(),
-            searchQuery: '',
-            showFavorites: false,
-            showMyLocations: false
         };
 
         // Pagination state:
@@ -54,7 +43,6 @@ export class MapController {
             totalItems: 0,
         }
 
-        // Load saved filters before DOM initialization:
         this.initialize();
     }
 
@@ -78,15 +66,6 @@ export class MapController {
 
             await this.initializeMap();
             await this.setupMapFeatures();
-
-            // Initialize remaining UI after map loads
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', () => {
-                    this.initializeRemainingUI();
-                });
-            } else {
-                this.initializeRemainingUI();
-            }
 
         } catch(error) {
             console.error('Map initialization failed: ', error);
@@ -117,70 +96,6 @@ export class MapController {
         });
     }
 
-    // Advanced Filter Functions: ------------------------------------------ //
-    async applyAdvancedFilters(filters) {
-        try {
-            console.log('Applying advanced filters:', filters);
-            
-            // Check if any advanced filters are actually applied
-            const hasAdvancedFilters = Object.keys(filters).length > 0;
-            
-            if (!hasAdvancedFilters) {
-                // No advanced filters, reload original data
-                await this.loadLocationsAndEvents();
-                return;
-            }
-            
-            // Build API query parameters
-            const queryParams = new URLSearchParams();
-            
-            Object.keys(filters).forEach(key => {
-                if (filters[key] !== null && filters[key] !== undefined && filters[key] !== '') {
-                    queryParams.append(key, filters[key]);
-                }
-            });
-            
-            // Fetch filtered locations
-            const url = `/api/v1/viewing-locations/?${queryParams.toString()}`;
-            const response = await fetch(url, {
-                credentials: 'same-origin'
-            });
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            const locations = data.results || data;
-            
-            // Store that we're using filtered data
-            this.isUsingAdvancedFilters = true;
-            
-            // Update markers on map
-            this.updateMapMarkers(locations);
-            
-            // Update location list in sidebar  
-            this.updateLocationList(locations);
-            
-            // Apply existing frontend filters on top of the API filtered results
-            setTimeout(() => {
-                this.applyFilters();
-            }, 100);
-            
-            console.log(`Applied advanced filters, showing ${locations.length} locations`);
-            
-        } catch (error) {
-            console.error('Error applying advanced filters:', error);
-        }
-    }
-
-    async resetAdvancedFilters() {
-        console.log('Resetting to original data');
-        this.isUsingAdvancedFilters = false;
-        await this.loadLocationsAndEvents();
-        this.applyFilters(); // Apply any existing frontend filters
-    }
-
     updateMapMarkers(locations) {
         // Clear existing location markers
         this.markerManager.locations.forEach(marker => marker.remove());
@@ -194,18 +109,13 @@ export class MapController {
     }
 
     createLocationMarker(location) {
-        // Create marker element with category-based styling
+        // Create marker element
         const el = document.createElement('div');
         el.className = 'map-marker location-marker';
-        
-        // Add category-specific styling if available
-        if (location.category) {
-            el.classList.add(`category-${location.category.slug}`);
-            el.innerHTML = `<i class="${location.category.icon}"></i>`;
-        } else {
-            el.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
-        }
-        
+
+        // Set marker icon
+        el.innerHTML = '<i class="fas fa-map-marker-alt"></i>';
+
         // Add verification badge if verified
         if (location.is_verified) {
             el.classList.add('verified');
@@ -235,20 +145,16 @@ export class MapController {
     }
 
     createLocationPopup(location) {
-        const verificationBadge = location.is_verified ? 
+        const verificationBadge = location.is_verified ?
             '<span class="popup-verified"><i class="fas fa-check-circle"></i> Verified</span>' : '';
-        
-        const categoryInfo = location.category ? 
-            `<div class="popup-category"><i class="${location.category.icon}"></i> ${location.category.name}</div>` : '';
-        
-        const qualityScore = location.quality_score ? 
+
+        const qualityScore = location.quality_score ?
             `<div class="popup-quality">Quality: ${location.quality_score.toFixed(1)}/100</div>` : '';
-        
+
         return `
             <div class="location-popup">
                 <h3>${location.name}</h3>
                 ${verificationBadge}
-                ${categoryInfo}
                 ${qualityScore}
                 <div class="popup-coordinates">${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}</div>
                 <a href="/location/${location.id}/" class="popup-link">View Details</a>
@@ -259,19 +165,16 @@ export class MapController {
     updateLocationList(locations) {
         const locationList = document.querySelector('.location-list');
         if (!locationList) return;
-        
+
         // Clear existing items (keep only pagination)
         const existingItems = locationList.querySelectorAll('.location-item');
         existingItems.forEach(item => item.remove());
-        
-        // Add filtered locations
+
+        // Add locations
         locations.forEach(location => {
             const locationElement = this.createLocationListItem(location);
             locationList.insertBefore(locationElement, locationList.querySelector('.pagination'));
         });
-        
-        // Update pagination if needed
-        this.updatePaginationForFiltered(locations.length);
     }
 
     createLocationListItem(location) {
@@ -284,12 +187,9 @@ export class MapController {
         div.setAttribute('data-is-favorite', location.is_favorited || 'false');
         div.setAttribute('data-added-by', location.added_by || '');
         
-        const verificationBadge = location.is_verified ? 
+        const verificationBadge = location.is_verified ?
             '<span class="verification-mini-badge"><i class="fas fa-check-circle"></i></span>' : '';
-        
-        const categoryIcon = location.category ? 
-            `<i class="${location.category.icon}"></i>` : '<i class="fas fa-map-marker-alt"></i>';
-        
+
         div.innerHTML = `
             <div class="item-snapshot">
                 <div class="favorite-indicator">
@@ -305,8 +205,8 @@ export class MapController {
                     ${verificationBadge}
                 </h3>
                 <div class="location-type">
-                    ${categoryIcon}
-                    ${location.category ? location.category.name : 'Viewing Location'}
+                    <i class="fas fa-map-marker-alt"></i>
+                    Viewing Location
                 </div>
                 <div class="location-info">
                     <div class="star-rating">
@@ -332,11 +232,6 @@ export class MapController {
             stars += `<i class="fas fa-star ${filled}"></i>`;
         }
         return stars;
-    }
-
-    updatePaginationForFiltered(totalItems) {
-        this.pagination.totalItems = totalItems;
-        this.updatePagination();
     }
 
     async initializeMap() {
@@ -515,7 +410,6 @@ export class MapController {
     }
 
     async setupMapFeatures() {
-        this.setupFilters();
         this.setupMapControls();
         this.setupStyleSwitcher();
         await this.loadLocationsAndEvents();
@@ -740,9 +634,6 @@ export class MapController {
                     if (this.mapController.locations?.length) {
                         this.mapController.displayLocations(this.mapController.locations);
                     }
-                    if (this.mapController.events?.length) {
-                        this.mapController.displayEvents(this.mapController.events);
-                    }
                 });
             }
 
@@ -833,16 +724,11 @@ export class MapController {
 
     async loadLocationsAndEvents() {
         try {
-            const [locations, events] = await Promise.all([
-                LocationService.getViewingLocations(),
-                LocationService.getCelestialEvents()
-            ]);
+            const locations = await LocationService.getViewingLocations();
 
             console.log('Loaded locations:', locations);
-            console.log('Loaded events:', events);
 
             if (locations?.length) this.displayLocations(locations);
-            if (events?.length) this.displayEvents(events);
 
         } catch (error) {
             console.error('Failed to load data: ', error);
@@ -900,79 +786,6 @@ export class MapController {
 
         } catch (error) {
             console.error('Error displaying locations:', error);
-        }
-    }
-
-    displayEvents(events) {
-        try {
-            // Clear existing event markers:
-            this.markerManager.events.forEach(marker => marker.remove());
-            this.markerManager.events.clear();
-
-            // Event type configurations
-            const eventConfigs = {
-                'METEOR': {
-                    color: '#FF6B6B',
-                    icon: '<i class="fas fa-meteor"></i>'
-                },
-                'ECLIPSE': {
-                    color: '#4ECDC4',
-                    icon: '<i class="fas fa-moon"></i>'
-                },
-                'PLANET': {
-                    color: '#45B7D1',
-                    icon: '<i class="fas fa-globe"></i>'
-                },
-                'AURORA': {
-                    color: '#96CEB4',
-                    icon: '<i class="fas fa-sparkles"></i>'
-                },
-                'COMET': {
-                    color: '#F0ADFFFF',
-                    icon: '<i class="fas fa-star"></i>'
-                },
-                'OTHER': {
-                    color: '#CC00CC',
-                    icon: '<i class="fas fa-star-shooting"></i>'
-                }
-            };
-
-            events.forEach(event => {
-                const el = document.createElement('div');
-                el.className = 'event-marker';
-
-                // Get event styling configuration, fallback to OTHER if type not found
-                const config = eventConfigs[event.event_type] || eventConfigs['OTHER'];
-
-                // Create marker HTML with event-specific icon
-                el.innerHTML = `
-                    <div class="event-marker-icon" style="background-color: ${config.color}">
-                        ${config.icon}
-                    </div>
-                    <div class="event-marker-radius" style="border-color: ${config.color}"></div>
-                `;
-
-                // Create and add marker
-                const marker = new mapboxgl.Marker({
-                    element: el,
-                    anchor: 'center'
-                })
-                .setLngLat([event.longitude, event.latitude]);
-
-                marker.eventType = event.event_type;
-
-                marker.addTo(this.map);
-
-                // Click event for more details
-                el.addEventListener('click', () => {
-                    this.flyToLocation(event.latitude, event.longitude, 5000, 12, true);
-                });
-
-                this.markerManager.events.set(event.id, marker);
-            });
-
-        } catch (error) {
-            console.error('Error displaying events:', error);
         }
     }
 
@@ -1074,7 +887,7 @@ export class MapController {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             // Send POST request
-            const response = await fetch('/api/v1/viewing-locations/', {
+            const response = await fetch('/api/viewing-locations/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1200,7 +1013,7 @@ export class MapController {
                 .addTo(this.map);
 
                 try {
-                    const response = await fetch(`/api/v1/viewing-locations/${locationId}/`, {
+                    const response = await fetch(`/api/viewing-locations/${locationId}/`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': csrfToken
@@ -1272,14 +1085,6 @@ export class MapController {
         }
 
         // Format values with proper handling of unavailable data
-        const cloudCover = location.cloudCoverPercentage >= 0
-            ? `${location.cloudCoverPercentage}%`
-            : 'Not available';
-
-        const lightPollution = location.light_pollution_value
-            ? `${location.light_pollution_value.toFixed(2)} mag/arcsec²`
-            : 'Not available';
-
         const qualityScore = location.quality_score
             ? `${Math.round(location.quality_score)}/100`
             : 'Not available';
@@ -1309,7 +1114,7 @@ export class MapController {
 
         if (isLoggedIn) {
             try {
-                const response = await fetch(`/api/v1/viewing-locations/${location.id}/favorite/`, {
+                const response = await fetch(`/api/viewing-locations/${location.id}/favorite/`, {
                     method: 'GET',
                     credentials: 'same-origin'
                 });
@@ -1358,10 +1163,6 @@ export class MapController {
                     <i class="fas fa-binoculars"></i>
                     Viewing Conditions
                 </button>
-                <button class="info-tab" data-tab="moon">
-                    <i class="fas fa-moon"></i>
-                    Moon Data
-                </button>
             </div>
 
             <div class="panel-content-wrapper">
@@ -1385,27 +1186,7 @@ export class MapController {
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="info-row">
-                                <div class="info-icon">
-                                    <i class="fas fa-cloud"></i>
-                                </div>
-                                <div class="info-content">
-                                    <label>Cloud Cover</label>
-                                    <span class="${cloudCover === 'Not available' ? 'unavailable' : ''}">${cloudCover}</span>
-                                </div>
-                            </div>
-        
-                            <div class="info-row">
-                                <div class="info-icon">
-                                    <i class="fas fa-moon"></i>
-                                </div>
-                                <div class="info-content">
-                                    <label>Light Pollution</label>
-                                    <span class="${lightPollution === 'Not available' ? 'unavailable' : ''}">${lightPollution}</span>
-                                </div>
-                            </div>
-        
+
                             <div class="info-row">
                                 <div class="info-icon">
                                     <i class="fas fa-star"></i>
@@ -1428,52 +1209,7 @@ export class MapController {
                         </div>
                     
                     </div>
-                    
-                    <!-- Moon Data Tab Content -->
-                    <div class="tab-content" data-tab="moon">
-                        <div class="info-section">
-                            <div class="info-row">
-                                <div class="info-icon">
-                                    <i class="fas fa-moon"></i>
-                                </div>
-                                <div class="info-content">
-                                    <label>Moon Phase</label>
-                                    <span>${location.moon_phase_info ? location.moon_phase_info.short_name : 'Unknown'}${location.moon_phase ? ' - ' + location.moon_phase.toFixed(1) + '%' : ''}</span>                                   
-                                </div>
-                            </div>
-                            
-                            <div class="info-row">
-                                <div class="info-icon">
-                                    <i class="fas fa-angle-up"></i>
-                                </div>
-                                <div class="info-content">
-                                    <label>Moon Altitude</label>
-                                    <span>${location.moon_altitude ? location.moon_altitude.toFixed(1) + '°' : 'Not available'}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="info-row">
-                                <div class="info-icon">
-                                    <i class="fas fa-arrow-up"></i>
-                                </div>
-                                <div class="info-content">
-                                    <label>Next Moonrise</label>
-                                    <span>${location.next_moonrise ? new Date(location.next_moonrise).toLocaleTimeString() : 'Not available'}</span>
-                                </div>
-                            </div>
-                            
-                            <div class="info-row">
-                                <div class="info-icon">
-                                    <i class="fas fa-arrow-down"></i>
-                                </div>
-                                <div class="info-content">
-                                    <label>Next Moonset</label>
-                                    <span>${location.next_moonset ? new Date(location.next_moonset).toLocaleTimeString() : 'Not available'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>     
-                </div>                                     
+                </div>
             </div>
             
             <div class="panel-bottom">
@@ -1577,7 +1313,7 @@ export class MapController {
 
 
             const action = location.is_favorited ? 'unfavorite' : 'favorite';
-            const response = await fetch(`/api/v1/viewing-locations/${locationId}/${action}/`, {
+            const response = await fetch(`/api/viewing-locations/${locationId}/${action}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken.value,
@@ -1725,16 +1461,16 @@ export class MapController {
                 if (locationCard) {
                     location.is_favorited = locationCard.getAttribute('is-favorite') === 'true';
 
-                    const visibleItems = Array.from(document.querySelectorAll('.location-item'))
-                        .filter(item => !item.classList.contains('hidden'));
+                    const allItems = Array.from(document.querySelectorAll('.location-item'));
 
-                    const itemIndex = visibleItems.indexOf(locationCard);
+                    const itemIndex = allItems.indexOf(locationCard);
                     const targetPage = Math.floor(itemIndex / this.pagination.itemsPerPage) + 1;
 
                     // Only change page if needed
                     if (targetPage !== this.pagination.currentPage) {
                         this.pagination.currentPage = targetPage;
-                        this.applyFilters();
+                        this.updatePagination();
+                        this.updateItemVisibility(allItems);
                     }
 
                     // Wait for DOM update then scroll
@@ -1806,7 +1542,7 @@ export class MapController {
         try {
             // First, fetch the updated list of locations from the server
             const locationsList = document.querySelector('.location-list');
-            const response = await fetch('/api/v1/viewing-locations/?page_size=100');
+            const response = await fetch('/api/viewing-locations/?page_size=100');
             const data = await response.json();
             
             // Handle paginated response
@@ -1855,8 +1591,12 @@ export class MapController {
             this.pagination.totalItems = locations.length;
             this.pagination.currentPage = 1;  // Reset to first page
 
-            // Apply filters and pagination
-            this.applyFilters();
+            // Update pagination display
+            this.updatePagination();
+
+            // Update item visibility for first page
+            const allItems = Array.from(document.querySelectorAll('.location-item'));
+            this.updateItemVisibility(allItems);
 
             // No need to reattach listeners - event delegation handles this
 
@@ -1876,189 +1616,8 @@ export class MapController {
         ).join('');
     }
 
-    // Filtering: ---------------------------------------------- //
-    initializeRemainingUI() {
-        // setupFilters() is already called in setupMapFeatures()
-        this.setupFilterToggle();
-    }
-
-    setupFilterToggle() {
-        const filterToggle = document.getElementById('filter-toggle');
-        const filterPanel = document.querySelector('.filter-panel');
-
-        if (filterToggle && filterPanel) {
-            filterToggle.addEventListener('click', () => {
-                // Toggle active state on button
-                filterToggle.classList.toggle('active');
-
-                // Toggle filter panel visibility
-                filterPanel.classList.toggle('visible');
-            });
-        }
-    }
-
-    setupFilters() {
-        // Tab filtering
-        const tabButtons = document.querySelectorAll('.panel-tab');
-        tabButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                // Remove active class from all tabs
-                tabButtons.forEach(tab => tab.classList.remove('active'));
-
-                // Add active class to clicked tab
-                button.classList.add('active');
-
-                // Update active tab in our filter state
-                this.filters.activeTab = button.getAttribute('data-tab').toLowerCase();
-
-                // Reset to first page:
-                this.pagination.currentPage = 1;
-
-                // Apply filters:
-                this.applyFilters();
-            });
-        });
-
-        // Event type filtering
-        const eventTypeButtons = document.querySelectorAll('.event-type-filter .filter-buttons button');
-        eventTypeButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const eventType = button.getAttribute('data-type');
-
-                // Toggle button active state
-                button.classList.toggle('active');
-
-                // Update our filter state
-                if (this.filters.eventTypes.has(eventType)) {
-                    this.filters.eventTypes.delete(eventType);
-                } else {
-                    this.filters.eventTypes.add(eventType);
-                }
-
-                this.pagination.currentPage = 1;
-
-                // Apply filters:
-                this.applyFilters();
-            });
-        });
-
-        // Location filtering
-        const locationFilterButtons = document.querySelectorAll('.location-type-filter .filter-buttons button');
-        locationFilterButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const filterType = button.getAttribute('data-filter');
-
-                // Toggle button state
-                button.classList.toggle('active');
-
-                // Update filter state
-                if (filterType === 'favorites') {
-                    this.filters.showFavorites = !this.filters.showFavorites;
-                } else if (filterType === 'my-locations') {
-                    this.filters.showMyLocations = !this.filters.showMyLocations;
-                }
-
-                // Reset to first page
-                this.pagination.currentPage = 1;
-
-                // Apply filters
-                this.applyFilters();
-            });
-        });
-
-        // Search filtering
-        const searchInput = document.querySelector('.search-container input');
-        searchInput.addEventListener('input', (e) => {
-            this.filters.searchQuery = e.target.value.toLowerCase();
-
-            this.pagination.currentPage = 1;
-
-            // Apply filters:
-            this.applyFilters();
-        });
-    }
-
-    applyFilters() {
-        if(!this.filters) {
-            console.error('Filters objects is not initialized');
-            return;
-        }
-
-        // Get all location items:
-        const items = document.querySelectorAll('.location-item');
-        let visibleItems = [];
-
-        items.forEach(item => {
-            let isVisible = true;
-            const itemType = item.getAttribute('data-type');
-            const eventType = item.getAttribute('data-event-type');
-            const isFavorite = item.getAttribute('data-is-favorite')?.toLowerCase() === 'true';
-            const isUserLocation = item.getAttribute('data-added-by') === window.currentUserId;
-
-            // Tab filtering
-            if (this.filters.activeTab !== 'all' && itemType !== this.filters.activeTab) {
-                isVisible = false;
-            }
-
-            // Event type filtering
-            if (isVisible && this.filters.eventTypes.size > 0 && itemType === 'event') {
-                isVisible = this.filters.eventTypes.has(eventType);
-            }
-
-            // Location filtering (only apply to location items)
-            if (isVisible && itemType === 'location') {
-                if (this.filters.showFavorites && !isFavorite) {
-                    isVisible = false;
-                }
-                if (this.filters.showMyLocations && !isUserLocation) {
-                    isVisible = false;
-                }
-            }
-
-            // Search filtering
-            if (isVisible && this.filters.searchQuery) {
-                const title = item.querySelector('.location-title')?.textContent.toLowerCase() || '';
-                const description = item.querySelector('.location-address, .event-description')?.textContent.toLowerCase() || '';
-                isVisible = title.includes(this.filters.searchQuery) ||
-                           description.includes(this.filters.searchQuery);
-            }
-
-            // Important: Set pointer-events based on visibility
-            if (isVisible) {
-                item.style.pointerEvents = 'auto';
-                item.classList.remove('hidden');
-                visibleItems.push(item);
-            } else {
-                item.style.pointerEvents = 'none';
-                item.classList.add('hidden');
-                item.style.display = 'none'; // Immediately hide non-visible items
-            }
-        });
-
-        // Update pagination with visible items count
-        this.pagination.totalItems = visibleItems.length;
-
-        // Ensure current page is valid with new total
-        const totalPages = Math.ceil(this.pagination.totalItems / this.pagination.itemsPerPage);
-        if (this.pagination.currentPage > totalPages) {
-            this.pagination.currentPage = Math.max(1, totalPages);
-        }
-
-        // Update pagination display
-        this.updatePagination();
-
-        // Update visible items based on current page
-        this.updateItemVisibility(visibleItems);
-
-        // Update marker visibility on the map
-        this.updateMapMarkers();
-    }
-
     updateMapMarkers() {
-        // Instead of handling individual markers, let's handle all markers based on the active tab
-        const activeTab = this.filters.activeTab;
-
-        // Handle location markers
+        // Show all location markers that are in the current viewport
         this.markerManager.locations.forEach((marker, key) => {
             const element = marker.getElement();
             const coordinates = marker.getLngLat();
@@ -2074,74 +1633,12 @@ export class MapController {
                             point.y >= -padding &&
                             point.y <= bounds.height + padding;
 
-            // Find corresponding location item to get its attributes
-            const locationItem = document.querySelector(
-                `.location-item[data-lat="${coordinates.lat}"][data-lng="${coordinates.lng}"]`
-            );
-
-            let shouldShow = (activeTab === 'all' || activeTab === 'location') && isInView;
-
-            // If we found a matching item, apply our location filters
-            if (shouldShow && locationItem) {
-                const isFavorite = locationItem.getAttribute('data-is-favorite') === 'true';
-                const isUserLocation = locationItem.getAttribute('data-added-by') === window.currentUserId;
-
-                // Apply the same filtering logic as in applyFilters
-                if (this.filters.showFavorites) {
-                    shouldShow = isFavorite;
-                }
-                if (this.filters.showMyLocations) {
-                    shouldShow = isUserLocation;
-                }
-            }
-
-            // Apply visibility with transition
+            // Simply show all markers that are in view
             if (element) {
                 element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
-                element.style.opacity = shouldShow ? '1' : '0';
+                element.style.opacity = isInView ? '1' : '0';
 
-                if (!shouldShow) {
-                    setTimeout(() => {
-                        element.style.display = 'none';
-                    }, this.transitionDuration);
-                } else {
-                    element.style.display = '';
-                    element.offsetHeight; // Force reflow
-                    element.style.opacity = '1';
-                }
-            }
-        });
-
-        // Handle event markers with the same logic
-        this.markerManager.events.forEach((marker) => {
-            const element = marker.getElement();
-            const coordinates = marker.getLngLat();
-
-            // Project the point to screen coordinates
-            const point = this.map.project(coordinates);
-
-            // Get the map's container dimensions
-            const bounds = this.map.getContainer().getBoundingClientRect();
-
-            // Check visibility using the same projection method
-            const padding = 100;
-            const isVisible = point.x >= -padding &&
-                            point.x <= bounds.width + padding &&
-                            point.y >= -padding &&
-                            point.y <= bounds.height + padding;
-
-            // Combine visibility with tab and event type filters
-            let shouldShow = (activeTab === 'all' || activeTab === 'event') && isVisible;
-
-            if (shouldShow && this.filters.eventTypes.size > 0) {
-                shouldShow = this.filters.eventTypes.has(marker.eventType);
-            }
-
-            if (element) {
-                element.style.transition = `opacity ${this.transitionDuration}ms ease-in-out`;
-                element.style.opacity = shouldShow ? '1' : '0';
-
-                if (!shouldShow) {
+                if (!isInView) {
                     setTimeout(() => {
                         element.style.display = 'none';
                     }, this.transitionDuration);

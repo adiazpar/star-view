@@ -8,7 +8,6 @@ from pathlib import Path
 # Import models
 from .models.userprofile import UserProfile
 from .models.reviewphoto import ReviewPhoto
-from .models.locationphoto import LocationPhoto
 from .models.locationreview import LocationReview
 from .models.viewinglocation import ViewingLocation
 
@@ -128,33 +127,6 @@ def delete_review_photo_files(sender, instance, **kwargs):
         safe_delete_directory(location_dir)
 
 
-@receiver(pre_delete, sender=LocationPhoto)
-def delete_location_photo_files(sender, instance, **kwargs):
-    """
-    Delete location photo and thumbnail files when LocationPhoto is deleted.
-    """
-    files_to_delete = []
-
-    # Add main image
-    if instance.image:
-        files_to_delete.append(instance.image.path)
-
-    # Add thumbnail
-    if instance.thumbnail:
-        files_to_delete.append(instance.thumbnail.path)
-
-    # Delete all files
-    for file_path in files_to_delete:
-        safe_delete_file(file_path)
-
-    # Clean up directories if they're empty
-    if instance.image:
-        # Get the location-specific directory
-        location_dir = os.path.dirname(instance.image.path)
-        safe_delete_directory(os.path.join(location_dir, 'thumbnails'))  # Delete thumbnails dir first
-        safe_delete_directory(location_dir)  # Then location dir
-
-
 @receiver(pre_delete, sender=LocationReview)
 def delete_review_media_files(sender, instance, **kwargs):
     """
@@ -176,22 +148,13 @@ def delete_review_media_files(sender, instance, **kwargs):
 def delete_location_media_files(sender, instance, **kwargs):
     """
     Delete all media files associated with a location when the location is deleted.
-    This handles the cascade deletion of LocationPhotos and ReviewPhotos.
+    This handles the cascade deletion of ReviewPhotos.
     """
-    # Get all photos for this location before they're deleted by cascade
-    location_photos = instance.photos.all()
-
     # Get all reviews and their photos before they're deleted by cascade
     reviews = instance.reviews.all()
 
     # Store directory paths for cleanup
     directories_to_clean = set()
-
-    # Process location photos
-    for photo in location_photos:
-        if photo.image:
-            location_dir = os.path.dirname(photo.image.path)
-            directories_to_clean.add(location_dir)
 
     # Process review photos
     for review in reviews:
@@ -215,11 +178,9 @@ def cleanup_location_directory_structure(sender, instance, **kwargs):
     Clean up the entire location directory structure after all cascade deletions are complete.
     """
     try:
-        # Try to clean up the main location directories
-        location_photos_dir = os.path.join(settings.MEDIA_ROOT, 'location_photos', str(instance.id))
+        # Try to clean up the main review photos directory
         review_photos_dir = os.path.join(settings.MEDIA_ROOT, 'review_photos', str(instance.id))
 
-        safe_delete_directory(location_photos_dir)
         safe_delete_directory(review_photos_dir)
 
         logger.info(f"Cleaned up directory structure for deleted location {instance.id}")

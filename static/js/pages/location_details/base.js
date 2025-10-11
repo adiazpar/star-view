@@ -98,7 +98,7 @@ function initializeFavoriteSystem(config) {
     // Check initial favorite status when page loads
     const favoriteButton = document.querySelector('.favorite-button');
     if (favoriteButton) {
-        fetch(`/api/v1/viewing-locations/${config.locationId}/favorite/`, {
+        fetch(`/api/viewing-locations/${config.locationId}/favorite/`, {
             method: 'GET',
             headers: {
                 'X-CSRFToken': config.csrfToken,
@@ -117,7 +117,7 @@ function initializeFavoriteSystem(config) {
         favoriteButton.addEventListener('click', function() {
             const endpoint = isFavorited ? 'unfavorite' : 'favorite';
 
-            fetch(`/api/v1/viewing-locations/${config.locationId}/${endpoint}/`, {
+            fetch(`/api/viewing-locations/${config.locationId}/${endpoint}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': config.csrfToken,

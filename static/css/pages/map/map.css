@@ -60,46 +60,6 @@
     border-bottom-color: var(--primary);
 }
 
-/* Search container */
-.search-section {
-    padding: var(--space-md) var(--space-md) 0 var(--space-md);
-    margin-bottom: var(--space-xs);
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.search-controls {
-    display: flex;
-    gap: var(--space-sm);
-    align-items: center;
-    margin-bottom: var(--space-sm);
-}
-
-.search-container {
-    flex: 1;
-}
-
-.search-input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: var(--space-sm) var(--space-md);
-    padding-left: calc(var(--space-lg) + 20px); /* Space for the icon */
-    background: var(--background-dark);
-    border: 1px solid var(--text-tertiary);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: var(--font-size-sm);
-}
-
-.search-input:focus {
-    outline: none;
-    border-color: var(--primary);
-}
-
-.search-input::placeholder {
-    color: var(--text-tertiary);
-}
-
 /* Filter toggle button */
 .filter-toggle-btn {
     padding: var(--space-sm);
@@ -135,8 +95,7 @@
 }
 
 /* Item type filters */
-.location-type-filter,
-.event-type-filter {
+.location-type-filter {
     padding-top: var(--space-sm);
     border-top: 1px solid var(--text-tertiary);
     padding-bottom: var(--space-sm);
@@ -734,12 +693,11 @@
 }
 
 
-/* Location and Event Marker styles */
-.location-marker, .event-marker {
+/* Location Marker styles */
+.location-marker {
     cursor: pointer;
 }
-.location-marker:hover .marker-icon,
-.event-marker:hover .event-marker-icon {
+.location-marker:hover .marker-icon {
     transform: scale(1.1) !important;
 }
 
@@ -763,35 +721,6 @@
 .marker-icon i {
     color: white;
     font-size: 7px;
-}
-
-.event-marker-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.2s;
-    transform-origin: center center;
-}
-.event-marker-icon i {
-    color: white;
-    font-size: 16px;
-}
-.event-marker-radius {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border: 2px dashed;
-    border-radius: 50%;
-    opacity: 0.3;
-    pointer-events: none;
-    width: 60px;
-    height: 60px;
-    z-index: 1;
 }
 
 /* Popup styles */
@@ -1023,13 +952,6 @@
 
 .info-section:last-child {
     margin-bottom: 0;
-}
-
-.moon-phase-details {
-    font-size: var(--font-size-xs);
-    color: var(--text-tertiary);
-    display: block;
-    margin-top: var(--space-xs);
 }
 
 .panel-bottom {

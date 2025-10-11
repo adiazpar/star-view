@@ -27,15 +27,6 @@
                         <span>Favorite Locations</span>
                     </a>
                 </li>
-                <li class="sidebar-item {% if active_tab == 'notifications' %}active{% endif %}">
-                    <a href="{% url 'account' user.pk %}?tab=notifications" class="sidebar-link" data-tooltip="Notifications">
-                        <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <span>Notifications</span>
-                    </a>
-                </li>
                 <li class="sidebar-item {% if active_tab == 'preferences' %}active{% endif %}">
                     <a href="{% url 'account' user.pk %}?tab=preferences" class="sidebar-link" data-tooltip="Preferences">
                         <svg class="sidebar-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

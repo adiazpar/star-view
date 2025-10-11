@@ -3,7 +3,6 @@
 from django.db import migrations, models
 import django.db.models.deletion
 from django.conf import settings
-import stars_app.models.locationphoto
 
 
 class Migration(migrations.Migration):
@@ -20,7 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('image', models.ImageField(help_text='Photo of the viewing location', upload_to=stars_app.models.locationphoto.location_photo_path)),
+                ('image', models.ImageField(help_text='Photo of the viewing location', upload_to='location_photos')),
                 ('caption', models.CharField(blank=True, help_text='Optional caption for the photo', max_length=500)),
                 ('is_primary', models.BooleanField(default=False, help_text='Primary photo shown in location listings')),
                 ('is_approved', models.BooleanField(default=True, help_text='Whether the photo has been approved by moderators')),

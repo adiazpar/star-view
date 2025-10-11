@@ -32,14 +32,8 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
-from drf_spectacular.utils import extend_schema, extend_schema_view
 from stars_app.serializers import *
-from stars_app.filters import ViewingLocationFilter
-from stars_app.serializers_bulk import BulkLocationImportSerializer
-from stars_app.services.clustering_service import ClusteringService
-from stars_app.models.locationphoto import LocationPhoto
 from stars_app.models.locationreport import LocationReport
-from stars_app.models.locationcategory import LocationCategory, LocationTag
 
 # Tile libraries:
 import os
@@ -70,49 +64,16 @@ class StandardResultsSetPagination(PageNumberPagination):
     max_page_size = 100
 
 # -------------------------------------------------------------- #
-# Location Management Views:
-@extend_schema_view(
-    list=extend_schema(description="Retrieve a list of celestial events with filtering and search capabilities"),
-    create=extend_schema(description="Create a new celestial event"),
-    retrieve=extend_schema(description="Retrieve a specific celestial event by ID"),
-    update=extend_schema(description="Update a celestial event"),
-    destroy=extend_schema(description="Delete a celestial event")
-)
-class CelestialEventViewSet(viewsets.ModelViewSet):
-    queryset = CelestialEvent.objects.all()
-    serializer_class = CelestialEventSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    pagination_class = StandardResultsSetPagination
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['event_type']
-    search_fields = ['name', 'description']
-    ordering_fields = ['start_time', 'end_time', 'created_at']
-    ordering = ['start_time']
-
-    def perform_create(self, serializer):
-        # Set elevation to 0 if not provided
-        serializer.save(elevation=serializer.validated_data.get('elevation', 0))
-
-
-# -------------------------------------------------------------- #
 # Viewing Location Views:
 
-@extend_schema_view(
-    list=extend_schema(description="Retrieve viewing locations with quality scores, light pollution data, and filtering"),
-    create=extend_schema(description="Add a new viewing location"),
-    retrieve=extend_schema(description="Get detailed information about a viewing location"),
-    update=extend_schema(description="Update viewing location details"),
-    destroy=extend_schema(description="Remove a viewing location")
-)
 class ViewingLocationViewSet(viewsets.ModelViewSet):
     queryset = ViewingLocation.objects.all()
     serializer_class = ViewingLocationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_class = ViewingLocationFilter  # Use custom filter class
     search_fields = ['name', 'formatted_address', 'locality']
-    ordering_fields = ['quality_score', 'light_pollution_value', 'created_at', 'visitor_count', 'rating_count']
+    ordering_fields = ['quality_score', 'created_at', 'visitor_count', 'rating_count']
     ordering = ['-quality_score']
 
     def get_queryset(self):
@@ -140,7 +101,6 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                     'latitude': location.latitude,
                     'longitude': location.longitude,
                     'quality_score': location.quality_score,
-                    'light_pollution_value': location.light_pollution_value,
                 })
             
             raise serializers.ValidationError({
@@ -194,127 +154,6 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             {'detail': 'Failed to update elevation'},
             status=status.HTTP_400_BAD_REQUEST
         )
-
-    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
-    def bulk_import(self, request):
-        """Bulk import locations from CSV or JSON file/data"""
-        serializer = BulkLocationImportSerializer(data=request.data)
-        
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        validated_data = serializer.validated_data
-        format_type = validated_data.get('format', 'json')
-        dry_run = validated_data.get('dry_run', True)
-        
-        try:
-            # Parse the data based on format
-            validation_errors = []
-            if validated_data.get('file'):
-                file_content = validated_data['file'].read()
-                if format_type == 'csv':
-                    locations = serializer.parse_csv(file_content)
-                else:
-                    locations, validation_errors = serializer.parse_json(file_content.decode('utf-8'))
-            else:
-                locations, validation_errors = serializer.parse_json(validated_data['data'])
-            
-            # Check for duplicates only for valid locations
-            duplicate_check_results = []
-            if locations:  # Only if we have valid locations
-                duplicate_check_results = serializer.check_duplicates(locations, request.user)
-            
-            # Prepare response
-            response_data = {
-                'total_submitted': len(validated_data.get('data', [])) if not validated_data.get('file') else 'unknown',
-                'total_valid_locations': len(locations),
-                'validation_errors': validation_errors,
-                'validation_errors_count': len(validation_errors),
-                'duplicates_found': sum(1 for r in duplicate_check_results if r['is_duplicate']),
-                'dry_run': dry_run,
-                'results': duplicate_check_results
-            }
-            
-            # If not dry run and no duplicates, create the locations
-            if not dry_run:
-                non_duplicate_locations = [
-                    r['location'] for r in duplicate_check_results 
-                    if not r['is_duplicate']
-                ]
-                
-                if non_duplicate_locations:
-                    created_locations = serializer.create_locations(non_duplicate_locations, request.user)
-                    response_data['created_count'] = len(created_locations)
-                    response_data['created_ids'] = [loc.id for loc in created_locations]
-                else:
-                    response_data['created_count'] = 0
-                    response_data['created_ids'] = []
-            
-            return Response(response_data, status=status.HTTP_200_OK)
-            
-        except Exception as e:
-            return Response(
-                {'detail': f'Import failed: {str(e)}'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-    @action(detail=False, methods=['GET'])
-    def clustered(self, request):
-        """Get clustered locations for map view based on zoom level and bounds"""
-        zoom_level = request.query_params.get('zoom', 10)
-        
-        try:
-            zoom_level = int(zoom_level)
-            zoom_level = max(0, min(20, zoom_level))  # Clamp between 0-20
-        except (TypeError, ValueError):
-            zoom_level = 10
-        
-        # Get optional bounds
-        bounds = None
-        if all(param in request.query_params for param in ['north', 'south', 'east', 'west']):
-            try:
-                bounds = {
-                    'north': float(request.query_params['north']),
-                    'south': float(request.query_params['south']),
-                    'east': float(request.query_params['east']),
-                    'west': float(request.query_params['west'])
-                }
-            except (TypeError, ValueError):
-                pass
-        
-        # Get locations - use the filtered queryset
-        queryset = self.filter_queryset(self.get_queryset())
-        
-        # Convert to list of dicts for clustering
-        locations = []
-        for location in queryset:
-            locations.append({
-                'id': location.id,
-                'name': location.name,
-                'latitude': location.latitude,
-                'longitude': location.longitude,
-                'quality_score': location.quality_score,
-                'is_verified': location.is_verified,
-                'light_pollution_value': location.light_pollution_value,
-                'rating_count': location.rating_count,
-                'average_rating': float(location.average_rating) if location.average_rating else 0
-            })
-        
-        # Perform clustering
-        clusters = ClusteringService.cluster_locations(locations, zoom_level, bounds)
-        
-        # Calculate the actual number of locations that were processed
-        # (after bounds filtering in clustering service)
-        total_processed = sum(1 for c in clusters if c.get('type') == 'location') + \
-                         sum(c.get('count', 0) for c in clusters if c.get('type') == 'cluster')
-        
-        return Response({
-            'zoom_level': zoom_level,
-            'total_locations': total_processed,
-            'cluster_count': len([c for c in clusters if c.get('type') == 'cluster']),
-            'individual_count': len([c for c in clusters if c.get('type') == 'location']),
-            'clusters': clusters
-        })
 
     @action(detail=False, methods=['GET'])
     def check_duplicates(self, request):
@@ -523,124 +362,6 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             {'detail': 'Failed to update address'},
             status=status.HTTP_400_BAD_REQUEST
         )
-
-    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
-    def upload_photo(self, request, pk=None):
-        """Upload a photo for this location"""
-        location = self.get_object()
-        
-        # Check if image was provided
-        if 'image' not in request.FILES:
-            return Response(
-                {'detail': 'No image file provided'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Create photo object
-        data = {
-            'location': location.id,
-            'image': request.FILES['image'],
-            'caption': request.data.get('caption', ''),
-            'is_primary': request.data.get('is_primary', False)
-        }
-        
-        serializer = LocationPhotoSerializer(data=data)
-        if serializer.is_valid():
-            # Extract EXIF data if available
-            photo = serializer.save(uploaded_by=request.user)
-            
-            # TODO: Extract EXIF data from image
-            # This would require PIL/Pillow library
-            
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['GET'])
-    def photos(self, request, pk=None):
-        """Get all photos for this location"""
-        location = self.get_object()
-        photos = location.photos.filter(is_approved=True)
-        serializer = LocationPhotoSerializer(photos, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
-    def set_primary_photo(self, request, pk=None):
-        """Set a photo as the primary photo for this location"""
-        location = self.get_object()
-        photo_id = request.data.get('photo_id')
-        
-        if not photo_id:
-            return Response(
-                {'detail': 'photo_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            photo = LocationPhoto.objects.get(
-                id=photo_id,
-                location=location,
-                is_approved=True
-            )
-            
-            # Only the uploader or location owner can set primary photo
-            if photo.uploaded_by != request.user and location.added_by != request.user:
-                return Response(
-                    {'detail': 'You do not have permission to set this as primary'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            photo.is_primary = True
-            photo.save()  # This will unset other primary photos automatically
-            
-            serializer = LocationPhotoSerializer(photo)
-            return Response(serializer.data)
-            
-        except LocationPhoto.DoesNotExist:
-            return Response(
-                {'detail': 'Photo not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-    @action(detail=True, methods=['DELETE'], permission_classes=[IsAuthenticated])
-    def delete_photo(self, request, pk=None):
-        """Delete a photo for this location"""
-        location = self.get_object()
-        photo_id = request.data.get('photo_id') or request.query_params.get('photo_id')
-        
-        if not photo_id:
-            return Response(
-                {'detail': 'photo_id is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        try:
-            photo = LocationPhoto.objects.get(
-                id=photo_id,
-                location=location
-            )
-            
-            # Only the uploader or location owner can delete the photo
-            if photo.uploaded_by != request.user and location.added_by != request.user:
-                return Response(
-                    {'detail': 'You do not have permission to delete this photo'},
-                    status=status.HTTP_403_FORBIDDEN
-                )
-            
-            # If this was the primary photo, unset it
-            was_primary = photo.is_primary
-            photo.delete()
-            
-            return Response({
-                'detail': 'Photo deleted successfully',
-                'was_primary': was_primary
-            })
-            
-        except LocationPhoto.DoesNotExist:
-            return Response(
-                {'detail': 'Photo not found'},
-                status=status.HTTP_404_NOT_FOUND
-            )
 
     @action(detail=True, methods=['POST'])
     def add_review(self, request, pk=None):
@@ -1169,48 +890,13 @@ class ReviewVoteViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewVoteSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
-    
+
     def get_queryset(self):
         return ReviewVote.objects.filter(user=self.request.user)
-    
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-
-class ForecastViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = ForecastSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = Forecast.objects.all()
-    pagination_class = StandardResultsSetPagination
-
-
-@extend_schema_view(
-    list=extend_schema(description="List all location categories"),
-    retrieve=extend_schema(description="Get a specific location category"),
-)
-class LocationCategoryViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = LocationCategorySerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = LocationCategory.objects.all()
-    pagination_class = StandardResultsSetPagination
-
-
-@extend_schema_view(
-    list=extend_schema(description="List all location tags"),
-    retrieve=extend_schema(description="Get a specific location tag"),
-)
-class LocationTagViewSet(viewsets.ReadOnlyModelViewSet):
-    serializer_class = LocationTagSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-    queryset = LocationTag.objects.filter(is_approved=True)  # Only show approved tags
-    pagination_class = StandardResultsSetPagination
-    filter_backends = [SearchFilter, OrderingFilter]
-    search_fields = ['name']
-    ordering_fields = ['name', 'usage_count']
-    ordering = ['-usage_count', 'name']
-
-
-# Note: defaultforecast is a function, not a model, so no ViewSet needed
 
 class ViewingLocationCreateView(LoginRequiredMixin, View):
     def post(self, request):
@@ -1236,8 +922,6 @@ class ViewingLocationCreateView(LoginRequiredMixin, View):
                 'longitude': location.longitude,
                 'elevation': location.elevation,
                 'formatted_address': location.formatted_address,
-                'light_pollution_value': location.light_pollution_value,
-                'cloudCoverPercentage': location.cloudCoverPercentage,
                 'quality_score': location.quality_score
             })
 
@@ -1424,18 +1108,6 @@ def update_viewing_nickname(request, favorite_id):
 
 
 # -------------------------------------------------------------- #
-# Update All Forecasts Button on Upload Page
-@staff_member_required
-def update_forecast(request):
-    locations = ViewingLocation.objects.all()
-
-    for loc in locations:
-        loc.updateForecast()
-
-    return render(request, 'stars_app/upload_tif.html')
-
-
-# -------------------------------------------------------------- #
 # Navigation Views:
 def home(request):
     from datetime import datetime, timedelta
@@ -1455,66 +1127,25 @@ def home(request):
     return render(request, 'stars_app/home.html', context)
 
 def map(request):
-    # Get all locations and events:
+    # Get all locations:
     locations = ViewingLocation.objects.all()
-    events = CelestialEvent.objects.all()
 
     # Get tile server configuration
     tile_config = get_tile_server_config()
 
-    # Combine all items into one list:
-    combined_items = list(locations) + list(events)
-
     context = {
-        'items': combined_items,
+        'items': locations,
         'mapbox_token': settings.MAPBOX_TOKEN,
         'tile_server_url': tile_config['public_url'],
     }
     return render(request, 'stars_app/map.html', context)
 
 def get_tile_server_config():
-    """Get the appropriate tile server URL based on environment"""
-    import socket
-    
-    # Check if we're running in Docker by trying to resolve the service name
-    try:
-        socket.gethostbyname('tile-server')
-        # We're in Docker, use internal URL for server calls, public for browser
-        return {
-            'internal_url': 'http://tile-server:3001',
-            'public_url': 'http://143.198.25.144:3001'  # This should be accessible from the browser
-        }
-    except socket.gaierror:
-        # Not in Docker, use localhost for everything
-        return {
-            'internal_url': 'http://localhost:3001',
-            'public_url': 'http://143.198.25.144:3001'
-        }
-
-def event_list(request):
-    event_list = CelestialEvent.objects.all()
-    return render(request, 'stars_app/list.html', {'events':event_list})
-
-def details(request, event_id):
-    event = CelestialEvent.objects.get(pk=event_id)
-    viewing_locations = ViewingLocation.objects.all()
-
-    closet_loc = viewing_locations[0]
-    for loc in viewing_locations:
-        event_point = (event.latitude, event.longitude)
-        closest_point = (closet_loc.latitude, closet_loc.longitude)
-        current_point = (loc.latitude, loc.longitude)
-
-        closest_distance = geodesic(event_point, closest_point).kilometers
-        current_distance = geodesic(event_point, current_point).kilometers
-        if current_distance < closest_distance:
-            closet_loc = loc
-
-    current_data = {
-        'event': event,
-        'view_loc': closet_loc
+    """Get the tile server URL configuration"""
+    return {
+        'internal_url': 'http://localhost:3001',
+        'public_url': 'http://143.198.25.144:3001'
     }
-    return render(request, 'stars_app/details.html', current_data)
 
 
 # -------------------------------------------------------------- #
@@ -1544,7 +1175,6 @@ def account(request, pk):
     template_mapping = {
         'profile': 'stars_app/account_profile.html',
         'favorites': 'stars_app/account_favorites.html',
-        'notifications': 'stars_app/account_notifications.html',
         'preferences': 'stars_app/account_preferences.html'
     }
 

@@ -57,13 +57,6 @@ class RatableModel(models.Model):
 
 class ViewingLocationBase(TimestampedModel, LocationModel, RatableModel):
     """Combined base class for ViewingLocation to avoid MRO issues"""
-    
-    class Meta:
-        abstract = True
 
-
-class CelestialEventBase(TimestampedModel, LocationModel):
-    """Combined base class for CelestialEvent to avoid MRO issues"""
-    
     class Meta:
         abstract = True

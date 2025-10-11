@@ -2,9 +2,6 @@
 *.sqlite3
 
 .DS_Store
-CLAUDE.md
-projectplan.md
-media/
 
 # Byte-compiled / optimized / DLL files
 .env
@@ -45,21 +42,6 @@ MANIFEST
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-cover/
 
 # Translations
 *.mo
@@ -248,8 +230,5 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 # Event Horizon specific
-logs/
-bandit-report.json
-.pre-commit-config.yaml.bak
 staticfiles/
 

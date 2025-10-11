@@ -64,10 +64,6 @@
                             <span class="value">{{ favorite.location.quality_score|floatformat:1 }}/10</span>
                         </div>
                         <div class="info-item">
-                            <span class="label"><i class="fas fa-cloud"></i>Current Cloud Cover:</span>
-                            <span class="value">{{ favorite.location.cloudCoverPercentage|floatformat:0 }}%</span>
-                        </div>
-                        <div class="info-item">
                             <span class="label"><i class="fas fa-location-dot"></i>Coordinates:</span>
                             <span class="value">{{ favorite.location.latitude|floatformat:4 }}, {{ favorite.location.longitude|floatformat:4 }}</span>
                         </div>

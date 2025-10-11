@@ -13,7 +13,6 @@
 
     <!-- Map-specific styles -->
     <link href="{% static 'css/pages/map/map.css' %}" rel="stylesheet">
-    <link href="{% static 'css/components/filter-panel.css' %}" rel="stylesheet">
 {% endblock %}
 
 <!-- Replace block content in base_template.html -->
@@ -32,136 +31,54 @@
     <div class="locations-panel">
         <!-- Filtering tabs -->
         <div class="panel-tabs">
-            <div class="panel-tab active" data-tab="all">ALL</div>
-            <div class="panel-tab" data-tab="location">LOCATIONS</div>
-            <div class="panel-tab" data-tab="event">EVENTS</div>
+            <div class="panel-tab active" data-tab="all">ALL LOCATIONS</div>
         </div>
 
-        <!-- Enhanced search with filters -->
-        <div class="search-section">
-            <div class="search-controls">
-                <div class="search-container">
-                    <input type="text"
-                           class="search-input"
-                           placeholder="Search locations or events..."
-                           id="location-search">
-                    <span class="search-icon">
-                        <i class="fas fa-search"></i>
-                    </span>
-                </div>
-
-                <button id="filter-toggle" class="filter-toggle-btn">
-                    <i class="fas fa-filter"></i>
-                </button>
-            </div>
-
-            <div class="filter-panel">
-                <!-- Add event type filters -->
-                <div class="event-type-filter">
-                    <div class="item-filter-title">
-                        Event Filters
-                    </div>
-                    <div class="filter-buttons">
-                        <button class="filter-btn" data-type="METEOR">Meteor Showers</button>
-                        <button class="filter-btn" data-type="ECLIPSE">Eclipses</button>
-                        <button class="filter-btn" data-type="PLANET">Planetary</button>
-                        <button class="filter-btn" data-type="AURORA">Aurora</button>
-                        <button class="filter-btn" data-type="COMET">Comets</button>
-                        <button class="filter-btn" data-type="OTHER">Other</button>
-                    </div>
-                </div>
-
-                <!-- Add location type filtering -->
-                <div class="location-type-filter">
-                    <div class="item-filter-title">
-                        Viewing Location Filters
-                    </div>
-                    <div class="filter-buttons">
-                        {% if user.is_authenticated %}
-                            <button class="filter-btn" data-filter="favorites">
-                                My Favorites
-                            </button>
-                            <button class="filter-btn" data-filter="my-locations">
-                                My Locations
-                            </button>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Location/Event list -->
+        <!-- Location list -->
         <div class="location-list">
             {% for item in items %}
-                {% if item|get_class == 'ViewingLocation' %}
-                    <div class="location-item"
-                         data-lat="{{ item.latitude }}"
-                         data-lng="{{ item.longitude }}"
-                         data-type="location"
-                         data-id="{{ item.id }}"
-                         data-is-favorite="{% if user.is_authenticated %}{{ item|is_favorite:user|lower }}{% else %}false{% endif %}"
-                         data-added-by="{{ item.added_by.id }}">
+                <div class="location-item"
+                     data-lat="{{ item.latitude }}"
+                     data-lng="{{ item.longitude }}"
+                     data-type="location"
+                     data-id="{{ item.id }}"
+                     data-is-favorite="{% if user.is_authenticated %}{{ item|is_favorite:user|lower }}{% else %}false{% endif %}"
+                     data-added-by="{{ item.added_by.id }}">
 
-                        <div class="item-snapshot">
-                            <div class="favorite-indicator {% if user.is_authenticated and item|is_favorite:user %}active{% endif %}">
-                                <i class="fas fa-heart"></i>
-                            </div>
-                            <img class="location-map"
-                                 src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},6/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
-                                 alt="Map view of {{ item.name }}">
+                    <div class="item-snapshot">
+                        <div class="favorite-indicator {% if user.is_authenticated and item|is_favorite:user %}active{% endif %}">
+                            <i class="fas fa-heart"></i>
                         </div>
+                        <img class="location-map"
+                             src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},6/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
+                             alt="Map view of {{ item.name }}">
+                    </div>
 
-                        <div class="item-content">
-                            <h3 class="location-title">{{ item.name }}</h3>
-                            <div class="location-type"><i class="fas fa-map-marker-alt"></i>Viewing Location</div>
-                            <div class="location-info">
-                                <div class="star-rating">
-                                    <div class="star-rating-stars">
-                                        {% with average_rating=item.reviews.all|average_rating %}
-                                            {# Loop through 5 stars #}
-                                            {% for i in "12345"|make_list %}
-                                                {# Convert average_rating to integer for comparison #}
-                                                {% with rating_int=average_rating|floatformat:"0"|add:"0" %}
-                                                    {# Check if this star should be filled based on the rating #}
-                                                    <i class="fas fa-star {% if forloop.counter <= rating_int %}filled{% endif %}"></i>
-                                                {% endwith %}
-                                            {% endfor %}
-                                        {% endwith %}
-                                    </div>
-                                    <span class="star-rating-count">({{ item.reviews.count }})</span>
+                    <div class="item-content">
+                        <h3 class="location-title">{{ item.name }}</h3>
+                        <div class="location-type"><i class="fas fa-map-marker-alt"></i>Viewing Location</div>
+                        <div class="location-info">
+                            <div class="star-rating">
+                                <div class="star-rating-stars">
+                                    {% with average_rating=item.reviews.all|average_rating %}
+                                        {# Loop through 5 stars #}
+                                        {% for i in "12345"|make_list %}
+                                            {# Convert average_rating to integer for comparison #}
+                                            {% with rating_int=average_rating|floatformat:"0"|add:"0" %}
+                                                {# Check if this star should be filled based on the rating #}
+                                                <i class="fas fa-star {% if forloop.counter <= rating_int %}filled{% endif %}"></i>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    {% endwith %}
                                 </div>
-                                <div class="info-item">
-                                    SEE DETAILS
-                                </div>
+                                <span class="star-rating-count">({{ item.reviews.count }})</span>
+                            </div>
+                            <div class="info-item">
+                                SEE DETAILS
                             </div>
                         </div>
                     </div>
-
-                {% else %}
-                    <div class="location-item"
-                         data-lat="{{ item.latitude }}"
-                         data-lng="{{ item.longitude }}"
-                         data-type="event"
-                         data-event-type="{{ item.event_type }}">
-
-                        <div class="item-snapshot">
-                            <img
-                                src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/{{ item.longitude }},{{ item.latitude }},10/150x150@2x?access_token={{ mapbox_token }}&attribution=false"
-                                alt="Map view of {{ item.name }}"
-                                class="location-map">
-                            <div class="snapshot-marker">
-                                <i class="fa-solid fa-location-dot"></i>
-                            </div>
-                        </div>
-
-                        <div class="item-content">
-                            <div class="location-title">{{ item.name }}</div>
-                            <div class="location-type">{{ item.get_event_type_display }}</div>
-                            <div class="event-details"></div>
-                        </div>
-                    </div>
-
-                {% endif %}
+                </div>
             {% endfor %}
         </div>
 
@@ -210,7 +127,6 @@
 {% block extra_scripts %}
 <script type="module">
     import {MapController} from "../../../static/js/pages/map/MapController.js";
-    import {FilterPanel} from "../../../static/js/components/FilterPanel.js";
 
     function initializePage() {
         if (typeof initNavbar === 'function') {
@@ -224,26 +140,13 @@
 
         // Make tile server URL available to JavaScript
         window.TILE_SERVER_URL = '{{ tile_server_url }}';
-        
+
         // Also add some debugging info
         console.log('🔧 Tile server URL configured as:', window.TILE_SERVER_URL);
         console.log('🌐 Current hostname:', window.location.hostname);
         console.log('🚀 Initializing map controller...');
 
         window.mapController = new MapController();
-        
-        // Initialize filter panel with callback
-        window.filterPanel = new FilterPanel({
-            container: document.querySelector('.filter-panel'),
-            onFilterChange: (filters) => {
-                // Apply advanced filters to map controller
-                if (window.mapController && window.mapController.applyAdvancedFilters) {
-                    window.mapController.applyAdvancedFilters(filters);
-                }
-            },
-            csrfToken: document.querySelector('[name=csrfmiddlewaretoken]').value
-        });
-        
         window.mapController.initialize();
     }
     setTimeout(initializePage, 0);

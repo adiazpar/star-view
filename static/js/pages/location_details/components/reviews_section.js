@@ -194,28 +194,19 @@ window.ReviewSystem = (function() {
                     
                     // Initialize contenteditable event listeners
                     const commentInput = formContainer.querySelector('.comment-input');
-                    const hiddenInput = formContainer.querySelector('.hidden-content');
-                    
-                    if (commentInput && hiddenInput) {
-                        // Set initial empty state
-                        hiddenInput.value = '';
-                        
+
+                    if (commentInput) {
                         // Add placeholder behavior
                         commentInput.addEventListener('focus', function() {
                             if (this.textContent.trim() === '' && !this.querySelector('*')) {
                                 this.textContent = '';
                             }
                         });
-                        
+
                         commentInput.addEventListener('blur', function() {
                             if (this.textContent.trim() === '' && !this.querySelector('*')) {
-                                this.innerHTML = '';
+                                this.textContent = '';
                             }
-                        });
-                        
-                        // Update hidden input on content change
-                        commentInput.addEventListener('input', function() {
-                            updateHiddenInput(this);
                         });
                     }
                     
@@ -662,28 +653,23 @@ window.ReviewSystem = (function() {
                 const form = existingFormContainer.querySelector('.comment-form');
                 if (form) {
                     const editableDiv = form.querySelector('.comment-input');
-                    const hiddenInput = form.querySelector('.hidden-content');
-                    
+
                     // Set up the placeholder behavior
                     if (editableDiv) {
                         editableDiv.addEventListener('focus', function() {
                             if (this.classList.contains('empty')) {
                                 this.classList.remove('empty');
-                                this.innerHTML = '';
+                                this.textContent = '';
                             }
                         });
-                        
+
                         editableDiv.addEventListener('blur', function() {
-                            if (this.innerHTML.trim() === '') {
+                            if (this.textContent.trim() === '') {
                                 this.classList.add('empty');
-                                this.innerHTML = '';
+                                this.textContent = '';
                             }
                         });
-                        
-                        editableDiv.addEventListener('input', function() {
-                            updateHiddenInput(this);
-                        });
-                        
+
                         // Initialize as empty
                         editableDiv.classList.add('empty');
                     }
@@ -699,78 +685,7 @@ window.ReviewSystem = (function() {
             }, 100);
         }
     }
-    
-    // Update hidden input with markdown content
-    function updateHiddenInput(editableDiv) {
-        const form = editableDiv.closest('.comment-form, .edit-form');
-        const hiddenInput = form.querySelector('.hidden-content');
-        
-        // Convert HTML content to markdown for storage
-        const htmlContent = editableDiv.innerHTML;
-        const markdownContent = htmlToMarkdown(htmlContent);
-        
-        hiddenInput.value = markdownContent;
-    }
-    
-    // Convert HTML to markdown
-    function htmlToMarkdown(html) {
-        // Create a temporary div to work with the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        
-        // Process the HTML content to extract formatting
-        let result = processNodeForMarkdown(tempDiv);
-        
-        // Handle multiple consecutive line breaks to preserve blank lines
-        // Convert sequences of 2 or more line breaks to double line breaks
-        result = result.replace(/\n{2,}/g, '\n\n');
-        
-        // Don't trim to preserve intentional blank lines at start/end
-        return result;
-    }
-    
-    // Process HTML nodes for markdown conversion
-    function processNodeForMarkdown(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            return node.textContent;
-        }
-        
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            let content = '';
-            
-            // Process all child nodes first
-            for (let child of node.childNodes) {
-                content += processNodeForMarkdown(child);
-            }
-            
-            // Apply formatting based on the current element
-            const tagName = node.tagName ? node.tagName.toLowerCase() : '';
-            
-            switch (tagName) {
-                case 'strong':
-                case 'b':
-                    return `**${content}**`;
-                case 'em':
-                case 'i':
-                    return `*${content}*`;
-                case 'u':
-                    return `__${content}__`;
-                case 'br':
-                    return '\n';
-                case 'div':
-                    // If div is empty or only contains whitespace, treat as blank line
-                    if (!content.trim()) {
-                        return '\n';
-                    }
-                    return content + '\n';
-                default:
-                    return content;
-            }
-        }
-        
-        return '';
-    }
-    
+
     // Handle cancel review action
     function handleCancelReview() {
         const formContainer = document.getElementById('reviewFormContainer');
@@ -788,12 +703,8 @@ window.ReviewSystem = (function() {
                 
                 // Clear comment input
                 const commentInput = form.querySelector('.comment-input');
-                const hiddenInput = form.querySelector('.hidden-content');
                 if (commentInput) {
-                    commentInput.innerHTML = '';
-                }
-                if (hiddenInput) {
-                    hiddenInput.value = '';
+                    commentInput.textContent = '';
                 }
                 
                 // Clear any uploaded images
@@ -840,9 +751,8 @@ window.CommentSystem = (function() {
     function init(pageConfig, bus) {
         config = pageConfig;
         eventBus = bus;
-        
+
         setupEventListeners();
-        initializeCommentFormatting();
     }
     
     // Setup event listeners for comment functionality
@@ -880,20 +790,17 @@ window.CommentSystem = (function() {
         const reviewId = this.dataset.reviewId;
         const locationId = this.dataset.locationId;
         const commentInput = this.querySelector('.comment-input');
-        const hiddenInput = this.querySelector('.hidden-content');
-        
-        // Get content from hidden input (markdown) or contenteditable div
+
+        // Get plain text content from contenteditable div or input
         let content;
-        if (hiddenInput && hiddenInput.value.trim()) {
-            content = hiddenInput.value.trim();
-        } else if (commentInput.contentEditable === 'true') {
-            content = htmlToMarkdown(commentInput.innerHTML).trim();
+        if (commentInput.contentEditable === 'true') {
+            content = commentInput.textContent.trim();
         } else {
             content = commentInput.value.trim();
         }
         if (!content) return;
 
-        fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/`, {
+        fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': config.csrfToken,
@@ -918,13 +825,7 @@ window.CommentSystem = (function() {
 
             // Clear the input
             if (commentInput.contentEditable === 'true') {
-                commentInput.innerHTML = '';
-                hiddenInput.value = '';
-                
-                // Clear all formatting button states
-                const form = commentInput.closest('.comment-form');
-                const buttons = form.querySelectorAll('.formatting-btn');
-                buttons.forEach(button => button.classList.remove('active'));
+                commentInput.textContent = '';
             } else {
                 commentInput.value = '';
             }
@@ -1031,7 +932,7 @@ window.CommentSystem = (function() {
     
     // Delete a comment
     function deleteComment(commentId, reviewId, locationId) {
-        fetch(`/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/`, {
+        fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/`, {
             method: 'DELETE',
             headers: {
                 'X-CSRFToken': config.csrfToken,
@@ -1222,13 +1123,13 @@ window.CommentSystem = (function() {
                     <span class="comment-date">${formatDate(comment.created_at)}</span>
                     ${comment.is_edited ? '<span class="edited-indicator">(edited)</span>' : ''}
                 </div>
-                <p class="comment-text" 
-                   data-editable="comment" 
+                <p class="comment-text"
+                   data-editable="comment"
                    data-location-id="${comment.location || config.locationId}"
                    data-review-id="${comment.review || comment.review_id}"
-                   data-comment-id="${comment.id}" 
-                   data-original-content="${comment.content || comment.formatted_content}">
-                    ${comment.formatted_content || comment.content}
+                   data-comment-id="${comment.id}"
+                   data-original-content="${comment.content}">
+                    ${comment.content}
                 </p>
                 <div class="comment-vote-controls">
                     ${voteControls}
@@ -1238,174 +1139,7 @@ window.CommentSystem = (function() {
         `;
         return div;
     }
-    
-    // Initialize formatting functionality for comment forms
-    function initializeCommentFormatting() {
-        // Add event listeners to all formatting buttons
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.formatting-btn')) {
-                e.preventDefault();
-                const button = e.target.closest('.formatting-btn');
-                const form = button.closest('.comment-form, .edit-form');
-                const editableDiv = form.querySelector('.comment-input');
-                
-                // Focus the editor first
-                editableDiv.focus();
-                
-                // Get the formatting type from button title
-                const formatType = button.getAttribute('title').toLowerCase();
-                
-                // Apply formatting using simple execCommand
-                applyFormattingSimple(formatType);
-                
-                // Update button states and hidden input
-                setTimeout(() => {
-                    updateButtonStates(form);
-                    updateHiddenInput(editableDiv);
-                }, 10);
-            }
-        });
 
-        // Update button states when selection changes
-        document.addEventListener('selectionchange', function() {
-            const activeElement = document.activeElement;
-            if (activeElement && activeElement.classList.contains('comment-input') && activeElement.contentEditable === 'true') {
-                const form = activeElement.closest('.comment-form');
-                updateButtonStates(form);
-            }
-        });
-        
-        // Update hidden input when content changes
-        document.addEventListener('input', function(e) {
-            if (e.target.classList.contains('comment-input') && e.target.contentEditable === 'true') {
-                updateHiddenInput(e.target);
-            }
-        });
-    }
-
-    // Apply formatting using execCommand
-    function applyFormattingSimple(formatType) {
-        // Use document.execCommand for reliable formatting
-        let command;
-        switch(formatType) {
-            case 'bold':
-                command = 'bold';
-                break;
-            case 'italic':
-                command = 'italic';
-                break;
-            case 'underline':
-                command = 'underline';
-                break;
-            default:
-                return;
-        }
-        
-        // Apply the formatting
-        document.execCommand(command, false, null);
-    }
-
-    // Update hidden input with markdown content
-    function updateHiddenInput(editableDiv) {
-        const form = editableDiv.closest('.comment-form, .edit-form');
-        const hiddenInput = form.querySelector('.hidden-content');
-        
-        // Convert HTML content to markdown for storage
-        const htmlContent = editableDiv.innerHTML;
-        const markdownContent = htmlToMarkdown(htmlContent);
-        
-        hiddenInput.value = markdownContent;
-    }
-
-    // Convert HTML to markdown
-    function htmlToMarkdown(html) {
-        // Create a temporary div to work with the HTML
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        
-        // Process the HTML content to extract formatting
-        let result = processNodeForMarkdown(tempDiv);
-        
-        // Handle multiple consecutive line breaks to preserve blank lines
-        // Convert sequences of 2 or more line breaks to double line breaks
-        result = result.replace(/\n{2,}/g, '\n\n');
-        
-        // Don't trim to preserve intentional blank lines at start/end
-        return result;
-    }
-    
-    // Process HTML nodes for markdown conversion
-    function processNodeForMarkdown(node) {
-        if (node.nodeType === Node.TEXT_NODE) {
-            return node.textContent;
-        }
-        
-        if (node.nodeType === Node.ELEMENT_NODE) {
-            let content = '';
-            
-            // Process all child nodes first
-            for (let child of node.childNodes) {
-                content += processNodeForMarkdown(child);
-            }
-            
-            // Apply formatting based on the current element
-            const tagName = node.tagName ? node.tagName.toLowerCase() : '';
-            
-            switch (tagName) {
-                case 'strong':
-                case 'b':
-                    return `**${content}**`;
-                case 'em':
-                case 'i':
-                    return `*${content}*`;
-                case 'u':
-                    return `__${content}__`;
-                case 'br':
-                    return '\n';
-                case 'div':
-                    // If div is empty or only contains whitespace, treat as blank line
-                    if (!content.trim()) {
-                        return '\n';
-                    }
-                    return content + '\n';
-                default:
-                    return content;
-            }
-        }
-        
-        return '';
-    }
-
-    // Update formatting button states
-    function updateButtonStates(form) {
-        if (!form) return;
-        
-        const buttons = form.querySelectorAll('.formatting-btn');
-        
-        buttons.forEach(button => {
-            const formatType = button.getAttribute('title').toLowerCase();
-            let command;
-            
-            switch(formatType) {
-                case 'bold':
-                    command = 'bold';
-                    break;
-                case 'italic':
-                    command = 'italic';
-                    break;
-                case 'underline':
-                    command = 'underline';
-                    break;
-                default:
-                    return;
-            }
-            
-            // Use queryCommandState to check if formatting is active
-            const isActive = document.queryCommandState(command);
-            button.classList.toggle('active', isActive);
-        });
-    }
-    
     // Format date for display
     function formatDate(dateString) {
         const date = new Date(dateString);
@@ -1469,9 +1203,9 @@ window.VotingSystem = (function() {
         // Construct API endpoint
         let apiUrl;
         if (isReviewVote) {
-            apiUrl = `/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/vote/`;
+            apiUrl = `/api/viewing-locations/${locationId}/reviews/${reviewId}/vote/`;
         } else {
-            apiUrl = `/api/v1/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/vote/`;
+            apiUrl = `/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/vote/`;
         }
         
         // Disable the button during the request
@@ -1558,27 +1292,7 @@ window.EditingSystem = (function() {
         config = pageConfig;
         eventBus = bus;
     }
-    
-    // Convert markdown to HTML for editing display
-    function convertMarkdownToHtml(markdown) {
-        if (!markdown) return '';
-        
-        let html = markdown;
-        
-        // Convert bold (**text**)
-        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        
-        // Convert underline (__text__)
-        html = html.replace(/__(.*?)__/g, '<u>$1</u>');
-        
-        // Convert italic (*text*)
-        html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        
-        // Don't automatically convert line breaks - preserve original formatting
-        
-        return html;
-    }
-    
+
     // Make an element editable
     function makeEditable(element, type, ids, originalContent) {
         // Check if already in edit mode
@@ -1689,13 +1403,7 @@ window.EditingSystem = (function() {
                     if (originalData.content) {
                         // Set the content in the comment input
                         if (commentInput) {
-                            commentInput.innerHTML = originalData.content;
-                        }
-                        
-                        // Set the hidden input value
-                        const hiddenInput = formElement.querySelector('.hidden-content');
-                        if (hiddenInput) {
-                            hiddenInput.value = originalData.markdownContent || originalData.content;
+                            commentInput.textContent = originalData.content;
                         }
                     }
                     
@@ -1726,19 +1434,7 @@ window.EditingSystem = (function() {
                     <div class="comment-input editable" contenteditable="true" data-placeholder="Edit your comment..." data-name="content">
                         ${cleanContent}
                     </div>
-                    <input type="hidden" class="hidden-content" value="${cleanContent}">
                     <div class="comment-toolbar">
-                        <div class="comment-formatting-tools">
-                            <button type="button" class="formatting-btn" title="Bold">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bold-icon lucide-bold"><path d="M6 12h9a4 4 0 0 1 0 8H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h7a4 4 0 0 1 0 8"/></svg>
-                            </button>
-                            <button type="button" class="formatting-btn" title="Italic">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-italic-icon lucide-italic"><line x1="19" x2="10" y1="4" y2="4"/><line x1="14" x2="5" y1="20" y2="20"/><line x1="15" x2="9" y1="4" y2="20"/></svg>
-                            </button>
-                            <button type="button" class="formatting-btn" title="Underline">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-underline-icon lucide-underline"><path d="M6 4v6a6 6 0 0 0 12 0V4"/><line x1="4" x2="20" y1="20" y2="20"/></svg>
-                            </button>
-                        </div>
                         <div class="edit-actions">
                             <button type="button" class="cancel-edit">Cancel</button>
                             <button type="submit" class="save-edit">Save Changes</button>
@@ -1774,14 +1470,6 @@ window.EditingSystem = (function() {
         if (type === 'comment') {
             const form = editControls.querySelector('.edit-form');
             if (form) {
-                // Convert markdown to HTML for proper display in edit mode
-                const commentInput = form.querySelector('.comment-input');
-                if (commentInput) {
-                    const markdownContent = commentInput.textContent || commentInput.innerHTML;
-                    const htmlContent = convertMarkdownToHtml(markdownContent);
-                    commentInput.innerHTML = htmlContent;
-                }
-                
                 addEditEventListeners(form, type, ids, element);
             }
         }
@@ -1871,21 +1559,18 @@ window.EditingSystem = (function() {
                 const parsed = JSON.parse(originalContent);
                 return {
                     rating: parsed.rating,
-                    content: parsed.content,
-                    markdownContent: parsed.markdownContent
+                    content: parsed.content
                 };
             } catch (e) {
                 // If not JSON, treat as plain content
                 return {
-                    content: originalContent,
-                    markdownContent: originalContent
+                    content: originalContent
                 };
             }
         } else {
             // For comments, it's just the content
             return {
-                content: originalContent,
-                markdownContent: originalContent
+                content: originalContent
             };
         }
     }
@@ -1906,35 +1591,19 @@ window.EditingSystem = (function() {
                 cancelEdit(originalElement);
             });
         }
-        
-        // Handle content input changes for markdown conversion
-        const contentInput = form.querySelector('.comment-input');
-        const hiddenInput = form.querySelector('.hidden-content');
-        
-        if (contentInput && hiddenInput && contentInput.contentEditable === 'true') {
-            contentInput.addEventListener('input', function() {
-                const htmlContent = this.innerHTML;
-                const markdownContent = convertHtmlToMarkdown(htmlContent);
-                hiddenInput.value = markdownContent;
-            });
-        }
     }
     
     // Handle edit form submission
     function handleEditSubmit(form, type, ids, originalElement) {
         const formData = new FormData(form);
         const contentInput = form.querySelector('.comment-input');
-        const hiddenInput = form.querySelector('.hidden-content');
-        
-        // Get content from hidden input or contenteditable div
+
+        // Get plain text content from contenteditable div or input
         let content = '';
-        
-        if (hiddenInput && hiddenInput.value && hiddenInput.value.trim()) {
-            content = hiddenInput.value.trim();
-        } else if (contentInput) {
+
+        if (contentInput) {
             if (contentInput.contentEditable === 'true') {
-                const htmlContent = contentInput.innerHTML;
-                content = convertHtmlToMarkdown(htmlContent).trim();
+                content = contentInput.textContent.trim();
             } else {
                 content = contentInput.value ? contentInput.value.trim() : '';
             }
@@ -1980,9 +1649,9 @@ window.EditingSystem = (function() {
         // Determine API endpoint
         let apiUrl;
         if (type === 'review') {
-            apiUrl = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/`;
+            apiUrl = `/api/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/`;
         } else {
-            apiUrl = `/api/v1/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
+            apiUrl = `/api/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
         }
         
         
@@ -2026,9 +1695,8 @@ window.EditingSystem = (function() {
                 const sentContent = formData.get('content');
                 if (sentContent) {
                     data.comment = sentContent;
-                    data.formatted_content = sentContent;
                 }
-                
+
                 // Also ensure rating is updated with what was sent
                 const sentRating = formData.get('rating');
                 if (sentRating) {
@@ -2064,8 +1732,8 @@ window.EditingSystem = (function() {
     function updateOriginalElement(element, data, type) {
         if (type === 'review') {
             // Update review content
-            const newContent = data.formatted_content || data.comment || data.content || '';
-            element.innerHTML = newContent;
+            const newContent = data.comment || data.content || '';
+            element.textContent = newContent;
             
             // Update data-rating attribute
             if (data.rating) {
@@ -2171,7 +1839,7 @@ window.EditingSystem = (function() {
             }
         } else {
             // Update comment content
-            element.innerHTML = data.formatted_content || data.content;
+            element.textContent = data.content;
             
             // Add edited indicator
             const commentHeader = element.closest('.comment').querySelector('.comment-header');
@@ -2189,7 +1857,6 @@ window.EditingSystem = (function() {
         // Update the original content attribute with the JSON format expected by parseOriginalContent
         element.setAttribute('data-original-content', JSON.stringify({
             content: data.comment || data.content || '',
-            markdownContent: data.comment || data.content || '',
             rating: data.rating
         }));
     }
@@ -2219,21 +1886,7 @@ window.EditingSystem = (function() {
         textArea.innerHTML = text;
         return textArea.value;
     }
-    
-    // Convert HTML to markdown (simplified version)
-    function convertHtmlToMarkdown(html) {
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = html;
-        
-        // Simple conversion for basic formatting
-        let result = tempDiv.textContent || tempDiv.innerText || '';
-        
-        // Handle line breaks
-        result = result.replace(/\n+/g, '\n\n');
-        
-        return result.trim();
-    }
-    
+
     // Public API
     return {
         init: init,
@@ -2978,9 +2631,9 @@ window.ReportModal = (function() {
         // Determine API endpoint
         let apiUrl;
         if (currentReportTarget.type === 'review') {
-            apiUrl = `/api/v1/viewing-locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.id}/report/`;
+            apiUrl = `/api/viewing-locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.id}/report/`;
         } else {
-            apiUrl = `/api/v1/viewing-locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.reviewId}/comments/${currentReportTarget.id}/report/`;
+            apiUrl = `/api/viewing-locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.reviewId}/comments/${currentReportTarget.id}/report/`;
         }
         
         // Submit report
