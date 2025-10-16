@@ -6,10 +6,10 @@ from django.conf import settings
 from pathlib import Path
 
 # Import models
-from .models.userprofile import UserProfile
-from .models.reviewphoto import ReviewPhoto
-from .models.locationreview import LocationReview
-from .models.viewinglocation import ViewingLocation
+from .models.model_user_profile import UserProfile
+from .models.model_review_photo import ReviewPhoto
+from .models.model_location_review import LocationReview
+from .models.model_viewing_location import ViewingLocation
 
 logger = logging.getLogger(__name__)
 

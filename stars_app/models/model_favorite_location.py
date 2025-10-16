@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from .viewinglocation import ViewingLocation
+from .model_viewing_location import ViewingLocation
 
 
 # Favorite Location Model ------------------------------------------- #

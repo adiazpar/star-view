@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from .base import TimestampedModel
+from .model_base import TimestampedModel
 
 
 # User Profile Model ------------------------------------------------ #
@@ -59,7 +59,7 @@ class UserProfile(TimestampedModel):
         score += verified_locations * 20
         
         # Points for reviews
-        from .locationreview import LocationReview
+        from .model_location_review import LocationReview
         reviews = LocationReview.objects.filter(user=self.user).count()
         score += reviews * 5
         

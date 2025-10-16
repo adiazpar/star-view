@@ -1,19 +1,30 @@
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import timezone
-import requests
-import xml.etree.ElementTree as ET
-from datetime import datetime, timedelta
-from zoneinfo import ZoneInfo
 
-from django_project import settings
-from .base import ViewingLocationBase
+from .model_base import TimestampedModel
 from stars_app.services.location_service import LocationService
 
 
 # Viewing Location Model -------------------------------------------- #
-class ViewingLocation(ViewingLocationBase):
+class ViewingLocation(TimestampedModel):
     name = models.CharField(max_length=200)
+
+    # Location fields
+    latitude = models.FloatField()
+    longitude = models.FloatField()
+    elevation = models.FloatField(
+        help_text="Elevation in meters",
+        default=0
+    )
+
+    # Rating fields
+    rating_count = models.PositiveIntegerField(default=0)
+    average_rating = models.DecimalField(
+        max_digits=3,
+        decimal_places=2,
+        default=0.00,
+        help_text="Average rating (0.00-5.00)"
+    )
 
     # New address fields:
     formatted_address = models.CharField(max_length=500, blank=True, null=True, help_text="Full formatted address from geocoding or user input")

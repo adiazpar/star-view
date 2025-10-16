@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .locationreview import LocationReview
+from .model_location_review import LocationReview
 
 class ReviewComment(models.Model):
     review = models.ForeignKey(

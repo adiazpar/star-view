@@ -1,16 +1,16 @@
 from django.db.models import Avg
 from rest_framework import serializers
 
-from stars_app.models.favoritelocation import FavoriteLocation
-from stars_app.models.reviewvote import ReviewVote
-from stars_app.models.reviewcomment import ReviewComment
-from stars_app.models.viewinglocation import ViewingLocation
-from stars_app.models.locationreview import LocationReview
-from stars_app.models.userprofile import UserProfile
-from stars_app.models.locationreport import LocationReport
-from stars_app.models.reviewphoto import ReviewPhoto
-from stars_app.models.reviewreport import ReviewReport
-from stars_app.models.commentreport import CommentReport
+from stars_app.models.model_favorite_location import FavoriteLocation
+from stars_app.models.model_review_vote import ReviewVote
+from stars_app.models.model_review_comment import ReviewComment
+from stars_app.models.model_viewing_location import ViewingLocation
+from stars_app.models.model_location_review import LocationReview
+from stars_app.models.model_user_profile import UserProfile
+from stars_app.models.model_location_report import LocationReport
+from stars_app.models.model_review_photo import ReviewPhoto
+from stars_app.models.model_review_report import ReviewReport
+from stars_app.models.model_comment_report import CommentReport
 from django.contrib.auth.models import User
 
 

@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from rest_framework.exceptions import PermissionDenied
 
 # Importing other things from project files:
-from stars_app.models.userprofile import UserProfile
+from stars_app.models.model_user_profile import UserProfile
 from django.contrib.auth.models import User
 from stars_app.utils import is_valid_email
 
@@ -33,28 +33,20 @@ from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 from stars_app.serializers import *
-from stars_app.models.locationreport import LocationReport
 
 # Tile libraries:
 import os
 from django.conf import settings
-from django.http import HttpResponse, FileResponse
-from django.views.decorators.cache import cache_control
-import subprocess
-from django.contrib.admin.views.decorators import staff_member_required
-import requests
 
 # Distance
-from geopy.distance import geodesic
-
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 import json
 
 from itertools import chain
 from django.core.paginator import Paginator
-from .models.reviewvote import ReviewVote
-from .models.commentvote import CommentVote
+from .models.model_review_vote import ReviewVote
+from .models.model_comment_vote import CommentVote
 
 # -------------------------------------------------------------- #
 # Pagination Classes:
@@ -386,8 +378,8 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             # Handle image uploads
             uploaded_images = request.FILES.getlist('images') or request.FILES.getlist('review_images')
             if uploaded_images:
-                from stars_app.models.reviewphoto import ReviewPhoto
-                
+                from stars_app.models.model_review_photo import ReviewPhoto
+
                 # Validate number of images
                 if len(uploaded_images) > 5:
                     # Delete the review if too many images
@@ -436,8 +428,8 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             # Handle image uploads for review updates
             uploaded_images = request.FILES.getlist('images') or request.FILES.getlist('review_images')
             if uploaded_images:
-                from stars_app.models.reviewphoto import ReviewPhoto
-                
+                from stars_app.models.model_review_photo import ReviewPhoto
+
                 # Check existing photos count
                 existing_photos_count = review.photos.count()
                 if existing_photos_count + len(uploaded_images) > 5:
@@ -588,8 +580,8 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
             # Handle image uploads
             uploaded_images = request.FILES.getlist('images') or request.FILES.getlist('review_images')
             if uploaded_images:
-                from stars_app.models.reviewphoto import ReviewPhoto
-                
+                from stars_app.models.model_review_photo import ReviewPhoto
+
                 # Check existing photos count
                 existing_photos_count = instance.photos.count()
                 if existing_photos_count + len(uploaded_images) > 5:
@@ -645,7 +637,7 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
                 )
             
             # Check if user already reported this review
-            from stars_app.models.reviewreport import ReviewReport
+            from stars_app.models.model_review_report import ReviewReport
             existing_report = ReviewReport.objects.filter(
                 review=review,
                 reported_by=request.user
@@ -810,7 +802,7 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
                 )
             
             # Check if user already reported this comment
-            from stars_app.models.commentreport import CommentReport
+            from stars_app.models.model_comment_report import CommentReport
             existing_report = CommentReport.objects.filter(
                 comment=comment,
                 reported_by=request.user
@@ -1042,8 +1034,8 @@ def location_details(request, location_id):
             # Handle image uploads
             uploaded_images = request.FILES.getlist('review_images')
             if uploaded_images:
-                from stars_app.models.reviewphoto import ReviewPhoto
-                
+                from stars_app.models.model_review_photo import ReviewPhoto
+
                 # Validate number of images
                 existing_photos_count = review.photos.count()
                 if existing_photos_count + len(uploaded_images) > 5:

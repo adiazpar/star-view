@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .base import TimestampedModel
-from .reviewcomment import ReviewComment
+from .model_base import TimestampedModel
+from .model_review_comment import ReviewComment
 
 
 class CommentReport(TimestampedModel):

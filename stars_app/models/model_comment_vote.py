@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-from .reviewcomment import ReviewComment
+from .model_review_comment import ReviewComment
 
 
 class CommentVote(models.Model):

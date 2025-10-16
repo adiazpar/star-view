@@ -1,9 +1,8 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.validators import ValidationError
-from .base import TimestampedModel
-from .locationreview import LocationReview
+from .model_base import TimestampedModel
+from .model_location_review import LocationReview
 import os
 from uuid import uuid4
 from PIL import Image
