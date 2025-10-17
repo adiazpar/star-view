@@ -1,10 +1,10 @@
 from django.db.models import Avg
 from rest_framework import serializers
 
-from stars_app.models.model_favorite_location import FavoriteLocation
+from stars_app.models.model_location_favorite import FavoriteLocation
 from stars_app.models.model_review_comment import ReviewComment
-from stars_app.models.model_viewing_location import ViewingLocation
-from stars_app.models.model_location_review import LocationReview
+from stars_app.models.model_location import Location
+from stars_app.models.model_review import Review
 from stars_app.models.model_user_profile import UserProfile
 from stars_app.models.model_review_photo import ReviewPhoto
 from django.contrib.auth.models import User
@@ -80,7 +80,7 @@ class ReviewPhotoSerializer(serializers.ModelSerializer):
 
 
 # Location Review Serializer -------------------------------------- #
-class LocationReviewSerializer(serializers.ModelSerializer):
+class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     user_full_name = serializers.SerializerMethodField()
     vote_count = serializers.SerializerMethodField()
@@ -91,7 +91,7 @@ class LocationReviewSerializer(serializers.ModelSerializer):
     is_edited = serializers.ReadOnlyField()
 
     class Meta:
-        model = LocationReview
+        model = Review
         fields = ['id', 'location', 'user', 'user_full_name',
                  'rating', 'comment', 'created_at', 'updated_at',
                   'vote_count', 'upvote_count', 'downvote_count', 'user_vote', 'photos', 'is_edited']
@@ -132,18 +132,18 @@ class LocationReviewSerializer(serializers.ModelSerializer):
 
 
 # Viewing Location Serializer ------------------------------------- #
-class ViewingLocationSerializer(serializers.ModelSerializer):
+class LocationSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)  # Explicitly define ID as integer
     added_by = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     verified_by = serializers.SerializerMethodField()
 
-    reviews = LocationReviewSerializer(many=True, read_only=True)
+    reviews = ReviewSerializer(many=True, read_only=True)
     average_rating = serializers.SerializerMethodField()
     review_count = serializers.SerializerMethodField()
 
     class Meta:
-        model = ViewingLocation
+        model = Location
         fields = ['id', 'name', 'latitude', 'longitude', 'elevation',
                   'formatted_address', 'administrative_area', 'locality', 'country',
                   'quality_score', 'added_by',
@@ -225,9 +225,9 @@ class UserSerializer(serializers.ModelSerializer):
 # Favorite Location Serializer ----------------------------------- #
 class FavoriteLocationSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
-    location = ViewingLocationSerializer(read_only=True)
+    location = LocationSerializer(read_only=True)
     location_id = serializers.PrimaryKeyRelatedField(
-        queryset=ViewingLocation.objects.all(),
+        queryset=Location.objects.all(),
         source='location',
         write_only=True
     )

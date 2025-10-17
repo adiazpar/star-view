@@ -724,7 +724,7 @@ export class MapController {
 
     async loadLocationsAndEvents() {
         try {
-            const locations = await LocationService.getViewingLocations();
+            const locations = await LocationService.getLocations();
 
             console.log('Loaded locations:', locations);
 
@@ -844,7 +844,7 @@ export class MapController {
             e.preventDefault();
             const name = nameInput.value.trim();
             if (name) {
-                this.createViewingLocation(name, lngLat);
+                this.createLocation(name, lngLat);
                 this.currentCreationPopup.remove();
             } else {
                 nameInput.classList.add('error');
@@ -858,7 +858,7 @@ export class MapController {
         nameInput.focus();
     }
 
-    async createViewingLocation(name, lngLat) {
+    async createLocation(name, lngLat) {
         try {
             // Show loading state with animated dots
             const loadingPopup = new mapboxgl.Popup({
@@ -887,7 +887,7 @@ export class MapController {
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             // Send POST request
-            const response = await fetch('/api/viewing-locations/', {
+            const response = await fetch('/api/locations/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1013,7 +1013,7 @@ export class MapController {
                 .addTo(this.map);
 
                 try {
-                    const response = await fetch(`/api/viewing-locations/${locationId}/`, {
+                    const response = await fetch(`/api/locations/${locationId}/`, {
                         method: 'DELETE',
                         headers: {
                             'X-CSRFToken': csrfToken
@@ -1114,7 +1114,7 @@ export class MapController {
 
         if (isLoggedIn) {
             try {
-                const response = await fetch(`/api/viewing-locations/${location.id}/favorite/`, {
+                const response = await fetch(`/api/locations/${location.id}/favorite/`, {
                     method: 'GET',
                     credentials: 'same-origin'
                 });
@@ -1313,7 +1313,7 @@ export class MapController {
 
 
             const action = location.is_favorited ? 'unfavorite' : 'favorite';
-            const response = await fetch(`/api/viewing-locations/${locationId}/${action}/`, {
+            const response = await fetch(`/api/locations/${locationId}/${action}/`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken.value,
@@ -1542,7 +1542,7 @@ export class MapController {
         try {
             // First, fetch the updated list of locations from the server
             const locationsList = document.querySelector('.location-list');
-            const response = await fetch('/api/viewing-locations/?page_size=100');
+            const response = await fetch('/api/locations/?page_size=100');
             const data = await response.json();
             
             // Handle paginated response

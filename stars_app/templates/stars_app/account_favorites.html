@@ -152,7 +152,7 @@ function saveNickname(locationId) {
     const nickname = input.value.trim();
     const csrftoken = getCookie('csrftoken');
 
-    fetch(`/api/viewing-locations/${locationId}/update-nickname/`, {
+    fetch(`/api/locations/${locationId}/update-nickname/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -204,7 +204,7 @@ function saveNickname(locationId) {
 function unfavoriteLocation(locationId) {
     if (!confirm('Are you sure you want to remove this location from your favorites?')) return;
 
-    const apiUrl = `/api/viewing-locations/${locationId}/unfavorite/`;
+    const apiUrl = `/api/locations/${locationId}/unfavorite/`;
 
     fetch(apiUrl, {
         method: 'POST',

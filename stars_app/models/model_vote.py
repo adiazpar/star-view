@@ -10,12 +10,12 @@ class Vote(models.Model):
 
     This model uses Django's ContentTypes framework with a GenericForeignKey
     to create a truly generic relationship. A Vote can point to any model:
-    - LocationReview
+    - Review
     - ReviewComment
-    - Or any future models you want to make votable (ViewingLocation, ReviewPhoto, etc.)
+    - Or any future models you want to make votable (Location, ReviewPhoto, etc.)
 
     The GenericForeignKey works by storing:
-    1. content_type: Which model is being voted on (e.g., "LocationReview")
+    1. content_type: Which model is being voted on (e.g., "Review")
     2. object_id: The ID of that specific object
     3. voted_object: A virtual field that combines the above two
     """
@@ -31,7 +31,7 @@ class Vote(models.Model):
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
-        help_text="The type of object being voted on (e.g., LocationReview, ReviewComment, etc.)"
+        help_text="The type of object being voted on (e.g., Review, ReviewComment, etc.)"
     )
 
     object_id = models.PositiveIntegerField(
@@ -84,10 +84,10 @@ class Vote(models.Model):
         Returns a string indicating what type of object is being voted on.
 
         Returns:
-            The model name as a string (e.g., 'locationreview', 'reviewcomment')
+            The model name as a string (e.g., 'review', 'reviewcomment')
 
         Usage:
-            if vote.voted_object_type == 'locationreview':
+            if vote.voted_object_type == 'review':
                 # Handle review-specific logic
         """
         if self.content_type:

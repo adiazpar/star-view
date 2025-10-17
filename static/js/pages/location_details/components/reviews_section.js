@@ -801,7 +801,7 @@ window.CommentSystem = (function() {
         }
         if (!content) return;
 
-        fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/`, {
+        fetch(`/api/locations/${locationId}/reviews/${reviewId}/comments/`, {
             method: 'POST',
             headers: {
                 'X-CSRFToken': config.csrfToken,
@@ -933,7 +933,7 @@ window.CommentSystem = (function() {
     
     // Delete a comment
     function deleteComment(commentId, reviewId, locationId) {
-        fetch(`/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/`, {
+        fetch(`/api/locations/${locationId}/reviews/${reviewId}/comments/${commentId}/`, {
             method: 'DELETE',
             headers: {
                 'X-CSRFToken': config.csrfToken,
@@ -1204,9 +1204,9 @@ window.VotingSystem = (function() {
         // Construct API endpoint
         let apiUrl;
         if (isReviewVote) {
-            apiUrl = `/api/viewing-locations/${locationId}/reviews/${reviewId}/vote/`;
+            apiUrl = `/api/locations/${locationId}/reviews/${reviewId}/vote/`;
         } else {
-            apiUrl = `/api/viewing-locations/${locationId}/reviews/${reviewId}/comments/${commentId}/vote/`;
+            apiUrl = `/api/locations/${locationId}/reviews/${reviewId}/comments/${commentId}/vote/`;
         }
         
         // Disable the button during the request
@@ -1650,9 +1650,9 @@ window.EditingSystem = (function() {
         // Determine API endpoint
         let apiUrl;
         if (type === 'review') {
-            apiUrl = `/api/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/`;
+            apiUrl = `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/`;
         } else {
-            apiUrl = `/api/viewing-locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
+            apiUrl = `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
         }
         
         
@@ -2632,9 +2632,9 @@ window.ReportModal = (function() {
         // Determine API endpoint
         let apiUrl;
         if (currentReportTarget.type === 'review') {
-            apiUrl = `/api/viewing-locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.id}/report/`;
+            apiUrl = `/api/locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.id}/report/`;
         } else {
-            apiUrl = `/api/viewing-locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.reviewId}/comments/${currentReportTarget.id}/report/`;
+            apiUrl = `/api/locations/${currentReportTarget.locationId}/reviews/${currentReportTarget.reviewId}/comments/${currentReportTarget.id}/report/`;
         }
         
         // Submit report

@@ -15,15 +15,15 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='viewing-locations')
+router.register(r'locations', views.LocationViewSet, basename='locations')
 router.register(r'user-profiles', views.UserProfileViewSet, basename='user-profiles')
 router.register(r'users', views.UserViewSet, basename='users')
 router.register(r'favorite-locations', views.FavoriteLocationViewSet, basename='favorite-locations')
 router.register(r'votes', views.VoteViewSet, basename='votes')
 
 # Nested router for reviews
-locations_router = routers.NestedDefaultRouter(router, r'viewing-locations', lookup='location')
-locations_router.register(r'reviews', views.LocationReviewViewSet, basename='location-reviews')
+locations_router = routers.NestedDefaultRouter(router, r'locations', lookup='location')
+locations_router.register(r'reviews', views.ReviewViewSet, basename='location-reviews')
 
 # Nested router for comments
 reviews_router = routers.NestedDefaultRouter(locations_router, r'reviews', lookup='review')
@@ -70,6 +70,6 @@ urlpatterns = [
     path('api/', include(reviews_router.urls)),
 
     # Other:
-    path('api/viewing-locations/', views.ViewingLocationCreateView.as_view(), name='viewing-location-create'),
+    path('api/locations/', views.LocationCreateView.as_view(), name='location-create'),
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

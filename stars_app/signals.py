@@ -8,8 +8,8 @@ from pathlib import Path
 # Import models
 from .models.model_user_profile import UserProfile
 from .models.model_review_photo import ReviewPhoto
-from .models.model_location_review import LocationReview
-from .models.model_viewing_location import ViewingLocation
+from .models.model_review import Review
+from .models.model_location import Location
 
 logger = logging.getLogger(__name__)
 
@@ -127,7 +127,7 @@ def delete_review_photo_files(sender, instance, **kwargs):
         safe_delete_directory(location_dir)
 
 
-@receiver(pre_delete, sender=LocationReview)
+@receiver(pre_delete, sender=Review)
 def delete_review_media_files(sender, instance, **kwargs):
     """
     Delete all media files associated with a review when the review is deleted.
@@ -144,7 +144,7 @@ def delete_review_media_files(sender, instance, **kwargs):
             pass
 
 
-@receiver(pre_delete, sender=ViewingLocation)
+@receiver(pre_delete, sender=Location)
 def delete_location_media_files(sender, instance, **kwargs):
     """
     Delete all media files associated with a location when the location is deleted.
@@ -172,7 +172,7 @@ def delete_location_media_files(sender, instance, **kwargs):
             logger.info(f"Location {instance.id} deleted - media cleanup handled by cascade signals")
 
 
-@receiver(post_delete, sender=ViewingLocation)
+@receiver(post_delete, sender=Location)
 def cleanup_location_directory_structure(sender, instance, **kwargs):
     """
     Clean up the entire location directory structure after all cascade deletions are complete.
@@ -189,7 +189,7 @@ def cleanup_location_directory_structure(sender, instance, **kwargs):
         logger.error(f"Error cleaning up directory structure for location {instance.id}: {str(e)}")
 
 
-@receiver(post_delete, sender=LocationReview)
+@receiver(post_delete, sender=Review)
 def cleanup_review_directory_structure(sender, instance, **kwargs):
     """
     Clean up the review directory structure after all cascade deletions are complete.

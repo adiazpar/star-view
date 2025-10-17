@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.fields import GenericRelation
-from .model_location_review import LocationReview
+from .model_review import Review
 
 class ReviewComment(models.Model):
     review = models.ForeignKey(
-        LocationReview,
+        Review,
         on_delete=models.CASCADE,
         related_name='comments'
     )

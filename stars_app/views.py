@@ -4,6 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 
 # Importing other things from project files:
 from stars_app.models.model_user_profile import UserProfile
+from stars_app.models.model_location import Location
 from django.contrib.auth.models import User
 from stars_app.utils import is_valid_email
 
@@ -59,9 +60,9 @@ class StandardResultsSetPagination(PageNumberPagination):
 # -------------------------------------------------------------- #
 # Viewing Location Views:
 
-class ViewingLocationViewSet(viewsets.ModelViewSet):
-    queryset = ViewingLocation.objects.all()
-    serializer_class = ViewingLocationSerializer
+class LocationViewSet(viewsets.ModelViewSet):
+    queryset = Location.objects.all()
+    serializer_class = LocationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
@@ -70,7 +71,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
     ordering = ['-quality_score']
 
     def get_queryset(self):
-        queryset = ViewingLocation.objects.all()
+        queryset = Location.objects.all()
         favorites_only = self.request.query_params.get('favorites_only', 'false')
         if favorites_only.lower() == 'true' and self.request.user.is_authenticated:
             queryset = queryset.filter(favorited_by__user=self.request.user)
@@ -114,7 +115,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         lat_range = 0.01  # Roughly 1.1 km
         lng_range = 0.01
         
-        nearby_locations = ViewingLocation.objects.filter(
+        nearby_locations = Location.objects.filter(
             latitude__range=(latitude - lat_range, latitude + lat_range),
             longitude__range=(longitude - lng_range, longitude + lng_range)
         )
@@ -176,7 +177,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
             'duplicates_found': len(duplicates) > 0,
             'count': len(duplicates),
             'radius_km': radius_km,
-            'locations': ViewingLocationSerializer(duplicates, many=True).data
+            'locations': LocationSerializer(duplicates, many=True).data
         })
 
     @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
@@ -192,7 +193,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
 
         location = self.get_object()
 
-        # Get the ContentType for ViewingLocation model
+        # Get the ContentType for Location model
         content_type = ContentType.objects.get_for_model(location)
 
         # Check if user already reported this location
@@ -259,7 +260,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Get the ContentType for ViewingLocation model
+        # Get the ContentType for Location model
         content_type = ContentType.objects.get_for_model(location)
 
         # Get all reports for this location
@@ -399,7 +400,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         location = self.get_object()
 
         # Check if user already reviewed this location
-        existing_review = LocationReview.objects.filter(
+        existing_review = Review.objects.filter(
             user=request.user,
             location=location
         ).first()
@@ -410,7 +411,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        serializer = LocationReviewSerializer(data=request.data)
+        serializer = ReviewSerializer(data=request.data)
         if serializer.is_valid():
             review = serializer.save(user=request.user, location=location)
             
@@ -441,7 +442,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                         print(f"Error uploading review image: {str(e)}")
             
             # Return the review with photos included
-            serializer = LocationReviewSerializer(review)
+            serializer = ReviewSerializer(review)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -449,7 +450,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
     def update_review(self, request, pk=None):
         location = self.get_object()
         
-        review = LocationReview.objects.filter(
+        review = Review.objects.filter(
             user_id=request.user.id,
             location_id=location.id
         ).first()
@@ -460,7 +461,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        serializer = LocationReviewSerializer(review, data=request.data, partial=True)
+        serializer = ReviewSerializer(review, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             
@@ -510,7 +511,7 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['DELETE'])
     def delete_review(self, request, pk=None):
         location = self.get_object()
-        review = LocationReview.objects.filter(
+        review = Review.objects.filter(
             user=request.user,
             location=location
         ).first()
@@ -524,8 +525,8 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
         review.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-class LocationReviewViewSet(viewsets.ModelViewSet):
-    serializer_class = LocationReviewSerializer
+class ReviewViewSet(viewsets.ModelViewSet):
+    serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
     filter_backends = [DjangoFilterBackend, OrderingFilter]
@@ -534,7 +535,7 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
     ordering = ['-created_at']
 
     def get_queryset(self):
-        return LocationReview.objects.filter(
+        return Review.objects.filter(
             location_id=self.kwargs['location_pk']
         )
 
@@ -545,7 +546,7 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
-        location = ViewingLocation.objects.get(pk=self.kwargs['location_pk'])
+        location = Location.objects.get(pk=self.kwargs['location_pk'])
         serializer.save(
             user=self.request.user,
             location=location
@@ -572,7 +573,7 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
         # Convert vote_type to boolean
         is_upvote = vote_type == 'up'
 
-        # Get the ContentType for LocationReview model
+        # Get the ContentType for Review model
         content_type = ContentType.objects.get_for_model(review)
 
         # Get or create the vote using generic Vote model
@@ -701,7 +702,7 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Get the ContentType for LocationReview model
+            # Get the ContentType for Review model
             content_type = ContentType.objects.get_for_model(review)
 
             # Check if user already reported this review
@@ -761,7 +762,7 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         try:
             review = get_object_or_404(
-                LocationReview,
+                Review,
                 id=self.kwargs['review_pk'],
                 location_id=self.kwargs['location_pk']
             )
@@ -986,13 +987,13 @@ class VoteViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class ViewingLocationCreateView(LoginRequiredMixin, View):
+class LocationCreateView(LoginRequiredMixin, View):
     def post(self, request):
         try:
             data = json.loads(request.body)
 
             # Create new viewing location
-            location = ViewingLocation.objects.create(
+            location = Location.objects.create(
                 name=data['name'],
                 latitude=data['latitude'],
                 longitude=data['longitude'],
@@ -1019,7 +1020,7 @@ class ViewingLocationCreateView(LoginRequiredMixin, View):
 @login_required
 def delete_review(request, review_id):
     # Get the review or return 404
-    review = get_object_or_404(LocationReview, pk=review_id)
+    review = get_object_or_404(Review, pk=review_id)
 
     # Check if the logged-in user owns this review
     if request.user != review.user:
@@ -1043,8 +1044,8 @@ def delete_review(request, review_id):
         }, status=500)
 
 def location_details(request, location_id):
-    location = get_object_or_404(ViewingLocation, pk=location_id)
-    all_reviews = LocationReview.objects.filter(location=location)
+    location = get_object_or_404(Location, pk=location_id)
+    all_reviews = Review.objects.filter(location=location)
 
     # Initialize these variables early
     user_has_reviewed = False
@@ -1125,7 +1126,7 @@ def location_details(request, location_id):
         comment = request.POST.get('comment')
 
         if rating:
-            review, created = LocationReview.objects.get_or_create(
+            review, created = Review.objects.get_or_create(
                 location=location,
                 user=request.user,
                 defaults={'rating': rating, 'comment': comment}
@@ -1224,7 +1225,7 @@ def home(request):
 
 def map(request):
     # Get all locations:
-    locations = ViewingLocation.objects.all()
+    locations = Location.objects.all()
 
     # Get tile server configuration
     tile_config = get_tile_server_config()

@@ -61,13 +61,13 @@ class UserProfile(models.Model):
         score += verified_locations * 20
         
         # Points for reviews
-        from .model_location_review import LocationReview
-        reviews = LocationReview.objects.filter(user=self.user).count()
+        from .model_review import Review
+        reviews = Review.objects.filter(user=self.user).count()
         score += reviews * 5
-        
+
         # Points for helpful reviews (more upvotes than downvotes)
         helpful_reviews = 0
-        for review in LocationReview.objects.filter(user=self.user):
+        for review in Review.objects.filter(user=self.user):
             upvotes = review.votes.filter(is_upvote=True).count()
             downvotes = review.votes.filter(is_upvote=False).count()
             if upvotes > downvotes:

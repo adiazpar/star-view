@@ -1,7 +1,7 @@
 from django.db import models
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.validators import ValidationError
-from .model_location_review import LocationReview
+from .model_review import Review
 import os
 from uuid import uuid4
 from PIL import Image
@@ -29,7 +29,7 @@ class ReviewPhoto(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     review = models.ForeignKey(
-        LocationReview,
+        Review,
         on_delete=models.CASCADE,
         related_name='photos'
     )

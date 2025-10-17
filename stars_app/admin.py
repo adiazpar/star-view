@@ -1,9 +1,9 @@
 from django.contrib import admin
 
 from stars_app.models.model_user_profile import UserProfile
-from stars_app.models.model_favorite_location import FavoriteLocation
-from stars_app.models.model_viewing_location import ViewingLocation
-from stars_app.models.model_location_review import LocationReview
+from stars_app.models.model_location_favorite import FavoriteLocation
+from stars_app.models.model_location import Location
+from stars_app.models.model_review import Review
 from stars_app.models.model_review_comment import ReviewComment
 from stars_app.models.model_review_photo import ReviewPhoto
 from stars_app.models.model_report import Report
@@ -221,10 +221,10 @@ class ReportAdmin(admin.ModelAdmin):
 # ==================== MODEL REGISTRATIONS ====================
 
 # Register models with basic admin interface
-admin.site.register(ViewingLocation)
+admin.site.register(Location)
 admin.site.register(UserProfile)
 admin.site.register(FavoriteLocation)
-admin.site.register(LocationReview)
+admin.site.register(Review)
 admin.site.register(ReviewComment)
 admin.site.register(ReviewPhoto)
 

@@ -5,7 +5,7 @@ from stars_app.services.location_service import LocationService
 
 
 # Viewing Location Model -------------------------------------------- #
-class ViewingLocation(models.Model):
+class Location(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

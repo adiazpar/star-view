@@ -10,13 +10,13 @@ class Report(models.Model):
 
     This model uses Django's ContentTypes framework with a GenericForeignKey
     to create a truly generic relationship. A Report can point to any model:
-    - ViewingLocation
-    - LocationReview
+    - Location
+    - Review
     - ReviewComment
     - Or any future models you want to make reportable
 
     The GenericForeignKey works by storing:
-    1. content_type: Which model is being reported (e.g., "LocationReview")
+    1. content_type: Which model is being reported (e.g., "Review")
     2. object_id: The ID of that specific object
     3. reported_object: A virtual field that combines the above two
     """
@@ -33,7 +33,7 @@ class Report(models.Model):
     content_type = models.ForeignKey(
         ContentType,
         on_delete=models.CASCADE,
-        help_text="The type of object being reported (e.g., ViewingLocation, LocationReview, etc.)"
+        help_text="The type of object being reported (e.g., Location, Review, etc.)"
     )
 
     object_id = models.PositiveIntegerField(
@@ -164,10 +164,10 @@ class Report(models.Model):
         Returns a string indicating what type of object is being reported.
 
         Returns:
-            The model name as a string (e.g., 'viewinglocation', 'locationreview', 'reviewcomment')
+            The model name as a string (e.g., 'location', 'review', 'reviewcomment')
 
         Usage:
-            if report.reported_object_type == 'viewinglocation':
+            if report.reported_object_type == 'location':
                 # Handle location-specific logic
         """
         if self.content_type:

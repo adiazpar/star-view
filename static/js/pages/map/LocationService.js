@@ -5,7 +5,7 @@ export class LocationService {
     }
 
     static async getLocationStatus(locationId) {
-        const response = await fetch(`/api/viewing-locations/${locationId}/favorite/`, {
+        const response = await fetch(`/api/locations/${locationId}/favorite/`, {
             headers: {
                 'Content-Type': 'application/json'
             }
@@ -16,7 +16,7 @@ export class LocationService {
 
     static async toggleFavorite(locationID, currentlyFavorited) {
         const endpoint = currentlyFavorited ? 'unfavorite' : 'favorite';
-        const response = await fetch(`/api/viewing-locations/${locationID}/${endpoint}/`, {
+        const response = await fetch(`/api/locations/${locationID}/${endpoint}/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -27,9 +27,9 @@ export class LocationService {
         return response.json();
     }
 
-    static async getViewingLocations() {
+    static async getLocations() {
         // Request up to 100 locations (max allowed by the API)
-        const response = await fetch('/api/viewing-locations/?page_size=100', {
+        const response = await fetch('/api/locations/?page_size=100', {
             headers: {
                 'Content-Type': 'application/json'
             }

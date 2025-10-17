@@ -3,15 +3,15 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.db.models import Avg
 from django.contrib.contenttypes.fields import GenericRelation
-from .model_viewing_location import ViewingLocation
+from .model_location import Location
 
 
-class LocationReview(models.Model):
+class Review(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     location = models.ForeignKey(
-        ViewingLocation,
+        Location,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
@@ -79,7 +79,7 @@ class LocationReview(models.Model):
         
         # If updating existing review, get the old rating
         if not is_new:
-            old_review = LocationReview.objects.get(pk=self.pk)
+            old_review = Review.objects.get(pk=self.pk)
             old_rating = old_review.rating
         
         # Save the review
