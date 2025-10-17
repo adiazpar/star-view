@@ -180,55 +180,93 @@ class ViewingLocationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
     def report(self, request, pk=None):
-        """Submit a report about this location"""
+        """
+        Submit a report about this location using the generic Report model.
+
+        The Report model uses Django's ContentTypes framework to handle
+        reports for any type of content.
+        """
+        from django.contrib.contenttypes.models import ContentType
+        from stars_app.models.model_report import Report
+
         location = self.get_object()
-        
-        # Prepare report data
+
+        # Get the ContentType for ViewingLocation model
+        content_type = ContentType.objects.get_for_model(location)
+
+        # Check if user already reported this location
+        existing_report = Report.objects.filter(
+            content_type=content_type,
+            object_id=location.id,
+            reported_by=request.user
+        ).first()
+
+        if existing_report:
+            return Response(
+                {'detail': 'You have already submitted a report for this location'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Prepare additional data (e.g., duplicate location ID)
+        additional_data = {}
+        if request.data.get('duplicate_of_id'):
+            additional_data['duplicate_of_id'] = request.data.get('duplicate_of_id')
+
+        # Prepare report data for the generic Report model
         report_data = {
-            'location': location.id,
+            'object_id': location.id,
             'report_type': request.data.get('report_type'),
-            'description': request.data.get('description'),
-            'duplicate_of': request.data.get('duplicate_of_id')
+            'description': request.data.get('description', ''),
+            'additional_data': additional_data if additional_data else None
         }
-        
-        serializer = LocationReportSerializer(data=report_data)
+
+        serializer = ReportSerializer(data=report_data)
         if serializer.is_valid():
-            try:
-                report = serializer.save(reported_by=request.user)
-                
-                # Increment report counter
-                location.times_reported += 1
-                location.save()
-                
-                return Response(
-                    LocationReportSerializer(report).data,
-                    status=status.HTTP_201_CREATED
-                )
-            except Exception as e:
-                # Handle unique constraint violation (duplicate report)
-                if 'unique constraint' in str(e).lower():
-                    return Response(
-                        {'detail': 'You have already submitted this type of report for this location'},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                raise
-        
+            # Save the report with content_type and reported_by
+            report = serializer.save(
+                content_type=content_type,
+                reported_by=request.user
+            )
+
+            # Increment report counter on the location
+            location.times_reported += 1
+            location.save()
+
+            return Response(
+                ReportSerializer(report).data,
+                status=status.HTTP_201_CREATED
+            )
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
     def reports(self, request, pk=None):
-        """Get all reports for this location (admin only)"""
+        """
+        Get all reports for this location (admin only).
+
+        Uses the generic Report model with ContentTypes.
+        """
+        from django.contrib.contenttypes.models import ContentType
+        from stars_app.models.model_report import Report
+
         location = self.get_object()
-        
+
         # Only staff can see all reports
         if not request.user.is_staff:
             return Response(
                 {'detail': 'You do not have permission to view reports'},
                 status=status.HTTP_403_FORBIDDEN
             )
-        
-        reports = location.reports.all()
-        serializer = LocationReportSerializer(reports, many=True)
+
+        # Get the ContentType for ViewingLocation model
+        content_type = ContentType.objects.get_for_model(location)
+
+        # Get all reports for this location
+        reports = Report.objects.filter(
+            content_type=content_type,
+            object_id=location.id
+        )
+        serializer = ReportSerializer(reports, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['POST', 'GET'], permission_classes=[IsAuthenticated])
@@ -625,47 +663,60 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['POST'])
     def report(self, request, pk=None, location_pk=None):
-        """Handle reporting reviews"""
+        """
+        Handle reporting reviews using the generic Report model.
+
+        Uses Django's ContentTypes framework for generic reporting.
+        """
         try:
+            from django.contrib.contenttypes.models import ContentType
+            from stars_app.models.model_report import Report
+
             review = self.get_object()
-            
+
             # Prevent users from reporting their own reviews
             if review.user == request.user:
                 return Response(
                     {'detail': 'You cannot report your own review'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
+            # Get the ContentType for LocationReview model
+            content_type = ContentType.objects.get_for_model(review)
+
             # Check if user already reported this review
-            from stars_app.models.model_review_report import ReviewReport
-            existing_report = ReviewReport.objects.filter(
-                review=review,
+            existing_report = Report.objects.filter(
+                content_type=content_type,
+                object_id=review.id,
                 reported_by=request.user
             ).first()
-            
+
             if existing_report:
                 return Response(
                     {'detail': 'You have already reported this review'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Create the report
+
+            # Prepare report data for the generic Report model
             report_data = {
-                'review': review.id,
+                'object_id': review.id,
                 'report_type': request.data.get('report_type', 'OTHER'),
                 'description': request.data.get('description', '')
             }
-            
-            serializer = ReviewReportSerializer(data=report_data)
+
+            serializer = ReportSerializer(data=report_data)
             if serializer.is_valid():
-                serializer.save(reported_by=request.user)
+                serializer.save(
+                    content_type=content_type,
+                    reported_by=request.user
+                )
                 return Response(
                     {'detail': 'Review reported successfully'},
                     status=status.HTTP_201_CREATED
                 )
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                
+
         except Exception as e:
             return Response(
                 {'detail': str(e)},
@@ -790,47 +841,60 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['POST'])
     def report(self, request, pk=None, location_pk=None, review_pk=None):
-        """Handle reporting comments"""
+        """
+        Handle reporting comments using the generic Report model.
+
+        Uses Django's ContentTypes framework for generic reporting.
+        """
         try:
+            from django.contrib.contenttypes.models import ContentType
+            from stars_app.models.model_report import Report
+
             comment = self.get_object()
-            
+
             # Prevent users from reporting their own comments
             if comment.user == request.user:
                 return Response(
                     {'detail': 'You cannot report your own comment'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
+            # Get the ContentType for ReviewComment model
+            content_type = ContentType.objects.get_for_model(comment)
+
             # Check if user already reported this comment
-            from stars_app.models.model_comment_report import CommentReport
-            existing_report = CommentReport.objects.filter(
-                comment=comment,
+            existing_report = Report.objects.filter(
+                content_type=content_type,
+                object_id=comment.id,
                 reported_by=request.user
             ).first()
-            
+
             if existing_report:
                 return Response(
                     {'detail': 'You have already reported this comment'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
-            # Create the report
+
+            # Prepare report data for the generic Report model
             report_data = {
-                'comment': comment.id,
+                'object_id': comment.id,
                 'report_type': request.data.get('report_type', 'OTHER'),
                 'description': request.data.get('description', '')
             }
-            
-            serializer = CommentReportSerializer(data=report_data)
+
+            serializer = ReportSerializer(data=report_data)
             if serializer.is_valid():
-                serializer.save(reported_by=request.user)
+                serializer.save(
+                    content_type=content_type,
+                    reported_by=request.user
+                )
                 return Response(
                     {'detail': 'Comment reported successfully'},
                     status=status.HTTP_201_CREATED
                 )
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-                
+
         except Exception as e:
             return Response(
                 {'detail': str(e)},

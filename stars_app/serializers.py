@@ -7,11 +7,11 @@ from stars_app.models.model_review_comment import ReviewComment
 from stars_app.models.model_viewing_location import ViewingLocation
 from stars_app.models.model_location_review import LocationReview
 from stars_app.models.model_user_profile import UserProfile
-from stars_app.models.model_location_report import LocationReport
 from stars_app.models.model_review_photo import ReviewPhoto
-from stars_app.models.model_review_report import ReviewReport
-from stars_app.models.model_comment_report import CommentReport
 from django.contrib.auth.models import User
+
+# Unified report model (replaces LocationReport, ReviewReport, CommentReport)
+from stars_app.models.model_report import Report
 
 
 # Review Comment Serializer --------------------------------------- #
@@ -243,45 +243,96 @@ class ReviewVoteSerializer(serializers.ModelSerializer):
         read_only_fields = ['user', 'created_at']
 
 
-# Location Report Serializer ------------------------------------- #
-class LocationReportSerializer(serializers.ModelSerializer):
-    reported_by = serializers.ReadOnlyField(source='reported_by.username')
-    reviewed_by = serializers.ReadOnlyField(source='reviewed_by.username')
-    location_name = serializers.ReadOnlyField(source='location.name')
-    duplicate_of_name = serializers.ReadOnlyField(source='duplicate_of.name')
-    
+# ========================================================================== #
+# GENERIC REPORT SERIALIZER
+# ========================================================================== #
+# This serializer handles reports for ANY type of content using Django's
+# ContentTypes framework. It works with the generic Report model.
+# ========================================================================== #
+
+class ReportSerializer(serializers.ModelSerializer):
+    """
+    Generic serializer for the Report model.
+
+    This serializer uses Django's ContentTypes framework to handle reports
+    for ANY model in your project. The reported object is specified via:
+    - content_type: The model being reported (auto-detected from object)
+    - object_id: The ID of the specific object being reported
+
+    This is completely generic and requires no changes to support new
+    reportable content types.
+    """
+
+    # ===== USER INFORMATION =====
+    reported_by = serializers.ReadOnlyField(
+        source='reported_by.username',
+        help_text="Username of the person who submitted this report"
+    )
+
+    reviewed_by = serializers.ReadOnlyField(
+        source='reviewed_by.username',
+        help_text="Username of the moderator who reviewed this report (if reviewed)"
+    )
+
+    # ===== CONTENT TYPE INFORMATION =====
+    reported_object_type = serializers.ReadOnlyField(
+        help_text="Type of object being reported (e.g., 'viewinglocation', 'locationreview')"
+    )
+
+    reported_object_str = serializers.SerializerMethodField(
+        help_text="String representation of the reported object"
+    )
+
+
     class Meta:
-        model = LocationReport
-        fields = ['id', 'location', 'location_name', 'reported_by', 'report_type', 
-                  'description', 'status', 'duplicate_of', 'duplicate_of_name',
-                  'reviewed_by', 'review_notes', 'reviewed_at', 'created_at']
-        read_only_fields = ['reported_by', 'reviewed_by', 'reviewed_at', 'created_at', 'status']
+        model = Report
+
+        fields = [
+            # Basic report info
+            'id',
+            'created_at',
+            'updated_at',
+
+            # Generic relationship fields
+            'content_type',
+            'object_id',
+            'reported_object_type',  # Helper field showing model name
+            'reported_object_str',   # Human-readable string of the object
+
+            # Report details
+            'reported_by',
+            'report_type',
+            'description',
+            'status',
+
+            # Additional data (JSON field for any extra context)
+            'additional_data',
+
+            # Moderation fields
+            'reviewed_by',
+            'review_notes',
+            'reviewed_at',
+        ]
+
+        read_only_fields = [
+            'id',
+            'created_at',
+            'updated_at',
+            'reported_by',
+            'reviewed_by',
+            'reviewed_at',
+            'status',
+            'content_type',  # Auto-set from the object being reported
+        ]
 
 
-class ReviewReportSerializer(serializers.ModelSerializer):
-    reported_by = serializers.ReadOnlyField(source='reported_by.username')
-    reviewed_by = serializers.ReadOnlyField(source='reviewed_by.username')
-    review_user = serializers.ReadOnlyField(source='review.user.username')
-    review_location = serializers.ReadOnlyField(source='review.location.name')
-    
-    class Meta:
-        model = ReviewReport
-        fields = ['id', 'review', 'review_user', 'review_location', 'reported_by', 
-                  'report_type', 'description', 'status', 'reviewed_by', 'review_notes', 
-                  'reviewed_at', 'created_at']
-        read_only_fields = ['reported_by', 'reviewed_by', 'reviewed_at', 'created_at', 'status']
+    def get_reported_object_str(self, obj):
+        """
+        Returns a human-readable string representation of the reported object.
 
-
-class CommentReportSerializer(serializers.ModelSerializer):
-    reported_by = serializers.ReadOnlyField(source='reported_by.username')
-    reviewed_by = serializers.ReadOnlyField(source='reviewed_by.username')
-    comment_user = serializers.ReadOnlyField(source='comment.user.username')
-    comment_review_user = serializers.ReadOnlyField(source='comment.review.user.username')
-    comment_location = serializers.ReadOnlyField(source='comment.review.location.name')
-    
-    class Meta:
-        model = CommentReport
-        fields = ['id', 'comment', 'comment_user', 'comment_review_user', 'comment_location', 
-                  'reported_by', 'report_type', 'description', 'status', 'reviewed_by', 
-                  'review_notes', 'reviewed_at', 'created_at']
-        read_only_fields = ['reported_by', 'reviewed_by', 'reviewed_at', 'created_at', 'status']
+        This calls the __str__ method on the reported object to get a
+        meaningful description.
+        """
+        if obj.reported_object:
+            return str(obj.reported_object)
+        return f"{obj.content_type.model if obj.content_type else 'Unknown'} #{obj.object_id}"

@@ -1,7 +1,6 @@
 from django.db import models
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.validators import ValidationError
-from .model_base import TimestampedModel
 from .model_location_review import LocationReview
 import os
 from uuid import uuid4
@@ -24,8 +23,11 @@ def review_thumbnail_path(instance, filename):
     return os.path.join('review_photos', str(instance.review.location.id), str(instance.review.id), 'thumbnails', filename)
 
 
-class ReviewPhoto(TimestampedModel):
+class ReviewPhoto(models.Model):
     """Photos uploaded with location reviews"""
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     review = models.ForeignKey(
         LocationReview,
         on_delete=models.CASCADE,

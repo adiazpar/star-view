@@ -3,10 +3,12 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.db.models import Avg
 from .model_viewing_location import ViewingLocation
-from .model_base import TimestampedModel
 
 
-class LocationReview(TimestampedModel):
+class LocationReview(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     location = models.ForeignKey(
         ViewingLocation,
         on_delete=models.CASCADE,

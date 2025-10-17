@@ -1,12 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from .model_base import TimestampedModel
 from stars_app.services.location_service import LocationService
 
 
 # Viewing Location Model -------------------------------------------- #
-class ViewingLocation(TimestampedModel):
+class ViewingLocation(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     name = models.CharField(max_length=200)
 
     # Location fields
