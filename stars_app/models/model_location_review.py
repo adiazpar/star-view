@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.db.models import Avg
+from django.contrib.contenttypes.fields import GenericRelation
 from .model_viewing_location import ViewingLocation
 
 
@@ -29,6 +30,9 @@ class LocationReview(models.Model):
         null=True,
         help_text="Optional review comment"
     )
+
+    # Generic relation to Vote model
+    votes = GenericRelation('Vote', related_query_name='review')
 
     class Meta:
         # Ensure one review per user per location

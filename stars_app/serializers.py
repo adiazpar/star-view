@@ -2,7 +2,6 @@ from django.db.models import Avg
 from rest_framework import serializers
 
 from stars_app.models.model_favorite_location import FavoriteLocation
-from stars_app.models.model_review_vote import ReviewVote
 from stars_app.models.model_review_comment import ReviewComment
 from stars_app.models.model_viewing_location import ViewingLocation
 from stars_app.models.model_location_review import LocationReview
@@ -12,6 +11,9 @@ from django.contrib.auth.models import User
 
 # Unified report model (replaces LocationReport, ReviewReport, CommentReport)
 from stars_app.models.model_report import Report
+
+# Unified vote model (replaces ReviewVote, CommentVote)
+from stars_app.models.model_vote import Vote
 
 
 # Review Comment Serializer --------------------------------------- #
@@ -100,9 +102,13 @@ class LocationReviewSerializer(serializers.ModelSerializer):
     def get_user_vote(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            vote = ReviewVote.objects.filter(
+            from django.contrib.contenttypes.models import ContentType
+            content_type = ContentType.objects.get_for_model(obj)
+
+            vote = Vote.objects.filter(
                 user=request.user,
-                review=obj
+                content_type=content_type,
+                object_id=obj.id
             ).first()
 
             # Convert boolean to string representation
@@ -233,14 +239,79 @@ class FavoriteLocationSerializer(serializers.ModelSerializer):
         read_only_fields = ['user', 'created_at']
 
 
-# Review Vote Serializer ----------------------------------------- #
-class ReviewVoteSerializer(serializers.ModelSerializer):
-    user = serializers.ReadOnlyField(source='user.username')
-    
+# ========================================================================== #
+# GENERIC VOTE SERIALIZER
+# ========================================================================== #
+# This serializer handles votes for ANY type of content using Django's
+# ContentTypes framework. It works with the generic Vote model.
+# ========================================================================== #
+
+class VoteSerializer(serializers.ModelSerializer):
+    """
+    Generic serializer for the Vote model.
+
+    This serializer uses Django's ContentTypes framework to handle votes
+    for ANY model in your project. The voted object is specified via:
+    - content_type: The model being voted on (auto-detected from object)
+    - object_id: The ID of the specific object being voted on
+
+    This is completely generic and requires no changes to support new
+    votable content types.
+    """
+
+    # ===== USER INFORMATION =====
+    user = serializers.ReadOnlyField(
+        source='user.username',
+        help_text="Username of the person who cast this vote"
+    )
+
+    # ===== CONTENT TYPE INFORMATION =====
+    voted_object_type = serializers.ReadOnlyField(
+        help_text="Type of object being voted on (e.g., 'locationreview', 'reviewcomment')"
+    )
+
+    voted_object_str = serializers.SerializerMethodField(
+        help_text="String representation of the voted object"
+    )
+
+
     class Meta:
-        model = ReviewVote
-        fields = ['id', 'user', 'review', 'is_upvote', 'created_at']
-        read_only_fields = ['user', 'created_at']
+        model = Vote
+
+        fields = [
+            # Basic vote info
+            'id',
+            'created_at',
+
+            # Generic relationship fields
+            'content_type',
+            'object_id',
+            'voted_object_type',  # Helper field showing model name
+            'voted_object_str',   # Human-readable string of the object
+
+            # Vote data
+            'user',
+            'is_upvote',
+        ]
+
+        read_only_fields = [
+            'id',
+            'created_at',
+            'user',
+            'content_type',  # Auto-set from the object being voted on
+        ]
+
+
+    def get_voted_object_str(self, obj):
+        """
+        Returns a human-readable string representation of the voted object.
+
+        This calls the __str__ method on the voted object to get a
+        meaningful description.
+        """
+        if obj.voted_object:
+            return str(obj.voted_object)
+        return f"{obj.content_type.model if obj.content_type else 'Unknown'} #{obj.object_id}"
 
 
 # ========================================================================== #

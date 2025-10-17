@@ -4,13 +4,103 @@ from stars_app.models.model_user_profile import UserProfile
 from stars_app.models.model_favorite_location import FavoriteLocation
 from stars_app.models.model_viewing_location import ViewingLocation
 from stars_app.models.model_location_review import LocationReview
-from stars_app.models.model_review_vote import ReviewVote
 from stars_app.models.model_review_comment import ReviewComment
-from stars_app.models.model_comment_vote import CommentVote
 from stars_app.models.model_review_photo import ReviewPhoto
-
-# Import the unified Report model (replaces LocationReport, ReviewReport, CommentReport)
 from stars_app.models.model_report import Report
+from stars_app.models.model_vote import Vote
+
+
+# ==================== CUSTOM ADMIN FOR GENERIC VOTE MODEL ====================
+
+class VoteAdmin(admin.ModelAdmin):
+    """
+    Custom admin interface for the generic Vote model.
+
+    The Vote model uses Django's ContentTypes framework with GenericForeignKey
+    to handle votes for ANY type of content in a truly generic way.
+
+    This admin interface makes it easy to:
+    - View and filter votes by type, content type, and user
+    - See what object is being voted on
+    - Track voting patterns across different content types
+    """
+
+    # ========== LIST VIEW CONFIGURATION ==========
+
+    list_display = [
+        'id',
+        'get_voted_object_type',    # Shows the model type (locationreview, reviewcomment, etc.)
+        'get_voted_object_str',     # Shows a human-readable description
+        'user',                     # Who cast the vote
+        'is_upvote',                # True for upvote, False for downvote
+        'created_at',               # When the vote was cast
+    ]
+
+    list_filter = [
+        'is_upvote',
+        'content_type',             # Filter by model type
+        'created_at',
+    ]
+
+    search_fields = [
+        'user__username',
+        'object_id',
+    ]
+
+    ordering = ['-created_at']
+
+    list_per_page = 50
+
+    # ========== DETAIL VIEW CONFIGURATION ==========
+
+    fieldsets = (
+        # Section 1: What's being voted on (generic relationship)
+        ('Vote Target', {
+            'fields': ('content_type', 'object_id', 'get_voted_object_display'),
+            'description': 'Generic relationship to the voted object'
+        }),
+
+        # Section 2: Vote details
+        ('Vote Information', {
+            'fields': ('user', 'is_upvote', 'created_at'),
+        }),
+    )
+
+    readonly_fields = [
+        'created_at',
+        'get_voted_object_display'
+    ]
+
+    # ========== CUSTOM METHODS ==========
+
+    def get_voted_object_type(self, obj):
+        """
+        Display the type of object being voted on.
+        Returns the model name (e.g., 'locationreview', 'reviewcomment')
+        """
+        return obj.voted_object_type or 'Unknown'
+
+    get_voted_object_type.short_description = 'Content Type'
+
+    def get_voted_object_str(self, obj):
+        """
+        Display a human-readable description of what's being voted on.
+        """
+        if obj.voted_object:
+            return str(obj.voted_object)
+        return f"{obj.content_type.model if obj.content_type else 'Unknown'} #{obj.object_id}"
+
+    get_voted_object_str.short_description = 'Voted Object'
+
+    def get_voted_object_display(self, obj):
+        """
+        Display the voted object in the detail view with a link to it.
+        """
+        if obj.voted_object:
+            return f"{obj.content_type.model}: {obj.voted_object}"
+        return f"{obj.content_type.model if obj.content_type else 'Unknown'} #{obj.object_id} (deleted)"
+
+    get_voted_object_display.short_description = 'Voted Object'
 
 
 # ==================== CUSTOM ADMIN FOR GENERIC REPORT MODEL ====================
@@ -135,10 +225,9 @@ admin.site.register(ViewingLocation)
 admin.site.register(UserProfile)
 admin.site.register(FavoriteLocation)
 admin.site.register(LocationReview)
-admin.site.register(ReviewVote)
 admin.site.register(ReviewComment)
-admin.site.register(CommentVote)
 admin.site.register(ReviewPhoto)
 
-# Register the unified Report model with custom admin interface
+# Register generic models with custom admin interfaces
+admin.site.register(Vote, VoteAdmin)
 admin.site.register(Report, ReportAdmin)

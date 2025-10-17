@@ -45,8 +45,9 @@ import json
 
 from itertools import chain
 from django.core.paginator import Paginator
-from .models.model_review_vote import ReviewVote
-from .models.model_comment_vote import CommentVote
+
+# Import generic Vote model (replaces ReviewVote, CommentVote)
+from .models.model_vote import Vote
 
 # -------------------------------------------------------------- #
 # Pagination Classes:
@@ -552,6 +553,13 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'])
     def vote(self, request, pk=None, location_pk=None):
+        """
+        Handle voting on reviews using the generic Vote model.
+
+        Uses Django's ContentTypes framework for generic voting.
+        """
+        from django.contrib.contenttypes.models import ContentType
+
         review = self.get_object()
         vote_type = request.data.get('vote_type')
 
@@ -564,10 +572,14 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
         # Convert vote_type to boolean
         is_upvote = vote_type == 'up'
 
-        # Get or create the vote
-        vote, created = ReviewVote.objects.get_or_create(
+        # Get the ContentType for LocationReview model
+        content_type = ContentType.objects.get_for_model(review)
+
+        # Get or create the vote using generic Vote model
+        vote, created = Vote.objects.get_or_create(
             user=request.user,
-            review=review,
+            content_type=content_type,
+            object_id=review.id,
             defaults={'is_upvote': is_upvote}
         )
 
@@ -581,16 +593,24 @@ class LocationReviewViewSet(viewsets.ModelViewSet):
                 vote.is_upvote = is_upvote
                 vote.save()
 
-        # Calculate updated vote information
-        upvotes = review.votes.filter(is_upvote=True).count()
-        downvotes = review.votes.filter(is_upvote=False).count()
+        # Calculate updated vote information using generic Vote queryset
+        upvotes = Vote.objects.filter(
+            content_type=content_type,
+            object_id=review.id,
+            is_upvote=True
+        ).count()
+        downvotes = Vote.objects.filter(
+            content_type=content_type,
+            object_id=review.id,
+            is_upvote=False
+        ).count()
         vote_count = upvotes - downvotes
-        
+
         # Get current user's vote status
         user_vote = None
         if vote:
             user_vote = 'up' if vote.is_upvote else 'down'
-        
+
         return Response({
             'vote_count': vote_count,
             'user_vote': user_vote,
@@ -780,59 +800,64 @@ class ReviewCommentViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['POST'])
     def vote(self, request, pk=None, location_pk=None, review_pk=None):
-        """Handle voting on comments"""
+        """
+        Handle voting on comments using the generic Vote model.
+
+        Uses Django's ContentTypes framework for generic voting.
+        """
         try:
+            from django.contrib.contenttypes.models import ContentType
+
             comment = self.get_object()
             vote_type = request.data.get('vote_type')
-            
+
             if vote_type not in ['up', 'down']:
                 return Response(
                     {'detail': 'Vote type must be "up" or "down"'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             # Prevent users from voting on their own comments
             if comment.user == request.user:
                 return Response(
                     {'detail': 'You cannot vote on your own comment'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             is_upvote = vote_type == 'up'
-            
-            # Check if user already voted
-            existing_vote = CommentVote.objects.filter(
+
+            # Get the ContentType for ReviewComment model
+            content_type = ContentType.objects.get_for_model(comment)
+
+            # Get or create the vote using generic Vote model
+            vote, created = Vote.objects.get_or_create(
                 user=request.user,
-                comment=comment
-            ).first()
-            
+                content_type=content_type,
+                object_id=comment.id,
+                defaults={'is_upvote': is_upvote}
+            )
+
             user_vote = None
-            if existing_vote:
-                if existing_vote.is_upvote == is_upvote:
+            if not created:
+                if vote.is_upvote == is_upvote:
                     # Same vote type - remove the vote (toggle off)
-                    existing_vote.delete()
+                    vote.delete()
                     user_vote = None
                 else:
                     # Different vote type - update the vote
-                    existing_vote.is_upvote = is_upvote
-                    existing_vote.save()
+                    vote.is_upvote = is_upvote
+                    vote.save()
                     user_vote = 'up' if is_upvote else 'down'
             else:
-                # Create new vote
-                CommentVote.objects.create(
-                    user=request.user,
-                    comment=comment,
-                    is_upvote=is_upvote
-                )
                 user_vote = 'up' if is_upvote else 'down'
-            
+
             # Return updated vote counts and user's vote status
             return Response({
                 'upvotes': comment.upvote_count,
                 'downvotes': comment.downvote_count,
                 'user_vote': user_vote
             })
-            
+
         except Exception as e:
             return Response(
                 {'detail': str(e)},
@@ -942,13 +967,20 @@ class FavoriteLocationViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-class ReviewVoteViewSet(viewsets.ModelViewSet):
-    serializer_class = ReviewVoteSerializer
+class VoteViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing votes using the generic Vote model.
+
+    This replaces the old ReviewVoteViewSet and CommentVoteViewSet with a
+    unified voting system that works across all votable content types.
+    """
+    serializer_class = VoteSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        return ReviewVote.objects.filter(user=self.request.user)
+        # Return all votes by the current user
+        return Vote.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -1050,10 +1082,14 @@ def location_details(request, location_id):
     for review in page_obj:
         # Add user-specific vote information only for authenticated users
         if request.user.is_authenticated:
-            # Get the vote for this review
-            vote = ReviewVote.objects.filter(
+            # Get the vote for this review using generic Vote model
+            from django.contrib.contenttypes.models import ContentType
+            review_content_type = ContentType.objects.get_for_model(review)
+
+            vote = Vote.objects.filter(
                 user=request.user,
-                review=review
+                content_type=review_content_type,
+                object_id=review.id
             ).first()
 
             # Add vote information as an attribute (not a property)
@@ -1065,12 +1101,16 @@ def location_details(request, location_id):
         comments = review.comments.all()
         for comment in comments:
             if request.user.is_authenticated:
-                # Get user's vote on this comment
-                comment_vote = CommentVote.objects.filter(
+                # Get user's vote on this comment using generic Vote model
+                from django.contrib.contenttypes.models import ContentType
+                comment_content_type = ContentType.objects.get_for_model(comment)
+
+                comment_vote = Vote.objects.filter(
                     user=request.user,
-                    comment=comment
+                    content_type=comment_content_type,
+                    object_id=comment.id
                 ).first()
-                
+
                 if comment_vote:
                     user_vote_value = 1 if comment_vote.is_upvote else -1
                     comment_votes[comment.id] = user_vote_value

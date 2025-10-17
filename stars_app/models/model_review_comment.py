@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.contenttypes.fields import GenericRelation
 from .model_location_review import LocationReview
 
 class ReviewComment(models.Model):
@@ -19,6 +20,9 @@ class ReviewComment(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Generic relation to Vote model
+    votes = GenericRelation('Vote', related_query_name='comment')
 
     class Meta:
         ordering = ['created_at']

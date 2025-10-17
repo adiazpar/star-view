@@ -19,7 +19,7 @@ router.register(r'viewing-locations', views.ViewingLocationViewSet, basename='vi
 router.register(r'user-profiles', views.UserProfileViewSet, basename='user-profiles')
 router.register(r'users', views.UserViewSet, basename='users')
 router.register(r'favorite-locations', views.FavoriteLocationViewSet, basename='favorite-locations')
-router.register(r'review-votes', views.ReviewVoteViewSet, basename='review-votes')
+router.register(r'votes', views.VoteViewSet, basename='votes')
 
 # Nested router for reviews
 locations_router = routers.NestedDefaultRouter(router, r'viewing-locations', lookup='location')
