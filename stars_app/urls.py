@@ -42,25 +42,17 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'),
 
     # Password Change Views:
-    path('password-reset/',
-         CustomPasswordResetView.as_view(),
-         name='password_reset'),
-    path('password-reset/done/',
-         CustomPasswordResetDoneView.as_view(),
-         name='password_reset_done'),
-    path('password-reset-confirm/<uidb64>/<token>/',
-         CustomPasswordResetConfirmView.as_view(),
-         name='password_reset_confirm'),
-    path('password-reset-complete/',
-         CustomPasswordResetCompleteView.as_view(),
-         name='password_reset_complete'),
+    path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),
+    path('password-reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
+    path('password-reset-confirm/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('password-reset-complete/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
     # Navigation:
     path('', views.home, name='home'),
     path('map/', views.map, name='map'),
     path('account/<int:pk>', views.account, name='account'),
 
-    # Viewing location:
+    # Location:
     path('location/<int:location_id>/', views.location_details, name='location_details'),
     path('delete-review/<int:review_id>/', views.delete_review, name='delete_review'),
 

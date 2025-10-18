@@ -1,76 +1,99 @@
+# ----------------------------------------------------------------------------------------------------- #
+# This signals.py file handles automatic cleanup of media files when models are deleted:                #
+#                                                                                                       #
+# 1. UserProfile deletion → Removes profile pictures                                                    #
+# 2. ReviewPhoto deletion → Removes review images and thumbnails                                        #
+# 3. Review deletion → Coordinates cleanup of all associated photos                                     #
+# 4. Location deletion → Coordinates cleanup of all reviews and photos via CASCADE                      #
+#                                                                                                       #
+# The cleanup happens in phases:                                                                        #
+# - pre_delete: Delete files before database deletion (while paths are still accessible)                #
+# - post_delete: Clean up empty directories after CASCADE deletions complete                            #
+#                                                                                                       #
+# Signal Registration:                                                                                  #
+# These signals are automatically registered when this module is imported. To ensure                    #
+# they're loaded, this file should be imported in stars_app/apps.py in the ready() method.              #
+#                                                                                                       #
+# Safety Features:                                                                                      #
+# - Files are only deleted if they're within MEDIA_ROOT (security check)                                #
+# - Empty directories are cleaned up automatically                                                      #
+# - Handles CASCADE deletions properly (Location → Reviews → Photos)                                    #
+# ----------------------------------------------------------------------------------------------------- #
+
+# Import tools:
 import os
-import logging
 from django.db.models.signals import pre_delete, post_delete
 from django.dispatch import receiver
 from django.conf import settings
 from pathlib import Path
 
-# Import models
-from .models.model_user_profile import UserProfile
-from .models.model_review_photo import ReviewPhoto
-from .models.model_review import Review
-from .models.model_location import Location
-
-logger = logging.getLogger(__name__)
+# Import models:
+from .models import UserProfile
+from .models import ReviewPhoto
+from .models import Review
+from .models import Location
 
 
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                                                                                       #
+#                                           SIGNAL METHODS                                              #
+#                                                                                                       #
+# ----------------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# Safely delete a file from the filesystem with error handling.                 #
+#                                                                               #
+# Args:       file_path (str): Path to the file to delete                       #
+# Returns:    bool: True if deleted successfully, False otherwise               #
+# ----------------------------------------------------------------------------- #
 def safe_delete_file(file_path):
-    """
-    Safely delete a file from the filesystem with error handling.
-
-    Args:
-        file_path (str): Path to the file to delete
-
-    Returns:
-        bool: True if deleted successfully, False otherwise
-    """
     if not file_path:
         return False
 
     try:
-        # Convert to Path object for better handling
+        # Convert to Path object for better handling:
         path = Path(file_path)
 
-        # Check if file exists and is within media directory (security check)
+        # Check if file exists and is within media directory (security check):
         if path.exists() and str(path).startswith(str(settings.MEDIA_ROOT)):
+            # File gets deleted:
             path.unlink()
-            logger.info(f"Deleted file: {file_path}")
             return True
         elif not path.exists():
-            logger.debug(f"File already deleted or doesn't exist: {file_path}")
+            # File already deleted or doesn't exist:
             return True
         else:
-            logger.warning(f"File outside media directory, not deleting: {file_path}")
+            # File outside of media directory, so it doesn't get deleted:
             return False
 
-    except Exception as e:
-        logger.error(f"Error deleting file {file_path}: {str(e)}")
+    except Exception:
+        # There was an error deleting the file:
         return False
 
 
+# ----------------------------------------------------------------------------- #
+# Safely delete an empty directory and its empty parent directories.            #
+#                                                                               #
+# Args:   dir_path (str): Path to the directory to delete                       #
+# ----------------------------------------------------------------------------- #
 def safe_delete_directory(dir_path):
-    """
-    Safely delete an empty directory and its empty parent directories.
-
-    Args:
-        dir_path (str): Path to the directory to delete
-    """
     if not dir_path:
         return
 
     try:
         path = Path(dir_path)
 
-        # Only delete if it's within media directory and is empty
+        # Only delete if it's within media directory and is empty:
         if (path.exists() and
                 str(path).startswith(str(settings.MEDIA_ROOT)) and
                 path.is_dir() and
                 not any(path.iterdir())):
 
+            # Delete empty directory:
             path.rmdir()
-            logger.info(f"Deleted empty directory: {dir_path}")
 
-            # Try to delete parent directory if it's also empty
+            # Try to delete parent directory if it's also empty:
             parent = path.parent
             if (parent != Path(settings.MEDIA_ROOT) and
                     parent.exists() and
@@ -78,134 +101,85 @@ def safe_delete_directory(dir_path):
                     not any(parent.iterdir())):
                 safe_delete_directory(str(parent))
 
-    except Exception as e:
-        logger.error(f"Error deleting directory {dir_path}: {str(e)}")
+    except Exception:
+        # There was an error deleting the directory:
+        return
 
 
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                                                                                       #
+#                                               SIGNALS                                                 #
+#                                                                                                       #
+# ----------------------------------------------------------------------------------------------------- #
+
+# Deletes user profile picture when user profile is deleted:
 @receiver(pre_delete, sender=UserProfile)
-def delete_user_profile_picture(sender, instance, **kwargs):
-    """
-    Delete user profile picture when UserProfile is deleted.
-    """
+def delete_user_profile_picture(instance):
     if instance.profile_picture:
         file_path = instance.profile_picture.path
         safe_delete_file(file_path)
 
-        # Try to clean up empty directory
+        # Try to clean up empty directory:
         dir_path = os.path.dirname(file_path)
         safe_delete_directory(dir_path)
 
 
+# Delete review photo and thumbnail files when ReviewPhoto is deleted:
 @receiver(pre_delete, sender=ReviewPhoto)
-def delete_review_photo_files(sender, instance, **kwargs):
-    """
-    Delete review photo and thumbnail files when ReviewPhoto is deleted.
-    """
+def delete_review_photo_files(instance):
     files_to_delete = []
 
-    # Add main image
+    # Add main image:
     if instance.image:
         files_to_delete.append(instance.image.path)
 
-    # Add thumbnail
+    # Add thumbnail:
     if instance.thumbnail:
         files_to_delete.append(instance.thumbnail.path)
 
-    # Delete all files
+    # Delete all files:
     for file_path in files_to_delete:
         safe_delete_file(file_path)
 
-    # Clean up directories if they're empty
+    # Clean up directories if they're empty:
     if instance.image:
-        # Get the review-specific directory
+        # Get the review-specific directory:
         review_dir = os.path.dirname(instance.image.path)
-        safe_delete_directory(os.path.join(review_dir, 'thumbnails'))  # Delete thumbnails dir first
-        safe_delete_directory(review_dir)  # Then review dir
+        safe_delete_directory(os.path.join(review_dir, 'thumbnails'))
+        safe_delete_directory(review_dir)
 
-        # Try to clean up location directory if empty
+        # Try to clean up location directory if empty:
         location_dir = os.path.dirname(review_dir)
         safe_delete_directory(location_dir)
 
 
-@receiver(pre_delete, sender=Review)
-def delete_review_media_files(sender, instance, **kwargs):
-    """
-    Delete all media files associated with a review when the review is deleted.
-    This handles the cascade deletion of ReviewPhotos.
-    """
-    # Get all photos for this review before they're deleted by cascade
-    review_photos = instance.photos.all()
-
-    for photo in review_photos:
-        # The ReviewPhoto pre_delete signal will handle individual file deletion
-        # We just need to ensure the directory structure is cleaned up
-        if photo.image:
-            # Directory cleanup will be handled by individual photo deletion signals
-            pass
-
-
-@receiver(pre_delete, sender=Location)
-def delete_location_media_files(sender, instance, **kwargs):
-    """
-    Delete all media files associated with a location when the location is deleted.
-    This handles the cascade deletion of ReviewPhotos.
-    """
-    # Get all reviews and their photos before they're deleted by cascade
-    reviews = instance.reviews.all()
-
-    # Store directory paths for cleanup
-    directories_to_clean = set()
-
-    # Process review photos
-    for review in reviews:
-        for photo in review.photos.all():
-            if photo.image:
-                review_dir = os.path.dirname(photo.image.path)
-                directories_to_clean.add(review_dir)
-
-    # The individual photo deletion signals will handle file cleanup
-    # We'll clean up the main location directory structure after cascade deletion
-    if directories_to_clean:
-        # Schedule directory cleanup (this will run after individual deletions)
-        for dir_path in directories_to_clean:
-            # Individual signals will handle this, but we log the location deletion
-            logger.info(f"Location {instance.id} deleted - media cleanup handled by cascade signals")
-
-
+# Clean up the entire location directory structure after all cascade deletions are complete:
 @receiver(post_delete, sender=Location)
-def cleanup_location_directory_structure(sender, instance, **kwargs):
-    """
-    Clean up the entire location directory structure after all cascade deletions are complete.
-    """
+def cleanup_location_directory_structure(instance):
     try:
-        # Try to clean up the main review photos directory
+        # Try to clean up the main review photos directory:
         review_photos_dir = os.path.join(settings.MEDIA_ROOT, 'review_photos', str(instance.id))
-
         safe_delete_directory(review_photos_dir)
 
-        logger.info(f"Cleaned up directory structure for deleted location {instance.id}")
+    except Exception:
+        # There was an error cleaning up directory structure for location:
+        return
 
-    except Exception as e:
-        logger.error(f"Error cleaning up directory structure for location {instance.id}: {str(e)}")
 
-
+# Clean up the review directory structure after all cascade deletions are complete:
 @receiver(post_delete, sender=Review)
-def cleanup_review_directory_structure(sender, instance, **kwargs):
-    """
-    Clean up the review directory structure after all cascade deletions are complete.
-    """
+def cleanup_review_directory_structure(instance):
     try:
-        # Try to clean up the main review directory
+        # Try to clean up the main review directory:
         review_dir = os.path.join(
             settings.MEDIA_ROOT,
             'review_photos',
             str(instance.location.id),
             str(instance.id)
         )
-
         safe_delete_directory(review_dir)
 
-        logger.info(f"Cleaned up directory structure for deleted review {instance.id}")
-
-    except Exception as e:
-        logger.error(f"Error cleaning up directory structure for review {instance.id}: {str(e)}")
+    except Exception:
+        # There was an error cleaning up directory structure for review:
+        return

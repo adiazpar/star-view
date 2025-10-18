@@ -79,7 +79,7 @@ class ReviewPhotoSerializer(serializers.ModelSerializer):
         return obj.thumbnail_url if obj.thumbnail else None
 
 
-# Location Review Serializer -------------------------------------- #
+# Review Serializer ----------------------------------------------- #
 class ReviewSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     user_full_name = serializers.SerializerMethodField()
@@ -131,7 +131,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         return obj.votes.filter(is_upvote=False).count()
 
 
-# Viewing Location Serializer ------------------------------------- #
+# Location Serializer --------------------------------------------- #
 class LocationSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(read_only=True)  # Explicitly define ID as integer
     added_by = serializers.SerializerMethodField()
