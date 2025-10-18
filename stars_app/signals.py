@@ -115,7 +115,7 @@ def safe_delete_directory(dir_path):
 
 # Deletes user profile picture when user profile is deleted:
 @receiver(pre_delete, sender=UserProfile)
-def delete_user_profile_picture(instance):
+def delete_user_profile_picture(instance, **kwargs):
     if instance.profile_picture:
         file_path = instance.profile_picture.path
         safe_delete_file(file_path)
@@ -127,7 +127,7 @@ def delete_user_profile_picture(instance):
 
 # Delete review photo and thumbnail files when ReviewPhoto is deleted:
 @receiver(pre_delete, sender=ReviewPhoto)
-def delete_review_photo_files(instance):
+def delete_review_photo_files(instance, **kwargs):
     files_to_delete = []
 
     # Add main image:
@@ -156,7 +156,7 @@ def delete_review_photo_files(instance):
 
 # Clean up the entire location directory structure after all cascade deletions are complete:
 @receiver(post_delete, sender=Location)
-def cleanup_location_directory_structure(instance):
+def cleanup_location_directory_structure(instance, **kwargs):
     try:
         # Try to clean up the main review photos directory:
         review_photos_dir = os.path.join(settings.MEDIA_ROOT, 'review_photos', str(instance.id))
@@ -169,7 +169,7 @@ def cleanup_location_directory_structure(instance):
 
 # Clean up the review directory structure after all cascade deletions are complete:
 @receiver(post_delete, sender=Review)
-def cleanup_review_directory_structure(instance):
+def cleanup_review_directory_structure(instance, **kwargs):
     try:
         # Try to clean up the main review directory:
         review_dir = os.path.join(

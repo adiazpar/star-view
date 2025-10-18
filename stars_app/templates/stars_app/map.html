@@ -60,7 +60,7 @@
                         <div class="location-info">
                             <div class="star-rating">
                                 <div class="star-rating-stars">
-                                    {% with average_rating=item.reviews.all|average_rating %}
+                                    {% with average_rating=item.average_rating %}
                                         {# Loop through 5 stars #}
                                         {% for i in "12345"|make_list %}
                                             {# Convert average_rating to integer for comparison #}
@@ -71,7 +71,7 @@
                                         {% endfor %}
                                     {% endwith %}
                                 </div>
-                                <span class="star-rating-count">({{ item.reviews.count }})</span>
+                                <span class="star-rating-count">({{ item.rating_count }})</span>
                             </div>
                             <div class="info-item">
                                 SEE DETAILS
