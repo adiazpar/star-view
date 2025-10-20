@@ -1089,11 +1089,11 @@ export class MapController {
             ? `${Math.round(location.quality_score)}/100`
             : 'Not available';
 
-        // Calculate average rating - similar to your template filter
-        const reviews = location.reviews || [];
-        const averageRating = reviews.length > 0
-            ? Math.round(reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length)
+        // Use pre-calculated rating data from info_panel endpoint
+        const averageRating = location.average_rating
+            ? Math.round(location.average_rating)
             : 0;
+        const reviewCount = location.review_count || 0;
 
         // Generate stars HTML with the new 'filled' class system
         const starsHTML = Array.from({ length: 5 }, (_, i) => {
@@ -1121,6 +1121,12 @@ export class MapController {
 
                 const data = await response.json();
                 location.is_favorited = data.is_favorited;
+
+                // IMPORTANT: Update the location in this.locations array to keep data in sync
+                const locationIndex = this.locations.findIndex(loc => loc.id === location.id);
+                if (locationIndex !== -1) {
+                    this.locations[locationIndex].is_favorited = data.is_favorited;
+                }
             } catch(error) {
                 console.error('Error checking favorite status:', error);
                 location.is_favorited = false; // Default to false if request fails
@@ -1181,7 +1187,7 @@ export class MapController {
                                             <div class="star-rating-stars">
                                                 ${starsHTML}
                                             </div>
-                                            <span class="rating-count">(${reviews.length})</span>
+                                            <span class="rating-count">(${reviewCount})</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1443,7 +1449,7 @@ export class MapController {
     }
 
     // Unified handler for both marker and card clicks
-    handleLocationSelection(location, element = null) {
+    async handleLocationSelection(location, element = null) {
         // Update selected state
         if (this.selectedLocationId === location.id) {
             // If clicking the same location, toggle the panel
@@ -1480,7 +1486,31 @@ export class MapController {
                 }
             }
 
-            this.createInfoPanel(location);
+            // Fetch optimized info panel data (not full location details)
+            // This is needed because map_markers endpoint only returns minimal data
+            try {
+                const response = await fetch(`/api/locations/${location.id}/info_panel/`);
+                if (response.ok) {
+                    const infoPanelData = await response.json();
+                    // Merge with existing location data (preserves is_favorited from earlier)
+                    const completeLocation = {
+                        ...infoPanelData,
+                        is_favorited: location.is_favorited,
+                        // Restructure added_by for compatibility with info panel code
+                        added_by: { id: infoPanelData.added_by_id }
+                    };
+                    this.createInfoPanel(completeLocation);
+                } else {
+                    console.error('Failed to fetch location info panel data');
+                    // Fall back to showing panel with minimal data
+                    this.createInfoPanel(location);
+                }
+            } catch (error) {
+                console.error('Error fetching location info panel data:', error);
+                // Fall back to showing panel with minimal data
+                this.createInfoPanel(location);
+            }
+
             this.updateActiveStates(location.id);
 
             // Fly to location on the map

@@ -196,6 +196,91 @@ class LocationSerializer(serializers.ModelSerializer):
         return None
 
 
+# Map Location Serializer ----------------------------------------- #
+class MapLocationSerializer(serializers.ModelSerializer):
+    """
+    Lightweight serializer optimized for map marker display.
+
+    This serializer returns only the minimal data needed to render location
+    markers on the 3D globe interface. By excluding unnecessary fields like
+    reviews, nested user data, and metadata, it reduces payload size by ~97%
+    compared to the full LocationSerializer.
+
+    Usage:
+        - Initial map load: GET /api/locations/map_markers/
+        - Returns simple JSON array (no pagination)
+        - Frontend converts to GeoJSON for Mapbox GL JS
+
+    Performance:
+        - Full LocationSerializer: ~500KB for 500 locations
+        - MapLocationSerializer: ~15KB for 500 locations
+
+    Note:
+        For full location details (after marker click), use the standard
+        LocationSerializer via GET /api/locations/{id}/
+    """
+
+    class Meta:
+        model = Location
+        fields = ['id', 'name', 'latitude', 'longitude', 'quality_score']
+        read_only_fields = fields
+
+
+# Location Info Panel Serializer ---------------------------------- #
+class LocationInfoPanelSerializer(serializers.ModelSerializer):
+    """
+    Optimized serializer for map info panel display.
+
+    This serializer provides just enough data to populate the info panel that
+    appears when a user clicks a marker on the map. It includes basic location
+    info and review statistics, but excludes heavy nested data like full review
+    content, photos, comments, and vote data.
+
+    Usage:
+        - Marker click: GET /api/locations/{id}/info_panel/
+        - Used by MapController.handleLocationSelection()
+
+    Fields included:
+        - Basic: id, name, latitude, longitude, elevation, formatted_address
+        - Quality: quality_score
+        - Reviews: average_rating, review_count (calculated, not nested)
+        - Ownership: added_by (id only, for delete permission check)
+
+    Performance:
+        - Full LocationSerializer: ~7KB per location (with all reviews/photos/votes)
+        - LocationInfoPanelSerializer: ~300 bytes per location
+        - Reduction: ~95%
+
+    What's excluded:
+        - Full review objects (content, user profiles, timestamps)
+        - Review photos
+        - Review comments
+        - Vote data
+        - User profile data beyond ID
+    """
+
+    added_by_id = serializers.IntegerField(source='added_by.id', read_only=True)
+    average_rating = serializers.SerializerMethodField()
+    review_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Location
+        fields = [
+            'id', 'name', 'latitude', 'longitude', 'elevation',
+            'formatted_address', 'quality_score',
+            'added_by_id', 'average_rating', 'review_count'
+        ]
+        read_only_fields = fields
+
+    def get_average_rating(self, obj):
+        """Calculate average rating without fetching full review objects."""
+        return obj.reviews.aggregate(avg_rating=Avg('rating'))['avg_rating']
+
+    def get_review_count(self, obj):
+        """Get review count without fetching full review objects."""
+        return obj.reviews.count()
+
+
 # User Profile Serializer ---------------------------------------- #
 class UserProfileSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')

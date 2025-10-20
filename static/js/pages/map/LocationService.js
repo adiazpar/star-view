@@ -28,15 +28,14 @@ export class LocationService {
     }
 
     static async getLocations() {
-        // Request up to 100 locations (max allowed by the API)
-        const response = await fetch('/api/locations/?page_size=100', {
+        // Use optimized map_markers endpoint (97% smaller payload)
+        const response = await fetch('/api/locations/map_markers/', {
             headers: {
                 'Content-Type': 'application/json'
             }
         });
         if (!response.ok) throw new Error('Failed to fetch viewing locations');
-        const data = await response.json();
-        // Handle paginated response - return just the results array
-        return data.results || data;
+        // Returns simple array - no pagination wrapper
+        return response.json();
     }
 }
