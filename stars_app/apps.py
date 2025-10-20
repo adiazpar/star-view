@@ -1,10 +1,31 @@
+# ----------------------------------------------------------------------------------------------------- #
+# This apps.py file configures the stars_app Django application:                                        #
+#                                                                                                       #
+# Configuration:                                                                                        #
+# - default_auto_field: Uses BigAutoField for auto-generated primary keys (64-bit integers)             #
+# - name: Application identifier that must match INSTALLED_APPS in settings.py                          #
+# - ready(): Startup hook that imports signals.py to register signal handlers                           #
+#                                                                                                       #
+# Execution Flow:                                                                                       #
+# Django startup → Loads INSTALLED_APPS → Instantiates StarsAppConfig → Calls ready() →                 #
+# Imports signals.py → Registers @receiver decorators for file cleanup                                  #
+#                                                                                                       #
+# Critical: Without ready() importing signals, the 4 signal handlers (UserProfile, ReviewPhoto,         #
+# Review, and Location deletions) won't register and orphaned files will remain on disk.                #
+# ----------------------------------------------------------------------------------------------------- #
+
+# Import tools:
 from django.apps import AppConfig
 
 
 class StarsAppConfig(AppConfig):
+    # BigAutoField for 64-bit auto-incrementing primary keys:
     default_auto_field = 'django.db.models.BigAutoField'
+
+    # Application name (must match settings.py INSTALLED_APPS):
     name = 'stars_app'
-    
+
+
+    # Registers signal handlers by importing signals.py when app is ready:
     def ready(self):
-        # Import signals when the app is ready to ensure they're registered:
         import stars_app.signals

@@ -6,8 +6,10 @@ from rest_framework.exceptions import PermissionDenied
 from stars_app.models.model_user_profile import UserProfile
 from stars_app.models.model_location import Location
 from django.contrib.auth.models import User
-from stars_app.utils import is_valid_email
 
+# Email validation:
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
 
 # Authentication libraries:
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -1367,7 +1369,10 @@ def change_email(request):
                 'message': 'Email address is required.'
             }, status=400)
 
-        if not is_valid_email(new_email):
+        # Validate email format using Django's built-in validator:
+        try:
+            validate_email(new_email)
+        except ValidationError:
             return JsonResponse({
                 'success': False,
                 'message': 'Please enter a valid email address.'
@@ -1460,8 +1465,10 @@ def register(request):
                 messages.error(request, 'Email is already registered.')
                 return redirect('register')
 
-            # Validate email format:
-            if not is_valid_email(email):
+            # Validate email format using Django's built-in validator:
+            try:
+                validate_email(email)
+            except ValidationError:
                 messages.error(request, 'Please enter a valid email address.')
                 return redirect('register')
 
