@@ -1,18 +1,22 @@
 # ----------------------------------------------------------------------------------------------------- #
-# This signals.py file handles automatic cleanup of media files when models are deleted:                #
+# This signals.py file handles Django signal receivers for the stars_app:                               #
 #                                                                                                       #
+# Model Creation Signals (post_save):                                                                   #
+# - User creation → Automatically creates associated UserProfile                                        #
+#                                                                                                       #
+# File Cleanup Signals (pre_delete, post_delete):                                                       #
 # 1. UserProfile deletion → Removes profile pictures                                                    #
 # 2. ReviewPhoto deletion → Removes review images and thumbnails                                        #
 # 3. Review deletion → Coordinates cleanup of all associated photos                                     #
 # 4. Location deletion → Coordinates cleanup of all reviews and photos via CASCADE                      #
 #                                                                                                       #
-# The cleanup happens in phases:                                                                        #
+# Cleanup happens in phases:                                                                            #
 # - pre_delete: Delete files before database deletion (while paths are still accessible)                #
 # - post_delete: Clean up empty directories after CASCADE deletions complete                            #
 #                                                                                                       #
 # Signal Registration:                                                                                  #
-# These signals are automatically registered when this module is imported. To ensure                    #
-# they're loaded, this file should be imported in stars_app/apps.py in the ready() method.              #
+# These signals are automatically registered when this module is imported via stars_app/apps.py         #
+# in the ready() method.                                                                                #
 #                                                                                                       #
 # Safety Features:                                                                                      #
 # - Files are only deleted if they're within MEDIA_ROOT (security check)                                #
@@ -22,9 +26,10 @@
 
 # Import tools:
 import os
-from django.db.models.signals import pre_delete, post_delete
+from django.db.models.signals import pre_delete, post_delete, post_save
 from django.dispatch import receiver
 from django.conf import settings
+from django.contrib.auth.models import User
 from pathlib import Path
 
 # Import models:
@@ -183,3 +188,12 @@ def cleanup_review_directory_structure(instance, **kwargs):
     except Exception:
         # There was an error cleaning up directory structure for review:
         return
+
+
+# Automatically create UserProfile when User is created:
+@receiver(post_save, sender=User)
+def create_or_update_user_profile(sender, instance, created, **kwargs):
+    if created:
+        UserProfile.objects.create(user=instance)
+    else:
+        UserProfile.objects.get_or_create(user=instance)  # Create profile for existing users if missing

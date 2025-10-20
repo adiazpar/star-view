@@ -1,42 +1,49 @@
+# ----------------------------------------------------------------------------------------------------- #
+# This model_review.py file defines the Review model:                                                   #
+#                                                                                                       #
+# Purpose:                                                                                              #
+# Represents a user's review of a stargazing location with ratings, comments, and vote tracking.        #
+# Automatically maintains aggregate rating statistics on the parent Location model.                     #
+#                                                                                                       #
+# Key Features:                                                                                         #
+# - Rating validation: 1-5 star ratings enforced via validators                                         #
+# - Unique constraint: One review per user per location                                                 #
+# - Vote tracking: GenericRelation to Vote model for upvote/downvote functionality                      #
+# - Automatic aggregation: Updates Location.rating_count and Location.average_rating on save/delete     #
+# - Edit detection: Tracks whether review has been modified after creation                              #
+# ----------------------------------------------------------------------------------------------------- #
+
+# Import tools:
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.contrib.auth.models import User
 from django.db.models import Avg
 from django.contrib.contenttypes.fields import GenericRelation
-from .model_location import Location
+
+# Import models:
+from . import Location
+
 
 
 class Review(models.Model):
+    # Timestamps:
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    location = models.ForeignKey(
-        Location,
-        on_delete=models.CASCADE,
-        related_name='reviews'
-    )
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='location_reviews'
-    )
-    rating = models.IntegerField(
-        validators=[MinValueValidator(1), MaxValueValidator(5)],
-        help_text="Rating from 1 to 5 stars"
-    )
-    comment = models.TextField(
-        max_length=1000,
-        blank=True,
-        null=True,
-        help_text="Optional review comment"
-    )
+    # Relationships:
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='location_reviews')
 
-    # Generic relation to Vote model
+    # Review data:
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], help_text="Rating from 1 to 5 stars")
+    comment = models.TextField(max_length=1000, blank=True, null=True, help_text="Optional review comment")
+
+    # Generic relation to Vote model (enables upvote/downvote tracking):
     votes = GenericRelation('Vote', related_query_name='review')
 
+
     class Meta:
-        # Ensure one review per user per location
-        unique_together = ('user', 'location')
+        unique_together = ('user', 'location')  # One review per user per location
         ordering = ['-created_at']
         indexes = [
             models.Index(fields=['rating'], name='review_rating_idx'),
@@ -45,73 +52,71 @@ class Review(models.Model):
             models.Index(fields=['user'], name='review_user_idx'),
         ]
 
+
+    # String representation for admin interface and debugging:
     def __str__(self):
         return f"{self.user.username}'s review of {self.location.name}"
 
+
+    # Returns the net vote score (upvotes minus downvotes):
     @property
     def vote_count(self):
-        """Returns the total vote score (upvotes - downvotes)"""
         upvotes = self.votes.filter(is_upvote=True).count()
         downvotes = self.votes.filter(is_upvote=False).count()
         return upvotes - downvotes
 
+
+    # Returns the total number of upvotes:
     @property
     def upvote_count(self):
-        """Returns the number of upvotes"""
         return self.votes.filter(is_upvote=True).count()
 
+
+    # Returns the total number of downvotes:
     @property
     def downvote_count(self):
-        """Returns the number of downvotes"""
         return self.votes.filter(is_upvote=False).count()
-    
+
+
+    # Checks if review was edited (updated_at > 10 seconds after created_at):
     @property
     def is_edited(self):
-        """Check if the review has been edited"""
-        # Consider it edited if updated_at is more than 10 seconds after created_at
         from datetime import timedelta
         return self.updated_at - self.created_at > timedelta(seconds=10)
-    
+
+
+    # Override save to automatically update location rating statistics:
     def save(self, *args, **kwargs):
-        """Override save to update location rating statistics"""
         is_new = self.pk is None
         old_rating = None
-        
-        # If updating existing review, get the old rating
+
         if not is_new:
             old_review = Review.objects.get(pk=self.pk)
             old_rating = old_review.rating
-        
-        # Save the review
+
         super().save(*args, **kwargs)
-        
-        # Update location statistics
         self.update_location_ratings()
-    
+
+
+    # Override delete to automatically update location rating statistics:
     def delete(self, *args, **kwargs):
-        """Override delete to update location rating statistics"""
         location = self.location
         super().delete(*args, **kwargs)
-        
-        # Update location statistics after deletion
         self.update_location_ratings(location=location)
-    
+
+
+    # Updates the parent location's rating_count and average_rating fields:
     def update_location_ratings(self, location=None):
-        """Update the location's rating count and average"""
         if location is None:
             location = self.location
-        
-        # Get all reviews for this location
+
         reviews = location.reviews.all()
-        
-        # Update rating count
         location.rating_count = reviews.count()
-        
-        # Calculate and update average rating
+
         if location.rating_count > 0:
             avg_rating = reviews.aggregate(Avg('rating'))['rating__avg']
             location.average_rating = round(avg_rating, 2) if avg_rating else 0
         else:
             location.average_rating = 0
-        
+
         location.save(update_fields=['rating_count', 'average_rating'])
