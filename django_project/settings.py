@@ -70,12 +70,6 @@ CRONJOBS = [
     # python3 manage.py crontab show        -- Show all cronjobs
     # python3 manage.py crontab add         -- Add all cronjobs
     # python3 manage.py crontab remove      -- Remove all cronjobs
-
-    # Run every hour between 6 PM and 6 AM
-    ('0 18-23,0-5 * * *', 'django.core.management.call_command', ['update_moon_conditions']),
-
-    # Run once at noon for basic updates
-    ('0 12 * * *', 'django.core.management.call_command', ['update_moon_conditions']),
 ]
 
 # Middleware

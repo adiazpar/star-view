@@ -3,12 +3,11 @@
 #                                                                                                       #
 # 1. Address Enrichment → Fetches city, state/region, and country from coordinates                      #
 # 2. Elevation Data → Retrieves elevation in meters from Mapbox terrain API                             #
-# 3. Quality Score → Calculates 0-100 stargazing quality score based on elevation                       #
-# 4. Initialization → Orchestrates all enrichment operations when a location is created                 #
+# 3. Initialization → Orchestrates all enrichment operations when a location is created                 #
 #                                                                                                       #
 # Data Flow:                                                                                            #
-# User creates location with coordinates → LocationService enriches with address, elevation, and        #
-# quality score → Fully populated location ready for display                                            #
+# User creates location with coordinates → LocationService enriches with address and elevation →        #
+# Fully populated location ready for display                                                            #
 #                                                                                                       #
 # Service Layer Pattern:                                                                                #
 # This service separates business logic from data models, following Django best practices:              #
@@ -33,9 +32,6 @@ from django.conf import settings
 
 
 class LocationService:
-
-    # Maximum elevation for quality score scaling:
-    MAX_ELEVATION_METERS = 4000
 
 
 
@@ -145,26 +141,6 @@ class LocationService:
         return True
 
 
-    # Calculate overall quality score for a location based on elevation.
-    # Scales elevation from 0-MAX_ELEVATION_METERS to 0-100 score:
-    @staticmethod
-    def calculate_quality_score(location):
-        try:
-            if location.elevation and location.elevation > 0:
-                score = min(100, (location.elevation / LocationService.MAX_ELEVATION_METERS) * 100)
-            else:
-                score = 0
-
-            location.quality_score = round(score, 1)
-            location.save(update_fields=['quality_score'])
-            # Info: Calculated quality score for {location.name}: {location.quality_score}
-            return True
-
-        except Exception as e:
-            # Error: Error calculating quality score for {location.name}: {error}
-            return False
-
-
     # Initialize all location data after creation:
     @staticmethod
     def initialize_location_data(location):
@@ -184,11 +160,4 @@ class LocationService:
             LocationService.update_elevation_from_mapbox(location)
         except Exception as e:
             # Warning: Could not update elevation for {location.name}: {error}
-            pass
-
-        # Calculate quality score based on elevation
-        try:
-            LocationService.calculate_quality_score(location)
-        except Exception as e:
-            # Warning: Could not calculate quality score for {location.name}: {error}
             pass

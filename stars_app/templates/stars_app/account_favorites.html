@@ -60,10 +60,6 @@
                 <div class="favorite-content">
                     <div class="location-info">
                         <div class="info-item">
-                            <span class="label"><i class="fas fa-star"></i>Quality Score:</span>
-                            <span class="value">{{ favorite.location.quality_score|floatformat:1 }}/10</span>
-                        </div>
-                        <div class="info-item">
                             <span class="label"><i class="fas fa-location-dot"></i>Coordinates:</span>
                             <span class="value">{{ favorite.location.latitude|floatformat:4 }}, {{ favorite.location.longitude|floatformat:4 }}</span>
                         </div>
@@ -204,23 +200,47 @@ function saveNickname(favoriteId) {
     });
 }
 
-function unfavoriteLocation(locationId) {
+async function unfavoriteLocation(locationId) {
     if (!confirm('Are you sure you want to remove this location from your favorites?')) return;
 
-    const apiUrl = `/api/locations/${locationId}/unfavorite/`;
+    try {
+        // First, get the user's favorites to find the favorite ID
+        const favoritesResponse = await fetch('/api/favorite-locations/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
 
-    fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken')
+        if (!favoritesResponse.ok) {
+            throw new Error('Failed to fetch favorites');
         }
-    })
-    .then(response => {
+
+        const favoritesData = await favoritesResponse.json();
+        const favorites = favoritesData.results || favoritesData;
+        const favorite = favorites.find(f => f.location.id === locationId);
+
+        if (!favorite) {
+            throw new Error('Favorite not found');
+        }
+
+        // Delete the favorite
+        const response = await fetch(`/api/favorite-locations/${favorite.id}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
         if (response.ok) {
             window.location.reload();
+        } else {
+            throw new Error('Failed to remove favorite');
         }
-    })
-    .catch(error => console.error('Error:', error));
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to remove favorite. Please try again.');
+    }
 }
 
 function getCookie(name) {

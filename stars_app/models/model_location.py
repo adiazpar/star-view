@@ -2,19 +2,18 @@
 # This model_location.py file defines the Location model:                                               #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Represents a stargazing viewing location with coordinates, ratings, and quality metrics. This is      #
-# the core model of the application, storing all information about places where users can stargaze.     #
+# Represents a stargazing viewing location with coordinates and ratings. This is the core model of      #
+# the application, storing all information about places where users can stargaze.                       #
 #                                                                                                       #
 # Key Features:                                                                                         #
 # - Geographic data: latitude, longitude, elevation, and address information                            #
-# - Quality scoring: Automatic calculation based on elevation and other factors                         #
 # - Review aggregation: Tracks average ratings and visitor counts                                       #
 # - Verification system: Staff can verify locations with notes and timestamps                           #
 # - Automatic enrichment: Calls LocationService on save to fetch address and elevation data             #
 #                                                                                                       #
 # Service Integration:                                                                                  #
 # The save() method automatically calls LocationService.initialize_location_data() for new locations    #
-# to enrich data via Mapbox APIs (reverse geocoding, elevation, quality score calculation).             #
+# to enrich data via Mapbox APIs (reverse geocoding and elevation).                                     #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Import tools:
@@ -44,9 +43,6 @@ class Location(models.Model):
     locality = models.CharField(max_length=200, blank=True, null=True, help_text="City/Town")
     country = models.CharField(max_length=200, blank=True, null=True)
 
-    # Quality metrics:
-    quality_score = models.FloatField(null=True, blank=True, help_text="Overall viewing quality score (0-100) based on elevation")
-
     # Rating aggregation:
     rating_count = models.PositiveIntegerField(default=0)
     average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00, help_text="Average rating (0.00-5.00)")
@@ -69,9 +65,6 @@ class Location(models.Model):
 
     def update_elevation_from_mapbox(self):
         return LocationService.update_elevation_from_mapbox(self)
-
-    def calculate_quality_score(self):
-        return LocationService.calculate_quality_score(self)
 
 
     # Override save to automatically enrich location data for new locations:
@@ -102,9 +95,8 @@ class Location(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['latitude', 'longitude'], name='location_coords_idx'),
-            models.Index(fields=['quality_score'], name='quality_score_idx'),
             models.Index(fields=['country'], name='country_idx'),
             models.Index(fields=['created_at'], name='created_at_idx'),
             models.Index(fields=['added_by'], name='added_by_idx'),
         ]
-        ordering = ['-quality_score', '-created_at']
+        ordering = ['-created_at']

@@ -144,14 +144,10 @@ export class MapController {
         const verificationBadge = location.is_verified ?
             '<span class="popup-verified"><i class="fas fa-check-circle"></i> Verified</span>' : '';
 
-        const qualityScore = location.quality_score ?
-            `<div class="popup-quality">Quality: ${location.quality_score.toFixed(1)}/100</div>` : '';
-
         return `
             <div class="location-popup">
                 <h3>${location.name}</h3>
                 ${verificationBadge}
-                ${qualityScore}
                 <div class="popup-coordinates">${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}</div>
                 <a href="/location/${location.id}/" class="popup-link">View Details</a>
             </div>
@@ -875,11 +871,6 @@ export class MapController {
             document.querySelector('.map-view').appendChild(infoPanel);
         }
 
-        // Format values with proper handling of unavailable data
-        const qualityScore = location.quality_score
-            ? `${Math.round(location.quality_score)}/100`
-            : 'Not available';
-
         // Use pre-calculated rating data from info_panel endpoint
         const averageRating = location.average_rating
             ? Math.round(location.average_rating)
@@ -905,7 +896,8 @@ export class MapController {
 
         if (isLoggedIn) {
             try {
-                const response = await fetch(`/api/locations/${location.id}/is_favorited/`, {
+                // Get location data which includes is_favorited field
+                const response = await fetch(`/api/locations/${location.id}/`, {
                     method: 'GET',
                     credentials: 'same-origin'
                 });
@@ -984,16 +976,6 @@ export class MapController {
                                 </div>
                             </div>
 
-                            <div class="info-row">
-                                <div class="info-icon">
-                                    <i class="fas fa-star"></i>
-                                </div>
-                                <div class="info-content">
-                                    <label>Quality Score</label>
-                                    <span class="${qualityScore === 'Not available' ? 'unavailable' : ''}">${qualityScore}</span>
-                                </div>
-                            </div>
-        
                             <div class="info-row">
                                 <div class="info-icon">
                                     <i class="fas fa-mountain"></i>
@@ -1109,15 +1091,49 @@ export class MapController {
             }
 
 
-            const action = location.is_favorited ? 'unfavorite' : 'favorite';
-            const response = await fetch(`/api/locations/${locationId}/${action}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrfToken.value,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin'
-            });
+            let response;
+            if (location.is_favorited) {
+                // Unfavorite: First get the favorite ID, then DELETE it
+                const favoritesResponse = await fetch('/api/favorite-locations/', {
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+
+                if (!favoritesResponse.ok) {
+                    throw new Error('Failed to fetch favorites');
+                }
+
+                const favorites = await favoritesResponse.json();
+                const favorite = favorites.results ? favorites.results.find(f => f.location.id === locationId) : null;
+
+                if (!favorite) {
+                    throw new Error('Favorite not found');
+                }
+
+                response = await fetch(`/api/favorite-locations/${favorite.id}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': csrfToken.value,
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+            } else {
+                // Favorite: POST to create new favorite
+                response = await fetch('/api/favorite-locations/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken.value,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        location_id: locationId
+                    }),
+                    credentials: 'same-origin'
+                });
+            }
 
             if (response.ok) {
                 // Toggle the favorited state
@@ -1164,6 +1180,7 @@ export class MapController {
                 } catch (parseError) {
                     console.error('Could not parse error response:', parseError);
                 }
+                const action = location.is_favorited ? 'unfavorite' : 'favorite';
                 this.showErrorMessage(`Failed to ${action} location: ${errorMessage}`);
             }
         } catch (error) {

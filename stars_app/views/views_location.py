@@ -8,21 +8,18 @@
 # Key Features:                                                                                         #
 # - LocationViewSet: Full CRUD API for locations with filtering, search, and ordering                  #
 # - Map optimization: Lightweight endpoints for 3D globe (map_markers + info_panel, 96%+ reduction)    #
-# - Duplicate detection: Checks for nearby locations before creation to prevent duplicates             #
-# - Favorite management: Users can favorite/unfavorite locations and check favorite status             #
 # - Report handling: Users can report problematic locations using the generic Report model             #
-# - Data enrichment: Automatic elevation and address updates via Mapbox APIs                           #
-# - Template view: location_details displays location info with reviews for authenticated users        #
+# - Template view: location_details displays location info with reviews (read-only)                    #
 #                                                                                                       #
 # Architecture:                                                                                         #
 # - Uses Django REST Framework ViewSets for API endpoints                                              #
-# - Integrates with ContentTypes framework for generic relationships (Vote, Report models)             #
-# - Delegates geographic operations to geopy library for distance calculations                         #
+# - Delegates business logic to service layer (ReportService, VoteService, ResponseService)            #
+# - Template views are read-only; all write operations use API endpoints                               #
+# - Favorite operations are handled by FavoriteLocationViewSet in views_favorite.py                    #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Django imports:
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.contenttypes.models import ContentType
+from django.shortcuts import render, get_object_or_404
 from django.conf import settings
 from django.db.models import Avg
 
@@ -34,23 +31,17 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 
 # Model imports:
 from ..models import Location
-from ..models import FavoriteLocation
 from ..models import Review
-from ..models import Report
-from ..models import Vote
 
 # Serializer imports:
 from ..serializers import LocationSerializer
 from ..serializers import MapLocationSerializer
 from ..serializers import LocationInfoPanelSerializer
-from ..serializers import ReportSerializer
 
 # Service imports:
 from ..services import ReportService
 from ..services import ResponseService
-
-# Other imports:
-from itertools import chain
+from ..services import VoteService
 
 
 
@@ -63,9 +54,9 @@ from itertools import chain
 # ----------------------------------------------------------------------------- #
 # API ViewSet for managing stargazing locations.                                #
 #                                                                               #
-# Provides endpoints for creating, retreiving, updating, and deleting           #
-# locations. Includes actions for favoriting, reporting, duplicate checking,    #
-# and review management.                                                        #
+# Provides endpoints for creating, retrieving, updating, and deleting           #
+# locations. Includes actions for reporting and optimized endpoints for map     #
+# display (map_markers, info_panel).                                            #
 # ----------------------------------------------------------------------------- #
 class LocationViewSet(viewsets.ModelViewSet):
     
@@ -101,89 +92,6 @@ class LocationViewSet(viewsets.ModelViewSet):
             return ResponseService.error(message, status_code=status_code)
 
 
-    # Get all reports for this location:
-    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
-    def reports(self, request, pk=None):
-        location = self.get_object()
-
-        # Only staff can see all reports
-        if not request.user.is_staff:
-            return ResponseService.error(
-                'You do not have permission to view reports',
-                status_code=status.HTTP_403_FORBIDDEN
-            )
-
-        content_type = ContentType.objects.get_for_model(location)
-
-        # Get all reports for this location
-        reports = Report.objects.filter(
-            content_type=content_type,
-            object_id=location.id
-        )
-        serializer = ReportSerializer(reports, many=True)
-        return Response(serializer.data)
-
-
-    # Check if a location is favorited by the current user:
-    @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
-    def is_favorited(self, request, pk=None):
-        location = self.get_object()
-        is_favorited = FavoriteLocation.objects.filter(
-            user=request.user,
-            location=location
-        ).exists()
-        message = 'Location is favorited' if is_favorited else 'Location is not favorited'
-        return ResponseService.success(
-            message,
-            data={'is_favorited': is_favorited}
-        )
-
-
-    # Add a location to user's favorites:
-    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
-    def favorite(self, request, pk=None):
-        location = self.get_object()
-
-        # Check if already favorited:
-        existing_favorite = FavoriteLocation.objects.filter(
-            user=request.user,
-            location=location
-        ).first()
-
-        if existing_favorite:
-            return ResponseService.error(
-                'Location already favorited',
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Create a new favorite:
-        FavoriteLocation.objects.create(
-            user=request.user,
-            location=location
-        )
-        serializer = self.get_serializer(location)
-        return Response(serializer.data)
-
-
-    # Remove a location from a user's favorites:
-    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
-    def unfavorite(self, request, pk=None):
-        location = self.get_object()
-
-        deleted_count, _ = FavoriteLocation.objects.filter(
-            user=request.user,
-            location=location
-        ).delete()
-
-        if deleted_count:
-            serializer = self.get_serializer(location)
-            return Response(serializer.data)
-        return ResponseService.error(
-            'Location was not favorited',
-            status_code=status.HTTP_400_BAD_REQUEST
-        )
-
-        
     # ----------------------------------------------------------------------------- #
     # Get minimal location data optimized for map display.                          #
     #                                                                               #
@@ -197,7 +105,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         queryset = Location.objects.all()
 
         # Optimize database query - only fetch needed columns
-        queryset = queryset.only('id', 'name', 'latitude', 'longitude', 'quality_score')
+        queryset = queryset.only('id', 'name', 'latitude', 'longitude')
 
         # Serialize and return as simple array
         serializer = self.get_serializer(queryset, many=True)
@@ -223,8 +131,8 @@ class LocationViewSet(viewsets.ModelViewSet):
 # ----------------------------------------------------------------------------- #
 # Display detailed information about a location including reviews.              #
 #                                                                               #
-# Shows all reviews with the user's review first (if exists), handles vote      #
-# information for authenticated users, and allows review submissions.           #
+# Shows all reviews with the user's review first (if exists) and enriches      #
+# them with vote information for authenticated users using VoteService.         #
 # ----------------------------------------------------------------------------- #
 def location_details(request, location_id):
 
@@ -253,90 +161,31 @@ def location_details(request, location_id):
     other_reviews = other_reviews.order_by('-created_at')
 
     # Combine reviews (user's review first, then others)
-    reviews_list = list(chain([user_review], other_reviews)) if user_review else list(other_reviews)
-    reviews_list = [r for r in reviews_list if r is not None]
+    if user_review:
+        reviews_list = [user_review] + list(other_reviews)
+    else:
+        reviews_list = list(other_reviews)
 
     # Create vote dictionaries to pass to template
     comment_votes = {}
 
-    # Add vote information for authenticated users
+    # Add vote information using VoteService
     for review in reviews_list:
-        if request.user.is_authenticated:
-            # Get the vote for this review using generic Vote model
-            review_content_type = ContentType.objects.get_for_model(review)
+        # Get vote data for this review
+        vote_data = VoteService.get_vote_counts(review, request.user)
+        setattr(review, 'user_vote', vote_data['user_vote'])
 
-            vote = Vote.objects.filter(
-                user=request.user,
-                content_type=review_content_type,
-                object_id=review.id
-            ).first()
-
-            # Add vote information as an attribute
-            setattr(review, 'user_vote', 'up' if vote and vote.is_upvote else 'down' if vote else None)
-        else:
-            setattr(review, 'user_vote', None)
-
-        # Prefetch comments with vote information
+        # Get vote data for comments
         comments = review.comments.all()
         for comment in comments:
-            if request.user.is_authenticated:
-                # Get user's vote on this comment using generic Vote model
-                comment_content_type = ContentType.objects.get_for_model(comment)
-
-                comment_vote = Vote.objects.filter(
-                    user=request.user,
-                    content_type=comment_content_type,
-                    object_id=comment.id
-                ).first()
-
-                if comment_vote:
-                    user_vote_value = 1 if comment_vote.is_upvote else -1
-                    comment_votes[comment.id] = user_vote_value
-                else:
-                    comment_votes[comment.id] = 0
+            comment_vote_data = VoteService.get_vote_counts(comment, request.user)
+            # Convert vote format for template (expects -1, 0, 1)
+            if comment_vote_data['user_vote'] == 'up':
+                comment_votes[comment.id] = 1
+            elif comment_vote_data['user_vote'] == 'down':
+                comment_votes[comment.id] = -1
             else:
                 comment_votes[comment.id] = 0
-
-    # Handle review submission
-    if request.method == 'POST' and request.user.is_authenticated and not is_owner:
-        rating = request.POST.get('rating')
-        comment = request.POST.get('comment')
-
-        if rating:
-            review, created = Review.objects.get_or_create(
-                location=location,
-                user=request.user,
-                defaults={'rating': rating, 'comment': comment}
-            )
-            if not created:
-                review.rating = rating
-                review.comment = comment
-                review.save()
-
-            # Handle image uploads
-            uploaded_images = request.FILES.getlist('review_images')
-            if uploaded_images:
-                from stars_app.models.model_review_photo import ReviewPhoto
-
-                # Validate number of images (max 5 per review)
-                existing_photos_count = review.photos.count()
-                if existing_photos_count + len(uploaded_images) > 5:
-                    return redirect('location_details', location_id=location_id)
-
-                # Process each uploaded image
-                for idx, image in enumerate(uploaded_images[:5-existing_photos_count]):
-                    try:
-                        ReviewPhoto.objects.create(
-                            review=review,
-                            image=image,
-                            order=existing_photos_count + idx
-                        )
-                    except Exception as e:
-                        # Continue processing other images on error
-                        pass
-
-            # Review submitted successfully
-            return redirect('location_details', location_id=location_id)
 
     # Calculate review statistics
     total_reviews = all_reviews.count()

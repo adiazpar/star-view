@@ -3,13 +3,11 @@
 #                                                                                                       #
 # Purpose:                                                                                              #
 # Provides REST Framework serializers for transforming User and UserProfile models between Python       #
-# objects and JSON for API responses. Handles user authentication data, profile information, and        #
-# reputation metrics.                                                                                   #
+# objects and JSON for API responses. Handles user authentication data and profile information.         #
 #                                                                                                       #
 # Key Features:                                                                                         #
 # - UserSerializer: Core Django User model with nested profile data                                     #
-# - UserProfileSerializer: Profile picture, reputation score, and contribution metrics                  #
-# - Read-only reputation: Scores are calculated automatically and cannot be edited via API              #
+# - UserProfileSerializer: Profile picture with URL generation                                          #
 # - Profile picture URLs: Provides absolute URLs for image display                                      #
 # ----------------------------------------------------------------------------------------------------- #
 
@@ -20,7 +18,6 @@ from stars_app.models.model_user_profile import UserProfile
 
 
 
-# User Profile Serializer ---------------------------------------- #
 class UserProfileSerializer(serializers.ModelSerializer):
     user = serializers.ReadOnlyField(source='user.username')
     profile_picture_url = serializers.ReadOnlyField(source='get_profile_picture_url')
@@ -28,15 +25,11 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['id', 'user', 'profile_picture', 'profile_picture_url',
-                  'reputation_score', 'verified_locations_count', 'helpful_reviews_count',
-                  'quality_photos_count', 'is_trusted_contributor',
                   'created_at', 'updated_at']
-        read_only_fields = ['user', 'reputation_score', 'verified_locations_count',
-                           'helpful_reviews_count', 'quality_photos_count',
-                           'is_trusted_contributor', 'created_at', 'updated_at']
+        read_only_fields = ['user', 'created_at', 'updated_at']
 
 
-# User Serializer ------------------------------------------------ #
+
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(source='userprofile', read_only=True)
 

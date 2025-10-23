@@ -84,6 +84,7 @@ function initializeRemainingFeatures(config, eventBus) {
 // Favorite functionality
 function initializeFavoriteSystem(config) {
     let isFavorited = false;
+    let favoriteId = null;
 
     function updateFavoriteButton() {
         const favoriteButton = document.querySelector('.favorite-button');
@@ -95,13 +96,12 @@ function initializeFavoriteSystem(config) {
         }
     }
 
-    // Check initial favorite status when page loads
+    // Check initial favorite status by fetching location data
     const favoriteButton = document.querySelector('.favorite-button');
     if (favoriteButton) {
-        fetch(`/api/locations/${config.locationId}/favorite/`, {
+        fetch(`/api/locations/${config.locationId}/`, {
             method: 'GET',
             headers: {
-                'X-CSRFToken': config.csrfToken,
                 'Content-Type': 'application/json'
             },
             credentials: 'same-origin'
@@ -110,33 +110,89 @@ function initializeFavoriteSystem(config) {
         .then(data => {
             isFavorited = data.is_favorited;
             updateFavoriteButton();
+
+            // If favorited, get the favorite ID for potential unfavorite operation
+            if (isFavorited) {
+                return fetch('/api/favorite-locations/', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                });
+            }
+        })
+        .then(response => {
+            if (response) return response.json();
+        })
+        .then(favorites => {
+            if (favorites && favorites.results) {
+                const favorite = favorites.results.find(f => f.location.id === config.locationId);
+                if (favorite) favoriteId = favorite.id;
+            }
         })
         .catch(error => console.error('Error checking favorite status:', error));
 
         // Add click handler for favorite button
-        favoriteButton.addEventListener('click', function() {
-            const endpoint = isFavorited ? 'unfavorite' : 'favorite';
+        favoriteButton.addEventListener('click', async function() {
+            try {
+                if (isFavorited) {
+                    // Unfavorite: DELETE the favorite
+                    if (!favoriteId) {
+                        // Fetch favorite ID if we don't have it
+                        const favoritesResponse = await fetch('/api/favorite-locations/', {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin'
+                        });
+                        const favorites = await favoritesResponse.json();
+                        const favorite = favorites.results ? favorites.results.find(f => f.location.id === config.locationId) : null;
+                        if (favorite) favoriteId = favorite.id;
+                    }
 
-            fetch(`/api/locations/${config.locationId}/${endpoint}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': config.csrfToken,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'same-origin'
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(data => {
-                isFavorited = !isFavorited;
-                updateFavoriteButton();
-            })
-            .catch(error => {
+                    if (favoriteId) {
+                        const response = await fetch(`/api/favorite-locations/${favoriteId}/`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': config.csrfToken,
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'same-origin'
+                        });
+
+                        if (!response.ok) throw new Error('Failed to unfavorite');
+
+                        isFavorited = false;
+                        favoriteId = null;
+                        updateFavoriteButton();
+                    }
+                } else {
+                    // Favorite: POST to create new favorite
+                    const response = await fetch('/api/favorite-locations/', {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': config.csrfToken,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            location_id: config.locationId
+                        }),
+                        credentials: 'same-origin'
+                    });
+
+                    if (!response.ok) throw new Error('Failed to favorite');
+
+                    const data = await response.json();
+                    favoriteId = data.id;
+                    isFavorited = true;
+                    updateFavoriteButton();
+                }
+            } catch (error) {
                 console.error('Error:', error);
                 alert('An error occurred. Please try again.');
-            });
+            }
         });
     }
 }

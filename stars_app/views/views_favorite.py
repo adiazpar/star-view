@@ -21,7 +21,7 @@ from rest_framework.permissions import IsAuthenticated
 from ..models import FavoriteLocation
 
 # Import serializers:
-from stars_app.serializers import FavoriteLocationSerializer
+from ..serializers import FavoriteLocationSerializer
 
 
 
