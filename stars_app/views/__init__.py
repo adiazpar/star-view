@@ -17,7 +17,6 @@
 # Location views:
 from .views_location import (
     LocationViewSet,
-    LocationCreateView,
     location_details,
 )
 
@@ -63,7 +62,6 @@ from .views_auth import (
 __all__ = [
     # Location views
     'LocationViewSet',
-    'LocationCreateView',
     'location_details',
 
     # Review views

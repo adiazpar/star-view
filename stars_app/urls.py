@@ -57,7 +57,4 @@ urlpatterns = [
     path('api/', include(locations_router.urls)),
     path('api/', include(reviews_router.urls)),
 
-    # Other:
-    path('api/locations/', views.LocationCreateView.as_view(), name='location-create'),
-
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
