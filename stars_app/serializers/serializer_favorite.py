@@ -33,4 +33,4 @@ class FavoriteLocationSerializer(serializers.ModelSerializer):
     class Meta:
         model = FavoriteLocation
         fields = ['id', 'user', 'location', 'location_id', 'nickname', 'display_name', 'created_at']
-        read_only_fields = ['user', 'created_at']
+        read_only_fields = ['id', 'user', 'created_at']

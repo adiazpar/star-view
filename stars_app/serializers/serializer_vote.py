@@ -72,6 +72,7 @@ class VoteSerializer(serializers.ModelSerializer):
             'created_at',
             'user',
             'content_type',  # Auto-set from the object being voted on
+            'object_id',     # Cannot change what object is being voted on
         ]
 
 

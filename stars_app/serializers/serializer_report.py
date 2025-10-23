@@ -93,6 +93,7 @@ class ReportSerializer(serializers.ModelSerializer):
             'reviewed_at',
             'status',
             'content_type',  # Auto-set from the object being reported
+            'object_id',     # Cannot change what object is being reported
         ]
 
 

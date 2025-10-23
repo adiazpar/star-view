@@ -26,7 +26,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         model = UserProfile
         fields = ['id', 'user', 'profile_picture', 'profile_picture_url',
                   'created_at', 'updated_at']
-        read_only_fields = ['user', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'created_at', 'updated_at']
 
 
 
@@ -36,4 +36,4 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined', 'profile']
-        read_only_fields = ['date_joined']
+        read_only_fields = ['id', 'username', 'date_joined']

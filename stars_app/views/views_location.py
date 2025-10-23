@@ -1,21 +1,21 @@
 # ----------------------------------------------------------------------------------------------------- #
-# This views_location.py file handles all location-related views and API endpoints:                    #
+# This views_location.py file handles all location-related views and API endpoints:                     #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Provides REST API endpoints and template views for managing stargazing locations. Handles location   #
-# creation, retrieval, updates, and enrichment with geographic data (elevation, address).              #
+# Provides REST API endpoints and template views for managing stargazing locations. Handles location    #
+# creation, retrieval, updates, and enrichment with geographic data (elevation, address).               #
 #                                                                                                       #
 # Key Features:                                                                                         #
-# - LocationViewSet: Full CRUD API for locations with filtering, search, and ordering                  #
-# - Map optimization: Lightweight endpoints for 3D globe (map_markers + info_panel, 96%+ reduction)    #
-# - Report handling: Users can report problematic locations using the generic Report model             #
-# - Template view: location_details displays location info with reviews (read-only)                    #
+# - LocationViewSet: Full CRUD API for locations with filtering, search, and ordering                   #
+# - Map optimization: Lightweight endpoints for 3D globe (map_markers + info_panel, 96%+ reduction)     #
+# - Report handling: Users can report problematic locations using the generic Report model              #
+# - Template view: location_details displays location info with reviews (read-only)                     #
 #                                                                                                       #
 # Architecture:                                                                                         #
-# - Uses Django REST Framework ViewSets for API endpoints                                              #
-# - Delegates business logic to service layer (ReportService, VoteService, ResponseService)            #
-# - Template views are read-only; all write operations use API endpoints                               #
-# - Favorite operations are handled by FavoriteLocationViewSet in views_favorite.py                    #
+# - Uses Django REST Framework ViewSets for API endpoints                                               #
+# - Delegates business logic to service layer (ReportService, VoteService, ResponseService)             #
+# - Template views are read-only; all write operations use API endpoints                                #
+# - Favorite operations are handled by FavoriteLocationViewSet in views_favorite.py                     #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Django imports:

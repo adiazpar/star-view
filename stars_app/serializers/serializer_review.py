@@ -35,7 +35,7 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
         model = ReviewComment
         fields = ['id', 'review', 'user', 'user_profile_picture', 'content',
                   'created_at', 'upvote_count', 'downvote_count', 'user_vote', 'is_edited']
-        read_only_fields = ['user', 'review']
+        read_only_fields = ['id', 'user', 'review', 'created_at']
 
     def get_user(self, obj):
         # Return full user information needed by frontend
@@ -64,7 +64,7 @@ class ReviewPhotoSerializer(serializers.ModelSerializer):
         model = ReviewPhoto
         fields = ['id', 'image', 'thumbnail', 'caption', 'order',
                   'image_url', 'thumbnail_url', 'created_at']
-        read_only_fields = ['thumbnail', 'created_at']
+        read_only_fields = ['id', 'thumbnail', 'created_at']
 
     def get_image_url(self, obj):
         request = self.context.get('request')
@@ -95,6 +95,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         fields = ['id', 'location', 'user', 'user_full_name',
                  'rating', 'comment', 'created_at', 'updated_at',
                   'vote_count', 'upvote_count', 'downvote_count', 'user_vote', 'photos', 'is_edited']
+        read_only_fields = ['id', 'user', 'location', 'created_at', 'updated_at']
 
     def get_user_full_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}".strip()

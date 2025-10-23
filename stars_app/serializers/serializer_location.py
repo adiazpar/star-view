@@ -28,7 +28,6 @@ from . import ReviewSerializer
 
 
 class LocationSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
     added_by = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
     verified_by = serializers.SerializerMethodField()
@@ -51,7 +50,7 @@ class LocationSerializer(serializers.ModelSerializer):
                   'times_reported', 'last_visited', 'visitor_count'
                   ]
 
-        read_only_fields = ['added_by',
+        read_only_fields = ['id', 'added_by',
                           'created_at', 'formatted_address', 'administrative_area',
                           'locality', 'country',
 
