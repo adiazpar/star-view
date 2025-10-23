@@ -8,23 +8,20 @@
     <div class="register-form">
         <h3>Register</h3>
 
-        {% if messages %}
-        <div class="messages" id="messages-container">
-            {% for message in messages %}
-            <div class="message {% if message.tags %}{{ message.tags }}{% endif %}">
-                {{ message }}
-                <button type="button" class="message-close" onclick="this.parentElement.remove()">
+        <!-- Message container for AJAX responses -->
+        <div class="messages" id="messages-container" style="display: none;">
+            <div class="message" id="message-content">
+                <span id="message-text"></span>
+                <button type="button" class="ajax-message-close" id="message-close-btn">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
                     </svg>
                 </button>
             </div>
-            {% endfor %}
         </div>
-        {% endif %}
 
-        <form method="POST" autocomplete="off">
+        <form method="POST" autocomplete="off" id="register-form">
             {% csrf_token %}
 
             <div class="name-inputs">
@@ -141,5 +138,109 @@ function togglePassword(inputId) {
         `;
     }
 }
+
+// Store timeout ID so we can clear it if needed
+let messageTimeout = null;
+
+// Bind close button click handler to prevent base.html from removing the element
+document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('message-close-btn');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();  // Prevent base.html event listener from firing
+            hideMessage();
+        });
+    }
+});
+
+function showMessage(message, isError = false) {
+    const container = document.getElementById('messages-container');
+    const messageContent = document.getElementById('message-content');
+    const messageText = document.getElementById('message-text');
+
+    // Safety check: if elements don't exist, log error
+    if (!container || !messageContent || !messageText) {
+        console.error('Message elements not found in DOM');
+        return;
+    }
+
+    // Clear any existing timeout
+    if (messageTimeout) {
+        clearTimeout(messageTimeout);
+    }
+
+    messageText.textContent = message;
+    messageContent.className = isError ? 'message error' : 'message success';
+    container.style.display = 'block';
+
+    // Auto-dismiss after 5 seconds
+    messageTimeout = setTimeout(() => {
+        hideMessage();
+    }, 5000);
+}
+
+function hideMessage() {
+    const container = document.getElementById('messages-container');
+    if (container) {
+        container.style.display = 'none';
+    }
+
+    // Clear the timeout
+    if (messageTimeout) {
+        clearTimeout(messageTimeout);
+        messageTimeout = null;
+    }
+}
+
+// Handle form submission via AJAX
+document.getElementById('register-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(this);
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalButtonText = submitButton.textContent;
+
+    // Disable button and show loading state
+    submitButton.disabled = true;
+    submitButton.textContent = 'REGISTERING...';
+
+    try {
+        const response = await fetch('{% url "register" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        console.log('Registration response status:', response.status);
+
+        // Always try to parse JSON response
+        const data = await response.json();
+        console.log('Registration response data:', data);
+
+        // Check if request was successful based on HTTP status code
+        if (response.ok) {
+            console.log('Registration successful, redirecting to:', data.redirect_url);
+            showMessage(data.detail, false);
+            // Redirect after a short delay
+            setTimeout(() => {
+                window.location.href = data.redirect_url;
+            }, 1000);
+        } else {
+            // Handle error response
+            console.log('Registration failed:', data.detail);
+            showMessage(data.detail, true);
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+        }
+    } catch (error) {
+        console.error('Registration exception:', error);
+        showMessage('An error occurred. Please try again.', true);
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+    }
+});
 </script>
 {% endblock %}

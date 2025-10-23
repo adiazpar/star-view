@@ -16,10 +16,7 @@ from .views import (
 
 router = DefaultRouter()
 router.register(r'locations', views.LocationViewSet, basename='locations')
-router.register(r'user-profiles', views.UserProfileViewSet, basename='user-profiles')
-router.register(r'users', views.UserViewSet, basename='users')
 router.register(r'favorite-locations', views.FavoriteLocationViewSet, basename='favorite-locations')
-router.register(r'votes', views.VoteViewSet, basename='votes')
 
 # Nested router for reviews
 locations_router = routers.NestedDefaultRouter(router, r'locations', lookup='location')
@@ -27,7 +24,7 @@ locations_router.register(r'reviews', views.ReviewViewSet, basename='location-re
 
 # Nested router for comments
 reviews_router = routers.NestedDefaultRouter(locations_router, r'reviews', lookup='review')
-reviews_router.register(r'comments', views.ReviewCommentViewSet, basename='review-comments')
+reviews_router.register(r'comments', views.CommentViewSet, basename='review-comments')
 
 
 urlpatterns = [
@@ -50,11 +47,10 @@ urlpatterns = [
     # Navigation:
     path('', views.home, name='home'),
     path('map/', views.map, name='map'),
-    path('account/<int:pk>', views.account, name='account'),
+    path('account/', views.account, name='account'),
 
     # Location:
     path('location/<int:location_id>/', views.location_details, name='location_details'),
-    path('delete-review/<int:review_id>/', views.delete_review, name='delete_review'),
 
     # Django Rest Framework:
     path('api/', include(router.urls)),

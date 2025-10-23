@@ -170,30 +170,29 @@ function saveNickname(locationId) {
         return response.json();
     })
     .then(data => {
-        if (data.success) {
-            const cardHeader = document.querySelector(`#nickname-edit-${locationId}`).closest('.favorite-header');
-            const displayElement = cardHeader.querySelector('.display-name');
-            displayElement.textContent = data.display_name;
+        const cardHeader = document.querySelector(`#nickname-edit-${locationId}`).closest('.favorite-header');
+        const displayElement = cardHeader.querySelector('.display-name');
+        displayElement.textContent = data.display_name;
 
-            // Handle original name display
-            let originalNameElement = cardHeader.querySelector('.original-name');
-            if (!originalNameElement && nickname) {
-                originalNameElement = document.createElement('div');
-                originalNameElement.className = 'original-name';
-                cardHeader.insertBefore(originalNameElement, cardHeader.querySelector('.nickname-edit-container'));
-            }
-
-            if (originalNameElement) {
-                if (nickname) {
-                    originalNameElement.textContent = `Originally: ${data.original_name}`;
-                    originalNameElement.style.display = 'block';
-                } else {
-                    originalNameElement.style.display = 'none';
-                }
-            }
-
-            toggleNicknameEdit(locationId);
+        // Handle original name display
+        let originalNameElement = cardHeader.querySelector('.original-name');
+        if (!originalNameElement && nickname) {
+            originalNameElement = document.createElement('div');
+            originalNameElement.className = 'original-name';
+            cardHeader.insertBefore(originalNameElement, cardHeader.querySelector('.nickname-edit-container'));
         }
+
+        if (originalNameElement) {
+            if (nickname) {
+                originalNameElement.textContent = `Originally: ${data.original_name}`;
+                originalNameElement.style.display = 'block';
+            } else {
+                originalNameElement.style.display = 'none';
+            }
+        }
+
+        toggleNicknameEdit(locationId);
+    }
     })
     .catch(error => {
         console.error('Error:', error);

@@ -178,8 +178,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_REDIRECT_URL = '/'
 
-# Default profile picture
-DEFAULT_PROFILE_PICTURE = os.path.join(MEDIA_URL, 'profile_pics/default_profile_pic.jpg')
+# Default profile picture (static asset, not media)
+DEFAULT_PROFILE_PICTURE = '/static/images/default_profile_pic.jpg'
 
 # Django REST Framework configuration
 REST_FRAMEWORK = {

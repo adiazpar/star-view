@@ -18,7 +18,7 @@
             <img src='{{ user_profile.get_profile_picture_url }}'
                  alt="Profile Picture"
                  class="profile-image"
-                 onerror="this.src='/static/images/default_profile_pic.jpg'">
+                 onerror="this.src='{{ default_profile_picture }}'">
             <div class="profile-picture-info">
                 <h5>Profile picture</h5>
                 <p>PNG, JPEG under 15MB</p>
@@ -198,12 +198,12 @@
                 },
                 credentials: 'same-origin'
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
                     document.querySelector('.profile-image').src = data.default_image_url;
                 } else {
-                    alert('Error removing profile picture: ' + data.error);
+                    alert('Error removing profile picture: ' + (data.detail || 'Unknown error'));
                 }
             })
             .catch(error => {
@@ -225,12 +225,12 @@
                 body: formData,
                 credentials: 'same-origin'
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
+            .then(async response => {
+                const data = await response.json();
+                if (response.ok) {
                     document.querySelector('.profile-image').src = data.image_url + '?t=' + new Date().getTime();
                 } else {
-                    alert('Error uploading image: ' + data.error);
+                    alert('Error uploading image: ' + (data.detail || 'Unknown error'));
                 }
             })
             .catch(error => {
@@ -273,12 +273,12 @@
                 });
 
                 const data = await response.json();
-                if(data.success) {
-                    showMessage(data.message);
+                if(response.ok) {
+                    showMessage(data.detail);
                     if(formId === 'passwordForm') form.reset();
                 }
                 else {
-                    showMessage(data.message || 'An error occurred', true);
+                    showMessage(data.detail || 'An error occurred', true);
                 }
             }
             catch (error) {

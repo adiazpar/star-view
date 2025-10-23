@@ -494,7 +494,8 @@ h4 { font-size: var(--font-size-lg); }
     background-color: var(--success);
 }
 
-.message-close {
+.message-close,
+.ajax-message-close {
     flex-shrink: 0; /* Prevent button from shrinking */
     width: 16px;
     height: 16px;
@@ -510,12 +511,14 @@ h4 { font-size: var(--font-size-lg); }
     transition: opacity var(--transition-base);
 }
 
-.message-close svg {
+.message-close svg,
+.ajax-message-close svg {
     width: 14px;
     height: 14px;
 }
 
-.message-close:hover {
+.message-close:hover,
+.ajax-message-close:hover {
     opacity: 1;
 }
 

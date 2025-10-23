@@ -18,6 +18,7 @@
 # Import tools:
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 
 
 
@@ -45,7 +46,7 @@ class UserProfile(models.Model):
     def get_profile_picture_url(self):
         if self.profile_picture and hasattr(self.profile_picture, 'url'):
             return self.profile_picture.url
-        return '/static/images/default_profile_pic.jpg'
+        return settings.DEFAULT_PROFILE_PICTURE
 
 
     # String representation for admin interface and debugging:

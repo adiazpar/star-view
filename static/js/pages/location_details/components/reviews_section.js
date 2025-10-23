@@ -534,10 +534,11 @@ window.ReviewSystem = (function() {
     // Handle review deletion
     function handleReviewDelete(deleteItem) {
         const reviewId = deleteItem.dataset.reviewId;
-        
+
         if (confirm('Are you sure you want to delete your review?')) {
-            fetch(`/delete-review/${reviewId}/`, {
-                method: 'POST',
+            // Use DRF endpoint with DELETE method
+            fetch(`/api/locations/${config.locationId}/reviews/${reviewId}/`, {
+                method: 'DELETE',
                 headers: {
                     'X-CSRFToken': config.csrfToken,
                     'Content-Type': 'application/json'
@@ -549,7 +550,8 @@ window.ReviewSystem = (function() {
                 return response.json();
             })
             .then(data => {
-                if (data.success) {
+                // DRF returns {detail: 'message', should_show_form: true}
+                if (data.detail || data.should_show_form) {
                     handleSuccessfulDeletion(deleteItem, data);
                 }
             })
@@ -1595,8 +1597,7 @@ window.EditingSystem = (function() {
     }
     
     // Handle edit form submission
-    function handleEditSubmit(form, type, ids, originalElement) {
-        const formData = new FormData(form);
+    async function handleEditSubmit(form, type, ids, originalElement) {
         const contentInput = form.querySelector('.comment-input');
 
         // Get plain text content from contenteditable div or input
@@ -1609,124 +1610,145 @@ window.EditingSystem = (function() {
                 content = contentInput.value ? contentInput.value.trim() : '';
             }
         }
-        
-        
+
+
         // For comments, content is required, but reviews can be empty (just rating/photos)
         if (type === 'comment' && !content) {
             alert('Please enter some content for your comment.');
             return;
         }
-        
-        // Use FormData to include photo deletions and other form data
-        formData.set('content', content);
-        
-        // For reviews, ensure rating and location are in FormData
-        if (type === 'review') {
-            const ratingInput = form.querySelector('input[name="rating"]:checked');
-            if (ratingInput) {
-                formData.set('rating', ratingInput.value);
-            }
-            
-            // Add the location ID (required by serializer)
-            formData.set('location', ids.locationId);
-            
-            // Collect photo IDs marked for deletion
-            const photosToDelete = [];
-            const markedItems = form.querySelectorAll('.image-preview-item.marked-for-deletion[data-photo-to-delete]');
-            markedItems.forEach(item => {
-                const photoId = item.getAttribute('data-photo-to-delete');
-                if (photoId) {
-                    photosToDelete.push(parseInt(photoId, 10));
-                }
-            });
-            
-            // Send photo deletion data in the format the backend expects
-            if (photosToDelete.length > 0) {
-                formData.set('delete_photo_ids', JSON.stringify(photosToDelete));
-            } else {
-            }
-        }
-        
-        // Determine API endpoint
-        let apiUrl;
-        if (type === 'review') {
-            apiUrl = `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/`;
-        } else {
-            apiUrl = `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
-        }
-        
-        
+
         // Disable form during submission
         const submitBtn = form.querySelector('.save-edit');
         const originalText = submitBtn.textContent;
         submitBtn.disabled = true;
         submitBtn.textContent = 'Saving...';
-        
-        // Submit the edit using FormData
-        fetch(apiUrl, {
-            method: 'PATCH',
-            headers: {
-                'X-CSRFToken': config.csrfToken,
-                // Remove Content-Type header - let browser set it for FormData
-            },
-            body: formData,
-            credentials: 'same-origin'
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    console.error('Server response status:', response.status);
-                    console.error('Server response text:', text);
-                    try {
-                        const error = JSON.parse(text);
-                        console.error('Parsed error:', error);
-                        throw new Error(error.detail || JSON.stringify(error) || 'Failed to save changes');
-                    } catch (e) {
-                        throw new Error(`Server error ${response.status}: ${text}`);
+
+        try {
+            // Step 1: Handle photo deletions (reviews only)
+            if (type === 'review') {
+                const markedItems = form.querySelectorAll('.image-preview-item.marked-for-deletion[data-photo-to-delete]');
+                for (const item of markedItems) {
+                    const photoId = item.getAttribute('data-photo-to-delete');
+                    if (photoId) {
+                        const deleteUrl = `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/photos/${photoId}/`;
+                        const response = await fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRFToken': config.csrfToken,
+                            },
+                            credentials: 'same-origin'
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Failed to delete photo ${photoId}`);
+                        }
+                    }
+                }
+            }
+
+            // Step 2: Update review text/rating or comment text
+            const updateFormData = new FormData();
+            updateFormData.set('content', content);
+
+            if (type === 'review') {
+                const ratingInput = form.querySelector('input[name="rating"]:checked');
+                if (ratingInput) {
+                    updateFormData.set('rating', ratingInput.value);
+                }
+                updateFormData.set('location', ids.locationId);
+            }
+
+            const apiUrl = type === 'review'
+                ? `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/`
+                : `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/comments/${ids.commentId}/`;
+
+            const updateResponse = await fetch(apiUrl, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRFToken': config.csrfToken,
+                },
+                body: updateFormData,
+                credentials: 'same-origin'
+            });
+
+            if (!updateResponse.ok) {
+                const errorText = await updateResponse.text();
+                try {
+                    const error = JSON.parse(errorText);
+                    throw new Error(error.detail || 'Failed to save changes');
+                } catch (e) {
+                    throw new Error(`Server error ${updateResponse.status}: ${errorText}`);
+                }
+            }
+
+            let data = await updateResponse.json();
+
+            // Step 3: Handle photo uploads (reviews only)
+            if (type === 'review') {
+                const uploadedImages = form.querySelectorAll('input[type="file"]');
+                const photoFormData = new FormData();
+                let hasNewPhotos = false;
+
+                uploadedImages.forEach(input => {
+                    if (input.files && input.files.length > 0) {
+                        for (const file of input.files) {
+                            photoFormData.append('review_images', file);
+                            hasNewPhotos = true;
+                        }
                     }
                 });
-            }
-            return response.json();
-        })
-        .then(data => {
-            
-            // WORKAROUND: Server might return stale data due to timing issues
-            // Use the content we know was sent since backend is confirmed saving correctly
-            if (type === 'review') {
-                const sentContent = formData.get('content');
-                if (sentContent) {
-                    data.comment = sentContent;
-                }
 
-                // Also ensure rating is updated with what was sent
-                const sentRating = formData.get('rating');
-                if (sentRating) {
-                    data.rating = parseInt(sentRating, 10);
+                if (hasNewPhotos) {
+                    const uploadUrl = `/api/locations/${ids.locationId}/reviews/${ids.reviewId}/add_photos/`;
+                    const uploadResponse = await fetch(uploadUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': config.csrfToken,
+                        },
+                        body: photoFormData,
+                        credentials: 'same-origin'
+                    });
+
+                    if (!uploadResponse.ok) {
+                        const errorText = await uploadResponse.text();
+                        try {
+                            const error = JSON.parse(errorText);
+                            throw new Error(error.detail || 'Failed to upload photos');
+                        } catch (e) {
+                            throw new Error(`Photo upload error: ${errorText}`);
+                        }
+                    }
+
+                    // Get updated review data with new photos
+                    const refreshResponse = await fetch(apiUrl, {
+                        credentials: 'same-origin'
+                    });
+                    data = await refreshResponse.json();
                 }
             }
-            
+
             // Update the original element with new content
             updateOriginalElement(originalElement, data, type);
-            
+
             // Remove edit mode
             cancelEdit(originalElement);
-            
+
             // Update metrics if this was a review
             if (type === 'review' && window.ReviewSystem) {
                 setTimeout(() => {
                     window.ReviewSystem.calculateRatingDistribution();
                 }, 100);
             }
-        })
-        .catch(error => {
+
+        } catch (error) {
             console.error('Error saving changes:', error);
-            alert('Failed to save changes. Please try again.');
-        })
-        .finally(() => {
+            alert('Failed to save changes: ' + error.message);
+        } finally {
             // Re-enable form
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
-        });
+        }
     }
     
     // Update original element with edited content

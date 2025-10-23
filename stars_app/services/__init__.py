@@ -20,3 +20,7 @@
 # ----------------------------------------------------------------------------------------------------- #
 
 from .location_service import LocationService
+from .password_service import PasswordService
+from .report_service import ReportService
+from .response_service import ResponseService
+from .vote_service import VoteService

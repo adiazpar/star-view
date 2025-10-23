@@ -45,7 +45,7 @@
             <div class="cta-buttons">
                 <a href="{% url 'map' %}" class="cta-button">Explore Map</a>
                 {% if user.is_authenticated %}
-                <a href="{% url 'account' user.pk %}?tab=favorites" class="cta-button secondary">My Favorites</a>
+                <a href="{% url 'account' %}?tab=favorites" class="cta-button secondary">My Favorites</a>
                 {% else %}
                 <a href="{% url 'register' %}" class="cta-button secondary">Get Started</a>
                 {% endif %}

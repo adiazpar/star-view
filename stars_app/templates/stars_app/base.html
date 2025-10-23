@@ -32,9 +32,9 @@
                 <li><a class="nav-link" href="{% url 'home' %}">HOME</a></li>
                 <li><a class="nav-link" href="{% url 'map' %}">MAP</a></li>
                 {% if user.is_authenticated %}
-                    <li><a class="nav-link" href="{% url 'account' user.id %}">ACCOUNT</a></li>
+                    <li><a class="nav-link" href="{% url 'account' %}">ACCOUNT</a></li>
                 {% else %}
-                    <li><a class="nav-link" href="{% url 'login' %}?next={% url 'account' 1 %}">ACCOUNT</a></li>
+                    <li><a class="nav-link" href="{% url 'login' %}?next={% url 'account' %}">ACCOUNT</a></li>
                 {% endif %}
             </ul>
 
@@ -90,9 +90,14 @@
             }, 300); // Match this to your animation duration
         }
 
-        // Handle automatic timeout for all messages
+        // Handle automatic timeout for all messages (but skip hidden AJAX message containers)
         const messages = document.querySelectorAll('.message');
         messages.forEach(message => {
+            // Skip if the parent container is hidden (used for AJAX messages)
+            const container = message.closest('.messages');
+            if (container && container.style.display === 'none') {
+                return;  // Don't auto-remove AJAX message containers
+            }
             setTimeout(() => removeMessage(message), 5000);
         });
 

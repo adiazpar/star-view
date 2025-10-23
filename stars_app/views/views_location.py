@@ -25,7 +25,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
-from django.contrib import messages
 from django.conf import settings
 from django.http import JsonResponse
 from django.views import View
@@ -36,6 +35,7 @@ from django.core.paginator import Paginator
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
@@ -57,6 +57,9 @@ from stars_app.serializers import (
     ReportSerializer,
     FavoriteLocationSerializer,
 )
+
+# Service imports:
+from stars_app.services import ResponseService
 
 # Other imports:
 from itertools import chain
@@ -638,35 +641,38 @@ class LocationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class LocationCreateView(LoginRequiredMixin, View):
+class LocationCreateView(APIView):
     """
-    JSON API endpoint for creating new locations (legacy, use LocationViewSet instead).
+    DRF API endpoint for creating new locations (legacy, use LocationViewSet instead).
     """
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         try:
-            data = json.loads(request.body)
-
             # Create new viewing location
             location = Location.objects.create(
-                name=data['name'],
-                latitude=data['latitude'],
-                longitude=data['longitude'],
+                name=request.data['name'],
+                latitude=request.data['latitude'],
+                longitude=request.data['longitude'],
                 added_by=request.user
             )
 
-            # Return the location data
-            return JsonResponse({
-                'id': location.id,
-                'name': location.name,
-                'latitude': location.latitude,
-                'longitude': location.longitude,
-                'elevation': location.elevation,
-                'formatted_address': location.formatted_address,
-                'quality_score': location.quality_score
-            })
+            return ResponseService.success(
+                'Location created successfully',
+                data={
+                    'id': location.id,
+                    'name': location.name,
+                    'latitude': location.latitude,
+                    'longitude': location.longitude,
+                    'elevation': location.elevation,
+                    'formatted_address': location.formatted_address,
+                    'quality_score': location.quality_score
+                },
+                status_code=status.HTTP_201_CREATED
+            )
 
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
 
 
 def location_details(request, location_id):
@@ -770,10 +776,9 @@ def location_details(request, location_id):
             if uploaded_images:
                 from stars_app.models.model_review_photo import ReviewPhoto
 
-                # Validate number of images
+                # Validate number of images (max 5 per review)
                 existing_photos_count = review.photos.count()
                 if existing_photos_count + len(uploaded_images) > 5:
-                    messages.error(request, f'You can only upload up to 5 photos per review. You already have {existing_photos_count} photos.')
                     return redirect('location_details', location_id=location_id)
 
                 # Process each uploaded image
@@ -785,9 +790,10 @@ def location_details(request, location_id):
                             order=existing_photos_count + idx
                         )
                     except Exception as e:
-                        messages.error(request, f'Error uploading image: {str(e)}')
+                        # Continue processing other images on error
+                        pass
 
-            messages.success(request, 'Your review has been submitted successfully!')
+            # Review submitted successfully
             return redirect('location_details', location_id=location_id)
 
     # Calculate review statistics
