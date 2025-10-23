@@ -15,10 +15,6 @@ export class MapController {
         // Initialize locations array to prevent undefined errors
         this.locations = [];
 
-        // Track current login & Creation popups:
-        this.currentLoginPopup = null;  // Track the current login popup
-        this.currentCreationPopup = null;  // Track the current creation popup
-
         // Light pollution layer state
         this.lightPollutionVisible = true;
 
@@ -431,42 +427,6 @@ export class MapController {
             // Update markers whenever the zoom level changes
             this.updateMapMarkers();
         });
-
-        // Add right-click handler (context menu):
-        this.map.on('contextmenu', (e) => {
-            // Prevent default context menu
-            e.preventDefault();
-
-            // First, clean up any existing popups
-            if (this.currentLoginPopup) {
-                this.currentLoginPopup.remove();
-                this.currentLoginPopup = null;
-            }
-            if (this.currentCreationPopup) {
-                this.currentCreationPopup.remove();
-                this.currentCreationPopup = null;
-            }
-
-            if (!window.currentUser) {
-                // Show login required message
-                this.currentLoginPopup = new mapboxgl.Popup({
-                    closeButton: true,
-                    closeOnClick: false,
-                    className: 'login-required-popup'  // Add this class
-                })
-                .setLngLat(e.lngLat)
-                .setHTML(`
-                    <div>
-                        <p style="margin-bottom: var(--space-md)">Please log in to create viewing locations</p>
-                        <a href="/login" class="action-button">Log In</a>
-                    </div>
-                `)
-                .addTo(this.map);
-                return;
-            }
-
-            this.showLocationCreationPopup(e.lngLat);
-        });
     }
 
     setupMapControls() {
@@ -789,175 +749,6 @@ export class MapController {
         }
     }
 
-
-    // Location Creation Popup: -------------------------------- //
-    showLocationCreationPopup(lngLat) {
-        const popupContent = document.createElement('div');
-        popupContent.className = 'popup-content';
-        popupContent.setAttribute('role', 'dialog');
-        popupContent.setAttribute('aria-labelledby', 'location-creation-title');
-
-        popupContent.innerHTML = `
-            <div class="popup-header">
-                <h4 id="location-creation-title">Create New Viewing Location</h4>
-            </div>
-            <form class="popup-form" onsubmit="return false;">
-                <div class="popup-input-container">
-                    <label for="new-location-name" class="visually-hidden">Location name</label>
-                    <input type="text" 
-                           id="new-location-name" 
-                           class="popup-input"
-                           placeholder="Enter location name"
-                           required
-                           autocomplete="off">
-                </div>
-                <button type="submit"
-                        id="create-location-btn" 
-                        class="popup-action-button">
-                    <i class="fas fa-plus" aria-hidden="true"></i>
-                    <span>Create Location</span>
-                </button>
-            </form>
-        `;
-
-        // Create and show popup with corrected accessibility
-        this.currentCreationPopup = new mapboxgl.Popup({
-            closeButton: true,
-            closeOnClick: false,
-            className: 'location-creation-popup',
-            maxWidth: '300px'
-        })
-        .setLngLat(lngLat)
-        .setDOMContent(popupContent)
-        .addTo(this.map);
-
-        // Add event listener for popup close
-        this.currentCreationPopup.on('close', () => {
-            this.currentCreationPopup = null;
-        });
-
-        // Set up form submission
-        const form = popupContent.querySelector('.popup-form');
-        const nameInput = popupContent.querySelector('#new-location-name');
-
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = nameInput.value.trim();
-            if (name) {
-                this.createLocation(name, lngLat);
-                this.currentCreationPopup.remove();
-            } else {
-                nameInput.classList.add('error');
-                nameInput.addEventListener('input', () => {
-                    nameInput.classList.remove('error');
-                }, { once: true });
-            }
-        });
-
-        // Focus input after popup is shown
-        nameInput.focus();
-    }
-
-    async createLocation(name, lngLat) {
-        try {
-            // Show loading state with animated dots
-            const loadingPopup = new mapboxgl.Popup({
-                closeButton: false,
-                closeOnClick: false,
-                className: 'loading-popup'
-            })
-            .setLngLat(lngLat)
-            .setHTML(`
-                <div class="loading-dots">
-                    <div class="loading-dot"></div>
-                    <div class="loading-dot"></div>
-                    <div class="loading-dot"></div>
-                </div>
-            `)
-            .addTo(this.map);
-
-            // Create location data
-            const locationData = {
-                name: name,
-                latitude: lngLat.lat,
-                longitude: lngLat.lng,
-            };
-
-            // Get CSRF token
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-            // Send POST request
-            const response = await fetch('/api/locations/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken,
-                    'Accept': 'application/json'  // Explicitly request JSON response
-                },
-                body: JSON.stringify(locationData),
-                credentials: 'same-origin'
-            });
-
-            // Remove loading popup
-            loadingPopup.remove();
-
-            // Handle non-successful responses
-            if (!response.ok) {
-                const errorData = await response.json();
-                const errorMessage = errorData.error || 'Failed to create location. Please try again.';
-
-                // Show error popup with specific message
-                const errorPopup = new mapboxgl.Popup({
-                    closeButton: true,
-                    closeOnClick: false,
-                    className: 'message-popup error',
-                    maxWidth: '300px'
-                })
-                .setLngLat(lngLat)
-                .setHTML(`<p><i class="fas fa-exclamation-circle"></i> ${errorMessage}</p>`)
-                .addTo(this.map);
-
-                // Log detailed error for debugging
-                console.error('Server response:', errorData);
-                return;
-            }
-
-            const newLocation = await response.json();
-            this.displayLocations([newLocation]);
-            await this.refreshLocationsList();
-            await this.loadLocationsAndEvents();
-
-            // Show success message
-            const successPopup = new mapboxgl.Popup({
-                closeButton: false,
-                closeOnClick: true,
-                className: 'message-popup success'
-            })
-            .setLngLat(lngLat)
-            .setHTML('<p><i class="fas fa-check-circle"></i> Location created successfully!</p>')
-            .addTo(this.map);
-
-            // Remove success message after 2 seconds
-            setTimeout(() => successPopup.remove(), 2000);
-
-        } catch (error) {
-            console.error('Error creating location:', error);
-
-            // Show user-friendly error message
-            const errorPopup = new mapboxgl.Popup({
-                closeButton: true,
-                closeOnClick: false,
-                className: 'message-popup error'
-            })
-            .setLngLat(lngLat)
-            .setHTML(`
-                <p><i class="fas fa-exclamation-circle"></i> Something went wrong while creating the location.</p>
-                <p style="font-size: smaller; margin-top: 8px;">Please try again or contact support if the problem persists.</p>
-            `)
-            .addTo(this.map);
-        }
-    }
-
     async deleteLocation(locationId) {
         try {
             // Get CSRF token
@@ -1114,7 +905,7 @@ export class MapController {
 
         if (isLoggedIn) {
             try {
-                const response = await fetch(`/api/locations/${location.id}/favorite/`, {
+                const response = await fetch(`/api/locations/${location.id}/is_favorited/`, {
                     method: 'GET',
                     credentials: 'same-origin'
                 });

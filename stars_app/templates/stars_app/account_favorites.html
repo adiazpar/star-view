@@ -36,10 +36,10 @@
 
                 <div class="favorite-header">
                     <div class="favorite-title">
-                        <h4 class="display-name" data-location-id="{{ favorite.location.id }}">
+                        <h4 class="display-name" data-favorite-id="{{ favorite.id }}" data-original-name="{{ favorite.location.name }}">
                             {{ favorite.get_display_name }}
                         </h4>
-                        <button class="edit-nickname-btn" onclick="toggleNicknameEdit({{ favorite.location.id }})">
+                        <button class="edit-nickname-btn" onclick="toggleNicknameEdit({{ favorite.id }})">
                             <span class="edit-icon">✎</span>
                         </button>
                     </div>
@@ -48,12 +48,12 @@
                             Originally: {{ favorite.location.name }}
                         </div>
                     {% endif %}
-                    <div class="nickname-edit-container" id="nickname-edit-{{ favorite.location.id }}" style="display: none;">
+                    <div class="nickname-edit-container" id="nickname-edit-{{ favorite.id }}" style="display: none;">
                         <input type="text"
                                class="form-input nickname-input"
                                value="{{ favorite.nickname|default:'' }}"
                                placeholder="{{ favorite.location.name }}">
-                        <button class="save-nickname-btn" onclick="saveNickname({{ favorite.location.id }})">Save</button>
+                        <button class="save-nickname-btn" onclick="saveNickname({{ favorite.id }})">Save</button>
                     </div>
                 </div>
 
@@ -136,8 +136,8 @@ function filterFavorites(searchTerm) {
     }
 }
 
-function toggleNicknameEdit(locationId) {
-    const editContainer = document.getElementById(`nickname-edit-${locationId}`);
+function toggleNicknameEdit(favoriteId) {
+    const editContainer = document.getElementById(`nickname-edit-${favoriteId}`);
 
     if (editContainer.style.display === 'none') {
         editContainer.style.display = 'flex';
@@ -147,19 +147,24 @@ function toggleNicknameEdit(locationId) {
     }
 }
 
-function saveNickname(locationId) {
-    const input = document.querySelector(`#nickname-edit-${locationId} input`);
+function saveNickname(favoriteId) {
+    const input = document.querySelector(`#nickname-edit-${favoriteId} input`);
     const nickname = input.value.trim();
     const csrftoken = getCookie('csrftoken');
 
-    fetch(`/api/locations/${locationId}/update-nickname/`, {
-        method: 'POST',
+    // Get original name from data attribute
+    const cardHeader = document.querySelector(`#nickname-edit-${favoriteId}`).closest('.favorite-header');
+    const displayElement = cardHeader.querySelector('.display-name');
+    const originalName = displayElement.getAttribute('data-original-name');
+
+    fetch(`/api/favorite-locations/${favoriteId}/`, {
+        method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': csrftoken,
-            'Accept': 'applications/json, text/plain, */*'
+            'Accept': 'application/json, text/plain, */*'
         },
-        body: JSON.stringify({ nickname: nickname })
+        body: JSON.stringify({ nickname: nickname || null })
     })
     .then(response => {
         if (!response.ok) {
@@ -170,29 +175,28 @@ function saveNickname(locationId) {
         return response.json();
     })
     .then(data => {
-        const cardHeader = document.querySelector(`#nickname-edit-${locationId}`).closest('.favorite-header');
-        const displayElement = cardHeader.querySelector('.display-name');
-        displayElement.textContent = data.display_name;
+        // Update display name
+        displayElement.textContent = data.nickname || originalName;
 
         // Handle original name display
         let originalNameElement = cardHeader.querySelector('.original-name');
         if (!originalNameElement && nickname) {
             originalNameElement = document.createElement('div');
             originalNameElement.className = 'original-name';
+            originalNameElement.title = originalName;
             cardHeader.insertBefore(originalNameElement, cardHeader.querySelector('.nickname-edit-container'));
         }
 
         if (originalNameElement) {
             if (nickname) {
-                originalNameElement.textContent = `Originally: ${data.original_name}`;
+                originalNameElement.textContent = `Originally: ${originalName}`;
                 originalNameElement.style.display = 'block';
             } else {
                 originalNameElement.style.display = 'none';
             }
         }
 
-        toggleNicknameEdit(locationId);
-    }
+        toggleNicknameEdit(favoriteId);
     })
     .catch(error => {
         console.error('Error:', error);

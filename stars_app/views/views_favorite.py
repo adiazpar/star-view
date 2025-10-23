@@ -10,10 +10,7 @@
 # - Automatic per-user filtering (users only see their own favorites)                                   #
 # - Optional nicknames for personal organization (stored in FavoriteLocation junction table)            #
 # - Sorted by creation date (newest first)                                                              #
-#                                                                                                       #
-# Note:                                                                                                 #
-# Nickname updates are primarily handled via LocationViewSet.update_nickname() endpoint, though         #
-# standard PATCH/PUT operations on this ViewSet also work.                                              #
+# - Nickname updates via standard PATCH/PUT operations on this ViewSet                                  #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Import tools:
