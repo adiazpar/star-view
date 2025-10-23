@@ -32,10 +32,10 @@ class VoteService:
     # ----------------------------------------------------------------------------- #
     # Handle a vote request with full validation (primary method for views).        #
     #                                                                               #
-    # Performs all necessary validations before processing the vote:               #
-    # 1. Validates vote_type parameter                                             #
-    # 2. Prevents users from voting on their own content                           #
-    # 3. Calls toggle_vote() to process the vote                                   #
+    # Performs all necessary validations before processing the vote:                #
+    # 1. Validates vote_type parameter                                              #
+    # 2. Prevents users from voting on their own content                            #
+    # 3. Calls toggle_vote() to process the vote                                    #
     #                                                                               #
     # Args:     user (User): The user casting the vote                              #
     #           content_object: The object being voted on (Review, ReviewComment)   #
