@@ -22,14 +22,9 @@
 
 # Django imports:
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
-from django.http import JsonResponse
-from django.views import View
 from django.db.models import Avg
-from django.core.paginator import Paginator
 
 # REST Framework imports:
 from rest_framework import viewsets, status
@@ -37,29 +32,24 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import SearchFilter, OrderingFilter
 
 # Model imports:
-from stars_app.models.model_location import Location
-from stars_app.models.model_location_favorite import FavoriteLocation
-from stars_app.models.model_review import Review
-from stars_app.models.model_report import Report
-from stars_app.models.model_vote import Vote
-from django.contrib.auth.models import User
+from ..models import Location
+from ..models import FavoriteLocation
+from ..models import Review
+from ..models import Report
+from ..models import Vote
 
 # Serializer imports:
-from stars_app.serializers import (
-    LocationSerializer,
-    MapLocationSerializer,
-    LocationInfoPanelSerializer,
-    ReviewSerializer,
-    ReportSerializer,
-    FavoriteLocationSerializer,
-)
+from ..serializers import LocationSerializer
+from ..serializers import MapLocationSerializer
+from ..serializers import LocationInfoPanelSerializer
+from ..serializers import ReviewSerializer
+from ..serializers import ReportSerializer
 
 # Service imports:
-from stars_app.services import ResponseService
+from ..services import ReportService
+from ..services import ResponseService
 
 # Other imports:
 from itertools import chain
@@ -84,26 +74,12 @@ class LocationViewSet(viewsets.ModelViewSet):
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    search_fields = ['name', 'formatted_address', 'locality']
-    ordering_fields = ['quality_score', 'created_at', 'visitor_count', 'rating_count']
-    ordering = ['-quality_score']
-
-
-    def get_queryset(self):
-        """Filter queryset to show only favorites if requested."""
-        queryset = Location.objects.all()
-        favorites_only = self.request.query_params.get('favorites_only', 'false')
-        if favorites_only.lower() == 'true' and self.request.user.is_authenticated:
-            queryset = queryset.filter(favorited_by__user=self.request.user)
-        return queryset
 
 
     def perform_create(self, serializer):
         """Create a new location with duplicate checking."""
         latitude = serializer.validated_data['latitude']
         longitude = serializer.validated_data['longitude']
-        elevation = serializer.validated_data.get('elevation', 0)
 
         # Check for nearby duplicates before creating
         duplicates = self.check_for_duplicates(latitude, longitude)
@@ -215,53 +191,24 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
     def report(self, request, pk=None):
-        """Submit a report about this location using the generic Report model."""
+        """Submit a report about this location using ReportService."""
         location = self.get_object()
-        content_type = ContentType.objects.get_for_model(location)
 
-        # Check if user already reported this location
-        existing_report = Report.objects.filter(
-            content_type=content_type,
-            object_id=location.id,
-            reported_by=request.user
-        ).first()
+        # Use ReportService to handle report submission
+        success, message, status_code = ReportService.submit_report(
+            user=request.user,
+            content_object=location,
+            report_type=request.data.get('report_type', 'OTHER'),
+            description=request.data.get('description', '')
+        )
 
-        if existing_report:
-            return Response(
-                {'detail': 'You have already submitted a report for this location'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Prepare additional data (e.g., duplicate location ID)
-        additional_data = {}
-        if request.data.get('duplicate_of_id'):
-            additional_data['duplicate_of_id'] = request.data.get('duplicate_of_id')
-
-        # Prepare report data for the generic Report model
-        report_data = {
-            'object_id': location.id,
-            'report_type': request.data.get('report_type'),
-            'description': request.data.get('description', ''),
-            'additional_data': additional_data if additional_data else None
-        }
-
-        serializer = ReportSerializer(data=report_data)
-        if serializer.is_valid():
-            report = serializer.save(
-                content_type=content_type,
-                reported_by=request.user
-            )
-
+        if success:
             # Increment report counter on the location
             location.times_reported += 1
             location.save()
-
-            return Response(
-                ReportSerializer(report).data,
-                status=status.HTTP_201_CREATED
-            )
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return ResponseService.success(message, status_code=status_code)
+        else:
+            return ResponseService.error(message, status_code=status_code)
 
 
     @action(detail=True, methods=['GET'], permission_classes=[IsAuthenticated])
@@ -287,6 +234,18 @@ class LocationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+    def _get_favorite_status(self, user, location):
+        """Helper method to check if a location is favorited by a user."""
+        is_favorited = FavoriteLocation.objects.filter(
+            user=user,
+            location=location
+        ).exists()
+        return Response({
+            'is_favorited': is_favorited,
+            'detail': 'Location is favorited' if is_favorited else 'Location is not favorited'
+        })
+
+
     @action(detail=True, methods=['POST', 'GET'], permission_classes=[IsAuthenticated])
     def favorite(self, request, pk=None):
         """Add a location to user's favorites."""
@@ -294,14 +253,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         # Handle GET request case:
         if request.method == "GET":
-            is_favorited = FavoriteLocation.objects.filter(
-                user=request.user,
-                location=location
-            ).exists()
-            return Response({
-                'is_favorited': is_favorited,
-                'detail': 'Location is favorited' if is_favorited else 'Location is not favorited'
-            })
+            return self._get_favorite_status(request.user, location)
 
         # Check if already favorited:
         existing_favorite = FavoriteLocation.objects.filter(
@@ -331,14 +283,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         # If it's a GET request, just return the current status
         if request.method == 'GET':
-            is_favorited = FavoriteLocation.objects.filter(
-                user=request.user,
-                location=location
-            ).exists()
-            return Response({
-                'is_favorited': is_favorited,
-                'detail': 'Location is favorited' if is_favorited else 'Location is not favorited'
-            })
+            return self._get_favorite_status(request.user, location)
 
         deleted_count, _ = FavoriteLocation.objects.filter(
             user=request.user,
@@ -586,14 +531,9 @@ class LocationViewSet(viewsets.ModelViewSet):
             1. Use this endpoint for initial map load
             2. Convert response to GeoJSON for Mapbox GL JS
             3. On marker click, fetch info panel data via GET /api/locations/{id}/info_panel/
-
-        Query parameters:
-            - favorites_only: Filter to user's favorited locations (requires auth)
-            - search: Search by name, address, or locality
-            - ordering: Sort by quality_score, created_at, etc.
         """
-        # Get filtered queryset (respects favorites_only and other filters)
-        queryset = self.get_queryset()
+        # Get all locations
+        queryset = Location.objects.all()
 
         # Optimize database query - only fetch needed columns
         queryset = queryset.only('id', 'name', 'latitude', 'longitude', 'quality_score')
@@ -679,7 +619,7 @@ def location_details(request, location_id):
     """
     Display detailed information about a location including reviews.
 
-    Shows paginated reviews with the user's review first (if exists), handles vote
+    Shows all reviews with the user's review first (if exists), handles vote
     information for authenticated users, and allows review submissions.
     """
     location = get_object_or_404(Location, pk=location_id)
@@ -706,19 +646,15 @@ def location_details(request, location_id):
     # Order other reviews by created_at
     other_reviews = other_reviews.order_by('-created_at')
 
-    # Combine reviews and handle pagination
+    # Combine reviews (user's review first, then others)
     reviews_list = list(chain([user_review], other_reviews)) if user_review else list(other_reviews)
     reviews_list = [r for r in reviews_list if r is not None]
-
-    paginator = Paginator(reviews_list, 10)
-    page_number = request.GET.get('page', 1)
-    page_obj = paginator.get_page(page_number)
 
     # Create vote dictionaries to pass to template
     comment_votes = {}
 
     # Add vote information for authenticated users
-    for review in page_obj:
+    for review in reviews_list:
         if request.user.is_authenticated:
             # Get the vote for this review using generic Vote model
             review_content_type = ContentType.objects.get_for_model(review)
@@ -805,7 +741,7 @@ def location_details(request, location_id):
 
     context = {
         'location': location,
-        'page_obj': page_obj,
+        'reviews_list': reviews_list,
         'user_has_reviewed': user_has_reviewed,
         'is_owner': is_owner,
         'mapbox_token': settings.MAPBOX_TOKEN,

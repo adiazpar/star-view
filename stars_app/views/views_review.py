@@ -26,9 +26,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
-from rest_framework.exceptions import ValidationError
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter
 
 # Model imports:
 from stars_app.models.model_review import Review
@@ -84,10 +81,6 @@ class IsOwnerOrReadOnly(BasePermission):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
-    filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['rating']
-    ordering_fields = ['rating', 'created_at', 'updated_at']
-    ordering = ['-created_at']
 
 
     # Filter reviews by location from URL parameters:
@@ -99,22 +92,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     # Create a review for a specific location:
     def perform_create(self, serializer):
-        location = Location.objects.get(pk=self.kwargs['location_pk'])
+        location = get_object_or_404(Location, pk=self.kwargs['location_pk'])
         serializer.save(
             user=self.request.user,
             location=location
         )
-
-
-    # Override perform_update to ensure updated_at is always updated:
-    def perform_update(self, serializer):
-        # Get the fields being updated and explicitly include updated_at
-        if serializer.validated_data:
-            update_fields = list(serializer.validated_data.keys())
-            update_fields.append('updated_at')
-            serializer.save(update_fields=update_fields)
-        else:
-            serializer.save()
 
 
     # Add photos to a review (max 5 total):
@@ -236,7 +218,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 # ----------------------------------------------------------------------------------------------------- #
 #                                                                                                       #
-#                                   REVIEW COMMENT VIEWSET                                              #
+#                                       COMMENT VIEWSET                                                 #
 #                                                                                                       #
 # ----------------------------------------------------------------------------------------------------- #
 
@@ -270,17 +252,6 @@ class CommentViewSet(viewsets.ModelViewSet):
             user=self.request.user,
             review=review
         )
-
-
-    # Override perform_update to ensure updated_at is always updated:
-    def perform_update(self, serializer):
-        # Get the fields being updated and explicitly include updated_at
-        if serializer.validated_data:
-            update_fields = list(serializer.validated_data.keys())
-            update_fields.append('updated_at')
-            serializer.save(update_fields=update_fields)
-        else:
-            serializer.save()
 
 
     # Handle voting on comments using VoteService:

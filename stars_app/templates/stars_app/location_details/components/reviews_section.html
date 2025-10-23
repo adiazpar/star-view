@@ -74,8 +74,8 @@
     {% endif %}
 
     <div class="reviews-list">
-        {% if page_obj %}
-            {% for review in page_obj %}
+        {% if reviews_list %}
+            {% for review in reviews_list %}
                 <div class="review-card {% if review.user == user %}current-user-review{% endif %}">
                     <div class="review-header">
                         <div class="review-author-section">
@@ -391,29 +391,6 @@
                     </div>
                 </div>
             {% endfor %}
-
-            <!-- Pagination controls -->
-            {% if page_obj.paginator.num_pages > 1 %}
-                <div class="pagination-container">
-                    {% if page_obj.has_previous %}
-                        <a href="?page={{ page_obj.previous_page_number }}"
-                           class="pagination-button">
-                            <i class="fas fa-chevron-left"></i> Previous
-                        </a>
-                    {% endif %}
-
-                    <span class="pagination-info">
-                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-                    </span>
-
-                    {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}"
-                           class="pagination-button">
-                            Next <i class="fas fa-chevron-right"></i>
-                        </a>
-                    {% endif %}
-                </div>
-            {% endif %}
         {% else %}
             <div class="no-reviews">No reviews yet</div>
         {% endif %}
