@@ -36,7 +36,7 @@ from stars_app.models.model_location import Location
 # Returns:  Rendered home page template                                         #
 # ----------------------------------------------------------------------------- #
 def home(request):
-    return render(request, 'stars_app/home.html')
+    return render(request, 'stars_app/home/home_base.html')
 
 
 # ----------------------------------------------------------------------------- #
@@ -58,4 +58,4 @@ def map(request):
         'mapbox_token': settings.MAPBOX_TOKEN,
         'tile_server_url': settings.TILE_SERVER_URL,
     }
-    return render(request, 'stars_app/map.html', context)
+    return render(request, 'stars_app/map/map_base.html', context)

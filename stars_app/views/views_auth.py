@@ -138,7 +138,7 @@ def register(request):
             )
 
     # GET request: render registration form
-    return render(request, 'stars_app/auth/register.html')
+    return render(request, 'stars_app/auth/auth_register.html')
 
 
 # ----------------------------------------------------------------------------- #
@@ -205,7 +205,7 @@ def custom_login(request):
     if next_url.startswith('/login/'):
         next_url = ''
 
-    return render(request, 'stars_app/auth/login.html', {'next': next_url})
+    return render(request, 'stars_app/auth/auth_login.html', {'next': next_url})
 
 
 # ----------------------------------------------------------------------------- #
@@ -294,23 +294,23 @@ class PasswordServiceSetPasswordForm(SetPasswordForm):
 
 # Display password reset request form (users enter their email):
 class CustomPasswordResetView(PasswordResetView):
-    template_name = 'stars_app/auth/password_reset/password_reset.html'
-    email_template_name = 'stars_app/auth/password_reset/password_reset_email.html'
+    template_name = 'stars_app/auth/password_reset/auth_password_reset.html'
+    email_template_name = 'stars_app/auth/password_reset/auth_password_reset_email.html'
     success_url = reverse_lazy('password_reset_done')
 
 
 # Display confirmation that password reset email was sent:
 class CustomPasswordResetDoneView(PasswordResetDoneView):
-    template_name = 'stars_app/auth/password_reset/password_reset_done.html'
+    template_name = 'stars_app/auth/password_reset/auth_password_reset_done.html'
 
 
 # Display form for entering new password (via link in password reset email):
 class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    template_name = 'stars_app/auth/password_reset/password_reset_confirm.html'
+    template_name = 'stars_app/auth/password_reset/auth_password_reset_confirm.html'
     success_url = reverse_lazy('password_reset_complete')
     form_class = PasswordServiceSetPasswordForm
 
 
 # Display confirmation that password was successfully reset:
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
-    template_name = 'stars_app/auth/password_reset/password_reset_complete.html'
+    template_name = 'stars_app/auth/password_reset/auth_password_reset_complete.html'

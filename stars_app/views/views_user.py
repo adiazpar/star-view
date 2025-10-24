@@ -77,11 +77,11 @@ def account(request):
 
     # Return the appropriate template based on the active tab
     template_mapping = {
-        'profile': 'stars_app/account/profile.html',
-        'favorites': 'stars_app/account/favorites.html',
+        'profile': 'stars_app/account/account_profile.html',
+        'favorites': 'stars_app/account/account_favorites.html',
     }
 
-    return render(request, template_mapping.get(active_tab, 'stars_app/account/profile.html'), context)
+    return render(request, template_mapping.get(active_tab, 'stars_app/account/account_profile.html'), context)
 
 
 

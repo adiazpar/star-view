@@ -3,9 +3,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- CSS -->
-    <link rel="stylesheet" href="{% static 'css/base/styles.css' %}" type="text/css">
-
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -13,8 +10,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/base.css' %}" type="text/css">
+    
     {% block extra_head %}{% endblock %}
-    <script src="{% static 'js/base/script.js' %}"></script>
 </head>
 
 <!-- Body Content -->
@@ -69,48 +68,9 @@
         <p>Created by Group 8 - Alejandro Diaz , Jason Cuthbert , Daniel Bolding , Oscar Tinoco</p>
     </footer>
 
-    {% block extra_scripts %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Function to remove message completely
-        function removeMessage(messageElement) {
-            // First add the fadeOut animation
-            messageElement.style.animation = 'fadeOut 0.3s ease-out forwards';
+    <!-- Base scripts loaded for all pages -->
+    <script type="module" src="{% static 'js/base.js' %}"></script>
 
-            // After animation completes, remove the entire element
-            setTimeout(() => {
-                // Check if the message's container will be empty
-                const container = messageElement.parentElement;
-                messageElement.remove();
-
-                // If container is empty, remove it too
-                if (container && container.children.length === 0) {
-                    container.remove();
-                }
-            }, 300); // Match this to your animation duration
-        }
-
-        // Handle automatic timeout for all messages (but skip hidden AJAX message containers)
-        const messages = document.querySelectorAll('.message');
-        messages.forEach(message => {
-            // Skip if the parent container is hidden (used for AJAX messages)
-            const container = message.closest('.messages');
-            if (container && container.style.display === 'none') {
-                return;  // Don't auto-remove AJAX message containers
-            }
-            setTimeout(() => removeMessage(message), 5000);
-        });
-
-        // Handle close button clicks
-        document.querySelectorAll('.message-close').forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                const message = this.closest('.message');
-                removeMessage(message);
-            });
-        });
-    });
-    </script>
-    {% endblock %}
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

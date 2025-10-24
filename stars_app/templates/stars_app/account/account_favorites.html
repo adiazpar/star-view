@@ -1,0 +1,100 @@
+{% extends "stars_app/account/account_base.html" %}
+{% load static %}
+
+{% block settings_content %}
+
+<div class="account-header">
+    <h3>Favorited Locations</h3>
+    <p class="subtitle">Manage your saved viewing locations and personalize them with nicknames.</p>
+</div>
+
+{% if favorites %}
+
+    <div class="search-section">
+        <div class="search-container">
+            <input
+                type="text"
+                id="favorites-search"
+                class="search-input"
+                placeholder="Search your favorite locations..."
+            >
+            <span class="search-icon">
+                <i class="fas fa-search"></i>
+            </span>
+        </div>
+    </div>
+
+    <div class="favorites-grid" id="favorites-grid">
+        {% for favorite in favorites %}
+            <div class="favorite-card" data-search-text="{{ favorite.get_display_name|lower }} {{ favorite.location.latitude }} {{ favorite.location.longitude }}">
+                <div class="favorite-banner">
+                    <img
+                        src="https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+ff0000({{ favorite.location.longitude }},{{ favorite.location.latitude }})/{{ favorite.location.longitude }},{{ favorite.location.latitude }},13/400x200?access_token={{ mapbox_token }}"
+                        alt="Map of {{ favorite.get_display_name }}"
+                        class="location-map"
+                    >
+                </div>
+
+                <div class="favorite-header">
+                    <div class="favorite-title">
+                        <h4 class="display-name" data-favorite-id="{{ favorite.id }}" data-original-name="{{ favorite.location.name }}">
+                            {{ favorite.get_display_name }}
+                        </h4>
+                        <button class="edit-nickname-btn">
+                            <span class="edit-icon">✎</span>
+                        </button>
+                    </div>
+                    {% if favorite.nickname %}
+                        <div class="original-name" title="{{ favorite.location.name }}">
+                            Originally: {{ favorite.location.name }}
+                        </div>
+                    {% endif %}
+                    <div class="nickname-edit-container" id="nickname-edit-{{ favorite.id }}" style="display: none;">
+                        <input type="text"
+                               class="form-input nickname-input"
+                               value="{{ favorite.nickname|default:'' }}"
+                               placeholder="{{ favorite.location.name }}">
+                        <button class="save-nickname-btn">Save</button>
+                    </div>
+                </div>
+
+                <div class="favorite-content">
+                    <div class="location-info">
+                        <div class="info-item">
+                            <span class="label"><i class="fas fa-location-dot"></i>Coordinates:</span>
+                            <span class="value">{{ favorite.location.latitude|floatformat:4 }}, {{ favorite.location.longitude|floatformat:4 }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label"><i class="fas fa-mountain"></i>Elevation:</span>
+                            <span class="value">{{ favorite.location.elevation|floatformat:0 }}m</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="favorite-actions">
+                     <a href="{% url 'map' %}?lat={{ favorite.location.latitude }}&lng={{ favorite.location.longitude }}&zoom=12"
+                       class="save-button">
+                        View on Map
+                    </a>
+                    <button class="delete-button" data-location-id="{{ favorite.location.id }}">
+                        Remove
+                    </button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="no-results" style="display: none;">
+        <p>No locations match your search.</p>
+    </div>
+{% else %}
+    <div class="empty-state">
+        <p>You haven't favorited any locations yet.</p>
+        <a href="{% url 'map' %}" class="save-button">Explore Locations</a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="module" src="{% static 'js/account/account_favorites_init.js' %}"></script>
+{% endblock %}

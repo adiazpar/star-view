@@ -204,4 +204,4 @@ def location_details(request, location_id):
         'average_rating': avg_rating,
         'comment_votes': comment_votes,
     }
-    return render(request, 'stars_app/location_details/base.html', context)
+    return render(request, 'stars_app/location/location_base.html', context)
