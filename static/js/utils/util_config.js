@@ -44,6 +44,29 @@ export const API_ENDPOINTS = {
         detail: (id) => `/api/favorites/${id}/`,
     },
 
+    // Favorite locations endpoints (legacy naming from API)
+    favoriteLocations: {
+        base: '/api/favorite-locations/',
+        detail: (id) => `/api/favorite-locations/${id}/`,
+    },
+
+    // Location-specific review and comment endpoints
+    location: {
+        reviews: (locationId) => `/api/locations/${locationId}/reviews/`,
+        reviewDetail: (locationId, reviewId) => `/api/locations/${locationId}/reviews/${reviewId}/`,
+        reviewPhotos: (locationId, reviewId) => `/api/locations/${locationId}/reviews/${reviewId}/add_photos/`,
+        reviewPhotoDelete: (locationId, reviewId, photoId) => `/api/locations/${locationId}/reviews/${reviewId}/photos/${photoId}/`,
+        reviewVote: (locationId, reviewId) => `/api/locations/${locationId}/reviews/${reviewId}/vote/`,
+        reviewReport: (locationId, reviewId) => `/api/locations/${locationId}/reviews/${reviewId}/report/`,
+        comments: (locationId, reviewId) => `/api/locations/${locationId}/reviews/${reviewId}/comments/`,
+        commentDetail: (locationId, reviewId, commentId) =>
+            `/api/locations/${locationId}/reviews/${reviewId}/comments/${commentId}/`,
+        commentVote: (locationId, reviewId, commentId) =>
+            `/api/locations/${locationId}/reviews/${reviewId}/comments/${commentId}/vote/`,
+        commentReport: (locationId, reviewId, commentId) =>
+            `/api/locations/${locationId}/reviews/${reviewId}/comments/${commentId}/report/`,
+    },
+
     // Report endpoints
     reports: {
         base: '/api/reports/',

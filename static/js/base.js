@@ -2,68 +2,77 @@
  * Base template initialization
  *
  * Initializes functionality that should be available on every page:
- * - Navbar: Hamburger menu, active link highlighting
- * - Messages: Display and dismissal of Django messages
+ * - Mobile hamburger menu toggle
+ * - Message system initialization
  */
 
 import { initMessages } from './utils/util_messages.js';
 
+// ============================================================================
+// CSS CLASSES - Update these if you rename CSS classes
+// ============================================================================
+const CSS_CLASSES = {
+    NAV_MENU: 'nav-menu',
+    NAV_BACKDROP: 'nav-backdrop',
+    HAMBURGER: 'hamburger',
+    MENU_ICON: 'menu-icon',
+    X_ICON: 'x-icon',
+    ACTIVE: 'active'
+};
+
 /**
- * Initialize navbar functionality
- * - Hamburger menu toggle for mobile
- * - Active link highlighting based on current URL
+ * Toggle mobile navigation menu
  */
-function initNavbar() {
-    // Create the navbar drop down menu:
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
-    const authLinks = document.getElementById('auth-links');
+window.toggleMenu = function() {
+    const navMenu = document.querySelector(`.${CSS_CLASSES.NAV_MENU}`);
+    const navBackdrop = document.querySelector(`.${CSS_CLASSES.NAV_BACKDROP}`);
+    const menuIcon = document.querySelector(`.${CSS_CLASSES.MENU_ICON}`);
+    const xIcon = document.querySelector(`.${CSS_CLASSES.X_ICON}`);
 
-    if (!hamburger || !navLinks || !authLinks) return;
+    // Toggle menu and backdrop
+    navMenu.classList.toggle(CSS_CLASSES.ACTIVE);
+    navBackdrop.classList.toggle(CSS_CLASSES.ACTIVE);
 
-    // Remove any existing click listeners:
-    hamburger.replaceWith(hamburger.cloneNode(true));
-
-    // Get the new hamburger element after replacement:
-    const newHamburger = document.getElementById('hamburger');
-
-    newHamburger.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-        authLinks.classList.toggle('active');
-    });
-
-    // Change the nav-item color based on the current URL:
-    const links = document.querySelectorAll('.nav-link');
-    const currentLocation = location.href;
-
-    links.forEach(link => {
-        // Skip links with href="#"
-        if (link.getAttribute('href') === '#') {
-            return;
-        }
-
-        // Get the base URL without query parameters for both current location and link:
-        const currentBasePath = currentLocation.split('?')[0];
-        const linkBasePath = link.href.split('?')[0];
-
-        // Check if the base paths match:
-        if (currentBasePath === linkBasePath ||
-            (link.href.includes('/account/') && currentLocation.includes('/account/'))) {
-            link.classList.add('active');
-        }
-        else {
-            link.classList.remove('active');
-        }
-    });
+    // Switch between hamburger and X icons
+    if (navMenu.classList.contains(CSS_CLASSES.ACTIVE)) {
+        menuIcon.style.display = 'none';
+        xIcon.style.display = 'block';
+    } else {
+        menuIcon.style.display = 'block';
+        xIcon.style.display = 'none';
+    }
 }
+
+/**
+ * Close mobile navigation menu
+ */
+function closeMenu() {
+    const navMenu = document.querySelector(`.${CSS_CLASSES.NAV_MENU}`);
+    const navBackdrop = document.querySelector(`.${CSS_CLASSES.NAV_BACKDROP}`);
+    const menuIcon = document.querySelector(`.${CSS_CLASSES.MENU_ICON}`);
+    const xIcon = document.querySelector(`.${CSS_CLASSES.X_ICON}`);
+
+    navMenu.classList.remove(CSS_CLASSES.ACTIVE);
+    navBackdrop.classList.remove(CSS_CLASSES.ACTIVE);
+    menuIcon.style.display = 'block';
+    xIcon.style.display = 'none';
+}
+
+/**
+ * Close menu when clicking outside the menu area
+ */
+document.addEventListener('click', function(e) {
+    const hamburger = document.querySelector(`.${CSS_CLASSES.HAMBURGER}`);
+    const navMenu = document.querySelector(`.${CSS_CLASSES.NAV_MENU}`);
+
+    if (navMenu.classList.contains(CSS_CLASSES.ACTIVE) &&
+        !navMenu.contains(e.target) &&
+        !hamburger.contains(e.target)) {
+        closeMenu();
+    }
+});
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    initNavbar();
     initMessages();
-});
-
-// Re-initialize navbar when URL changes without page reload:
-window.addEventListener('popstate', () => {
-    initNavbar();
 });

@@ -5,9 +5,31 @@
  * Design: Only ONE message is shown at a time for clarity.
  *
  * API:
- * - showMessage(message, isError) - Display a message
+ * - showMessage(message, type) - Display a message
+ *   - type: 'success' (default), 'error', 'warning', or 'info'
  * - dismissMessage() - Dismiss the current message
+ * - initMessages() - Initialize for Django server-rendered messages
  */
+
+// ============================================================================
+// CSS CLASSES - Update these if you rename CSS classes
+// ============================================================================
+const CSS_CLASSES = {
+    MESSAGE_CONTAINER: 'message-container',
+    MESSAGE: 'message',
+    MESSAGE_TEXT: 'message-text',
+    MESSAGE_CLOSE: 'message-close',
+    FADE_OUT: 'fade-out',
+    SUCCESS: 'success',
+    ERROR: 'error',
+    WARNING: 'warning',
+    INFO: 'info'
+};
+
+const TIMING = {
+    AUTO_DISMISS: 5000,
+    FADE_OUT_DURATION: 300
+};
 
 let messageTimeout = null;
 let currentMessage = null;
@@ -19,9 +41,9 @@ let currentMessage = null;
  * it will be instantly replaced by the new one.
  *
  * @param {string} message - The message text to display
- * @param {boolean} isError - Whether this is an error (true) or success (false)
+ * @param {string} type - Message type: 'success' (default), 'error', 'warning', or 'info'
  */
-export function showMessage(message, isError = false) {
+export function showMessage(message, type = 'success') {
     // Clear existing timeout
     if (messageTimeout) {
         clearTimeout(messageTimeout);
@@ -35,22 +57,31 @@ export function showMessage(message, isError = false) {
     }
 
     // Find or create messages container
-    let container = document.querySelector('.messages');
+    let container = document.querySelector(`.${CSS_CLASSES.MESSAGE_CONTAINER}`);
     if (!container) {
         container = document.createElement('div');
-        container.className = 'messages';
+        container.className = CSS_CLASSES.MESSAGE_CONTAINER;
         document.body.prepend(container);
     }
 
+    // Validate type and set default
+    const validTypes = [CSS_CLASSES.SUCCESS, CSS_CLASSES.ERROR, CSS_CLASSES.WARNING, CSS_CLASSES.INFO];
+    const messageClass = validTypes.includes(type) ? type : CSS_CLASSES.SUCCESS;
+
     // Create message element
     const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${isError ? 'error' : 'success'}`;
-    messageDiv.textContent = message;
+    messageDiv.className = `${CSS_CLASSES.MESSAGE} ${messageClass}`;
+
+    // Create message text wrapper
+    const messageText = document.createElement('div');
+    messageText.className = CSS_CLASSES.MESSAGE_TEXT;
+    messageText.textContent = message;
+    messageDiv.appendChild(messageText);
 
     // Add close button
     const closeButton = document.createElement('button');
     closeButton.type = 'button';
-    closeButton.className = 'message-close';
+    closeButton.className = CSS_CLASSES.MESSAGE_CLOSE;
     closeButton.innerHTML = '<i class="fas fa-xmark"></i>';
     closeButton.addEventListener('click', (e) => {
         e.preventDefault();
@@ -62,10 +93,11 @@ export function showMessage(message, isError = false) {
     container.appendChild(messageDiv);
     currentMessage = messageDiv;
 
-    // Auto-dismiss after 5 seconds
+    // Auto-dismiss after configured time
     messageTimeout = setTimeout(() => {
         dismissMessage();
-    }, 5000);
+    }, TIMING.AUTO_DISMISS);
+    
 }
 
 /**
@@ -79,8 +111,8 @@ export function dismissMessage() {
 
     if (!currentMessage) return;
 
-    // Add fadeOut animation
-    currentMessage.style.animation = 'fadeOut 0.3s ease-out forwards';
+    // Add fadeOut class
+    currentMessage.classList.add(CSS_CLASSES.FADE_OUT);
 
     // Remove from DOM after animation
     setTimeout(() => {
@@ -94,7 +126,7 @@ export function dismissMessage() {
             }
         }
         currentMessage = null;
-    }, 300);
+    }, TIMING.FADE_OUT_DURATION);
 }
 
 /**
@@ -104,42 +136,42 @@ export function dismissMessage() {
 export function initMessages() {
     document.addEventListener('DOMContentLoaded', function() {
         // Auto-dismiss server-rendered messages
-        const messages = document.querySelectorAll('.message');
+        const messages = document.querySelectorAll(`.${CSS_CLASSES.MESSAGE}`);
         messages.forEach(message => {
             // Skip hidden containers
-            const container = message.closest('.messages');
+            const container = message.closest(`.${CSS_CLASSES.MESSAGE_CONTAINER}`);
             if (container && container.style.display === 'none') {
                 return;
             }
 
-            // Auto-dismiss after 5 seconds
+            // Auto-dismiss after configured time
             setTimeout(() => {
-                message.style.animation = 'fadeOut 0.3s ease-out forwards';
+                message.classList.add(CSS_CLASSES.FADE_OUT);
                 setTimeout(() => {
                     const parent = message.parentElement;
                     message.remove();
                     if (parent && parent.children.length === 0) {
                         parent.remove();
                     }
-                }, 300);
-            }, 5000);
+                }, TIMING.FADE_OUT_DURATION);
+            }, TIMING.AUTO_DISMISS);
         });
 
         // Handle all close button clicks (event delegation)
         document.addEventListener('click', (e) => {
-            const closeButton = e.target.closest('.message-close, .ajax-message-close');
+            const closeButton = e.target.closest(`.${CSS_CLASSES.MESSAGE_CLOSE}`);
             if (closeButton) {
                 e.preventDefault();
-                const message = closeButton.closest('.message');
+                const message = closeButton.closest(`.${CSS_CLASSES.MESSAGE}`);
                 if (message) {
-                    message.style.animation = 'fadeOut 0.3s ease-out forwards';
+                    message.classList.add(CSS_CLASSES.FADE_OUT);
                     setTimeout(() => {
                         const parent = message.parentElement;
                         message.remove();
                         if (parent && parent.children.length === 0) {
                             parent.remove();
                         }
-                    }, 300);
+                    }, TIMING.FADE_OUT_DURATION);
                 }
             }
         });

@@ -69,7 +69,6 @@ class ReportService:
 
             # Prepare report data for the generic Report model
             report_data = {
-                'object_id': content_object.id,
                 'report_type': report_type,
                 'description': description
             }
@@ -79,6 +78,7 @@ class ReportService:
             if serializer.is_valid():
                 serializer.save(
                     content_type=content_type,
+                    object_id=content_object.id,
                     reported_by=user
                 )
                 content_type_name = content_type.model.replace('_', ' ').capitalize()
