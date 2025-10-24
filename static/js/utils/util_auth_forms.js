@@ -19,20 +19,15 @@ export function togglePassword(inputId) {
     const input = document.getElementById(inputId);
     input.type = input.type === 'password' ? 'text' : 'password';
 
-    // Update icon
+    // Update icon (Font Awesome)
     const button = input.nextElementSibling;
-    const icon = button.querySelector('svg');
+    const icon = button.querySelector('i');
     if (input.type === 'text') {
-        icon.innerHTML = `
-            <line x1="3" y1="3" x2="21" y2="21"></line>
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        `;
+        // Password is visible, show eye-slash icon
+        icon.className = 'fas fa-eye-slash eye-icon';
     } else {
-        icon.innerHTML = `
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        `;
+        // Password is hidden, show regular eye icon
+        icon.className = 'fas fa-eye eye-icon';
     }
 }
 

@@ -413,13 +413,12 @@ window.ReviewSystem = (function() {
         // Update star display with consistent styling
         const starContainer = document.querySelector('.rating-stars');
         if (starContainer) {
-            const stars = starContainer.querySelectorAll('svg');
+            const stars = starContainer.querySelectorAll('i.fa-star');
             const filledStars = Math.round(averageRating);
-            
+
             stars.forEach((star, index) => {
                 if (index < filledStars) {
                     star.style.color = 'var(--golden)';
-                    star.style.fill = 'var(--golden)';
                 } else {
                     star.style.color = 'var(--text-tertiary)';
                     star.style.fill = 'none'; // Consistent outline style for empty stars
@@ -643,13 +642,9 @@ window.ReviewSystem = (function() {
             }
             
             // Update the icon from lock to pencil
-            const currentIcon = toggleBtn.querySelector('svg');
+            const currentIcon = toggleBtn.querySelector('i');
             if (currentIcon) {
-                const newIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-square-pen">
-                    <path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                    <path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>
-                </svg>`;
-                currentIcon.outerHTML = newIcon;
+                currentIcon.className = 'fas fa-pen-to-square';
             }
         }
     }
@@ -1113,16 +1108,9 @@ window.CommentSystem = (function() {
         const downvoteCount = comment.downvote_count || 0;
         const userVote = comment.user_vote;
         
-        // SVG icons as strings for JavaScript
-        const thumbsUpIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-thumbs-up">
-            <path d="M7 10v12"/>
-            <path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>
-        </svg>`;
-        
-        const thumbsDownIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-thumbs-down">
-            <path d="M17 14V2"/>
-            <path d="M9 18.12 10 14H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/>
-        </svg>`;
+        // Font Awesome icons
+        const thumbsUpIcon = '<i class="fas fa-thumbs-up"></i>';
+        const thumbsDownIcon = '<i class="fas fa-thumbs-down"></i>';
 
         let voteControls = '';
         if (config.isAuthenticated && !isCommentOwner) {
@@ -1164,29 +1152,10 @@ window.CommentSystem = (function() {
         // Create ellipsis menu for authenticated users
         let ellipsisMenu = '';
         if (config.isAuthenticated) {
-            const ellipsisIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ellipsis">
-                <circle cx="12" cy="12" r="1"/>
-                <circle cx="19" cy="12" r="1"/>
-                <circle cx="5" cy="12" r="1"/>
-            </svg>`;
-            
-            const pencilIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil">
-                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
-                <path d="m15 5 4 4"/>
-            </svg>`;
-            
-            const trashIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash-2">
-                <path d="M3 6h18"/>
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>
-                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
-                <line x1="10" x2="10" y1="11" y2="17"/>
-                <line x1="14" x2="14" y1="11" y2="17"/>
-            </svg>`;
-            
-            const flagIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flag">
-                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-                <line x1="4" x2="4" y1="22" y2="15"/>
-            </svg>`;
+            const ellipsisIcon = '<i class="fas fa-ellipsis"></i>';
+            const pencilIcon = '<i class="fas fa-pen"></i>';
+            const trashIcon = '<i class="fas fa-trash"></i>';
+            const flagIcon = '<i class="fas fa-flag"></i>';
 
             if (isCurrentUser) {
                 // Owner options: Edit and Delete
@@ -1611,10 +1580,7 @@ window.EditingSystem = (function() {
                             previewDiv.innerHTML = `
                                 <img src="${img.src}" alt="Existing photo ${index + 1}" class="preview-image">
                                 <button type="button" class="remove-image-btn" data-existing-photo-id="${img.closest('.review-photo-item').getAttribute('data-photo-id')}" title="Remove existing image">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                                    </svg>
+                                    <i class="fas fa-xmark"></i>
                                 </button>
                             `;
                             previewContainer.appendChild(previewDiv);
@@ -1890,37 +1856,20 @@ window.EditingSystem = (function() {
                     // Clear existing stars
                     ratingDisplay.innerHTML = '';
                     
-                    // Create new stars based on the rating
+                    // Create new stars based on the rating using Font Awesome
                     for (let i = 1; i <= 5; i++) {
-                        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                        svg.setAttribute('width', '16');
-                        svg.setAttribute('height', '16');
-                        svg.setAttribute('viewBox', '0 0 24 24');
-                        svg.setAttribute('stroke', 'currentColor');
-                        svg.setAttribute('stroke-width', '2');
-                        svg.setAttribute('stroke-linecap', 'round');
-                        svg.setAttribute('stroke-linejoin', 'round');
-                        
+                        const star = document.createElement('i');
+                        star.className = 'fas fa-star';
+
                         if (i <= data.rating) {
                             // Filled star
-                            svg.setAttribute('fill', 'currentColor');
-                            svg.setAttribute('class', 'lucide lucide-star filled');
-                            svg.style.color = 'var(--golden)';
-                            svg.style.fill = 'var(--golden)';
+                            star.style.color = 'var(--golden)';
                         } else {
                             // Empty star
-                            svg.setAttribute('fill', 'none');
-                            svg.setAttribute('class', 'lucide lucide-star');
-                            svg.style.color = 'var(--text-tertiary)';
+                            star.style.color = 'var(--text-tertiary)';
                         }
-                        
-                        // Add the path element
-                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        path.setAttribute('d', 'M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z');
-                        
-                        svg.appendChild(path);
-                        ratingDisplay.appendChild(svg);
+
+                        ratingDisplay.appendChild(star);
                     }
                 }
             }
@@ -2274,10 +2223,7 @@ window.ImageUploadSystem = (function() {
         div.innerHTML = `
             <img src="${src}" alt="${filename}" class="preview-image">
             <button type="button" class="remove-image-btn" data-index="${index}" title="Remove image">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <i class="fas fa-xmark"></i>
             </button>
         `;
         return div;
@@ -2357,20 +2303,13 @@ window.ImageUploadSystem = (function() {
                         </div>
                     </div>
                     <button class="lightbox-close" title="Close">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                        </svg>
+                        <i class="fas fa-xmark"></i>
                     </button>
                     <button class="lightbox-nav lightbox-prev" title="Previous photo">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15,18 9,12 15,6"></polyline>
-                        </svg>
+                        <i class="fas fa-chevron-left"></i>
                     </button>
                     <button class="lightbox-nav lightbox-next" title="Next photo">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9,18 15,12 9,6"></polyline>
-                        </svg>
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
             `;
@@ -2849,9 +2788,9 @@ window.ReportModal = (function() {
         notification.innerHTML = `
             <div class="notification-content">
                 <div class="notification-icon">
-                    ${type === 'success' ? 
-                        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20,6 9,17 4,12"></polyline></svg>' :
-                        '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+                    ${type === 'success' ?
+                        '<i class="fas fa-check"></i>' :
+                        '<i class="fas fa-circle-exclamation"></i>'
                     }
                 </div>
                 <span class="notification-message">${message}</span>

@@ -3,14 +3,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <title>Event Horizon</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Horizon</title>
 
-    <!-- CSS -->
+    <!-- Import Font Awesome Kit -->
+    <script src="https://kit.fontawesome.com/487246ab59.js" crossorigin="anonymous"></script>
+
+    <!-- Import CSS Stylesheet -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}" type="text/css">
     
     {% block extra_head %}{% endblock %}
@@ -51,7 +51,7 @@
                 </div>
 
                 <button class="hamburger" id="hamburger">
-                    &#9776;
+                    <i class="fas fa-bars"></i>
                 </button>
             </div>
         </div>
