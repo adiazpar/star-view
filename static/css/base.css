@@ -30,7 +30,6 @@
     --text-tertiary: #868686;
 
     /* Typography */
-    --font-primary: Tahoma, sans-serif;
     --font-size-xs: 0.75rem;
     --font-size-sm: 0.875rem;
     --font-size-base: 1rem;
@@ -70,13 +69,22 @@
 
 /* ---------------------------------------------------------------- */
 /* ---------- Global Styles ---------- */
+*{
+    font-family: Inter, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+}
+@supports (font-variation-settings: normal) {
+    :root {
+        font-family: InterVariable, sans-serif;
+    }
+}
+
 html {
     height: 100%;
     overflow-x: hidden;
 }
 
 body {
-    font-family: var(--font-primary);
     color: var(--text-primary);
     background-color: var(--background);
     line-height: 1.5;
