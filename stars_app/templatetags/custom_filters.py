@@ -18,30 +18,6 @@ from django import template
 register = template.Library()
 
 
-
-# ----------------------------------------------------------------------------- #
-# Check if a location has been favorited by the current user.                   #
-#                                                                               #
-# This filter queries the Location model's favorited_by relationship to         #
-# determine if the current user has favorited this location.                    #
-#                                                                               #
-# Args:       location: Location model instance to check                        #
-#             user: User model instance (current authenticated user)            #
-#                                                                               #
-# Returns:    bool: True if user has favorited this location, False otherwise   #
-#                                                                               #
-# ----------------------------------------------------------------------------- #
-@register.filter
-def is_favorite(location, user):
-    # Only check for authenticated users:
-    if user.is_authenticated:
-        # Query the favorited_by relationship to check if this user has favorited this location:
-        return location.favorited_by.filter(user=user).exists()
-
-    # Return False for unauthenticated users:
-    return False
-
-
 # ----------------------------------------------------------------------------- #
 # Retrieve a value from a dictionary using a key in Django templates.           #
 #                                                                               #
@@ -56,7 +32,6 @@ def is_favorite(location, user):
 # Returns:    The value at dictionary[key], or None if not found                #
 #                                                                               #
 # ----------------------------------------------------------------------------- #
-
 @register.filter
 def get_item(dictionary, key):
     # Handle None or empty dictionary:

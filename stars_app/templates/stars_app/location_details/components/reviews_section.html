@@ -33,10 +33,12 @@
     </div>
 
     <!-- Hidden Review Form Template (for cloning after deletion) -->
-    <div id="reviewFormTemplate" style="display: none;">
-        <h5>Write a Review</h5>
-        {% include 'stars_app/location_details/components/review_form_fields.html' with form_id_prefix='template' %}
-    </div>
+    <script type="text/template" id="reviewFormTemplate">
+        <div class="review-form-wrapper">
+            <h5>Write a Review</h5>
+            {% include 'stars_app/location_details/components/review_form_fields.html' with form_id_prefix='template' %}
+        </div>
+    </script>
 
     <!-- Review Metrics Card -->
     {% if location.rating_count > 0 %}

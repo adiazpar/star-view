@@ -29,9 +29,9 @@ from django.core.exceptions import ValidationError
 from django.conf import settings
 
 # DRF imports:
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
+from rest_framework import status, viewsets
 
 # Model imports:
 from django.contrib.auth.models import User
@@ -77,179 +77,204 @@ def account(request):
 
     # Return the appropriate template based on the active tab
     template_mapping = {
-        'profile': 'stars_app/account_profile.html',
-        'favorites': 'stars_app/account_favorites.html',
+        'profile': 'stars_app/account/profile.html',
+        'favorites': 'stars_app/account/favorites.html',
     }
 
-    return render(request, template_mapping.get(active_tab, 'stars_app/account_profile.html'), context)
+    return render(request, template_mapping.get(active_tab, 'stars_app/account/profile.html'), context)
 
+
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                                                                                       #
+#                                      USER PROFILE VIEWSET                                             #
+#                                                                                                       #
+# ----------------------------------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
-# Upload new profile picture via DRF API. Automatically deletes old custom      #
-# images (preserves default images) before saving the new one.                  #
+# REST API ViewSet for user profile management operations.                      #
 #                                                                               #
-# Args:     request: POST request with 'profile_picture' file                   #
-# Returns:  DRF Response with success status and new image URL                  #
-# ----------------------------------------------------------------------------- #
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def upload_profile_picture(request):
-    try:
-        if 'profile_picture' not in request.FILES:
-            return ResponseService.error('No image file provided', status_code=status.HTTP_400_BAD_REQUEST)
-
-        profile_picture = request.FILES['profile_picture']
-        user_profile = request.user.userprofile
-
-        # Delete old profile picture if it exists (None means using default, so nothing to delete)
-        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
-            safe_delete_file(user_profile.profile_picture.path)
-
-        # Save the new profile picture
-        user_profile.profile_picture = profile_picture
-        user_profile.save()
-
-        return ResponseService.success(
-            'Profile picture updated successfully',
-            data={'image_url': user_profile.profile_picture.url}
-        )
-    except Exception as e:
-        return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
-
-
-# ----------------------------------------------------------------------------- #
-# Remove profile picture via DRF API. Deletes the file and resets to default.  #
+# This ViewSet provides a RESTful API for managing user profile data including  #
+# profile pictures, names, email, and passwords. All endpoints require          #
+# authentication and operate on the authenticated user's profile.               #
 #                                                                               #
-# Args:     request: POST request from API call                                 #
-# Returns:  DRF Response with success status and default image URL              #
+# Architecture:                                                                 #
+# - All actions use ResponseService for consistent JSON responses               #
+# - Password operations use PasswordService for validation                      #
+# - File deletion uses safe_delete_file from signals module                     #
+# - Uses DRF's @action decorator for custom endpoints                           #
 # ----------------------------------------------------------------------------- #
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def remove_profile_picture(request):
-    try:
-        user_profile = request.user.userprofile
+class UserProfileViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
 
-        # Delete the current profile picture if it exists (None means using default)
-        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
-            safe_delete_file(user_profile.profile_picture.path)
-
-        # Reset to default (model returns default URL when profile_picture is None)
-        user_profile.profile_picture = None
-        user_profile.save()
-
-        return ResponseService.success(
-            'Profile picture removed successfully',
-            data={'default_image_url': user_profile.get_profile_picture_url}
-        )
-    except Exception as e:
-        return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
-
-
-# ----------------------------------------------------------------------------- #
-# Update user's first and last name via DRF API.                                #
-#                                                                               #
-# Args:     request: POST request with first_name and last_name                 #
-# Returns:  DRF Response with success status and updated names                  #
-# ----------------------------------------------------------------------------- #
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def update_name(request):
-    try:
-        first_name = request.data.get('first_name', '').strip()
-        last_name = request.data.get('last_name', '').strip()
-
-        # Validate required fields
-        if not first_name or not last_name:
-            return ResponseService.error('Both first and last name are required.', status_code=status.HTTP_400_BAD_REQUEST)
-
-        user = request.user
-        user.first_name = first_name
-        user.last_name = last_name
-        user.save()
-
-        return ResponseService.success(
-            'Name updated successfully.',
-            data={
-                'first_name': first_name,
-                'last_name': last_name
-            }
-        )
-    except Exception as e:
-        return ResponseService.error(f'Error updating name: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
-
-
-# ----------------------------------------------------------------------------- #
-# Update user's email via DRF API. Validates format and checks for duplicates   #
-# before updating (case-insensitive).                                           #
-#                                                                               #
-# Args:     request: POST request with new_email                                #
-# Returns:  DRF Response with success status and new email                      #
-# ----------------------------------------------------------------------------- #
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def change_email(request):
-    try:
-        new_email = request.data.get('new_email', '').strip()
-
-        # Validate the new email
-        if not new_email:
-            return ResponseService.error('Email address is required.', status_code=status.HTTP_400_BAD_REQUEST)
-
-        # Validate email format using Django's built-in validator
+    # ----------------------------------------------------------------------------- #
+    # Upload new profile picture. Automatically deletes old custom images           #
+    # (preserves default images) before saving the new one.                         #
+    #                                                                               #
+    # HTTP Method: POST                                                             #
+    # Endpoint: /api/profile/upload-picture/                                        #
+    # Body: multipart/form-data with 'profile_picture' file                         #
+    # Returns: DRF Response with success status and new image URL                   #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['post'], url_path='upload-picture')
+    def upload_picture(self, request):
         try:
-            validate_email(new_email)
-        except ValidationError:
-            return ResponseService.error('Please enter a valid email address.', status_code=status.HTTP_400_BAD_REQUEST)
+            if 'profile_picture' not in request.FILES:
+                return ResponseService.error('No image file provided', status_code=status.HTTP_400_BAD_REQUEST)
 
-        # Check if email is already taken
-        if User.objects.filter(email=new_email.lower()).exclude(id=request.user.id).exists():
-            return ResponseService.error('This email address is already registered.', status_code=status.HTTP_400_BAD_REQUEST)
+            profile_picture = request.FILES['profile_picture']
+            user_profile = request.user.userprofile
 
-        # Update the email
-        request.user.email = new_email.lower()
-        request.user.save()
+            # Delete old profile picture if it exists (None means using default, so nothing to delete)
+            if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
+                safe_delete_file(user_profile.profile_picture.path)
 
-        return ResponseService.success(
-            'Email updated successfully.',
-            data={'new_email': new_email}
-        )
+            # Save the new profile picture
+            user_profile.profile_picture = profile_picture
+            user_profile.save()
 
-    except Exception as e:
-        return ResponseService.error(f'Error updating email: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
+            return ResponseService.success(
+                'Profile picture updated successfully',
+                data={'image_url': user_profile.profile_picture.url}
+            )
+        except Exception as e:
+            return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
 
 
-# ----------------------------------------------------------------------------- #
-# Update user's password via DRF API. Verifies current password, validates new  #
-# password strength with PasswordService, and maintains session.                #
-#                                                                               #
-# Args:     request: POST request with current_password and new_password        #
-# Returns:  DRF Response with success status or validation error                #
-# ----------------------------------------------------------------------------- #
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def change_password(request):
-    try:
-        current_password = request.data.get('current_password')
-        new_password = request.data.get('new_password')
+    # ----------------------------------------------------------------------------- #
+    # Remove profile picture and reset to default.                                  #
+    #                                                                               #
+    # HTTP Method: DELETE                                                           #
+    # Endpoint: /api/profile/remove-picture/                                        #
+    # Returns: DRF Response with success status and default image URL               #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['delete'], url_path='remove-picture')
+    def remove_picture(self, request):
+        try:
+            user_profile = request.user.userprofile
 
-        # Validate inputs
-        if not current_password or not new_password:
-            return ResponseService.error('Both current and new passwords are required.', status_code=status.HTTP_400_BAD_REQUEST)
+            # Delete the current profile picture if it exists (None means using default)
+            if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
+                safe_delete_file(user_profile.profile_picture.path)
 
-        # Use PasswordService to validate and change password
-        success, error_message = PasswordService.change_password(
-            user=request.user,
-            current_password=current_password,
-            new_password=new_password
-        )
+            # Reset to default (model returns default URL when profile_picture is None)
+            user_profile.profile_picture = None
+            user_profile.save()
 
-        if not success:
-            return ResponseService.error(error_message, status_code=status.HTTP_400_BAD_REQUEST)
+            return ResponseService.success(
+                'Profile picture removed successfully',
+                data={'default_image_url': user_profile.get_profile_picture_url}
+            )
+        except Exception as e:
+            return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
 
-        # Update session to prevent logout after password change
-        update_session_auth_hash(request, request.user)
 
-        return ResponseService.success('Password updated successfully.')
+    # ----------------------------------------------------------------------------- #
+    # Update user's first and last name.                                            #
+    #                                                                               #
+    # HTTP Method: PATCH                                                            #
+    # Endpoint: /api/profile/update-name/                                           #
+    # Body: JSON with first_name and last_name                                      #
+    # Returns: DRF Response with success status and updated names                   #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['patch'], url_path='update-name')
+    def update_name(self, request):
+        try:
+            first_name = request.data.get('first_name', '').strip()
+            last_name = request.data.get('last_name', '').strip()
 
-    except Exception as e:
-        return ResponseService.error(f'Error updating password: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
+            # Validate required fields
+            if not first_name or not last_name:
+                return ResponseService.error('Both first and last name are required.', status_code=status.HTTP_400_BAD_REQUEST)
+
+            user = request.user
+            user.first_name = first_name
+            user.last_name = last_name
+            user.save()
+
+            return ResponseService.success(
+                'Name updated successfully.',
+                data={
+                    'first_name': first_name,
+                    'last_name': last_name
+                }
+            )
+        except Exception as e:
+            return ResponseService.error(f'Error updating name: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Update user's email address. Validates format and checks for duplicates.      #
+    #                                                                               #
+    # HTTP Method: PATCH                                                            #
+    # Endpoint: /api/profile/update-email/                                          #
+    # Body: JSON with new_email                                                     #
+    # Returns: DRF Response with success status and new email                       #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['patch'], url_path='update-email')
+    def update_email(self, request):
+        try:
+            new_email = request.data.get('new_email', '').strip()
+
+            # Validate the new email
+            if not new_email:
+                return ResponseService.error('Email address is required.', status_code=status.HTTP_400_BAD_REQUEST)
+
+            # Validate email format using Django's built-in validator
+            try:
+                validate_email(new_email)
+            except ValidationError:
+                return ResponseService.error('Please enter a valid email address.', status_code=status.HTTP_400_BAD_REQUEST)
+
+            # Check if email is already taken
+            if User.objects.filter(email=new_email.lower()).exclude(id=request.user.id).exists():
+                return ResponseService.error('This email address is already registered.', status_code=status.HTTP_400_BAD_REQUEST)
+
+            # Update the email
+            request.user.email = new_email.lower()
+            request.user.save()
+
+            return ResponseService.success(
+                'Email updated successfully.',
+                data={'new_email': new_email}
+            )
+
+        except Exception as e:
+            return ResponseService.error(f'Error updating email: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Update user's password. Verifies current password and validates new password. #
+    #                                                                               #
+    # HTTP Method: PATCH                                                            #
+    # Endpoint: /api/profile/update-password/                                       #
+    # Body: JSON with current_password and new_password                             #
+    # Returns: DRF Response with success status or validation error                 #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['patch'], url_path='update-password')
+    def update_password(self, request):
+        try:
+            current_password = request.data.get('current_password')
+            new_password = request.data.get('new_password')
+
+            # Validate inputs
+            if not current_password or not new_password:
+                return ResponseService.error('Both current and new passwords are required.', status_code=status.HTTP_400_BAD_REQUEST)
+
+            # Use PasswordService to validate and change password
+            success, error_message = PasswordService.change_password(
+                user=request.user,
+                current_password=current_password,
+                new_password=new_password
+            )
+
+            if not success:
+                return ResponseService.error(error_message, status_code=status.HTTP_400_BAD_REQUEST)
+
+            # Update session to prevent logout after password change
+            update_session_auth_hash(request, request.user)
+
+            return ResponseService.success('Password updated successfully.')
+
+        except Exception as e:
+            return ResponseService.error(f'Error updating password: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)

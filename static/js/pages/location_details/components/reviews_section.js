@@ -224,28 +224,34 @@ window.ReviewSystem = (function() {
     
     // Function to create a review form from the template
     function createReviewForm() {
-        const template = document.getElementById('reviewFormTemplate');
-        if (!template) {
+        const templateScript = document.getElementById('reviewFormTemplate');
+        if (!templateScript) {
             console.error('Review form template not found');
             return null;
         }
-        
-        // Clone the template content
-        const formContent = template.cloneNode(true);
-        formContent.style.display = ''; // Remove the display: none
-        formContent.id = ''; // Remove the ID to avoid duplicates
-        
+
+        // Create a temporary container and parse the template HTML
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = templateScript.innerHTML.trim();
+
+        // Get the form wrapper (first child of the template)
+        const formContent = tempContainer.firstElementChild;
+        if (!formContent) {
+            console.error('Invalid template structure');
+            return null;
+        }
+
         // Update the CSRF token in the cloned form
         const csrfInput = formContent.querySelector('input[name="csrfmiddlewaretoken"]');
         if (csrfInput) {
             csrfInput.value = config.csrfToken;
         }
-        
+
         // Generate unique IDs for the star inputs to avoid conflicts
         const starInputs = formContent.querySelectorAll('.star-rating input[type="radio"]');
         const starLabels = formContent.querySelectorAll('.star-rating label');
         const uniqueId = Date.now(); // Use timestamp for uniqueness
-        
+
         starInputs.forEach((input, index) => {
             const newId = `star${index + 1}-${uniqueId}`;
             input.id = newId;
@@ -253,12 +259,12 @@ window.ReviewSystem = (function() {
                 starLabels[index].setAttribute('for', newId);
             }
         });
-        
+
         // Update image upload element IDs to avoid conflicts
         const imageInput = formContent.querySelector('#template-review-images-input');
         const addImageBtn = formContent.querySelector('#template-add-image-btn');
         const previewContainer = formContent.querySelector('#template-image-preview-container');
-        
+
         if (imageInput) {
             imageInput.id = `review-images-input`;
         }
@@ -268,7 +274,7 @@ window.ReviewSystem = (function() {
         if (previewContainer) {
             previewContainer.id = `image-preview-container`;
         }
-        
+
         return formContent;
     }
     
@@ -444,6 +450,18 @@ window.ReviewSystem = (function() {
         const reviewsList = document.querySelector('.reviews-list');
         if (reviewsList) {
             reviewsList.addEventListener('click', handleReviewActions);
+        }
+
+        // Handle new review form submission
+        const reviewFormContainer = document.getElementById('reviewFormContainer');
+        if (reviewFormContainer) {
+            // Use event delegation since form might be dynamically inserted
+            reviewFormContainer.addEventListener('submit', function(e) {
+                const form = e.target.closest('.review-form');
+                if (form) {
+                    handleReviewSubmit(e, form);
+                }
+            });
         }
     }
     
@@ -693,37 +711,131 @@ window.ReviewSystem = (function() {
     function handleCancelReview() {
         const formContainer = document.getElementById('reviewFormContainer');
         const toggleBtn = document.getElementById('toggleReviewForm');
-        
+
         if (formContainer && toggleBtn) {
             // Clear the form
             const form = formContainer.querySelector('.review-form');
             if (form) {
                 form.reset();
-                
+
                 // Clear star rating visual state
                 const labels = form.querySelectorAll('.star-rating label');
                 labels.forEach(label => label.classList.remove('filled'));
-                
+
                 // Clear comment input
                 const commentInput = form.querySelector('.comment-input');
                 if (commentInput) {
                     commentInput.textContent = '';
                 }
-                
+
                 // Clear any uploaded images
                 if (window.ImageUploadSystem && window.ImageUploadSystem.clearAllImages) {
                     window.ImageUploadSystem.clearAllImages();
                 }
             }
-            
+
             // Hide the form container
             formContainer.style.display = 'none';
-            
+
             // Update toggle button state
             toggleBtn.classList.remove('active');
         }
     }
-    
+
+    // Handle new review submission
+    function handleReviewSubmit(e, form) {
+        e.preventDefault();
+
+        // Get rating value
+        const ratingInput = form.querySelector('input[name="rating"]:checked');
+        if (!ratingInput) {
+            alert('Please select a rating');
+            return;
+        }
+        const rating = parseInt(ratingInput.value);
+
+        // Get comment from contenteditable div
+        const commentInput = form.querySelector('.comment-input');
+        const comment = commentInput ? commentInput.textContent.trim() : '';
+
+        if (!comment) {
+            alert('Please write a comment');
+            return;
+        }
+
+        // Get images from ImageUploadSystem if available
+        const uploadedImages = window.ImageUploadSystem && window.ImageUploadSystem.getFormFiles
+            ? window.ImageUploadSystem.getFormFiles()
+            : [];
+
+        // Disable submit button to prevent double submission
+        const submitBtn = form.querySelector('.submit-review');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+        }
+
+        // Step 1: Create the review
+        fetch(`/api/locations/${config.locationId}/reviews/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': config.csrfToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                rating: rating,
+                comment: comment
+            }),
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(error => {
+                    throw new Error(error.detail || error.message || 'Failed to submit review');
+                });
+            }
+            return response.json();
+        })
+        .then(data => {
+            const newReviewId = data.id;
+
+            // Step 2: Upload images if any
+            if (uploadedImages.length > 0) {
+                const formData = new FormData();
+                uploadedImages.forEach(file => {
+                    formData.append('review_images', file);
+                });
+
+                return fetch(`/api/locations/${config.locationId}/reviews/${newReviewId}/add_photos/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': config.csrfToken
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(() => data); // Return the original review data
+            }
+            return data;
+        })
+        .then(() => {
+            // Success! Reload the page to show the new review
+            // This ensures all vote counts, UI states, and permissions are correctly displayed
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(error.message || 'Failed to submit review. Please try again.');
+
+            // Re-enable submit button on error
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Review';
+            }
+        });
+    }
+
     // Close dropdown when clicking outside
     function setupOutsideClickHandler() {
         document.addEventListener('click', function(e) {
@@ -1323,11 +1435,12 @@ window.EditingSystem = (function() {
         // For reviews, try to clone the template form for consistent styling
         let formHTML = '';
         if (type === 'review') {
-            const reviewFormTemplate = document.getElementById('reviewFormTemplate');
-            if (reviewFormTemplate) {
-                // Clone the template and extract only the form element
-                const templateClone = reviewFormTemplate.cloneNode(true);
-                const formElement = templateClone.querySelector('.review-form');
+            const reviewFormTemplateScript = document.getElementById('reviewFormTemplate');
+            if (reviewFormTemplateScript) {
+                // Parse the template HTML from script tag
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = reviewFormTemplateScript.innerHTML.trim();
+                const formElement = tempContainer.querySelector('.review-form');
                 
                 if (formElement) {
                     

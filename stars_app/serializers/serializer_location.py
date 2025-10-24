@@ -104,13 +104,26 @@ class LocationSerializer(serializers.ModelSerializer):
 # markers on the 3D globe interface. By excluding unnecessary fields like       #
 # reviews, nested user data, and metadata, it reduces payload size by ~97%      #
 # compared to the full LocationSerializer.                                      #
+#                                                                               #
+# Note: Includes is_favorited field for authenticated users to display favorite #
+# status indicators on map markers and sidebar.                                 #
 # ----------------------------------------------------------------------------- #
 class MapLocationSerializer(serializers.ModelSerializer):
+    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Location
-        fields = ['id', 'name', 'latitude', 'longitude']
+        fields = ['id', 'name', 'latitude', 'longitude', 'is_favorited']
         read_only_fields = fields
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return FavoriteLocation.objects.filter(
+                user=request.user,
+                location=obj
+            ).exists()
+        return False
 
 
 

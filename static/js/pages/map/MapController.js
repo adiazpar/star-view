@@ -697,15 +697,26 @@ export class MapController {
             this.markerManager.locations.forEach(marker => marker.remove());
             this.markerManager.locations.clear();
 
-            // Store the full location data including favorites
-            this.locations = locations.map(location => {
+            // Store the full location data (use API data as source of truth)
+            this.locations = locations;
+
+            // Update sidebar hearts to match API data
+            locations.forEach(location => {
                 const locationElement = document.querySelector(`.location-item[data-id="${location.id}"]`);
-                return {
-                    ...location,
-                    is_favorited: locationElement ?
-                        locationElement.getAttribute('is-favorite') === 'true' :
-                        false
-                };
+                if (locationElement) {
+                    // Update the data attribute
+                    locationElement.setAttribute('data-is-favorite', location.is_favorited.toString());
+
+                    // Update the heart indicator
+                    const heartIndicator = locationElement.querySelector('.favorite-indicator');
+                    if (heartIndicator) {
+                        if (location.is_favorited) {
+                            heartIndicator.classList.add('active');
+                        } else {
+                            heartIndicator.classList.remove('active');
+                        }
+                    }
+                }
             });
 
             locations.forEach(location => {
@@ -1162,7 +1173,7 @@ export class MapController {
                 // Update the card in the list if it exists
                 const locationCard = document.querySelector(`.location-item[data-id="${locationId}"]`);
                 if (locationCard) {
-                    locationCard.setAttribute('is-favorite', location.is_favorited.toString());
+                    locationCard.setAttribute('data-is-favorite', location.is_favorited.toString());
                     // Update the heart indicator if it exists
                     const heartIndicator = locationCard.querySelector('.favorite-indicator');
                     if (heartIndicator) {
@@ -1245,7 +1256,7 @@ export class MapController {
             }
 
             const locationId = card.getAttribute('data-id');
-            const isFavorited = card.getAttribute('is-favorite') === 'true';
+            const isFavorited = card.getAttribute('data-is-favorite') === 'true';
 
             const location = this.findLocationById(locationId);
 
@@ -1273,7 +1284,7 @@ export class MapController {
                 // Find which page the item is on
                 const locationCard = document.querySelector(`.location-item[data-id="${location.id}"]`);
                 if (locationCard) {
-                    location.is_favorited = locationCard.getAttribute('is-favorite') === 'true';
+                    location.is_favorited = locationCard.getAttribute('data-is-favorite') === 'true';
 
                     const allItems = Array.from(document.querySelectorAll('.location-item'));
 
@@ -1397,7 +1408,7 @@ export class MapController {
                 locationElement.setAttribute('data-id', location.id);
                 locationElement.setAttribute('data-lat', location.latitude);
                 locationElement.setAttribute('data-lng', location.longitude);
-                locationElement.setAttribute('is-favorite', location.is_favorited || false);
+                locationElement.setAttribute('data-is-favorite', location.is_favorited || false);
                 locationElement.setAttribute('data-added-by', location.added_by.id);
 
                 locationElement.innerHTML = `

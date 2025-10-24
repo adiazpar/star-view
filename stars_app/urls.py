@@ -31,6 +31,7 @@ from .views import (
     FavoriteLocationViewSet,
     ReviewViewSet,
     CommentViewSet,
+    UserProfileViewSet,
     # Template views
     home,
     map,
@@ -44,17 +45,12 @@ from .views import (
     CustomPasswordResetDoneView,
     CustomPasswordResetConfirmView,
     CustomPasswordResetCompleteView,
-    # User profile views
-    upload_profile_picture,
-    remove_profile_picture,
-    update_name,
-    change_email,
-    change_password,
 )
 
 router = DefaultRouter()
 router.register(r'locations', LocationViewSet, basename='locations')
 router.register(r'favorite-locations', FavoriteLocationViewSet, basename='favorite-locations')
+router.register(r'profile', UserProfileViewSet, basename='profile')
 
 # Nested router for reviews
 locations_router = routers.NestedDefaultRouter(router, r'locations', lookup='location')
@@ -70,11 +66,6 @@ urlpatterns = [
     path('register/', register, name='register'),
     path('login/', custom_login, name='login'),
     path('logout/', custom_logout, name='logout'),
-    path('upload-profile-picture/', upload_profile_picture, name='upload_profile_picture'),
-    path('remove-profile-picture/', remove_profile_picture, name='remove_profile_picture'),
-    path('update-name/', update_name, name='update_name'),
-    path('change-email/', change_email, name='change_email'),
-    path('change-password/', change_password, name='change_password'),
 
     # Password Reset Views:
     path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),

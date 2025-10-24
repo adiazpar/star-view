@@ -67,81 +67,11 @@
     </div>
 </div>
 
-<script>
-function togglePassword(inputId) {
-    const input = document.getElementById(inputId);
-    input.type = input.type === 'password' ? 'text' : 'password';
+<script type="module">
+import { showMessage, hideMessage, initMessageHandlers } from '../../../static/js/shared/auth-forms.js';
 
-    // Update icon
-    const button = input.nextElementSibling;
-    const icon = button.querySelector('svg');
-    if (input.type === 'text') {
-        icon.innerHTML = `
-            <line x1="3" y1="3" x2="21" y2="21"></line>
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        `;
-    } else {
-        icon.innerHTML = `
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-        `;
-    }
-}
-
-// Store timeout ID so we can clear it if needed
-let messageTimeout = null;
-
-// Bind close button click handler to prevent base.html from removing the element
-document.addEventListener('DOMContentLoaded', function() {
-    const closeBtn = document.getElementById('message-close-btn');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();  // Prevent base.html event listener from firing
-            hideMessage();
-        });
-    }
-});
-
-function showMessage(message, isError = false) {
-    const container = document.getElementById('messages-container');
-    const messageContent = document.getElementById('message-content');
-    const messageText = document.getElementById('message-text');
-
-    // Safety check: if elements don't exist, log error
-    if (!container || !messageContent || !messageText) {
-        console.error('Message elements not found in DOM');
-        return;
-    }
-
-    // Clear any existing timeout
-    if (messageTimeout) {
-        clearTimeout(messageTimeout);
-    }
-
-    messageText.textContent = message;
-    messageContent.className = isError ? 'message error' : 'message success';
-    container.style.display = 'block';
-
-    // Auto-dismiss after 5 seconds
-    messageTimeout = setTimeout(() => {
-        hideMessage();
-    }, 5000);
-}
-
-function hideMessage() {
-    const container = document.getElementById('messages-container');
-    if (container) {
-        container.style.display = 'none';
-    }
-
-    // Clear the timeout
-    if (messageTimeout) {
-        clearTimeout(messageTimeout);
-        messageTimeout = null;
-    }
-}
+// Initialize message handlers on page load
+document.addEventListener('DOMContentLoaded', initMessageHandlers);
 
 // Handle form submission via AJAX
 document.getElementById('login-form').addEventListener('submit', async function(e) {
@@ -164,15 +94,11 @@ document.getElementById('login-form').addEventListener('submit', async function(
             }
         });
 
-        console.log('Login response status:', response.status);
-
         // Always try to parse JSON response
         const data = await response.json();
-        console.log('Login response data:', data);
 
         // Check if request was successful based on HTTP status code
         if (response.ok) {
-            console.log('Login successful, redirecting to:', data.redirect_url);
             showMessage(data.detail, false);
             // Redirect after a short delay
             setTimeout(() => {
@@ -180,7 +106,6 @@ document.getElementById('login-form').addEventListener('submit', async function(
             }, 1000);
         } else {
             // Handle error response
-            console.log('Login failed:', data.detail);
             showMessage(data.detail, true);
             submitButton.disabled = false;
             submitButton.textContent = originalButtonText;

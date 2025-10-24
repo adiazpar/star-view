@@ -29,11 +29,7 @@ from .views_review import (
 # User profile views:
 from .views_user import (
     account,
-    upload_profile_picture,
-    remove_profile_picture,
-    update_name,
-    change_email,
-    change_password,
+    UserProfileViewSet,
 )
 
 # Favorite location views:
@@ -70,11 +66,7 @@ __all__ = [
 
     # User profile views
     'account',
-    'upload_profile_picture',
-    'remove_profile_picture',
-    'update_name',
-    'change_email',
-    'change_password',
+    'UserProfileViewSet',
 
     # Favorite location views
     'FavoriteLocationViewSet',
