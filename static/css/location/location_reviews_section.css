@@ -206,17 +206,6 @@
     animation: slideDown 0.3s ease-out;
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
 /* Image Upload Section */
 .review-images-input {
     display: flex;
@@ -1766,26 +1755,7 @@
     cursor: not-allowed;
 }
 
-/* Animation for smooth transitions */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes slideUp {
-    from {
-        transform: translateY(20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
+/* Animations inherited from base.css */
 
 .report-modal-overlay.active {
     animation: fadeIn var(--transition-base) ease;

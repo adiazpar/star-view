@@ -1,5 +1,5 @@
 /* Import Component Styles */
-@import url('./components/reviews_section.css');
+@import url('location_reviews_section.css');
 
 /* Hero Section Styles */
 .hero-section {
@@ -78,7 +78,7 @@
     align-items: center;
     gap: var(--space-xs);
     background: var(--green);
-    color: var(--white);
+    color: var(--text-primary);
     padding: var(--space-xs) var(--space-sm);
     border-radius: var(--radius-sm);
     font-size: var(--font-size-sm);
@@ -190,19 +190,6 @@
     margin: 0;
     line-height: 1.4;
 }
-/* Verification Badge */
-.verification-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-sm);
-    background: var(--success);
-    color: var(--text-primary);
-    border-radius: var(--radius-sm);
-    font-size: var(--font-size-xs);
-    margin-left: var(--space-sm);
-}
-
 
 /* Responsive Design */
 @media (max-width: 768px) {

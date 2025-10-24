@@ -3,6 +3,10 @@
 {% load static %}
 {% block body_class %}register-page{% endblock %}
 
+{% block extra_head %}
+<link href="{% static 'css/auth/auth.css' %}" rel="stylesheet">
+{% endblock %}
+
 <!-- Populates block content in base.html -->
 {% block content %}
 <div class="register-container">
