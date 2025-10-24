@@ -7,10 +7,10 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Get the location details page container
-    const pageContainer = document.querySelector('.location-details-page');
+    // Get the location data container with all data attributes
+    const pageContainer = document.querySelector('.location-data-container');
     if (!pageContainer) {
-        console.error('Location details page container not found');
+        console.error('Location data container not found');
         return;
     }
 
@@ -30,6 +30,4 @@ document.addEventListener('DOMContentLoaded', () => {
         locationFormattedAddress: config.locationFormattedAddress || '',
         userHasReviewed: config.userHasReviewed === 'true'
     };
-
-    console.log('✅ Location details config initialized:', window.locationDetailsConfig);
 });

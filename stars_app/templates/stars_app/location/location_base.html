@@ -9,7 +9,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="location-details-page"
+<div class="location-data-container"
      data-location-id="{{ location.id }}"
      data-is-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}"
      data-is-owner="{% if is_owner %}true{% else %}false{% endif %}"
@@ -126,7 +126,7 @@
 
 {% block extra_scripts %}
 <!-- Location Scripts -->
-<script type="module" src="{% static 'js/location/location_init.js' %}"></script>
-<script src="{% static 'js/location/location_reviews.js' %}"></script>
+<script src="{% static 'js/location/location_init.js' %}"></script>
 <script src="{% static 'js/location/location_base.js' %}"></script>
+<script src="{% static 'js/location/location_reviews.js' %}"></script>
 {% endblock %}

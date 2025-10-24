@@ -5,8 +5,8 @@
  * the shared auth-forms module for message display and password toggling.
  */
 
-import { showMessage } from '../../utils/util_auth_forms.js';
-import { API_ENDPOINTS } from '../../utils/util_config.js';
+import { showMessage } from '../utils/util_auth_forms.js';
+import { API_ENDPOINTS } from '../utils/util_config.js';
 
 // Handle form submission via AJAX
 document.addEventListener('DOMContentLoaded', () => {

@@ -565,13 +565,16 @@ window.ReviewSystem = (function() {
             })
             .then(response => {
                 if (!response.ok) throw new Error('Failed to delete review');
+                // Check if response has content before parsing JSON
+                // DELETE may return 204 No Content
+                if (response.status === 204 || response.headers.get('content-length') === '0') {
+                    return {}; // Return empty object for successful deletion with no content
+                }
                 return response.json();
             })
             .then(data => {
-                // DRF returns {detail: 'message', should_show_form: true}
-                if (data.detail || data.should_show_form) {
-                    handleSuccessfulDeletion(deleteItem, data);
-                }
+                // Handle successful deletion
+                handleSuccessfulDeletion(deleteItem, data);
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -765,7 +768,7 @@ window.ReviewSystem = (function() {
 
         // Get images from ImageUploadSystem if available
         const uploadedImages = window.ImageUploadSystem && window.ImageUploadSystem.getFormFiles
-            ? window.ImageUploadSystem.getFormFiles()
+            ? window.ImageUploadSystem.getFormFiles(form)
             : [];
 
         // Disable submit button to prevent double submission

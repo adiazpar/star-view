@@ -171,7 +171,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
     # Handle voting on reviews using VoteService:
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
     def vote(self, request, pk=None, location_pk=None):
         review = self.get_object()
         vote_type = request.data.get('vote_type')
@@ -197,7 +197,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
     # Handle reporting reviews using ReportService:
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
     def report(self, request, pk=None, location_pk=None):
         review = self.get_object()
 
@@ -255,7 +255,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
     # Handle voting on comments using VoteService:
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
     def vote(self, request, pk=None, location_pk=None, review_pk=None):
         comment = self.get_object()
         vote_type = request.data.get('vote_type')
@@ -281,7 +281,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
     # Handle reporting comments using ReportService:
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
     def report(self, request, pk=None, location_pk=None, review_pk=None):
         comment = self.get_object()
 
