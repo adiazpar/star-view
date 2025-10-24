@@ -9,7 +9,7 @@
  */
 
 // Re-export message functions from single source of truth
-export { showMessage, dismissMessage } from './messages.js';
+export { showMessage, dismissMessage } from './util_messages.js';
 
 /**
  * Toggle password visibility for a password input field
