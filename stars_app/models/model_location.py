@@ -21,6 +21,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from stars_app.services.location_service import LocationService
 
+# Import validators:
+from stars_app.validators import sanitize_plain_text
+
 
 
 class Location(models.Model):
@@ -67,11 +70,15 @@ class Location(models.Model):
         return LocationService.update_elevation_from_mapbox(self)
 
 
-    # Override save to automatically enrich location data for new locations:
+    # Override save to sanitize name and automatically enrich location data:
     def save(self, *args, **kwargs):
         try:
+            # Sanitize location name to prevent XSS attacks
+            if self.name:
+                self.name = sanitize_plain_text(self.name)
+
             is_new = not self.pk
-            
+
             # First save to get the ID:
             super().save(*args, **kwargs)
             

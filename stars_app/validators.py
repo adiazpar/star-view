@@ -2,13 +2,14 @@
 # This validators.py file provides reusable validation utilities for data integrity and security.       #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Centralized validation functions for file uploads, geographic coordinates, and other data that        #
-# requires validation before processing. These validators are used across views, serializers, and       #
-# models to ensure consistent validation logic throughout the application.                              #
+# Centralized validation functions for file uploads, geographic coordinates, and input sanitization.    #
+# These validators are used across views, serializers, and models to ensure consistent validation       #
+# logic throughout the application.                                                                     #
 #                                                                                                       #
 # Key Features:                                                                                         #
 # - File upload validation: size limits, MIME types, extensions, malicious content detection            #
 # - Geographic validation: latitude/longitude bounds, elevation ranges                                  #
+# - XSS prevention: HTML sanitization with bleach (strips dangerous tags, allows safe formatting)       #
 # - Reusable across models, serializers, and views                                                      #
 # - Raises Django ValidationError for consistent error handling                                         #
 #                                                                                                       #
@@ -20,6 +21,7 @@
 
 import os
 import mimetypes
+import bleach
 from django.core.exceptions import ValidationError
 from django.conf import settings
 
@@ -188,3 +190,86 @@ def validate_elevation(value):
         raise ValidationError(
             f'Elevation must be between -500m and 9000m. Got: {value}m'
         )
+
+
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                                                                                       #
+#                                    INPUT SANITIZATION (XSS PREVENTION)                                #
+#                                                                                                       #
+# ----------------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# Sanitize user-generated text content to prevent XSS attacks.                  #
+#                                                                               #
+# Uses bleach library to strip dangerous HTML/JavaScript while allowing safe    #
+# formatting tags. This prevents stored XSS attacks where malicious scripts     #
+# are saved to the database and executed in other users' browsers.              #
+#                                                                               #
+# Allowed tags: <b>, <i>, <u>, <em>, <strong>, <br>, <p>                        #
+# Blocked tags: <script>, <iframe>, <object>, event handlers (onclick, etc.)    #
+#                                                                               #
+# Args:     value: Text content to sanitize (str)                               #
+# Returns:  Sanitized text with dangerous content removed (str)                 #
+# ----------------------------------------------------------------------------- #
+def sanitize_html(value):
+
+    if not value:
+        return value
+
+    # First, remove script and style tags entirely (including their content)
+    import re
+    value = re.sub(r'<script[^>]*>.*?</script>', '', value, flags=re.DOTALL | re.IGNORECASE)
+    value = re.sub(r'<style[^>]*>.*?</style>', '', value, flags=re.DOTALL | re.IGNORECASE)
+
+    # Define allowed HTML tags (safe formatting only)
+    allowed_tags = [
+        'b', 'i', 'u', 'em', 'strong', 'br', 'p',
+        'ul', 'ol', 'li', 'blockquote', 'code'
+    ]
+
+    # Define allowed attributes (very restrictive)
+    # No event handlers (onclick, onerror, etc.) allowed
+    allowed_attributes = {}
+
+    # Strip all dangerous content (removes disallowed tags but keeps their text)
+    sanitized = bleach.clean(
+        value,
+        tags=allowed_tags,
+        attributes=allowed_attributes,
+        strip=True,  # Strip disallowed tags (but keep text content)
+        strip_comments=True  # Remove HTML comments
+    )
+
+    return sanitized
+
+
+# ----------------------------------------------------------------------------- #
+# Sanitize plain text content (no HTML allowed at all).                         #
+#                                                                               #
+# For fields where HTML formatting isn't needed (like location names), this     #
+# strips ALL HTML tags to ensure only plain text is stored. More restrictive    #
+# than sanitize_html().                                                         #
+#                                                                               #
+# Args:     value: Text content to sanitize (str)                               #
+# Returns:  Plain text with all HTML removed (str)                              #
+# ----------------------------------------------------------------------------- #
+def sanitize_plain_text(value):
+    if not value:
+        return value
+
+    # First, remove script and style tags entirely (including their content)
+    import re
+    value = re.sub(r'<script[^>]*>.*?</script>', '', value, flags=re.DOTALL | re.IGNORECASE)
+    value = re.sub(r'<style[^>]*>.*?</style>', '', value, flags=re.DOTALL | re.IGNORECASE)
+
+    # Strip all HTML tags, no exceptions
+    sanitized = bleach.clean(
+        value,
+        tags=[],  # No tags allowed
+        attributes={},
+        strip=True,
+        strip_comments=True
+    )
+
+    return sanitized

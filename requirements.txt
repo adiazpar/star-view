@@ -1,3 +1,4 @@
+bleach==6.2.0
 certifi==2024.8.30
 django==5.1.13
 django-crontab==0.7.1

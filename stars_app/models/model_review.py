@@ -23,6 +23,9 @@ from django.contrib.contenttypes.fields import GenericRelation
 # Import models:
 from . import Location
 
+# Import validators:
+from stars_app.validators import sanitize_html
+
 
 
 class Review(models.Model):
@@ -85,8 +88,12 @@ class Review(models.Model):
         return self.updated_at - self.created_at > timedelta(seconds=10)
 
 
-    # Override save to automatically update location rating statistics:
+    # Override save to sanitize HTML and update location rating statistics:
     def save(self, *args, **kwargs):
+        # Sanitize comment to prevent XSS attacks
+        if self.comment:
+            self.comment = sanitize_html(self.comment)
+
         is_new = self.pk is None
         old_rating = None
 

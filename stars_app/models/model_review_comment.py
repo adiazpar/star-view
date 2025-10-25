@@ -21,6 +21,9 @@ from django.contrib.contenttypes.fields import GenericRelation
 # Import models:
 from . import Review
 
+# Import validators:
+from stars_app.validators import sanitize_html
+
 
 
 class ReviewComment(models.Model):
@@ -77,3 +80,12 @@ class ReviewComment(models.Model):
     def is_edited(self):
         from datetime import timedelta
         return self.updated_at - self.created_at > timedelta(seconds=10)
+
+
+    # Override save to sanitize HTML content:
+    def save(self, *args, **kwargs):
+        # Sanitize content to prevent XSS attacks
+        if self.content:
+            self.content = sanitize_html(self.content)
+
+        super().save(*args, **kwargs)
