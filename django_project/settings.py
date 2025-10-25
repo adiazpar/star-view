@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',  # CORS support for frontend apps
     'stars_app',
     'rest_framework',
     'django.contrib.sites',
@@ -75,6 +76,7 @@ CRONJOBS = [
 # Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # CORS (must be before CommonMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -229,6 +231,9 @@ REST_FRAMEWORK = {
     },
 }
 
+
+
+
 # Security Settings
 # Load ALLOWED_HOSTS from environment variable (comma-separated)
 # Development default: 127.0.0.1,localhost,nyx.local
@@ -239,6 +244,34 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,nyx.local').spli
 # Development: Can be empty
 # Production: Add HTTPS origins (e.g., https://yourdomain.com,https://www.yourdomain.com)
 CSRF_TRUSTED_ORIGINS = [origin for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin]
+
+# CORS Configuration (Phase 2, Item 5)
+# Load CORS_ALLOWED_ORIGINS from environment variable (comma-separated)
+# Development: Typically http://localhost:3000 for React/Vue frontends
+# Production: Add your frontend domain (e.g., https://app.yourdomain.com)
+CORS_ALLOWED_ORIGINS = [origin for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if origin]
+
+# CORS Security Settings
+CORS_ALLOW_CREDENTIALS = True  # Allow cookies/auth headers in CORS requests
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
 
 # Security Headers
 # These headers protect against common web vulnerabilities
@@ -254,6 +287,8 @@ if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000          # Enable HSTS for 1 year (31536000 seconds)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True   # Apply HSTS to all subdomains
     SECURE_HSTS_PRELOAD = True              # Allow browser HSTS preload list inclusion
+
+
 
 # Cache configuration
 # Using LocMemCache for development (required for rate limiting)
