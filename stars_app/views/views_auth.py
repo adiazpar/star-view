@@ -38,12 +38,27 @@ from django.urls import reverse_lazy, reverse
 from django.db.models import Q
 
 # DRF imports:
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework import status
 
 # Service imports:
 from stars_app.services import PasswordService, ResponseService
+
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                    CUSTOM THROTTLE CLASSES                                            #
+# ----------------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# Custom throttle class for login and registration endpoints.                  #
+#                                                                               #
+# Limits authentication attempts to prevent brute force attacks.               #
+# Rate: 5 requests per minute (configured in settings.py)                      #
+# ----------------------------------------------------------------------------- #
+class LoginRateThrottle(AnonRateThrottle):
+    scope = 'login'
 
 
 
@@ -60,11 +75,14 @@ from stars_app.services import PasswordService, ResponseService
 # uniqueness, password confirmation and strength. Creates a new user account    #
 # and returns JSON response with success status and redirect URL.               #
 #                                                                               #
+# Throttling: Limited to 5 requests per minute to prevent abuse                 #
+#                                                                               #
 # Args:     request: HTTP request object                                        #
 # Returns:  Rendered registration page (GET) or DRF Response (POST)             #
 # ----------------------------------------------------------------------------- #
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def register(request):
     if request.method == 'POST':
         try:
@@ -147,11 +165,14 @@ def register(request):
 # DRF API endpoint that authenticates users using either their username or      #
 # email. Returns JSON response with success status and redirect URL.            #
 #                                                                               #
+# Throttling: Limited to 5 requests per minute to prevent brute force attacks   #
+#                                                                               #
 # Args:     request: HTTP request object                                        #
 # Returns:  Rendered login page (GET) or DRF Response (POST)                    #
 # ----------------------------------------------------------------------------- #
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
 def custom_login(request):
     if request.method == 'POST':
         try:
@@ -292,11 +313,16 @@ class PasswordServiceSetPasswordForm(SetPasswordForm):
 #                                                                                                       #
 # ----------------------------------------------------------------------------------------------------- #
 
-# Display password reset request form (users enter their email):
+# ----------------------------------------------------------------------------- #
+# Display password reset request form (users enter their email).               #
+#                                                                               #
+# Throttled to prevent email bombing attacks (3 requests per hour).            #
+# ----------------------------------------------------------------------------- #
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'stars_app/auth/password_reset/auth_password_reset.html'
     email_template_name = 'stars_app/auth/password_reset/auth_password_reset_email.html'
     success_url = reverse_lazy('password_reset_done')
+    throttle_classes = [LoginRateThrottle]
 
 
 # Display confirmation that password reset email was sent:
