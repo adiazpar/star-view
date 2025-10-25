@@ -14,6 +14,9 @@
     <!-- Import Font Awesome Kit -->
     <script src="https://kit.fontawesome.com/487246ab59.js" crossorigin="anonymous"></script>
 
+    <!-- Prevent theme flash by setting theme before CSS loads -->
+    <script src="{% static 'js/utils/util_theme_init.js' %}"></script>
+
     <!-- Import CSS Stylesheet -->
     <link rel="stylesheet" href="{% static 'css/base.css' %}" type="text/css">
     <link rel="stylesheet" href="{% static 'css/utils/util_messages.css' %}" type="text/css">
@@ -27,7 +30,7 @@
         <nav>
             <!-- Logo -->
             <a href="{% url 'home' %}">
-                <img src="{% static 'images/logo-dark.png' %}" alt="Event Horizon Logo" class="logo">
+                <img src="" alt="Event Horizon Logo" class="logo">
             </a>
 
             <!-- Hamburger button (hidden on desktop) -->

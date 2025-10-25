@@ -129,9 +129,6 @@ function toggleTheme() {
 
 // Load saved theme preference on page load:
 function loadTheme() {
-
-    updateLogo();
-
     const savedTheme = localStorage.getItem('theme');
     const html = document.documentElement;
 
@@ -141,6 +138,9 @@ function loadTheme() {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         html.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
     }
+
+    // Update logo AFTER setting the theme
+    updateLogo();
 }
 
 // Listen for system theme preference changes
