@@ -44,7 +44,7 @@ from ..services import ResponseService
 from ..services import VoteService
 
 # Throttle imports:
-from ..throttles import ContentCreationThrottle, ReportThrottle
+from stars_app.utils import ContentCreationThrottle, ReportThrottle
 
 
 

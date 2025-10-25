@@ -40,7 +40,7 @@ from stars_app.serializers import ReviewSerializer, ReviewCommentSerializer
 from stars_app.services import ReportService, ResponseService, VoteService
 
 # Throttle imports:
-from stars_app.throttles import ContentCreationThrottle, VoteThrottle, ReportThrottle
+from stars_app.utils import ContentCreationThrottle, VoteThrottle, ReportThrottle
 
 
 
@@ -125,7 +125,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['POST'])
     def add_photos(self, request, pk=None, location_pk=None):
         from django.core.exceptions import ValidationError
-        from stars_app.validators import validate_file_size, validate_image_file
+        from stars_app.utils import validate_file_size, validate_image_file
 
         review = self.get_object()
 

@@ -36,4 +36,4 @@ from .model_report import Report
 from .model_vote import Vote
 
 # Import signals to ensure they're registered:
-from stars_app import signals
+from stars_app.utils import signals

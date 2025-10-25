@@ -33,10 +33,10 @@ from django.contrib.auth.models import User
 from pathlib import Path
 
 # Import models:
-from .models import UserProfile
-from .models import ReviewPhoto
-from .models import Review
-from .models import Location
+from stars_app.models import UserProfile
+from stars_app.models import ReviewPhoto
+from stars_app.models import Review
+from stars_app.models import Location
 
 
 

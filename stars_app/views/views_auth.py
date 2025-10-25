@@ -44,7 +44,7 @@ from rest_framework import status
 
 # Service imports:
 from stars_app.services import PasswordService, ResponseService
-from stars_app.throttles import LoginRateThrottle
+from stars_app.utils import LoginRateThrottle
 
 
 

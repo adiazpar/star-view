@@ -22,7 +22,7 @@ from django.contrib.auth.models import User
 from stars_app.services.location_service import LocationService
 
 # Import validators:
-from stars_app.validators import (
+from stars_app.utils import (
     sanitize_plain_text,
     validate_latitude,
     validate_longitude,

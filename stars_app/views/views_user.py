@@ -42,7 +42,7 @@ from ..models import FavoriteLocation
 from stars_app.services import PasswordService, ResponseService
 
 # Signal utility imports:
-from stars_app.signals import safe_delete_file
+from stars_app.utils.signals import safe_delete_file
 
 
 
@@ -122,7 +122,7 @@ class UserProfileViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['post'], url_path='upload-picture')
     def upload_picture(self, request):
         from django.core.exceptions import ValidationError
-        from stars_app.validators import validate_file_size, validate_image_file
+        from stars_app.utils import validate_file_size, validate_image_file
 
         try:
             if 'profile_picture' not in request.FILES:

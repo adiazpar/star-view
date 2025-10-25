@@ -22,7 +22,7 @@ from django.contrib.contenttypes.fields import GenericRelation
 from . import Review
 
 # Import validators:
-from stars_app.validators import sanitize_html
+from stars_app.utils import sanitize_html
 
 
 

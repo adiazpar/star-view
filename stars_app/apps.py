@@ -28,4 +28,4 @@ class StarsAppConfig(AppConfig):
 
     # Registers signal handlers by importing signals.py when app is ready:
     def ready(self):
-        import stars_app.signals
+        import stars_app.utils.signals
