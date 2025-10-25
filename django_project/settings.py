@@ -227,3 +227,8 @@ INTERNAL_IPS = ['127.0.0.1']
 
 # Disable API limits for development
 DISABLE_EXTERNAL_APIS = os.getenv('DISABLE_EXTERNAL_APIS', 'False') == 'True'
+
+# File Upload Validation Settings
+MAX_UPLOAD_SIZE_MB = 5  # Maximum file size in megabytes
+ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
+ALLOWED_IMAGE_MIMETYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']

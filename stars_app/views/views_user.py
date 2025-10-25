@@ -111,6 +111,9 @@ class UserProfileViewSet(viewsets.ViewSet):
     # Upload new profile picture. Automatically deletes old custom images           #
     # (preserves default images) before saving the new one.                         #
     #                                                                               #
+    # Security: Validates file size (5MB max), MIME type, and extension before      #
+    # processing to prevent malicious file uploads and DOS attacks.                 #
+    #                                                                               #
     # HTTP Method: POST                                                             #
     # Endpoint: /api/profile/upload-picture/                                        #
     # Body: multipart/form-data with 'profile_picture' file                         #
@@ -118,11 +121,22 @@ class UserProfileViewSet(viewsets.ViewSet):
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['post'], url_path='upload-picture')
     def upload_picture(self, request):
+        from django.core.exceptions import ValidationError
+        from stars_app.validators import validate_file_size, validate_image_file
+
         try:
             if 'profile_picture' not in request.FILES:
                 return ResponseService.error('No image file provided', status_code=status.HTTP_400_BAD_REQUEST)
 
             profile_picture = request.FILES['profile_picture']
+
+            # Validate file before processing
+            try:
+                validate_file_size(profile_picture)
+                validate_image_file(profile_picture)
+            except ValidationError as e:
+                return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
+
             user_profile = request.user.userprofile
 
             # Delete old profile picture if it exists (None means using default, so nothing to delete)

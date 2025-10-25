@@ -99,9 +99,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         )
 
 
-    # Add photos to a review (max 5 total):
+    # ----------------------------------------------------------------------------- #
+    # Add photos to a review (max 5 total).                                        #
+    #                                                                               #
+    # Security: Validates each uploaded image for file size (5MB max), MIME type,  #
+    # and extension before processing to prevent malicious uploads and DOS attacks.#
+    # ----------------------------------------------------------------------------- #
     @action(detail=True, methods=['POST'])
     def add_photos(self, request, pk=None, location_pk=None):
+        from django.core.exceptions import ValidationError
+        from stars_app.validators import validate_file_size, validate_image_file
+
         review = self.get_object()
 
         # Get uploaded images
@@ -112,6 +120,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 'No images provided',
                 status_code=status.HTTP_400_BAD_REQUEST
             )
+
+        # Validate all files before processing any of them
+        for image in uploaded_images:
+            try:
+                validate_file_size(image)
+                validate_image_file(image)
+            except ValidationError as e:
+                return ResponseService.error(
+                    f'Invalid file "{image.name}": {str(e)}',
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
 
         # Check existing photos count
         existing_photos_count = review.photos.count()
@@ -129,7 +148,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
-        # Process each uploaded image
+        # Process each uploaded image (all validation passed)
         created_photos = []
         for idx, image in enumerate(uploaded_images):
             photo = ReviewPhoto.objects.create(
