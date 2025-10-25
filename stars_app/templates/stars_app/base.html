@@ -35,13 +35,18 @@
                 <i class="fa-solid fa-bars menu-icon"></i>
                 <i class="fa-solid fa-xmark x-icon" style="display: none;"></i>
              </div>
-
-             <!-- Navigation Menu -->
-              <ul class="nav-menu">
+             
+             <!-- Nav Links -->
+             <ul class="nav-menu">
                 <li><a href="#">Home</a></li>
                 <li><a href="#">Map</a></li>
                 <li><a href="#">Account</a></li>
-              </ul>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'logout' %}" class="login-button"><i class="fa-solid fa-right-from-bracket"></i>Logout</a></li>
+                {% else %}
+                    <li><a href="{% url 'login' %}" class="login-button"><i class="fa-solid fa-right-to-bracket"></i>Login</a></li>
+                {% endif %}
+            </ul>
         </nav>
     </div>
 

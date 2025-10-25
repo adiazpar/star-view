@@ -143,7 +143,6 @@ nav {
     text-decoration: none;
     color: var(--text-primary-color);
 }
-
 .hamburger i {
     transition: scale 0.25s;
 }
@@ -159,21 +158,36 @@ nav {
 nav ul li {
     display: inline-block;
     list-style: none;
-    padding: 24px 24px;
-    display: inline;
+    justify-content: center;
+    align-items: center;
 
     position: relative;
-    color: var(--text-primary-color);
-    text-decoration: none;
+    padding: 0 12px;
+}
+nav ul li a {
     font-size: 12px;
-    font-weight: bold;
+    text-decoration: none;
     text-transform: uppercase;
+    font-weight: 400;
+
+    color: var(--text-secondary-color);
+    padding: 12px 24px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
 }
 @media (hover: hover) and (pointer: fine) {
-    nav ul li:hover {
+    nav ul li a:hover {
         color: var(--accent-color);
-        cursor: pointer;
     }
+}
+
+.login-button {
+    color: var(--text-primary-color);
+    border-left: var(--text-secondary-color) 0.25px solid;
+    font-weight: 700;
 }
 
 @media screen and (max-width: 700px) {
@@ -207,15 +221,24 @@ nav ul li {
     }
     .nav-menu li {
         margin: 0;
-        display: block;
-        text-align: right;
-        padding: 32px 0;
         border-bottom: 1px solid var(--background-secondary);
-
-        font-size: 16px;
         width: 100%;
+    }
+    .nav-menu li a {
+        text-align: right;
+        font-size: 16px;
+        padding: 32px 0;
+
         display: block;
         padding-right: 24px;
+    }
+    .login-button {
+        color: var(--text-secondary-color);
+        border-left: 0;
+        font-weight: 400;
+    }
+    .login-button i {
+        display: none;
     }
 }
 
@@ -344,7 +367,7 @@ nav ul li {
     padding: 0 5%;
 }
 .copyright-container {
-    border-top: var(--background-secondary) 0.25px solid;
+    border-top: var(--text-secondary-color) 0.25px solid;
     padding: 32px 5%;
 
     display: flex;
