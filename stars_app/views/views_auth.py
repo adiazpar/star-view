@@ -186,20 +186,24 @@ def custom_login(request):
                 return ResponseService.error('Username and password are required.', status_code=status.HTTP_400_BAD_REQUEST)
 
             # Try to get user by username or email
-            user = User.objects.filter(
+            user_obj = User.objects.filter(
                 Q(username=username_or_email) |
                 Q(email=username_or_email)
             ).first()
 
-            # No account found with that username or email
-            if not user:
-                return ResponseService.error('No account found with that username or email.', status_code=status.HTTP_401_UNAUTHORIZED)
+            # Use generic error message to prevent user enumeration
+            # Don't reveal whether the username/email exists or password is wrong
+            generic_error = 'Invalid username or password.'
+
+            # If user doesn't exist, return generic error (prevents user enumeration)
+            if not user_obj:
+                return ResponseService.error(generic_error, status_code=status.HTTP_401_UNAUTHORIZED)
 
             # Authenticate with username
-            user = authenticate(request, username=user.username, password=password)
+            authenticated_user = authenticate(request, username=user_obj.username, password=password)
 
-            if user is not None:
-                login(request, user)
+            if authenticated_user is not None:
+                login(request, authenticated_user)
 
                 # Determine redirect URL
                 redirect_url = reverse('home')
@@ -212,8 +216,8 @@ def custom_login(request):
                     status_code=status.HTTP_200_OK
                 )
 
-            # Invalid password
-            return ResponseService.error('Incorrect password.', status_code=status.HTTP_401_UNAUTHORIZED)
+            # Invalid password - use same generic error (prevents user enumeration)
+            return ResponseService.error(generic_error, status_code=status.HTTP_401_UNAUTHORIZED)
 
         except Exception as e:
             return ResponseService.error(

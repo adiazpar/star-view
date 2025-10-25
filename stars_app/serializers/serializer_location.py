@@ -46,7 +46,7 @@ class LocationSerializer(serializers.ModelSerializer):
                   'reviews', 'average_rating', 'review_count',
 
                   # Verification fields:
-                  'is_verified', 'verification_date', 'verified_by', 'verification_notes',
+                  'is_verified', 'verification_date', 'verified_by',
                   'times_reported', 'last_visited', 'visitor_count'
                   ]
 
@@ -55,7 +55,8 @@ class LocationSerializer(serializers.ModelSerializer):
                           'locality', 'country',
 
                             # Verification fields are read-only (managed by system)
-                            'is_verified', 'verification_date', 'verified_by', 'verification_notes',
+                            # Note: verification_notes excluded (staff-only internal data)
+                            'is_verified', 'verification_date', 'verified_by',
                             'times_reported', 'last_visited', 'visitor_count'
                             ]
 
