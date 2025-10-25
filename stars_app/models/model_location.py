@@ -22,7 +22,12 @@ from django.contrib.auth.models import User
 from stars_app.services.location_service import LocationService
 
 # Import validators:
-from stars_app.validators import sanitize_plain_text
+from stars_app.validators import (
+    sanitize_plain_text,
+    validate_latitude,
+    validate_longitude,
+    validate_elevation
+)
 
 
 
@@ -36,9 +41,9 @@ class Location(models.Model):
     added_by = models.ForeignKey(User, on_delete=models.CASCADE)
 
     # Geographic data:
-    latitude = models.FloatField()
-    longitude = models.FloatField()
-    elevation = models.FloatField(default=0, help_text="Elevation in meters")
+    latitude = models.FloatField(validators=[validate_latitude])
+    longitude = models.FloatField(validators=[validate_longitude])
+    elevation = models.FloatField(default=0, validators=[validate_elevation], help_text="Elevation in meters")
 
     # Address information (auto-populated via Mapbox):
     formatted_address = models.CharField(max_length=500, blank=True, null=True, help_text="Full formatted address from geocoding")
@@ -70,12 +75,17 @@ class Location(models.Model):
         return LocationService.update_elevation_from_mapbox(self)
 
 
-    # Override save to sanitize name and automatically enrich location data:
+    # Override save to sanitize name, validate coordinates, and enrich location data:
     def save(self, *args, **kwargs):
         try:
             # Sanitize location name to prevent XSS attacks
             if self.name:
                 self.name = sanitize_plain_text(self.name)
+
+            # Validate coordinates (run validators explicitly)
+            validate_latitude(self.latitude)
+            validate_longitude(self.longitude)
+            validate_elevation(self.elevation)
 
             is_new = not self.pk
 
