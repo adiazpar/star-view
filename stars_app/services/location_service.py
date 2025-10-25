@@ -46,13 +46,19 @@ class LocationService:
     #                                                                               #
     # Args:   url (str): The Mapbox API URL to request                              #
     # Returns: Response JSON data if successful, None otherwise                     #
+    #                                                                               #
+    # Security: 10-second timeout prevents hanging on slow/unresponsive API         #
     # ----------------------------------------------------------------------------- #
     @staticmethod
     def _make_mapbox_request(url):
         try:
-            response = requests.get(url)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
             return response.json()
+
+        except requests.exceptions.Timeout as e:
+            # Error: Mapbox API request timed out after 10 seconds
+            return None
 
         except requests.exceptions.RequestException as e:
             # Error: Mapbox API request failed: {error}
