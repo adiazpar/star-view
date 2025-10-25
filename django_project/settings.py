@@ -183,13 +183,16 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
+    
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ],
+
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ],
+
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.NamespaceVersioning',
     'DEFAULT_VERSION': 'v1',
     'ALLOWED_VERSIONS': ['v1'],
@@ -198,10 +201,14 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
     ],
+
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/hour',  # Anonymous users: 100 requests per hour
         'user': '1000/hour',  # Authenticated users: 1000 requests per hour
         'login': '5/minute',  # Login attempts: 5 per minute
+        'content_creation': '20/hour',  # Locations, reviews, comments: 20 per hour
+        'vote': '60/hour',  # Upvotes/downvotes: 60 per hour (1 per minute)
+        'report': '10/hour',  # Content reports: 10 per hour
     },
 }
 

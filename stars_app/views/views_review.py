@@ -39,6 +39,9 @@ from stars_app.serializers import ReviewSerializer, ReviewCommentSerializer
 # Service imports:
 from stars_app.services import ReportService, ResponseService, VoteService
 
+# Throttle imports:
+from stars_app.throttles import ContentCreationThrottle, VoteThrottle, ReportThrottle
+
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -81,6 +84,20 @@ class IsOwnerOrReadOnly(BasePermission):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+
+    # Apply different throttles based on action:
+    def get_throttles(self):
+        if self.action == 'create':
+            # Limit review creation to prevent spam
+            return [ContentCreationThrottle()]
+        elif self.action == 'vote':
+            # Limit votes to prevent vote manipulation
+            return [VoteThrottle()]
+        elif self.action == 'report':
+            # Limit reports to prevent report abuse
+            return [ReportThrottle()]
+        return super().get_throttles()
 
 
     # Filter reviews by location from URL parameters:
@@ -250,6 +267,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewCommentSerializer
     permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+
+
+    # Apply different throttles based on action:
+    def get_throttles(self):
+        if self.action == 'create':
+            # Limit comment creation to prevent spam
+            return [ContentCreationThrottle()]
+        elif self.action == 'vote':
+            # Limit votes to prevent vote manipulation
+            return [VoteThrottle()]
+        elif self.action == 'report':
+            # Limit reports to prevent report abuse
+            return [ReportThrottle()]
+        return super().get_throttles()
 
 
     # Filter comments by review from URL parameters:

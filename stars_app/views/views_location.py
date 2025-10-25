@@ -43,6 +43,9 @@ from ..services import ReportService
 from ..services import ResponseService
 from ..services import VoteService
 
+# Throttle imports:
+from ..throttles import ContentCreationThrottle, ReportThrottle
+
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -59,10 +62,21 @@ from ..services import VoteService
 # display (map_markers, info_panel).                                            #
 # ----------------------------------------------------------------------------- #
 class LocationViewSet(viewsets.ModelViewSet):
-    
+
     queryset = Location.objects.all()
     serializer_class = LocationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+    # Apply different throttles based on action:
+    def get_throttles(self):
+        if self.action == 'create':
+            # Limit location creation to prevent spam
+            return [ContentCreationThrottle()]
+        elif self.action == 'report':
+            # Limit reports to prevent report abuse
+            return [ReportThrottle()]
+        return super().get_throttles()
 
 
     # Create a new location:

@@ -40,25 +40,11 @@ from django.db.models import Q
 # DRF imports:
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
-from rest_framework.throttling import AnonRateThrottle
 from rest_framework import status
 
 # Service imports:
 from stars_app.services import PasswordService, ResponseService
-
-
-# ----------------------------------------------------------------------------------------------------- #
-#                                    CUSTOM THROTTLE CLASSES                                            #
-# ----------------------------------------------------------------------------------------------------- #
-
-# ----------------------------------------------------------------------------- #
-# Custom throttle class for login and registration endpoints.                  #
-#                                                                               #
-# Limits authentication attempts to prevent brute force attacks.               #
-# Rate: 5 requests per minute (configured in settings.py)                      #
-# ----------------------------------------------------------------------------- #
-class LoginRateThrottle(AnonRateThrottle):
-    scope = 'login'
+from stars_app.throttles import LoginRateThrottle
 
 
 
