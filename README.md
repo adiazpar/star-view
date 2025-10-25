@@ -1,4 +1,4 @@
-# GROUP 8 FALL 2024 - Event Horizon
+# Event Horizon
 
 ## Project Overview
 Event Horizon is an astronomical viewing location platform that helps stargazers find optimal locations for celestial observations. The platform integrates real-time light pollution data, weather forecasts, moon phase information, and community reviews to provide comprehensive stargazing recommendations.
@@ -81,12 +81,3 @@ Use the commands below:
     git checkout {branchname}
     
     git reset --hard origin/{branchname}   # removes staged and working directory changes
-
-
-## Cloud-Based Light Pollution System
-We have migrated from local GDAL processing to a modern cloud-based architecture for better performance and maintainability.
-
-### Current Data Sources:
-- **NASA VIIRS**: Real-time satellite light pollution data
-- **NASA Black Marble**: Global nighttime lights visualization  
-- **MapBox Geocoding**: Location-based light pollution estimation

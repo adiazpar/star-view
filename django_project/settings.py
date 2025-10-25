@@ -111,13 +111,30 @@ WSGI_APPLICATION = 'django_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# Default to SQLite for development
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# Database configuration: SQLite for development, PostgreSQL for production
+# Set DB_ENGINE=postgresql in .env to use PostgreSQL
+DB_ENGINE = os.getenv('DB_ENGINE', 'sqlite3')
+
+if DB_ENGINE == 'postgresql':
+    # PostgreSQL configuration (production)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('DB_NAME', 'event_horizon'),
+            'USER': os.getenv('DB_USER', 'postgres'),
+            'PASSWORD': os.getenv('DB_PASSWORD', ''),
+            'HOST': os.getenv('DB_HOST', 'localhost'),
+            'PORT': os.getenv('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    # SQLite configuration (development default)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
@@ -212,9 +229,31 @@ REST_FRAMEWORK = {
     },
 }
 
-# Development security settings
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'nyx.local']
-CSRF_TRUSTED_ORIGINS = []
+# Security Settings
+# Load ALLOWED_HOSTS from environment variable (comma-separated)
+# Development default: 127.0.0.1,localhost,nyx.local
+# Production: Add your domain (e.g., yourdomain.com,www.yourdomain.com)
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,nyx.local').split(',')
+
+# Load CSRF_TRUSTED_ORIGINS from environment variable (comma-separated)
+# Development: Can be empty
+# Production: Add HTTPS origins (e.g., https://yourdomain.com,https://www.yourdomain.com)
+CSRF_TRUSTED_ORIGINS = [origin for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin]
+
+# Security Headers
+# These headers protect against common web vulnerabilities
+SECURE_BROWSER_XSS_FILTER = True    # Enable browser XSS filtering
+X_FRAME_OPTIONS = 'DENY'            # Prevent clickjacking attacks
+SECURE_CONTENT_TYPE_NOSNIFF = True  # Prevent MIME type sniffing
+
+# Production-only security settings (only enabled when DEBUG=False)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True              # Redirect all HTTP to HTTPS
+    SESSION_COOKIE_SECURE = True            # Only send session cookie over HTTPS
+    CSRF_COOKIE_SECURE = True               # Only send CSRF cookie over HTTPS
+    SECURE_HSTS_SECONDS = 31536000          # Enable HSTS for 1 year (31536000 seconds)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True   # Apply HSTS to all subdomains
+    SECURE_HSTS_PRELOAD = True              # Allow browser HSTS preload list inclusion
 
 # Cache configuration
 # Using LocMemCache for development (required for rate limiting)
