@@ -1,5 +1,5 @@
 """
-Django settings for Event Horizon project.
+Django settings for Star View project.
 
 Production-ready configuration with:
 - PostgreSQL database support
@@ -32,7 +32,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Site configuration
 SITE_ID = 1
-SITE_NAME = "Event Horizon"
+SITE_NAME = "Star View"
 
 # =============================================================================
 # SECURITY SETTINGS

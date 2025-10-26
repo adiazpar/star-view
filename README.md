@@ -1,7 +1,7 @@
-# Event Horizon
+# Star View
 
 ## Project Overview
-Event Horizon is an astronomical viewing location platform that helps stargazers find optimal locations for celestial observations. The platform integrates real-time light pollution data, weather forecasts, moon phase information, and community reviews to provide comprehensive stargazing recommendations.
+Star View is an astronomical viewing location platform that helps stargazers find optimal locations for celestial observations. The platform integrates real-time light pollution data, weather forecasts, moon phase information, and community reviews to provide comprehensive stargazing recommendations.
 
 ## Project Initial Setup
 If you'd like to work in DevEDU, here are some instructions to get the project started and ready for development:
