@@ -21,7 +21,7 @@
 # Django imports:
 from django.shortcuts import render, get_object_or_404
 from django.conf import settings
-from django.db.models import Avg
+from django.db.models import Avg, Count, Q, Exists, OuterRef
 
 # REST Framework imports:
 from rest_framework import viewsets, status, serializers
@@ -32,6 +32,7 @@ from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnl
 # Model imports:
 from ..models import Location
 from ..models import Review
+from ..models import FavoriteLocation
 
 # Serializer imports:
 from ..serializers import LocationSerializer
@@ -63,9 +64,65 @@ from stars_app.utils import ContentCreationThrottle, ReportThrottle
 # ----------------------------------------------------------------------------- #
 class LocationViewSet(viewsets.ModelViewSet):
 
-    queryset = Location.objects.all()
-    serializer_class = LocationSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
+
+
+    # Use different serializers for list vs detail views:
+    def get_serializer_class(self):
+        # For list view, don't include nested reviews (too much data)
+        # Reviews are available via the nested endpoint /api/locations/{id}/reviews/
+        if self.action == 'list':
+            from ..serializers import LocationListSerializer
+            return LocationListSerializer
+
+        # SCALABILITY NOTE:
+        # Currently 'retrieve' (detail) view returns LocationSerializer with ALL nested reviews.
+        # This works fine for locations with 1-20 reviews, but can be slow with 100+ reviews.
+        #
+        # For better scalability, change this to:
+        #   return LocationListSerializer
+        #
+        # Then have frontend fetch reviews separately via:
+        #   GET /api/locations/{id}/reviews/?page=1 (already paginated, 20 per page)
+        return LocationSerializer
+
+
+    # Optimize queryset with select_related, prefetch_related, and annotations:
+    def get_queryset(self):
+        queryset = Location.objects.select_related(
+            'added_by',
+            'verified_by'
+        ).annotate(
+            review_count_annotated=Count('reviews'),
+            average_rating_annotated=Avg('reviews__rating')
+        )
+
+        # For detail view, prefetch nested reviews with votes to avoid N+1
+        if self.action == 'retrieve':
+            queryset = queryset.prefetch_related(
+                'reviews__user',
+                'reviews__photos',
+                'reviews__votes',  # Prefetch votes for reviews
+                'reviews__comments__user',
+                'reviews__comments__votes'  # Prefetch votes for comments
+            )
+        else:
+            # For list view, we don't include nested reviews in serializer
+            # so no need to prefetch them
+            pass
+
+        # Add is_favorited annotation for authenticated users
+        if self.request.user.is_authenticated:
+            queryset = queryset.annotate(
+                is_favorited_annotated=Exists(
+                    FavoriteLocation.objects.filter(
+                        user=self.request.user,
+                        location=OuterRef('pk')
+                    )
+                )
+            )
+
+        return queryset
 
 
     # Apply different throttles based on action:

@@ -51,7 +51,16 @@ class ReviewCommentSerializer(serializers.ModelSerializer):
     def get_user_vote(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return obj.get_user_vote(request.user)
+            # Use prefetched votes if available to avoid N+1 queries
+            if hasattr(obj, '_prefetched_objects_cache') and 'votes' in obj._prefetched_objects_cache:
+                # Filter prefetched votes for current user
+                user_votes = [v for v in obj.votes.all() if v.user_id == request.user.id]
+                if user_votes:
+                    return 'up' if user_votes[0].is_upvote else 'down'
+                return None
+            else:
+                # Fallback to model method if votes not prefetched
+                return obj.get_user_vote(request.user)
         return None
 
 
@@ -103,16 +112,24 @@ class ReviewSerializer(serializers.ModelSerializer):
     def get_user_vote(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            from django.contrib.contenttypes.models import ContentType
-            content_type = ContentType.objects.get_for_model(obj)
+            # Use prefetched votes if available to avoid N+1 queries
+            if hasattr(obj, '_prefetched_objects_cache') and 'votes' in obj._prefetched_objects_cache:
+                # Filter prefetched votes for current user
+                user_votes = [v for v in obj.votes.all() if v.user_id == request.user.id]
+                if user_votes:
+                    return 'up' if user_votes[0].is_upvote else 'down'
+            else:
+                # Fallback to querying if votes not prefetched
+                from django.contrib.contenttypes.models import ContentType
+                content_type = ContentType.objects.get_for_model(obj)
 
-            vote = Vote.objects.filter(
-                user=request.user,
-                content_type=content_type,
-                object_id=obj.id
-            ).first()
+                vote = Vote.objects.filter(
+                    user=request.user,
+                    content_type=content_type,
+                    object_id=obj.id
+                ).first()
 
-            # Convert boolean to string representation
-            if vote is not None:  # Check if vote exists
-                return 'up' if vote.is_upvote else 'down'
+                # Convert boolean to string representation
+                if vote is not None:  # Check if vote exists
+                    return 'up' if vote.is_upvote else 'down'
         return None  # Return None if no vote exists

@@ -14,3 +14,4 @@ requests==2.32.3
 sendgrid==6.11.0
 whitenoise==6.9.0
 django-cors-headers==4.9.0
+django-debug-toolbar==6.0.0

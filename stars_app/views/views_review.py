@@ -102,9 +102,21 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     # Filter reviews by location from URL parameters:
     def get_queryset(self):
-        return Review.objects.filter(
+        from django.contrib.contenttypes.models import ContentType
+        from stars_app.models import Vote
+
+        queryset = Review.objects.filter(
             location_id=self.kwargs['location_pk']
+        ).select_related(
+            'user',
+            'location'
+        ).prefetch_related(
+            'photos',
+            'comments__user',
+            'votes'  # Prefetch votes to avoid N+1 in get_user_vote()
         )
+
+        return queryset
 
 
     # Create a review for a specific location:
@@ -287,7 +299,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return ReviewComment.objects.filter(
             review_id=self.kwargs['review_pk']
-        ).select_related('user', 'user__userprofile')
+        ).select_related(
+            'user',
+            'user__userprofile',
+            'review'
+        ).prefetch_related(
+            'votes'  # Prefetch votes to avoid N+1 in get_user_vote()
+        )
 
 
     # Create a comment for a specific review:

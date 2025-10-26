@@ -64,21 +64,38 @@ class Review(models.Model):
     # Returns the net vote score (upvotes minus downvotes):
     @property
     def vote_count(self):
-        upvotes = self.votes.filter(is_upvote=True).count()
-        downvotes = self.votes.filter(is_upvote=False).count()
-        return upvotes - downvotes
+        # Use prefetched votes if available to avoid database queries
+        if hasattr(self, '_prefetched_objects_cache') and 'votes' in self._prefetched_objects_cache:
+            votes_list = list(self.votes.all())
+            upvotes = sum(1 for v in votes_list if v.is_upvote)
+            downvotes = sum(1 for v in votes_list if not v.is_upvote)
+            return upvotes - downvotes
+        else:
+            upvotes = self.votes.filter(is_upvote=True).count()
+            downvotes = self.votes.filter(is_upvote=False).count()
+            return upvotes - downvotes
 
 
     # Returns the total number of upvotes:
     @property
     def upvote_count(self):
-        return self.votes.filter(is_upvote=True).count()
+        # Use prefetched votes if available to avoid database queries
+        if hasattr(self, '_prefetched_objects_cache') and 'votes' in self._prefetched_objects_cache:
+            votes_list = list(self.votes.all())
+            return sum(1 for v in votes_list if v.is_upvote)
+        else:
+            return self.votes.filter(is_upvote=True).count()
 
 
     # Returns the total number of downvotes:
     @property
     def downvote_count(self):
-        return self.votes.filter(is_upvote=False).count()
+        # Use prefetched votes if available to avoid database queries
+        if hasattr(self, '_prefetched_objects_cache') and 'votes' in self._prefetched_objects_cache:
+            votes_list = list(self.votes.all())
+            return sum(1 for v in votes_list if not v.is_upvote)
+        else:
+            return self.votes.filter(is_upvote=False).count()
 
 
     # Checks if review was edited (updated_at > 10 seconds after created_at):

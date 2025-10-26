@@ -54,13 +54,23 @@ class ReviewComment(models.Model):
     # Returns the total number of upvotes:
     @property
     def upvote_count(self):
-        return self.votes.filter(is_upvote=True).count()
+        # Use prefetched votes if available to avoid database queries
+        if hasattr(self, '_prefetched_objects_cache') and 'votes' in self._prefetched_objects_cache:
+            votes_list = list(self.votes.all())
+            return sum(1 for v in votes_list if v.is_upvote)
+        else:
+            return self.votes.filter(is_upvote=True).count()
 
 
     # Returns the total number of downvotes:
     @property
     def downvote_count(self):
-        return self.votes.filter(is_upvote=False).count()
+        # Use prefetched votes if available to avoid database queries
+        if hasattr(self, '_prefetched_objects_cache') and 'votes' in self._prefetched_objects_cache:
+            votes_list = list(self.votes.all())
+            return sum(1 for v in votes_list if not v.is_upvote)
+        else:
+            return self.votes.filter(is_upvote=False).count()
 
 
     # Returns how a specific user voted ('up', 'down', or None):

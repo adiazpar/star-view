@@ -26,6 +26,7 @@ from .serializer_review import (
 # Location serializers:
 from .serializer_location import (
     LocationSerializer,
+    LocationListSerializer,
     MapLocationSerializer,
     LocationInfoPanelSerializer,
 )
@@ -60,6 +61,7 @@ __all__ = [
 
     # Location serializers
     'LocationSerializer',
+    'LocationListSerializer',
     'MapLocationSerializer',
     'LocationInfoPanelSerializer',
 

@@ -16,6 +16,7 @@
 # Import tools:
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from django.db.models import Avg, Count
 
 # Import models:
 from ..models import FavoriteLocation
@@ -37,9 +38,32 @@ class FavoriteLocationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
 
-    # Filter to only show current user's favorites (sorted by newest first):
+    # Filter to only show current user's favorites with optimized queries:
     def get_queryset(self):
-        return FavoriteLocation.objects.filter(user=self.request.user).order_by('-created_at')
+        from django.db.models import Exists, OuterRef
+
+        queryset = FavoriteLocation.objects.filter(
+            user=self.request.user
+        ).select_related(
+            'location__added_by',
+            'location__verified_by',
+            'user'
+        ).prefetch_related(
+            'location__reviews__user',
+            'location__reviews__photos',
+            'location__reviews__votes',  # Prefetch votes for reviews
+            'location__reviews__comments__user',
+            'location__reviews__comments__votes'  # Prefetch votes for comments
+        )
+
+        # Add annotations to the nested location objects
+        # This is done through a subquery to annotate the location
+        queryset = queryset.annotate(
+            location_review_count=Count('location__reviews'),
+            location_average_rating=Avg('location__reviews__rating')
+        )
+
+        return queryset.order_by('-created_at')
 
 
     # Automatically set user field when creating favorites:
