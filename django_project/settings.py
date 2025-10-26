@@ -97,6 +97,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',               # Whitenoise (MUST be after SecurityMiddleware)
     'debug_toolbar.middleware.DebugToolbarMiddleware',          # Debug Toolbar (development)
     'corsheaders.middleware.CorsMiddleware',                    # CORS (before CommonMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -201,7 +202,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
+
+# Whitenoise configuration for serving static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (user uploads)
 MEDIA_URL = '/media/'
