@@ -43,7 +43,7 @@ python3 manage.py collectstatic --no-input
 # Run database migrations
 echo "Running database migrations..."
 python3 manage.py makemigrations
-pytho3 manage.py migrate --no-input
+python3 manage.py migrate --no-input
 
 # Create superuser if environment variables are set
 # This uses Django's built-in command that reads from environment variables:
