@@ -61,6 +61,59 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True   # HSTS for subdomains
     SECURE_HSTS_PRELOAD = True              # HSTS preload list
 
+# Content Security Policy (CSP) - Phase 4 Security Enhancement
+# Defines which sources browsers can load resources from (scripts, styles, images, etc.)
+# Using django-csp 4.0+ format
+CONTENT_SECURITY_POLICY = {
+    'DIRECTIVES': {
+        'default-src': ("'self'",),                     # Default: only allow resources from same origin
+        'script-src': (
+            "'self'",
+            "https://api.mapbox.com",                   # Mapbox GL JS library
+            "https://cdn.jsdelivr.net",                 # CDN for libraries (if needed)
+        ),
+        'style-src': (
+            "'self'",
+            "'unsafe-inline'",                          # Required for Django admin and inline styles
+            "https://api.mapbox.com",                   # Mapbox styles
+            "https://cdn.jsdelivr.net",                 # CDN styles
+        ),
+        'img-src': (
+            "'self'",
+            "data:",                                    # Data URIs for inline images
+            "https://*.mapbox.com",                     # Mapbox tile images (uses subdomains)
+            "https://api.mapbox.com",                   # Mapbox API images
+        ),
+        'font-src': (
+            "'self'",
+            "data:",                                    # Data URIs for fonts
+            "https://fonts.gstatic.com",                # Google Fonts (if used)
+        ),
+        'connect-src': (
+            "'self'",
+            "https://api.mapbox.com",                   # Mapbox API calls
+            "https://*.mapbox.com",                     # Mapbox tile servers
+            "https://events.mapbox.com",                # Mapbox analytics
+        ),
+        'frame-ancestors': ("'none'",),                 # Prevent framing (same as X-Frame-Options: DENY)
+        'base-uri': ("'self'",),                        # Restrict <base> tag URLs
+        'form-action': ("'self'",),                     # Only allow forms to submit to same origin
+    }
+}
+
+# Permissions Policy (formerly Feature-Policy) - Phase 4 Security Enhancement
+# Controls which browser features can be used
+PERMISSIONS_POLICY = {
+    "geolocation": [],          # Disable geolocation API (not needed)
+    "camera": [],               # Disable camera access
+    "microphone": [],           # Disable microphone access
+    "payment": [],              # Disable payment APIs
+    "usb": [],                  # Disable USB device access
+    "magnetometer": [],         # Disable magnetometer
+    "accelerometer": [],        # Disable accelerometer
+    "gyroscope": [],            # Disable gyroscope
+}
+
 # File upload validation settings
 MAX_UPLOAD_SIZE_MB = 5
 ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.gif', '.webp']
@@ -85,6 +138,7 @@ INSTALLED_APPS = [
     'django_crontab',
     'django_filters',
     'corsheaders',              # CORS support (Phase 2)
+    'csp',                      # Content Security Policy (Phase 4)
     'debug_toolbar',            # Development only
 
     # Project apps
@@ -97,9 +151,11 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',               # Whitenoise (MUST be after SecurityMiddleware)
-    'debug_toolbar.middleware.DebugToolbarMiddleware',          # Debug Toolbar (development)
-    'corsheaders.middleware.CorsMiddleware',                    # CORS (before CommonMiddleware)
+    'whitenoise.middleware.WhiteNoiseMiddleware',                           # Whitenoise (MUST be after SecurityMiddleware)
+    'csp.middleware.CSPMiddleware',                                         # Content Security Policy (Phase 4)
+    'django_permissions_policy.PermissionsPolicyMiddleware',                # Permissions-Policy header (Phase 4)
+    'debug_toolbar.middleware.DebugToolbarMiddleware',                      # Debug Toolbar (development)
+    'corsheaders.middleware.CorsMiddleware',                                # CORS (before CommonMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
