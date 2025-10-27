@@ -42,6 +42,9 @@ from stars_app.services import ReportService, ResponseService, VoteService
 # Throttle imports:
 from stars_app.utils import ContentCreationThrottle, VoteThrottle, ReportThrottle
 
+# Cache imports:
+from stars_app.utils import invalidate_location_detail, invalidate_review_list
+
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -119,7 +122,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return queryset
 
 
-    # Create a review for a specific location:
+    # ----------------------------------------------------------------------------- #
+    # Create a review for a location and associate it with the current user.       #
+    #                                                                               #
+    # DRF Note: This overrides ModelViewSet's default perform_create() to inject   #
+    # the current user and location from URL parameters. Without this override,    #
+    # DRF would just call serializer.save() which would fail since user and        #
+    # location are required fields. We also invalidate caches since the location   #
+    # detail now has a new review affecting ratings and review count.              #
+    # ----------------------------------------------------------------------------- #
     def perform_create(self, serializer):
         location = get_object_or_404(Location, pk=self.kwargs['location_pk'])
         serializer.save(
@@ -127,12 +138,52 @@ class ReviewViewSet(viewsets.ModelViewSet):
             location=location
         )
 
+        # Invalidate caches since new review was created
+        invalidate_location_detail(location.id)  # Location detail includes reviews
+        invalidate_review_list(location.id)  # Review list for this location
+
 
     # ----------------------------------------------------------------------------- #
-    # Add photos to a review (max 5 total).                                        #
+    # Update a review and invalidate related caches.                               #
     #                                                                               #
-    # Security: Validates each uploaded image for file size (5MB max), MIME type,  #
-    # and extension before processing to prevent malicious uploads and DOS attacks.#
+    # DRF Note: This overrides ModelViewSet's default perform_update() to add      #
+    # cache invalidation. Without this override, DRF would just call               #
+    # serializer.save() with no cache clearing, causing the location's cached      #
+    # review data to become stale (wrong rating, outdated review text, etc).       #
+    # ----------------------------------------------------------------------------- #
+    def perform_update(self, serializer):
+        review = self.get_object()
+        location_id = review.location.id
+        serializer.save()
+
+        # Invalidate caches since review was updated
+        invalidate_location_detail(location_id)
+        invalidate_review_list(location_id)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Delete a review and invalidate related caches.                               #
+    #                                                                               #
+    # DRF Note: This overrides ModelViewSet's default perform_destroy() to add     #
+    # cache invalidation. Without this override, DRF would just call               #
+    # instance.delete() with no cache clearing, causing the deleted review to      #
+    # still appear in the location's cached review list and affecting cached       #
+    # rating calculations.                                                          #
+    # ----------------------------------------------------------------------------- #
+    def perform_destroy(self, instance):
+        location_id = instance.location.id
+        instance.delete()
+
+        # Invalidate caches since review was deleted
+        invalidate_location_detail(location_id)
+        invalidate_review_list(location_id)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Add photos to a review (max 5 total).                                         #
+    #                                                                               #
+    # Security: Validates each uploaded image for file size (5MB max), MIME type,   #
+    # and extension before processing to prevent malicious uploads and DOS attacks. #
     # ----------------------------------------------------------------------------- #
     @action(detail=True, methods=['POST'])
     def add_photos(self, request, pk=None, location_pk=None):

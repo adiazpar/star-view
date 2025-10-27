@@ -15,6 +15,7 @@
 # Modules in This Package:                                                                              #
 # - validators.py: File upload validation, coordinate validation, XSS sanitization                      #
 # - throttles.py: DRF rate limiting classes (login, content creation, voting, reporting)                #
+# - cache.py: Redis caching utilities (key generation, invalidation helpers)                            #
 # - signals.py: Django signal handlers (file cleanup, aggregate updates)                                #
 #                                                                                                       #
 # Note on signals.py:                                                                                   #
@@ -41,6 +42,22 @@ from .throttles import (
     ReportThrottle,
 )
 
+# Import cache utilities
+from .cache import (
+    location_list_key,
+    location_detail_key,
+    map_markers_key,
+    review_list_key,
+    user_favorites_key,
+    invalidate_location_list,
+    invalidate_location_detail,
+    invalidate_map_markers,
+    invalidate_review_list,
+    invalidate_user_favorites,
+    invalidate_all_location_caches,
+    get_or_set_cache,
+)
+
 __all__ = [
     # Validators
     'validate_file_size',
@@ -56,4 +73,18 @@ __all__ = [
     'ContentCreationThrottle',
     'VoteThrottle',
     'ReportThrottle',
+
+    # Cache utilities
+    'location_list_key',
+    'location_detail_key',
+    'map_markers_key',
+    'review_list_key',
+    'user_favorites_key',
+    'invalidate_location_list',
+    'invalidate_location_detail',
+    'invalidate_map_markers',
+    'invalidate_review_list',
+    'invalidate_user_favorites',
+    'invalidate_all_location_caches',
+    'get_or_set_cache',
 ]

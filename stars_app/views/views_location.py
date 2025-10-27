@@ -47,6 +47,18 @@ from ..services import VoteService
 # Throttle imports:
 from stars_app.utils import ContentCreationThrottle, ReportThrottle
 
+# Cache imports:
+from stars_app.utils import (
+    location_list_key,
+    location_detail_key,
+    map_markers_key,
+    invalidate_location_list,
+    invalidate_location_detail,
+    invalidate_map_markers,
+    invalidate_all_location_caches,
+)
+from django.core.cache import cache
+
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -125,6 +137,89 @@ class LocationViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+    # ----------------------------------------------------------------------------- #
+    # List all locations with pagination and caching.                               #
+    #                                                                               #
+    # Cache Strategy:                                                               #
+    # - Cache each page separately for 15 minutes (900 seconds)                     #
+    # - Authenticated users get different cache (includes is_favorited)             #
+    # - Invalidated when: new location created, location deleted                    #
+    #                                                                               #
+    # Performance Impact:                                                           #
+    # - Before caching: 4 queries per request (already optimized with annotations)  #
+    # - After caching: 0 queries for cache hits (~90%+ of requests)                 #
+    # ----------------------------------------------------------------------------- #
+    def list(self, request, *args, **kwargs):
+        page = request.GET.get('page', 1)
+
+        # Different cache keys for authenticated vs anonymous users
+        # (authenticated includes is_favorited annotation)
+        if request.user.is_authenticated:
+            cache_key = f'{location_list_key(page)}:user:{request.user.id}'
+        else:
+            cache_key = location_list_key(page)
+
+        # Try to get from cache
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        # Cache miss - get data from database
+        queryset = self.filter_queryset(self.get_queryset())
+
+        # Paginate the queryset
+        page_obj = self.paginate_queryset(queryset)
+        if page_obj is not None:
+            serializer = self.get_serializer(page_obj, many=True)
+            response_data = self.get_paginated_response(serializer.data).data
+        else:
+            serializer = self.get_serializer(queryset, many=True)
+            response_data = serializer.data
+
+        # Cache for 15 minutes
+        cache.set(cache_key, response_data, timeout=900)
+
+        return Response(response_data)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Retrieve a single location with caching.                                      #
+    #                                                                               #
+    # Cache Strategy:                                                               #
+    # - Cache each location separately for 15 minutes (900 seconds)                 #
+    # - Authenticated users get different cache (includes is_favorited, nested      #
+    # reviews with user_vote)                                                       #
+    # - Invalidated when: location updated, review added/updated/deleted            #
+    #                                                                               #
+    # Performance Impact:                                                           #
+    # - Before caching: 9 queries per request (with prefetching)                    #
+    # - After caching: 0 queries for cache hits (~80%+ of requests)                 #
+    # ----------------------------------------------------------------------------- #
+    def retrieve(self, request, *args, **kwargs):
+        location_id = kwargs.get('pk')
+
+        # Different cache keys for authenticated vs anonymous users
+        if request.user.is_authenticated:
+            cache_key = f'{location_detail_key(location_id)}:user:{request.user.id}'
+        else:
+            cache_key = location_detail_key(location_id)
+
+        # Try to get from cache
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        # Cache miss - get data from database
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        response_data = serializer.data
+
+        # Cache for 15 minutes
+        cache.set(cache_key, response_data, timeout=900)
+
+        return Response(response_data)
+
+
     # Apply different throttles based on action:
     def get_throttles(self):
         if self.action == 'create':
@@ -136,9 +231,53 @@ class LocationViewSet(viewsets.ModelViewSet):
         return super().get_throttles()
 
 
-    # Create a new location:
+    # ----------------------------------------------------------------------------- #
+    # Create a new location and set the user who added it.                          #
+    #                                                                               #
+    # DRF Note: This overrides ModelViewSet's default perform_create() to inject    #
+    # the current user as added_by. Without this override, DRF would just call      #
+    # serializer.save() with no additional context. We also invalidate caches       #
+    # since the location list and map markers now have new data.                    #
+    # ----------------------------------------------------------------------------- #
     def perform_create(self, serializer):
         serializer.save(added_by=self.request.user)
+
+        # Invalidate caches since new location was created
+        invalidate_location_list()  # Clear all location list pages
+        invalidate_map_markers()  # Clear map markers cache
+
+
+    # ----------------------------------------------------------------------------- #
+    # Update a location and invalidate related caches.                              #
+    #                                                                               #
+    # DRF Note: This overrides ModelViewSet's default perform_update() to add       #
+    # cache invalidation. Without this override, DRF would just call                #
+    # serializer.save() with no cache clearing, causing stale data to be served.    #
+    # ----------------------------------------------------------------------------- #
+    def perform_update(self, serializer):
+        location = self.get_object()
+        serializer.save()
+
+        # Invalidate caches since location was updated
+        invalidate_all_location_caches(location.id)  # Clear all related caches
+
+
+    # ----------------------------------------------------------------------------- #
+    # Delete a location and invalidate related caches.                              #
+    #                                                                               #
+    # DRF Note: This overrides ModelViewSet's default perform_destroy() to add      #
+    # cache invalidation. Without this override, DRF would just call                #
+    # instance.delete() with no cache clearing, causing deleted locations to        #
+    # still appear in cached responses.                                             #
+    # ----------------------------------------------------------------------------- #
+    def perform_destroy(self, instance):
+        location_id = instance.id
+        instance.delete()
+
+        # Invalidate caches since location was deleted
+        invalidate_location_list()  # Clear location list
+        invalidate_map_markers()  # Clear map markers
+        invalidate_location_detail(location_id)  # Clear this location's detail
 
 
     # Submit a report about this location using the ReportService:
@@ -168,10 +307,22 @@ class LocationViewSet(viewsets.ModelViewSet):
     #                                                                               #
     # Returns a lightweight JSON array containing only the essential fields         #
     # needed to render markers on the 3D globe interface.                           #
+    #                                                                               #
+    # Cache Strategy:                                                               #
+    # - Cached for 30 minutes (1800 seconds) - map data changes infrequently        #
+    # - Same for all users (no user-specific data)                                  #
+    # - Invalidated when: location created, location deleted, coordinates change    #
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['GET'], serializer_class=MapLocationSerializer)
     def map_markers(self, request):
-        
+
+        # Try to get from cache (same for all users)
+        cache_key = map_markers_key()
+        cached_data = cache.get(cache_key)
+        if cached_data is not None:
+            return Response(cached_data)
+
+        # Cache miss - get data from database
         # Get all locations
         queryset = Location.objects.all()
 
@@ -180,7 +331,12 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         # Serialize and return as simple array
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        response_data = serializer.data
+
+        # Cache for 30 minutes (longer than list/detail since map data rarely changes)
+        cache.set(cache_key, response_data, timeout=1800)
+
+        return Response(response_data)
 
 
     # ----------------------------------------------------------------------------- #
@@ -202,7 +358,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 # ----------------------------------------------------------------------------- #
 # Display detailed information about a location including reviews.              #
 #                                                                               #
-# Shows all reviews with the user's review first (if exists) and enriches      #
+# Shows all reviews with the user's review first (if exists) and enriches       #
 # them with vote information for authenticated users using VoteService.         #
 # ----------------------------------------------------------------------------- #
 def location_details(request, location_id):

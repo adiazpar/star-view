@@ -322,13 +322,16 @@ CORS_ALLOW_HEADERS = [
 # CACHING
 # =============================================================================
 
-# Cache backend (required for rate limiting)
-# Development: LocMemCache
-# Production: Use Redis or Memcached
+# Cache backend configuration (required for rate limiting and performance caching)
+# Using Redis for both development and production (Django 4.0+ native support)
+# Development: Local Redis via Homebrew (redis://127.0.0.1:6379/1)
+# Production: Render Redis service (set REDIS_URL in environment variables)
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+        'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+        'LOCATION': os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/1'),
+        'KEY_PREFIX': 'starview',  # Prefix all cache keys with app name
+        'TIMEOUT': 900,  # Default timeout: 15 minutes (in seconds)
     }
 }
 
