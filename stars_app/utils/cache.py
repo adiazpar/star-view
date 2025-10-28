@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------------------------------- #
-# This cache.py file provides centralized Redis caching utilities for Star View:                        #
+# This cache.py file provides centralized Redis caching utilities for Starview:                        #
 #                                                                                                       #
 # Purpose:                                                                                              #
 # Manages cache key generation and invalidation for all cached API endpoints. Centralizing cache        #

@@ -1,5 +1,5 @@
 """
-Django settings for Star View project.
+Django settings for Starview project.
 
 Production-ready configuration with:
 - PostgreSQL database support
@@ -32,7 +32,7 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Site configuration
 SITE_ID = 1
-SITE_NAME = "Star View"
+SITE_NAME = "Starview"
 
 # =============================================================================
 # SECURITY SETTINGS
