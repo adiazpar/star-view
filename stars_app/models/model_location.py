@@ -9,11 +9,11 @@
 # - Geographic data: latitude, longitude, elevation, and address information                            #
 # - Review aggregation: Tracks average ratings and visitor counts                                       #
 # - Verification system: Staff can verify locations with notes and timestamps                           #
-# - Automatic enrichment: Calls LocationService on save to fetch address and elevation data             #
+# - Automatic enrichment: Triggers async Celery task on save to fetch address and elevation data        #
 #                                                                                                       #
 # Service Integration:                                                                                  #
-# The save() method automatically calls LocationService.initialize_location_data() for new locations    #
-# to enrich data via Mapbox APIs (reverse geocoding and elevation).                                     #
+# The save() method automatically triggers async enrichment task for new locations via Celery.          #
+# This provides instant response to users while Mapbox enrichment happens in background (2-5 seconds).  #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Import tools:
@@ -91,15 +91,33 @@ class Location(models.Model):
 
             # First save to get the ID:
             super().save(*args, **kwargs)
-            
-            # If this is a new location or coordinates have changed
+
+            # If this is a new location or coordinates have changed, enrich data
             if is_new or any(
                     field in kwargs.get('update_fields', [])
                     for field in ['latitude', 'longitude']
             ):
-                print(f"Updating data for location {self.name}")
-                LocationService.initialize_location_data(self)
-                
+                print(f"Enriching location {self.name} (ID: {self.pk})")
+
+                # Import here to avoid circular imports
+                from django.conf import settings
+
+                # Check if Celery worker is enabled via environment variable
+                # Set CELERY_ENABLED=True in .env when worker is running (production)
+                # Set CELERY_ENABLED=False or omit to use sync enrichment (development/free tier)
+                use_celery = getattr(settings, 'CELERY_ENABLED', False)
+
+                if use_celery:
+                    # Async enrichment via Celery (requires worker running)
+                    from stars_app.utils.tasks import enrich_location_data
+                    enrich_location_data.delay(self.pk)
+                    print(f"  → Queued async enrichment task for location {self.pk}")
+                else:
+                    # Sync enrichment (fallback when no worker available)
+                    print(f"  → Running sync enrichment (Celery disabled)")
+                    from stars_app.services.location_service import LocationService
+                    LocationService.initialize_location_data(self)
+
         except Exception as e:
             print(f"Error saving location: {e}")
             raise

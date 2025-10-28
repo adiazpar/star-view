@@ -1,4 +1,5 @@
 bleach==6.2.0
+celery==5.4.0
 certifi==2024.8.30
 django==5.1.13
 django-axes==8.0.0

@@ -430,6 +430,46 @@ CACHES = {
 }
 
 # =============================================================================
+# CELERY CONFIGURATION
+# =============================================================================
+
+# Enable/disable Celery async tasks
+# Set to True when Celery worker is running (production with worker service)
+# Set to False when no worker available (development, free tier deployment)
+# When False, tasks run synchronously (slower but no worker cost)
+CELERY_ENABLED = os.getenv('CELERY_ENABLED', 'False') == 'True'
+
+# Celery broker (message queue) - uses same Redis instance as cache
+# Development: Local Redis (redis://127.0.0.1:6379/0 - different database than cache)
+# Production: Render Redis service (set REDIS_URL in environment variables)
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')
+
+# Celery result backend (stores task results) - also uses Redis
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://127.0.0.1:6379/0')
+
+# Serialization formats
+CELERY_ACCEPT_CONTENT = ['json']  # Accept only JSON (more secure than pickle)
+CELERY_TASK_SERIALIZER = 'json'   # Serialize tasks as JSON
+CELERY_RESULT_SERIALIZER = 'json' # Serialize results as JSON
+
+# Timezone settings (match Django timezone)
+CELERY_TIMEZONE = TIME_ZONE
+CELERY_ENABLE_UTC = True
+
+# Task time limits (prevent runaway tasks)
+CELERY_TASK_TIME_LIMIT = 300      # Hard limit: 5 minutes (task killed after this)
+CELERY_TASK_SOFT_TIME_LIMIT = 240 # Soft limit: 4 minutes (SoftTimeLimitExceeded exception)
+
+# Task result settings
+CELERY_RESULT_EXPIRES = 3600      # Results expire after 1 hour
+CELERY_TASK_TRACK_STARTED = True  # Track when tasks start (useful for monitoring)
+CELERY_TASK_SEND_SENT_EVENT = True # Send event when task is sent to broker
+
+# Worker settings
+CELERY_WORKER_PREFETCH_MULTIPLIER = 4  # How many tasks each worker prefetches
+CELERY_WORKER_MAX_TASKS_PER_CHILD = 1000  # Restart worker after 1000 tasks (prevent memory leaks)
+
+# =============================================================================
 # CRON JOBS
 # =============================================================================
 
