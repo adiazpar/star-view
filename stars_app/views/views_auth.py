@@ -42,6 +42,10 @@ from rest_framework.decorators import api_view, permission_classes, throttle_cla
 from rest_framework.permissions import AllowAny
 from rest_framework import status
 
+# django-axes imports for account lockout:
+from axes.exceptions import AxesBackendPermissionDenied
+from axes.handlers.proxy import AxesProxyHandler
+
 # Service imports:
 from stars_app.services import PasswordService, ResponseService
 from stars_app.utils import LoginRateThrottle
@@ -171,6 +175,14 @@ def custom_login(request):
             if not username_or_email or not password:
                 return ResponseService.error('Username and password are required.', status_code=status.HTTP_400_BAD_REQUEST)
 
+            # Check if request is already locked out.
+            # This prevents further authentication attempts when account is locked
+            if AxesProxyHandler.is_locked(request):
+                return ResponseService.error(
+                    'Account temporarily locked due to too many failed login attempts. Please try again in 1 hour.',
+                    status_code=status.HTTP_403_FORBIDDEN
+                )
+
             # Try to get user by username or email
             user_obj = User.objects.filter(
                 Q(username=username_or_email) |
@@ -185,8 +197,16 @@ def custom_login(request):
             if not user_obj:
                 return ResponseService.error(generic_error, status_code=status.HTTP_401_UNAUTHORIZED)
 
-            # Authenticate with username
-            authenticated_user = authenticate(request, username=user_obj.username, password=password)
+            # Authenticate with username (django-axes intercepts this call)
+            # Phase 4: Account Lockout - AxesBackendPermissionDenied raised if account is locked
+            try:
+                authenticated_user = authenticate(request, username=user_obj.username, password=password)
+            except AxesBackendPermissionDenied:
+                # Account is locked out due to too many failed attempts
+                return ResponseService.error(
+                    'Account temporarily locked due to too many failed login attempts. Please try again in 1 hour.',
+                    status_code=status.HTTP_403_FORBIDDEN
+                )
 
             if authenticated_user is not None:
                 login(request, authenticated_user)
@@ -200,6 +220,14 @@ def custom_login(request):
                     'Login successful! Redirecting...',
                     data={'redirect_url': redirect_url},
                     status_code=status.HTTP_200_OK
+                )
+
+            # Authentication failed - check if this failure triggered a lockout
+            # The lockout occurs AFTER the failed attempt is recorded:
+            if AxesProxyHandler.is_locked(request):
+                return ResponseService.error(
+                    'Account temporarily locked due to too many failed login attempts. Please try again in 1 hour.',
+                    status_code=status.HTTP_403_FORBIDDEN
                 )
 
             # Invalid password - use same generic error (prevents user enumeration)

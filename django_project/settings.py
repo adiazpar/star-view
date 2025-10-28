@@ -139,6 +139,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',              # CORS support (Phase 2)
     'csp',                      # Content Security Policy (Phase 4)
+    'axes',                     # Account lockout policy (Phase 4)
     'debug_toolbar',            # Development only
 
     # Project apps
@@ -160,6 +161,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'axes.middleware.AxesMiddleware',                                       # Account lockout (MUST be after AuthenticationMiddleware)
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -231,6 +233,7 @@ else:
 # =============================================================================
 
 AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # Account lockout backend (Phase 4 - MUST be first)
     'django.contrib.auth.backends.ModelBackend',
 ]
 
@@ -240,6 +243,32 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
+# =============================================================================
+# ACCOUNT LOCKOUT POLICY (django-axes - Phase 4)
+# =============================================================================
+
+# Account lockout configuration for brute force attack prevention
+# Protects against distributed attacks by locking accounts (not just IPs)
+from datetime import timedelta
+
+AXES_FAILURE_LIMIT = 5                          # Lock account after 5 failed login attempts
+AXES_COOLOFF_TIME = timedelta(hours=1)          # Lock duration: 1 hour
+AXES_LOCKOUT_PARAMETERS = ['username']          # Lock by username (protects against distributed attacks)
+AXES_RESET_ON_SUCCESS = True                    # Reset failure counter on successful login
+AXES_LOCK_OUT_AT_FAILURE = True                 # Lock out immediately when limit reached
+AXES_ENABLE_ADMIN = True                        # Show django-axes models in admin interface
+AXES_VERBOSE = True                             # Enable detailed logging
+
+# Handler: Use database for logging (provides audit trail)
+# 'axes.handlers.database.AxesDatabaseHandler' logs all attempts to database
+AXES_HANDLER = 'axes.handlers.database.AxesDatabaseHandler'
+
+# Use cache for performance (in addition to database logging)
+AXES_CACHE = 'default'                          # Use default Redis cache
+
+# Customize lockout response
+AXES_COOLOFF_MESSAGE = "Account temporarily locked due to too many failed login attempts. Please try again in 1 hour."
 
 # =============================================================================
 # INTERNATIONALIZATION
