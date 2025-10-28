@@ -5,6 +5,8 @@
 CLAUDE.md
 .claude
 .vscode
+celery_worker.log
+logs/
 
 # Byte-compiled / optimized / DLL files
 .env
