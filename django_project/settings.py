@@ -69,14 +69,17 @@ CONTENT_SECURITY_POLICY = {
         'default-src': ("'self'",),                     # Default: only allow resources from same origin
         'script-src': (
             "'self'",
+            "'unsafe-inline'",                          # Required for inline scripts (Mapbox init, etc.)
             "https://api.mapbox.com",                   # Mapbox GL JS library
             "https://cdn.jsdelivr.net",                 # CDN for libraries (if needed)
+            "https://kit.fontawesome.com",              # Font Awesome kit
         ),
         'style-src': (
             "'self'",
             "'unsafe-inline'",                          # Required for Django admin and inline styles
             "https://api.mapbox.com",                   # Mapbox styles
             "https://cdn.jsdelivr.net",                 # CDN styles
+            "https://rsms.me",                          # Inter font CSS
         ),
         'img-src': (
             "'self'",
@@ -87,13 +90,16 @@ CONTENT_SECURITY_POLICY = {
         'font-src': (
             "'self'",
             "data:",                                    # Data URIs for fonts
-            "https://fonts.gstatic.com",                # Google Fonts (if used)
+            "https://fonts.gstatic.com",                # Google Fonts and Inter font
+            "https://rsms.me",                          # Inter font files
+            "https://*.fontawesome.com",                # Font Awesome fonts (all subdomains)
         ),
         'connect-src': (
             "'self'",
             "https://api.mapbox.com",                   # Mapbox API calls
             "https://*.mapbox.com",                     # Mapbox tile servers
             "https://events.mapbox.com",                # Mapbox analytics
+            "https://*.fontawesome.com",                # Font Awesome API (all subdomains)
         ),
         'frame-ancestors': ("'none'",),                 # Prevent framing (same as X-Frame-Options: DENY)
         'base-uri': ("'self'",),                        # Restrict <base> tag URLs
@@ -377,6 +383,9 @@ REST_FRAMEWORK = {
         'vote': '60/hour',              # Upvotes/downvotes
         'report': '10/hour',            # Content reports
     },
+
+    # Exception handling (Phase 4: Standardized error responses)
+    'EXCEPTION_HANDLER': 'stars_app.utils.exception_handler.custom_exception_handler',
 }
 
 # =============================================================================
@@ -431,6 +440,62 @@ CRONJOBS = [
     # python manage.py crontab add      - Add all cronjobs
     # python manage.py crontab remove   - Remove all cronjobs
 ]
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
+# Ensure logs directory exists
+LOGS_DIR = BASE_DIR / 'logs'
+LOGS_DIR.mkdir(exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+
+    # Log formatting
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'json': {
+            'format': '{"timestamp": "%(asctime)s", "level": "%(levelname)s", "module": "%(module)s", "message": "%(message)s"}',
+        },
+    },
+
+    # Log handlers (where logs go)
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+        'audit_file': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': LOGS_DIR / 'audit.log',
+            'maxBytes': 10485760,  # 10MB
+            'backupCount': 10,
+            'formatter': 'json',
+        },
+    },
+
+    # Loggers (what to log)
+    'loggers': {
+        # Audit logger for security events
+        'audit': {
+            'handlers': ['audit_file', 'console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Application logger for general events
+        'stars_app': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
 
 # =============================================================================
 # DEVELOPMENT SETTINGS

@@ -9,12 +9,12 @@
 # - Account Management: Tabbed interface for profile and favorites                                      #
 # - Profile Updates: AJAX endpoints for profile pictures, names, email, and passwords                   #
 # - Password Security: Integrates with PasswordService for consistent validation across the app         #
-# - Response Handling: Uses ResponseService for standardized JSON responses                             #
+# - Error Handling: Uses DRF exceptions caught by the global exception handler                          #
 #                                                                                                       #
 # Architecture:                                                                                         #
 # - Function-based views for account page and AJAX update endpoints                                     #
 # - Uses PasswordService for all password operations (single source of truth)                           #
-# - Uses ResponseService for consistent error and success responses                                     #
+# - Uses DRF exceptions for consistent error responses via exception handler                            #
 # - Uses safe_delete_file from signals for secure file deletion with MEDIA_ROOT validation              #
 # - Optimized database queries with select_related to prevent N+1 query problems                        #
 # ----------------------------------------------------------------------------------------------------- #
@@ -31,7 +31,8 @@ from django.conf import settings
 # DRF imports:
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, exceptions
+from rest_framework.response import Response
 
 # Model imports:
 from django.contrib.auth.models import User
@@ -39,7 +40,7 @@ from ..models import UserProfile
 from ..models import FavoriteLocation
 
 # Service imports:
-from stars_app.services import PasswordService, ResponseService
+from stars_app.services import PasswordService
 
 # Signal utility imports:
 from stars_app.utils.signals import safe_delete_file
@@ -99,7 +100,7 @@ def account(request):
 # authentication and operate on the authenticated user's profile.               #
 #                                                                               #
 # Architecture:                                                                 #
-# - All actions use ResponseService for consistent JSON responses               #
+# - All actions raise DRF exceptions for consistent error handling              #
 # - Password operations use PasswordService for validation                      #
 # - File deletion uses safe_delete_file from signals module                     #
 # - Uses DRF's @action decorator for custom endpoints                           #
@@ -121,38 +122,35 @@ class UserProfileViewSet(viewsets.ViewSet):
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['post'], url_path='upload-picture')
     def upload_picture(self, request):
-        from django.core.exceptions import ValidationError
+        from django.core.exceptions import ValidationError as DjangoValidationError
         from stars_app.utils import validate_file_size, validate_image_file
 
+        if 'profile_picture' not in request.FILES:
+            raise exceptions.ValidationError('No image file provided')
+
+        profile_picture = request.FILES['profile_picture']
+
+        # Validate file before processing
         try:
-            if 'profile_picture' not in request.FILES:
-                return ResponseService.error('No image file provided', status_code=status.HTTP_400_BAD_REQUEST)
+            validate_file_size(profile_picture)
+            validate_image_file(profile_picture)
+        except DjangoValidationError as e:
+            raise exceptions.ValidationError(str(e))
 
-            profile_picture = request.FILES['profile_picture']
+        user_profile = request.user.userprofile
 
-            # Validate file before processing
-            try:
-                validate_file_size(profile_picture)
-                validate_image_file(profile_picture)
-            except ValidationError as e:
-                return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
+        # Delete old profile picture if it exists (None means using default, so nothing to delete)
+        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
+            safe_delete_file(user_profile.profile_picture.path)
 
-            user_profile = request.user.userprofile
+        # Save the new profile picture
+        user_profile.profile_picture = profile_picture
+        user_profile.save()
 
-            # Delete old profile picture if it exists (None means using default, so nothing to delete)
-            if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
-                safe_delete_file(user_profile.profile_picture.path)
-
-            # Save the new profile picture
-            user_profile.profile_picture = profile_picture
-            user_profile.save()
-
-            return ResponseService.success(
-                'Profile picture updated successfully',
-                data={'image_url': user_profile.profile_picture.url}
-            )
-        except Exception as e:
-            return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'detail': 'Profile picture updated successfully',
+            'image_url': user_profile.profile_picture.url
+        }, status=status.HTTP_200_OK)
 
 
     # ----------------------------------------------------------------------------- #
@@ -164,23 +162,20 @@ class UserProfileViewSet(viewsets.ViewSet):
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['delete'], url_path='remove-picture')
     def remove_picture(self, request):
-        try:
-            user_profile = request.user.userprofile
+        user_profile = request.user.userprofile
 
-            # Delete the current profile picture if it exists (None means using default)
-            if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
-                safe_delete_file(user_profile.profile_picture.path)
+        # Delete the current profile picture if it exists (None means using default)
+        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
+            safe_delete_file(user_profile.profile_picture.path)
 
-            # Reset to default (model returns default URL when profile_picture is None)
-            user_profile.profile_picture = None
-            user_profile.save()
+        # Reset to default (model returns default URL when profile_picture is None)
+        user_profile.profile_picture = None
+        user_profile.save()
 
-            return ResponseService.success(
-                'Profile picture removed successfully',
-                data={'default_image_url': user_profile.get_profile_picture_url}
-            )
-        except Exception as e:
-            return ResponseService.error(str(e), status_code=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'detail': 'Profile picture removed successfully',
+            'default_image_url': user_profile.get_profile_picture_url
+        }, status=status.HTTP_200_OK)
 
 
     # ----------------------------------------------------------------------------- #
@@ -193,28 +188,23 @@ class UserProfileViewSet(viewsets.ViewSet):
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['patch'], url_path='update-name')
     def update_name(self, request):
-        try:
-            first_name = request.data.get('first_name', '').strip()
-            last_name = request.data.get('last_name', '').strip()
+        first_name = request.data.get('first_name', '').strip()
+        last_name = request.data.get('last_name', '').strip()
 
-            # Validate required fields
-            if not first_name or not last_name:
-                return ResponseService.error('Both first and last name are required.', status_code=status.HTTP_400_BAD_REQUEST)
+        # Validate required fields
+        if not first_name or not last_name:
+            raise exceptions.ValidationError('Both first and last name are required.')
 
-            user = request.user
-            user.first_name = first_name
-            user.last_name = last_name
-            user.save()
+        user = request.user
+        user.first_name = first_name
+        user.last_name = last_name
+        user.save()
 
-            return ResponseService.success(
-                'Name updated successfully.',
-                data={
-                    'first_name': first_name,
-                    'last_name': last_name
-                }
-            )
-        except Exception as e:
-            return ResponseService.error(f'Error updating name: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'detail': 'Name updated successfully.',
+            'first_name': first_name,
+            'last_name': last_name
+        }, status=status.HTTP_200_OK)
 
 
     # ----------------------------------------------------------------------------- #
@@ -227,34 +217,30 @@ class UserProfileViewSet(viewsets.ViewSet):
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['patch'], url_path='update-email')
     def update_email(self, request):
+        new_email = request.data.get('new_email', '').strip()
+
+        # Validate the new email
+        if not new_email:
+            raise exceptions.ValidationError('Email address is required.')
+
+        # Validate email format using Django's built-in validator
         try:
-            new_email = request.data.get('new_email', '').strip()
+            validate_email(new_email)
+        except ValidationError:
+            raise exceptions.ValidationError('Please enter a valid email address.')
 
-            # Validate the new email
-            if not new_email:
-                return ResponseService.error('Email address is required.', status_code=status.HTTP_400_BAD_REQUEST)
+        # Check if email is already taken
+        if User.objects.filter(email=new_email.lower()).exclude(id=request.user.id).exists():
+            raise exceptions.ValidationError('This email address is already registered.')
 
-            # Validate email format using Django's built-in validator
-            try:
-                validate_email(new_email)
-            except ValidationError:
-                return ResponseService.error('Please enter a valid email address.', status_code=status.HTTP_400_BAD_REQUEST)
+        # Update the email
+        request.user.email = new_email.lower()
+        request.user.save()
 
-            # Check if email is already taken
-            if User.objects.filter(email=new_email.lower()).exclude(id=request.user.id).exists():
-                return ResponseService.error('This email address is already registered.', status_code=status.HTTP_400_BAD_REQUEST)
-
-            # Update the email
-            request.user.email = new_email.lower()
-            request.user.save()
-
-            return ResponseService.success(
-                'Email updated successfully.',
-                data={'new_email': new_email}
-            )
-
-        except Exception as e:
-            return ResponseService.error(f'Error updating email: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'detail': 'Email updated successfully.',
+            'new_email': new_email
+        }, status=status.HTTP_200_OK)
 
 
     # ----------------------------------------------------------------------------- #
@@ -267,28 +253,26 @@ class UserProfileViewSet(viewsets.ViewSet):
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['patch'], url_path='update-password')
     def update_password(self, request):
-        try:
-            current_password = request.data.get('current_password')
-            new_password = request.data.get('new_password')
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
 
-            # Validate inputs
-            if not current_password or not new_password:
-                return ResponseService.error('Both current and new passwords are required.', status_code=status.HTTP_400_BAD_REQUEST)
+        # Validate inputs
+        if not current_password or not new_password:
+            raise exceptions.ValidationError('Both current and new passwords are required.')
 
-            # Use PasswordService to validate and change password
-            success, error_message = PasswordService.change_password(
-                user=request.user,
-                current_password=current_password,
-                new_password=new_password
-            )
+        # Use PasswordService to validate and change password
+        success, error_message = PasswordService.change_password(
+            user=request.user,
+            current_password=current_password,
+            new_password=new_password
+        )
 
-            if not success:
-                return ResponseService.error(error_message, status_code=status.HTTP_400_BAD_REQUEST)
+        if not success:
+            raise exceptions.ValidationError(error_message)
 
-            # Update session to prevent logout after password change
-            update_session_auth_hash(request, request.user)
+        # Update session to prevent logout after password change
+        update_session_auth_hash(request, request.user)
 
-            return ResponseService.success('Password updated successfully.')
-
-        except Exception as e:
-            return ResponseService.error(f'Error updating password: {str(e)}', status_code=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'detail': 'Password updated successfully.'
+        }, status=status.HTTP_200_OK)

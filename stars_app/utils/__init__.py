@@ -16,6 +16,8 @@
 # - validators.py: File upload validation, coordinate validation, XSS sanitization                      #
 # - throttles.py: DRF rate limiting classes (login, content creation, voting, reporting)                #
 # - cache.py: Redis caching utilities (key generation, invalidation helpers)                            #
+# - audit_logger.py: Security audit logging (authentication events, admin actions)                      #
+# - exception_handler.py: Global exception handler for consistent error responses (Phase 4)             #
 # - signals.py: Django signal handlers (file cleanup, aggregate updates)                                #
 #                                                                                                       #
 # Note on signals.py:                                                                                   #
@@ -58,6 +60,20 @@ from .cache import (
     get_or_set_cache,
 )
 
+# Import audit logging utilities
+from .audit_logger import (
+    log_auth_event,
+    log_admin_action,
+    log_permission_denied,
+    get_client_ip,
+    get_user_agent,
+)
+
+# Import exception handler
+from .exception_handler import (
+    custom_exception_handler,
+)
+
 __all__ = [
     # Validators
     'validate_file_size',
@@ -87,4 +103,14 @@ __all__ = [
     'invalidate_user_favorites',
     'invalidate_all_location_caches',
     'get_or_set_cache',
+
+    # Audit logging
+    'log_auth_event',
+    'log_admin_action',
+    'log_permission_denied',
+    'get_client_ip',
+    'get_user_agent',
+
+    # Exception handler
+    'custom_exception_handler',
 ]

@@ -35,5 +35,8 @@ from .model_review_photo import ReviewPhoto
 from .model_report import Report
 from .model_vote import Vote
 
+# Audit/Security models:
+from .model_audit_log import AuditLog
+
 # Import signals to ensure they're registered:
 from stars_app.utils import signals

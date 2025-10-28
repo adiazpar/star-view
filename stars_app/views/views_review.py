@@ -23,9 +23,10 @@
 from django.shortcuts import get_object_or_404
 
 # REST Framework imports:
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, exceptions
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, BasePermission, SAFE_METHODS
+from rest_framework.response import Response
 
 # Model imports:
 from stars_app.models.model_review import Review
@@ -37,7 +38,7 @@ from stars_app.models.model_location import Location
 from stars_app.serializers import ReviewSerializer, ReviewCommentSerializer
 
 # Service imports:
-from stars_app.services import ReportService, ResponseService, VoteService
+from stars_app.services import ReportService, VoteService
 
 # Throttle imports:
 from stars_app.utils import ContentCreationThrottle, VoteThrottle, ReportThrottle
@@ -196,10 +197,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         uploaded_images = request.FILES.getlist('images') or request.FILES.getlist('review_images')
 
         if not uploaded_images:
-            return ResponseService.error(
-                'No images provided',
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+            raise exceptions.ValidationError('No images provided')
 
         # Validate all files before processing any of them
         for image in uploaded_images:
@@ -207,25 +205,18 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 validate_file_size(image)
                 validate_image_file(image)
             except ValidationError as e:
-                return ResponseService.error(
-                    f'Invalid file "{image.name}": {str(e)}',
-                    status_code=status.HTTP_400_BAD_REQUEST
-                )
+                raise exceptions.ValidationError(f'Invalid file "{image.name}": {str(e)}')
 
         # Check existing photos count
         existing_photos_count = review.photos.count()
         remaining_slots = 5 - existing_photos_count
 
         if remaining_slots <= 0:
-            return ResponseService.error(
-                'You already have 5 photos. Delete some before adding more.',
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+            raise exceptions.ValidationError('You already have 5 photos. Delete some before adding more.')
 
         if len(uploaded_images) > remaining_slots:
-            return ResponseService.error(
-                f'You can only add {remaining_slots} more photo(s). You already have {existing_photos_count} photo(s).',
-                status_code=status.HTTP_400_BAD_REQUEST
+            raise exceptions.ValidationError(
+                f'You can only add {remaining_slots} more photo(s). You already have {existing_photos_count} photo(s).'
             )
 
         # Process each uploaded image (all validation passed)
@@ -242,10 +233,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 'order': photo.order
             })
 
-        return ResponseService.success(
-            f'{len(created_photos)} photo(s) added successfully',
-            data={'photos': created_photos},
-            status_code=status.HTTP_201_CREATED
+        return Response(
+            {
+                'detail': f'{len(created_photos)} photo(s) added successfully',
+                'photos': created_photos
+            },
+            status=status.HTTP_201_CREATED
         )
 
 
@@ -258,15 +251,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
             photo = ReviewPhoto.objects.get(id=photo_id, review=review)
             photo.delete()
 
-            return ResponseService.success(
-                'Photo deleted successfully',
-                status_code=status.HTTP_200_OK
+            return Response(
+                {'detail': 'Photo deleted successfully'},
+                status=status.HTTP_200_OK
             )
         except ReviewPhoto.DoesNotExist:
-            return ResponseService.error(
-                'Photo not found',
-                status_code=status.HTTP_404_NOT_FOUND
-            )
+            raise exceptions.NotFound('Photo not found')
 
 
     # Handle voting on reviews using VoteService:
@@ -276,23 +266,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         vote_type = request.data.get('vote_type')
 
         # Use VoteService to handle validation and vote processing
-        success, data, status_code = VoteService.handle_vote_request(
+        # VoteService raises ValidationError on failure (caught by exception handler)
+        vote_data = VoteService.handle_vote_request(
             user=request.user,
             content_object=review,
             vote_type=vote_type
         )
 
-        if success:
-            return ResponseService.success(
-                'Vote processed successfully',
-                data=data,
-                status_code=status_code
-            )
-        else:
-            return ResponseService.error(
-                data.get('error', 'Failed to process vote'),
-                status_code=status_code
-            )
+        return Response({
+            'detail': 'Vote processed successfully',
+            **vote_data
+        }, status=status.HTTP_200_OK)
 
 
     # Handle reporting reviews using ReportService:
@@ -300,18 +284,20 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def report(self, request, pk=None, location_pk=None):
         review = self.get_object()
 
-        # Use ReportService to handle report submission:
-        success, message, status_code = ReportService.submit_report(
+        # Use ReportService to handle report submission
+        # ReportService raises ValidationError on failure (caught by exception handler)
+        report = ReportService.submit_report(
             user=request.user,
             content_object=review,
             report_type=request.data.get('report_type', 'OTHER'),
             description=request.data.get('description', '')
         )
 
-        if success:
-            return ResponseService.success(message, status_code=status_code)
-        else:
-            return ResponseService.error(message, status_code=status_code)
+        content_type_name = report.content_type.model.replace('_', ' ').capitalize()
+        return Response(
+            {'detail': f'{content_type_name} reported successfully'},
+            status=status.HTTP_201_CREATED
+        )
 
 
 
@@ -380,23 +366,17 @@ class CommentViewSet(viewsets.ModelViewSet):
         vote_type = request.data.get('vote_type')
 
         # Use VoteService to handle validation and vote processing
-        success, data, status_code = VoteService.handle_vote_request(
+        # VoteService raises ValidationError on failure (caught by exception handler)
+        vote_data = VoteService.handle_vote_request(
             user=request.user,
             content_object=comment,
             vote_type=vote_type
         )
 
-        if success:
-            return ResponseService.success(
-                'Vote processed successfully',
-                data=data,
-                status_code=status_code
-            )
-        else:
-            return ResponseService.error(
-                data.get('error', 'Failed to process vote'),
-                status_code=status_code
-            )
+        return Response({
+            'detail': 'Vote processed successfully',
+            **vote_data
+        }, status=status.HTTP_200_OK)
 
 
     # Handle reporting comments using ReportService:
@@ -405,14 +385,16 @@ class CommentViewSet(viewsets.ModelViewSet):
         comment = self.get_object()
 
         # Use ReportService to handle report submission
-        success, message, status_code = ReportService.submit_report(
+        # ReportService raises ValidationError on failure (caught by exception handler)
+        report = ReportService.submit_report(
             user=request.user,
             content_object=comment,
             report_type=request.data.get('report_type', 'OTHER'),
             description=request.data.get('description', '')
         )
 
-        if success:
-            return ResponseService.success(message, status_code=status_code)
-        else:
-            return ResponseService.error(message, status_code=status_code)
+        content_type_name = report.content_type.model.replace('_', ' ').capitalize()
+        return Response(
+            {'detail': f'{content_type_name} reported successfully'},
+            status=status.HTTP_201_CREATED
+        )

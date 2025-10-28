@@ -40,27 +40,26 @@ class VoteService:
     # Args:     user (User): The user casting the vote                              #
     #           content_object: The object being voted on (Review, ReviewComment)   #
     #           vote_type (str): 'up' for upvote, 'down' for downvote               #
-    # Returns:  Tuple (bool, dict, int): (success, data, status_code)               #
-    #           data contains: vote_data on success, error message on failure       #
+    # Returns:  dict: vote_data (upvotes, downvotes, vote_count, user_vote)         #
+    # Raises:   ValidationError: If validation fails                                #
     # ----------------------------------------------------------------------------- #
     @staticmethod
     def handle_vote_request(user, content_object, vote_type):
+        from rest_framework.exceptions import ValidationError
+
         # Validate vote type
         if vote_type not in ['up', 'down']:
-            return False, {'error': 'Vote type must be "up" or "down"'}, 400
+            raise ValidationError('Vote type must be "up" or "down"')
 
         # Prevent users from voting on their own content
         if hasattr(content_object, 'user') and content_object.user == user:
-            return False, {'error': 'You cannot vote on your own content'}, 400
+            raise ValidationError('You cannot vote on your own content')
 
         # Process the vote
         is_upvote = vote_type == 'up'
-        success, vote_data = VoteService.toggle_vote(user, content_object, is_upvote)
+        vote_data = VoteService.toggle_vote(user, content_object, is_upvote)
 
-        if success:
-            return True, vote_data, 200
-        else:
-            return False, vote_data, 500
+        return vote_data
 
 
     # ----------------------------------------------------------------------------- #
@@ -74,66 +73,59 @@ class VoteService:
     # Args:     user (User): The user casting the vote                              #
     #           content_object: The object being voted on (Review, ReviewComment)   #
     #           is_upvote (bool): True for upvote, False for downvote               #
-    # Returns:  Tuple (bool, dict): (success, vote_data)                            #
-    #           vote_data contains: upvotes, downvotes, vote_count, user_vote       #
+    # Returns:  dict: vote_data (upvotes, downvotes, vote_count, user_vote)         #
     # ----------------------------------------------------------------------------- #
     @staticmethod
     def toggle_vote(user, content_object, is_upvote):
-        try:
-            # Get the ContentType for the content object
-            content_type = ContentType.objects.get_for_model(content_object)
+        # Get the ContentType for the content object
+        content_type = ContentType.objects.get_for_model(content_object)
 
-            # Get or create the vote
-            vote, created = Vote.objects.get_or_create(
-                user=user,
-                content_type=content_type,
-                object_id=content_object.id,
-                defaults={'is_upvote': is_upvote}
-            )
+        # Get or create the vote
+        vote, created = Vote.objects.get_or_create(
+            user=user,
+            content_type=content_type,
+            object_id=content_object.id,
+            defaults={'is_upvote': is_upvote}
+        )
 
-            user_vote = None
-            if not created:
-                # Vote already exists
-                if vote.is_upvote == is_upvote:
-                    # Same vote type - remove the vote (toggle off)
-                    vote.delete()
-                    user_vote = None
-                else:
-                    # Different vote type - update the vote
-                    vote.is_upvote = is_upvote
-                    vote.save()
-                    user_vote = 'up' if is_upvote else 'down'
+        user_vote = None
+        if not created:
+            # Vote already exists
+            if vote.is_upvote == is_upvote:
+                # Same vote type - remove the vote (toggle off)
+                vote.delete()
+                user_vote = None
             else:
-                # New vote created
+                # Different vote type - update the vote
+                vote.is_upvote = is_upvote
+                vote.save()
                 user_vote = 'up' if is_upvote else 'down'
+        else:
+            # New vote created
+            user_vote = 'up' if is_upvote else 'down'
 
-            # Calculate updated vote counts
-            upvotes = Vote.objects.filter(
-                content_type=content_type,
-                object_id=content_object.id,
-                is_upvote=True
-            ).count()
+        # Calculate updated vote counts
+        upvotes = Vote.objects.filter(
+            content_type=content_type,
+            object_id=content_object.id,
+            is_upvote=True
+        ).count()
 
-            downvotes = Vote.objects.filter(
-                content_type=content_type,
-                object_id=content_object.id,
-                is_upvote=False
-            ).count()
+        downvotes = Vote.objects.filter(
+            content_type=content_type,
+            object_id=content_object.id,
+            is_upvote=False
+        ).count()
 
-            vote_count = upvotes - downvotes
+        vote_count = upvotes - downvotes
 
-            # Return vote data
-            vote_data = {
-                'upvotes': upvotes,
-                'downvotes': downvotes,
-                'vote_count': vote_count,
-                'user_vote': user_vote
-            }
-
-            return True, vote_data
-
-        except Exception as e:
-            return False, {'error': str(e)}
+        # Return vote data
+        return {
+            'upvotes': upvotes,
+            'downvotes': downvotes,
+            'vote_count': vote_count,
+            'user_vote': user_vote
+        }
 
 
     # ----------------------------------------------------------------------------- #

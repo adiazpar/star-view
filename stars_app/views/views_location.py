@@ -13,7 +13,8 @@
 #                                                                                                       #
 # Architecture:                                                                                         #
 # - Uses Django REST Framework ViewSets for API endpoints                                               #
-# - Delegates business logic to service layer (ReportService, VoteService, ResponseService)             #
+# - Delegates business logic to service layer (ReportService, VoteService)                              #
+# - Errors raised as exceptions, caught by global exception handler (Phase 4)                           #
 # - Template views are read-only; all write operations use API endpoints                                #
 # - Favorite operations are handled by FavoriteLocationViewSet in views_favorite.py                     #
 # ----------------------------------------------------------------------------------------------------- #
@@ -41,7 +42,6 @@ from ..serializers import LocationInfoPanelSerializer
 
 # Service imports:
 from ..services import ReportService
-from ..services import ResponseService
 from ..services import VoteService
 
 # Throttle imports:
@@ -286,20 +286,24 @@ class LocationViewSet(viewsets.ModelViewSet):
         location = self.get_object()
 
         # Use ReportService to handle report submission
-        success, message, status_code = ReportService.submit_report(
+        # ReportService raises ValidationError on failure (caught by exception handler)
+        report = ReportService.submit_report(
             user=request.user,
             content_object=location,
             report_type=request.data.get('report_type', 'OTHER'),
             description=request.data.get('description', '')
         )
 
-        if success:
-            # Increment report counter on the location
-            location.times_reported += 1
-            location.save()
-            return ResponseService.success(message, status_code=status_code)
-        else:
-            return ResponseService.error(message, status_code=status_code)
+        # Increment report counter on the location
+        location.times_reported += 1
+        location.save()
+
+        # Return success response
+        content_type_name = report.content_type.model.replace('_', ' ').capitalize()
+        return Response(
+            {'detail': f'{content_type_name} reported successfully'},
+            status=status.HTTP_201_CREATED
+        )
 
 
     # ----------------------------------------------------------------------------- #
