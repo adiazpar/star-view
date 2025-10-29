@@ -15,9 +15,9 @@
 #                                                                                                       #
 # Architecture:                                                                                         #
 # - Development: Vite dev server runs on :5173 with hot reload, this view rarely used                   #
-# - Production: Django serves React build from frontend/dist/, this view handles all frontend routes    #
+# - Production: Django serves React build from starview_frontend/dist/, this view handles all routes  #
 # - URLs: Configured as catch-all pattern in django_project/urls.py (must be last in urlpatterns)       #
-# - Templates: Looks for index.html in frontend/dist/ (configured in settings.TEMPLATES DIRS)           #
+# - Templates: Looks for index.html in starview_frontend/dist/ (configured in settings.TEMPLATES)       #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Django imports:
@@ -34,12 +34,12 @@ import os
 # based on the URL path.                                                        #
 #                                                                               #
 # Development workflow:                                                         #
-# - Run `npm run dev` in frontend/ directory                                    #
+# - Run `npm run dev` in starview_frontend/ directory                           #
 # - Access React at http://localhost:5173 (hot reload enabled)                  #
 # - API calls proxy to Django at :8000 via Vite config                          #
 #                                                                               #
 # Production workflow:                                                          #
-# - Run `npm run build` to create optimized bundle in frontend/dist/            #
+# - Run `npm run build` to create optimized bundle in starview_frontend/dist/   #
 # - Django serves everything from :8000                                         #
 # - This view returns index.html for all non-API routes                         #
 # ----------------------------------------------------------------------------- #
@@ -51,7 +51,7 @@ class ReactAppView(TemplateView):
             return ['index.html']
 
         # Development: check if build exists (e.g., testing production mode locally)
-        build_path = os.path.join(settings.BASE_DIR, 'frontend', 'dist', 'index.html')
+        build_path = os.path.join(settings.BASE_DIR, 'starview_frontend', 'dist', 'index.html')
         if os.path.exists(build_path):
             return ['index.html']
 

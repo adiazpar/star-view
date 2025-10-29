@@ -27,7 +27,7 @@ from .views import ReactAppView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('stars_app.urls')),
+    path('', include('starview_app.urls')),
 ]
 
 # Django Debug Toolbar (development only)
@@ -46,12 +46,12 @@ urlpatterns += [
     re_path(
         r'^assets/(?P<path>.*)$',
         static_serve,
-        {'document_root': os.path.join(settings.BASE_DIR, 'frontend/dist/assets')},
+        {'document_root': os.path.join(settings.BASE_DIR, 'starview_frontend/dist/assets')},
     ),
     re_path(
         r'^images/(?P<path>.*)$',
         static_serve,
-        {'document_root': os.path.join(settings.BASE_DIR, 'frontend/dist/images')},
+        {'document_root': os.path.join(settings.BASE_DIR, 'starview_frontend/dist/images')},
     ),
 ]
 

@@ -40,13 +40,13 @@ pip install -r requirements.txt
 
 # Install Node.js dependencies and build React frontend
 echo "Installing Node.js dependencies..."
-cd frontend
+cd starview_frontend
 npm ci  # Use 'npm ci' for faster, more reliable installs in CI/CD
 
 echo "Building React production bundle..."
 npm run build
 
-echo "React build completed. Output in frontend/dist/"
+echo "React build completed. Output in starview_frontend/dist/"
 cd ..
 
 # Collect static files (CSS, JS, images, React build)

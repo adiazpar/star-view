@@ -149,7 +149,7 @@ INSTALLED_APPS = [
     'debug_toolbar',            # Development only
 
     # Project apps
-    'stars_app',
+    'starview_app',
 ]
 
 # =============================================================================
@@ -187,7 +187,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            os.path.join(BASE_DIR, 'frontend/dist'),  # React build directory
+            os.path.join(BASE_DIR, 'starview_frontend/dist'),  # React build directory
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -298,7 +298,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Include both Django static files AND React production build
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),           # Django static files
-    os.path.join(BASE_DIR, 'frontend/dist'),    # React production build
+    os.path.join(BASE_DIR, 'starview_frontend/dist'),    # React production build
 ]
 
 # Whitenoise configuration for serving static files in production
@@ -392,7 +392,7 @@ REST_FRAMEWORK = {
     },
 
     # Exception handling (Phase 4: Standardized error responses)
-    'EXCEPTION_HANDLER': 'stars_app.utils.exception_handler.custom_exception_handler',
+    'EXCEPTION_HANDLER': 'starview_app.utils.exception_handler.custom_exception_handler',
 }
 
 # =============================================================================
@@ -536,7 +536,7 @@ LOGGING = {
             'propagate': False,
         },
         # Application logger for general events
-        'stars_app': {
+        'starview_app': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
