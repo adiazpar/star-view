@@ -45,6 +45,8 @@ from .views import (
     CustomPasswordResetDoneView,
     CustomPasswordResetConfirmView,
     CustomPasswordResetCompleteView,
+    # Health check views
+    health_check,
 )
 
 router = DefaultRouter()
@@ -62,6 +64,9 @@ reviews_router.register(r'comments', CommentViewSet, basename='review-comments')
 
 
 urlpatterns = [
+    # Health check (for load balancer monitoring):
+    path('health/', health_check, name='health_check'),
+
     # User authentication:
     path('register/', register, name='register'),
     path('login/', custom_login, name='login'),

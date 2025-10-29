@@ -54,6 +54,11 @@ from .views_auth import (
     CustomPasswordResetCompleteView,
 )
 
+# Health check views:
+from .views_health import (
+    health_check,
+)
+
 # Expose all views for easier imports:
 __all__ = [
     # Location views
@@ -83,4 +88,7 @@ __all__ = [
     'CustomPasswordResetDoneView',
     'CustomPasswordResetConfirmView',
     'CustomPasswordResetCompleteView',
+
+    # Health check views
+    'health_check',
 ]
