@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------------------------------------- #
-# This build.sh script runs on Render during deployment to set up the Django application.               #
+# This build.sh script runs on Render during deployment to set up the Django + React application.       #
 #                                                                                                       #
 # Purpose:                                                                                              #
 # Automates deployment tasks that would normally require shell access: installing dependencies,         #
-# collecting static files, running migrations, and creating an initial superuser. This is               #
-# essential for Render's free tier which doesn't provide interactive shell access.                      #
+# building the React frontend, collecting static files, running migrations, and creating an initial     #
+# superuser. This is essential for Render's free tier which doesn't provide interactive shell access.   #
 #                                                                                                       #
 # What it does:                                                                                         #
 # 1. Installs Python dependencies from requirements.txt                                                 #
-# 2. Collects static files (CSS, JS, images) for production serving                                     #
-# 3. Runs database migrations to update schema                                                          #
-# 4. Creates superuser if DJANGO_SUPERUSER_* environment variables are set                              #
+# 2. Installs Node.js dependencies and builds React production bundle                                   #
+# 3. Collects static files (CSS, JS, images, React build) for production serving                        #
+# 4. Runs database migrations to update schema                                                          #
+# 5. Creates superuser if DJANGO_SUPERUSER_* environment variables are set                              #
 #                                                                                                       #
 # Usage:                                                                                                #
 # - Render automatically runs this script during deployment                                             #
@@ -19,6 +20,7 @@
 #   DJANGO_SUPERUSER_USERNAME=admin                                                                     #
 #   DJANGO_SUPERUSER_EMAIL=admin@example.com                                                            #
 #   DJANGO_SUPERUSER_PASSWORD=your-secure-password                                                      #
+#   VITE_MAPBOX_TOKEN=your-mapbox-token                                                                 #
 #                                                                                                       #
 # Security Note:                                                                                        #
 # The superuser creation only runs if credentials don't already exist in the database.                  #
@@ -33,10 +35,21 @@ echo "Starting Render build script..."
 echo "===================================="
 
 # Install Python dependencies
-echo "Installing dependencies from requirements.txt..."
+echo "Installing Python dependencies from requirements.txt..."
 pip install -r requirements.txt
 
-# Collect static files (CSS, JS, images)
+# Install Node.js dependencies and build React frontend
+echo "Installing Node.js dependencies..."
+cd frontend
+npm ci  # Use 'npm ci' for faster, more reliable installs in CI/CD
+
+echo "Building React production bundle..."
+npm run build
+
+echo "React build completed. Output in frontend/dist/"
+cd ..
+
+# Collect static files (CSS, JS, images, React build)
 echo "Collecting static files..."
 python3 manage.py collectstatic --no-input
 

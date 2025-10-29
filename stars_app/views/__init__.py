@@ -37,12 +37,6 @@ from .views_favorite import (
     FavoriteLocationViewSet,
 )
 
-# Navigation views:
-from .views_navigation import (
-    home,
-    map,
-)
-
 # Authentication views:
 from .views_auth import (
     register,
@@ -75,10 +69,6 @@ __all__ = [
 
     # Favorite location views
     'FavoriteLocationViewSet',
-
-    # Navigation views
-    'home',
-    'map',
 
     # Authentication views
     'register',

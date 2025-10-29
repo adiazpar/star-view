@@ -33,8 +33,6 @@ from .views import (
     CommentViewSet,
     UserProfileViewSet,
     # Template views
-    home,
-    map,
     account,
     location_details,
     # Authentication views
@@ -78,12 +76,8 @@ urlpatterns = [
     path('password-reset-confirm/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('password-reset-complete/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
-    # Navigation:
-    path('', home, name='home'),
-    path('map/', map, name='map'),
+    # Legacy template views (kept for backward compatibility):
     path('account/', account, name='account'),
-
-    # Location:
     path('location/<int:location_id>/', location_details, name='location_details'),
 
     # Django Rest Framework:
