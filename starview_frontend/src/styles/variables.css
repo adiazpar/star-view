@@ -1,0 +1,102 @@
+/* Starview Design System - CSS Variables */
+
+:root {
+  /* Colors - Dark Theme (Default) */
+  --bg-primary: #111827;
+  --bg-secondary: #1f2937;
+  --bg-elevated: #374151;
+  --bg-hover: #4b5563;
+
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+
+  /* Colors - Semantic */
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --accent-light: #60a5fa;
+  --accent-bg: rgba(59, 130, 246, 0.1);
+
+  --border: #4b5563;
+  --border-focus: #3b82f6;
+
+  --success: #22c55e;
+  --success-bg: rgba(34, 197, 94, 0.1);
+  --success-border: rgba(34, 197, 94, 0.3);
+
+  --warning: #eab308;
+  --warning-bg: rgba(234, 179, 8, 0.1);
+  --warning-border: rgba(234, 179, 8, 0.3);
+
+  --error: #ef4444;
+  --error-bg: rgba(239, 68, 68, 0.1);
+  --error-border: rgba(239, 68, 68, 0.3);
+
+  --info: #0ea5e9;
+  --info-bg: rgba(14, 165, 233, 0.1);
+  --info-border: rgba(14, 165, 233, 0.3);
+
+  --star-filled: #fbbf24;
+  --star-empty: #4b5563;
+
+  /* Spacing */
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+
+  /* Border Radius */
+  --radius: 4px;
+  --radius-full: 9999px;
+
+  /* Shadow */
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+
+  /* Transition */
+  --transition: 0.15s;
+
+  /* Z-Index */
+  --z-navbar: 30;
+  --z-modal: 50;
+
+  /* Typography */
+  --font-family: 'Inter', sans-serif;
+
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --text-4xl: 36px;
+
+  --font-lighter: lighter
+  --font-light: light;
+  --font-normal: normal;
+  --font-bold: bold;
+  --font-bolder: bolder;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+
+  --container-max: 1280px;
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  --bg-primary: #ffffff;
+  --bg-secondary: #f3f4f6;
+  --bg-elevated: #ffffff;
+  --bg-hover: #e5e7eb;
+
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+
+  --border: #d1d5db;
+
+  --star-empty: #d1d5db;
+
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}

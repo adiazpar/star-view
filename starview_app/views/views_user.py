@@ -20,8 +20,6 @@
 # ----------------------------------------------------------------------------------------------------- #
 
 # Django imports:
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth import update_session_auth_hash
 from django.views.decorators.http import require_POST
 from django.core.validators import validate_email
@@ -44,45 +42,6 @@ from starview_app.services import PasswordService
 
 # Signal utility imports:
 from starview_app.utils.signals import safe_delete_file
-
-
-
-# ----------------------------------------------------------------------------------------------------- #
-#                                                                                                       #
-#                                           USER METHODS                                                #
-#                                                                                                       #
-# ----------------------------------------------------------------------------------------------------- #
-
-# ----------------------------------------------------------------------------- #
-# Display user account page with tabbed interface for profile and favorites.    #
-# Active tab determined by 'tab' query parameter.                               #
-#                                                                               #
-# Args:     request: HTTP request object                                        #
-# Returns:  Rendered account page template based on active tab                  #
-# ----------------------------------------------------------------------------- #
-@login_required(login_url='login')
-def account(request):
-    user = request.user
-    active_tab = request.GET.get('tab', 'profile')
-
-    # Optimize: Use select_related to fetch Location data with favorites (prevents N+1)
-    favorites = FavoriteLocation.objects.filter(user=user).select_related('location')
-
-    context = {
-        'favorites': favorites,
-        'user_profile': user.userprofile,
-        'active_tab': active_tab,
-        'mapbox_token': settings.MAPBOX_TOKEN,
-        'default_profile_picture': settings.DEFAULT_PROFILE_PICTURE,
-    }
-
-    # Return the appropriate template based on the active tab
-    template_mapping = {
-        'profile': 'stars_app/account/account_profile.html',
-        'favorites': 'stars_app/account/account_favorites.html',
-    }
-
-    return render(request, template_mapping.get(active_tab, 'stars_app/account/account_profile.html'), context)
 
 
 

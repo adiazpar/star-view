@@ -20,7 +20,7 @@
 # ----------------------------------------------------------------------------------------------------- #
 
 # Django imports:
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.db.models import Avg, Count, Q, Exists, OuterRef
 
@@ -359,80 +359,3 @@ class LocationViewSet(viewsets.ModelViewSet):
 
 
 
-# ----------------------------------------------------------------------------- #
-# Display detailed information about a location including reviews.              #
-#                                                                               #
-# Shows all reviews with the user's review first (if exists) and enriches       #
-# them with vote information for authenticated users using VoteService.         #
-# ----------------------------------------------------------------------------- #
-def location_details(request, location_id):
-
-    location = get_object_or_404(Location, pk=location_id)
-    all_reviews = Review.objects.filter(location=location)
-
-    # Initialize variables
-    user_has_reviewed = False
-    is_owner = False
-
-    if request.user.is_authenticated:
-        # Check if user owns the location
-        is_owner = location.added_by == request.user
-
-        # Check if user has already reviewed
-        user_has_reviewed = all_reviews.filter(user=request.user).exists()
-
-        # Get user's review and other reviews
-        user_review = all_reviews.filter(user=request.user).first()
-        other_reviews = all_reviews.exclude(user=request.user)
-    else:
-        user_review = None
-        other_reviews = all_reviews
-
-    # Order other reviews by created_at
-    other_reviews = other_reviews.order_by('-created_at')
-
-    # Combine reviews (user's review first, then others)
-    if user_review:
-        reviews_list = [user_review] + list(other_reviews)
-    else:
-        reviews_list = list(other_reviews)
-
-    # Create vote dictionaries to pass to template
-    comment_votes = {}
-
-    # Add vote information using VoteService
-    for review in reviews_list:
-        # Get vote data for this review
-        vote_data = VoteService.get_vote_counts(review, request.user)
-        setattr(review, 'user_vote', vote_data['user_vote'])
-
-        # Get vote data for comments
-        comments = review.comments.all()
-        for comment in comments:
-            comment_vote_data = VoteService.get_vote_counts(comment, request.user)
-            # Convert vote format for template (expects -1, 0, 1)
-            if comment_vote_data['user_vote'] == 'up':
-                comment_votes[comment.id] = 1
-            elif comment_vote_data['user_vote'] == 'down':
-                comment_votes[comment.id] = -1
-            else:
-                comment_votes[comment.id] = 0
-
-    # Calculate review statistics
-    total_reviews = all_reviews.count()
-    if total_reviews > 0:
-        avg_rating = all_reviews.aggregate(Avg('rating'))['rating__avg'] or 0
-    else:
-        avg_rating = 0
-
-    context = {
-        'location': location,
-        'reviews_list': reviews_list,
-        'user_has_reviewed': user_has_reviewed,
-        'is_owner': is_owner,
-        'mapbox_token': settings.MAPBOX_TOKEN,
-        'total_reviews': total_reviews,
-        'average_rating': avg_rating,
-        'comment_votes': comment_votes,
-    }
-    return render(request, 'stars_app/location/location_base.html', context)

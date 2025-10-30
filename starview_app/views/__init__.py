@@ -17,7 +17,6 @@
 # Location views:
 from .views_location import (
     LocationViewSet,
-    location_details,
 )
 
 # Review views:
@@ -28,7 +27,6 @@ from .views_review import (
 
 # User profile views:
 from .views_user import (
-    account,
     UserProfileViewSet,
 )
 
@@ -57,14 +55,12 @@ from .views_health import (
 __all__ = [
     # Location views
     'LocationViewSet',
-    'location_details',
 
     # Review views
     'ReviewViewSet',
     'CommentViewSet',
 
     # User profile views
-    'account',
     'UserProfileViewSet',
 
     # Favorite location views

@@ -32,9 +32,6 @@ from .views import (
     ReviewViewSet,
     CommentViewSet,
     UserProfileViewSet,
-    # Template views
-    account,
-    location_details,
     # Authentication views
     register,
     custom_login,
@@ -65,22 +62,18 @@ urlpatterns = [
     # Health check (for load balancer monitoring):
     path('health/', health_check, name='health_check'),
 
-    # User authentication:
-    path('register/', register, name='register'),
-    path('login/', custom_login, name='login'),
-    path('logout/', custom_logout, name='logout'),
+    # User authentication API endpoints:
+    path('api/auth/register/', register, name='register'),
+    path('api/auth/login/', custom_login, name='login'),
+    path('api/auth/logout/', custom_logout, name='logout'),
 
-    # Password Reset Views:
+    # Password Reset Views (still use templates for email flow):
     path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),
     path('password-reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
     path('password-reset-confirm/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('password-reset-complete/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
-    # Legacy template views (kept for backward compatibility):
-    path('account/', account, name='account'),
-    path('location/<int:location_id>/', location_details, name='location_details'),
-
-    # Django Rest Framework:
+    # Django Rest Framework API endpoints:
     path('api/', include(router.urls)),
     path('api/', include(locations_router.urls)),
     path('api/', include(reviews_router.urls)),

@@ -21,9 +21,7 @@
 # ----------------------------------------------------------------------------------------------------- #
 
 # Import tools:
-from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.views import (
@@ -34,12 +32,12 @@ from django.contrib.auth.views import (
 )
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy
 from django.db.models import Q
 
 # DRF imports:
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status, exceptions
 from rest_framework.response import Response
 
@@ -71,11 +69,10 @@ from starview_app.utils import LoginRateThrottle, log_auth_event
 # Args:     request: HTTP request object                                        #
 # Returns:  Rendered registration page (GET) or DRF Response (POST)             #
 # ----------------------------------------------------------------------------- #
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 @throttle_classes([LoginRateThrottle])
 def register(request):
-    if request.method == 'POST':
         # Get form data
         username = request.data.get('username', '').strip()
         email = request.data.get('email', '').strip()
@@ -149,11 +146,8 @@ def register(request):
         # Registration successful
         return Response({
             'detail': 'Account created successfully! Redirecting...',
-            'redirect_url': reverse('home')
+            'redirect_url': '/'
         }, status=status.HTTP_201_CREATED)
-
-    # GET request: render registration form
-    return render(request, 'stars_app/auth/auth_register.html')
 
 
 # ----------------------------------------------------------------------------- #
@@ -167,11 +161,10 @@ def register(request):
 # Args:     request: HTTP request object                                        #
 # Returns:  Rendered login page (GET) or DRF Response (POST)                    #
 # ----------------------------------------------------------------------------- #
-@api_view(['GET', 'POST'])
+@api_view(['POST'])
 @permission_classes([AllowAny])
 @throttle_classes([LoginRateThrottle])
 def custom_login(request):
-    if request.method == 'POST':
         # Get form data
         username_or_email = request.data.get('username', '').strip().lower()
         password = request.data.get('password', '')
@@ -253,8 +246,8 @@ def custom_login(request):
             )
 
             # Determine redirect URL
-            redirect_url = reverse('home')
-            if next_url and not next_url.startswith('/login/'):
+            redirect_url = '/'
+            if next_url and not next_url.startswith('/login'):
                 redirect_url = next_url
 
             return Response({
@@ -291,23 +284,17 @@ def custom_login(request):
         # Invalid password - use same generic error (prevents user enumeration)
         raise exceptions.AuthenticationFailed(generic_error)
 
-    # GET request: render login page
-    next_url = request.GET.get('next', '')
-    if next_url.startswith('/login/'):
-        next_url = ''
-
-    return render(request, 'stars_app/auth/auth_login.html', {'next': next_url})
-
 
 # ----------------------------------------------------------------------------- #
-# Handle user logout.                                                           #
+# Handle user logout via API endpoint.                                          #
 #                                                                               #
-# Ends the user's session and redirects to home page with confirmation message. #
+# Ends the user's session and returns JSON response.                            #
 #                                                                               #
 # Args:     Request: HTTP request object                                        #
-# Returns:  Redirect to home page                                               #
+# Returns:  DRF Response with success message                                   #
 # ----------------------------------------------------------------------------- #
-@login_required(login_url='login')
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def custom_logout(request):
     # Get user before logout (session cleared after logout())
     user = request.user
@@ -323,7 +310,10 @@ def custom_logout(request):
     )
 
     logout(request)
-    return redirect('home')
+    return Response({
+        'detail': 'Logout successful.',
+        'redirect_url': '/'
+    }, status=status.HTTP_200_OK)
 
 
 
