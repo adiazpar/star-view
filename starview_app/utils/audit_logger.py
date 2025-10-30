@@ -49,7 +49,7 @@ logger = logging.getLogger('audit')
 
 # Lazy-load AuditLog model to avoid circular import:
 def get_audit_log_model():
-    return apps.get_model('stars_app', 'AuditLog')
+    return apps.get_model('starview_app', 'AuditLog')
 
 
 # ----------------------------------------------------------------------------- #

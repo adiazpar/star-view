@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useTheme } from '../hooks/useTheme';
+import { useAuth } from '../hooks/useAuth';
 
 function Navbar() {
-  // TODO: Get user authentication state from context/store
-  const isAuthenticated = false;
   const { theme, toggleTheme } = useTheme();
+  const { isAuthenticated, user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [backdropVisible, setBackdropVisible] = useState(false);
 
@@ -48,11 +48,26 @@ function Navbar() {
           <Link to="/" className="navbar-link">Home</Link>
           <Link to="/map" className="navbar-link">Map</Link>
           <Link to="/explore" className="navbar-link">Explore</Link>
-          <Link to="/profile" className="navbar-link">Register</Link>
-          <Link to="/login" className="navbar-link login-btn">
-            <i className="fa-solid fa-arrow-right-to-bracket"></i>
-            Login
-          </Link>
+
+          {isAuthenticated ? (
+            // Authenticated: Show Profile and Logout
+            <>
+              <Link to="/profile" className="navbar-link">Profile</Link>
+              <button onClick={logout} className="navbar-link login-btn">
+                <i className="fa-solid fa-arrow-right-from-bracket"></i>
+                Logout
+              </button>
+            </>
+          ) : (
+            // Not authenticated: Show Register and Login
+            <>
+              <Link to="/register" className="navbar-link">Register</Link>
+              <Link to="/login" className="navbar-link login-btn">
+                <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                Login
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Hamburger Button */}
@@ -67,25 +82,50 @@ function Navbar() {
         {/* Mobile Menu */}
         <div className={`navbar-mobile-menu ${mobileMenuOpen ? 'open' : ''}`}>
           <Link to="/" className="navbar-mobile-link" onClick={closeMobileMenu}>
-            <i class="fa-regular fa-house"></i>
+            <i className="fa-regular fa-house"></i>
             Home
           </Link>
           <Link to="/map" className="navbar-mobile-link" onClick={closeMobileMenu}>
-            <i class="fa-solid fa-earth-europe"></i>
+            <i className="fa-solid fa-earth-europe"></i>
             Map
           </Link>
           <Link to="/explore" className="navbar-mobile-link" onClick={closeMobileMenu}>
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <i className="fa-solid fa-magnifying-glass"></i>
             Explore
           </Link>
-          <Link to="/profile" className="navbar-mobile-link" onClick={closeMobileMenu}>
-            <i className="fa-regular fa-user"></i>
-            Register
-          </Link>
-          <Link to="/login" className="navbar-mobile-link" onClick={closeMobileMenu}>
-            <i className="fa-solid fa-arrow-right-to-bracket"></i>
-            Login
-          </Link>
+
+          {isAuthenticated ? (
+            // Authenticated: Show Profile and Logout
+            <>
+              <Link to="/profile" className="navbar-mobile-link" onClick={closeMobileMenu}>
+                <i className="fa-regular fa-user"></i>
+                Profile
+              </Link>
+              <button
+                onClick={() => {
+                  closeMobileMenu();
+                  logout();
+                }}
+                className="navbar-mobile-link"
+                style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
+              >
+                <i className="fa-solid fa-arrow-right-from-bracket"></i>
+                Logout
+              </button>
+            </>
+          ) : (
+            // Not authenticated: Show Register and Login
+            <>
+              <Link to="/register" className="navbar-mobile-link" onClick={closeMobileMenu}>
+                <i className="fa-regular fa-user"></i>
+                Register
+              </Link>
+              <Link to="/login" className="navbar-mobile-link" onClick={closeMobileMenu}>
+                <i className="fa-solid fa-arrow-right-to-bracket"></i>
+                Login
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu Backdrop */}

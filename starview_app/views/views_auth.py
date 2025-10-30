@@ -445,3 +445,43 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 # Display confirmation that password was successfully reset:
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'stars_app/auth/password_reset/auth_password_reset_complete.html'
+
+
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                                                                                       #
+#                                    AUTHENTICATION STATUS                                              #
+#                                                                                                       #
+# ----------------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# Check if user is authenticated and return user information.                   #
+#                                                                               #
+# DRF API endpoint that returns authentication status and basic user info.      #
+# Useful for frontend components (like navbar) to conditionally render UI       #
+# based on authentication state without making unnecessary authenticated        #
+# requests to other endpoints.                                                  #
+#                                                                               #
+# Args:     request: HTTP request object                                        #
+# Returns:  DRF Response with authentication status and user data               #
+# ----------------------------------------------------------------------------- #
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def auth_status(request):
+    if request.user.is_authenticated:
+        return Response({
+            'authenticated': True,
+            'user': {
+                'id': request.user.id,
+                'username': request.user.username,
+                'email': request.user.email,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+                'profile_picture_url': request.user.userprofile.get_profile_picture_url
+            }
+        }, status=status.HTTP_200_OK)
+    else:
+        return Response({
+            'authenticated': False,
+            'user': None
+        }, status=status.HTTP_200_OK)

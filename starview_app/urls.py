@@ -36,6 +36,7 @@ from .views import (
     register,
     custom_login,
     custom_logout,
+    auth_status,
     CustomPasswordResetView,
     CustomPasswordResetDoneView,
     CustomPasswordResetConfirmView,
@@ -66,6 +67,7 @@ urlpatterns = [
     path('api/auth/register/', register, name='register'),
     path('api/auth/login/', custom_login, name='login'),
     path('api/auth/logout/', custom_logout, name='logout'),
+    path('api/auth/status/', auth_status, name='auth_status'),
 
     # Password Reset Views (still use templates for email flow):
     path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),
