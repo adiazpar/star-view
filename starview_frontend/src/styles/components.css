@@ -364,11 +364,12 @@
 
 .form-group {
   margin-bottom: var(--space-lg);
+  font-weight: 300;
 }
 
 .form-label {
   display: block;
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   font-weight: var(--font-semibold);
   color: var(--text-secondary);
   margin-bottom: var(--space-sm);
@@ -379,7 +380,7 @@
 .form-select {
   width: 100%;
   padding: 10px 16px;
-  background-color: var(--bg-elevated);
+  background-color: var(--bg-primary);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   color: var(--text-primary);
@@ -387,7 +388,7 @@
 
 .form-input::placeholder,
 .form-textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--bg-hover);
 }
 
 .form-input:focus,
@@ -410,11 +411,6 @@
 }
 
 .form-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
-  background-position: right 8px center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
   padding-right: 2.5rem;
   cursor: pointer;
 }

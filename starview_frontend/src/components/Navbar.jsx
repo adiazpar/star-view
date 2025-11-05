@@ -55,6 +55,12 @@ function Navbar() {
           <Link to="/map" className="navbar-link">Map</Link>
           <Link to="/explore" className="navbar-link">Explore</Link>
 
+          {/* Theme Toggle Button */}
+          <button onClick={toggleTheme} className="navbar-link" style={{ border: 'none', background: 'none' }}>
+            <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
+            {theme === 'dark' ? 'Light' : 'Dark'}
+          </button>
+
           {isAuthenticated ? (
             // Authenticated: Show Profile and Logout
             <>
@@ -99,6 +105,18 @@ function Navbar() {
             <i className="fa-solid fa-magnifying-glass"></i>
             Explore
           </Link>
+
+          {/* Theme Toggle Button (Mobile) */}
+          <button
+            onClick={() => {
+              toggleTheme();
+            }}
+            className="navbar-mobile-link"
+            style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
+          >
+            <i className={theme === 'dark' ? 'fa-solid fa-sun' : 'fa-solid fa-moon'}></i>
+            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+          </button>
 
           {isAuthenticated ? (
             // Authenticated: Show Profile and Logout

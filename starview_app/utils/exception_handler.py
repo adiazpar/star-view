@@ -175,8 +175,26 @@ def format_drf_exception(exc, response):
     if isinstance(exc, Http404):
         detail = 'Resource not found'
 
+    # Clean up ErrorDetail objects from DRF ValidationError
+    # DRF wraps error messages in ErrorDetail objects, which when converted
+    # to string show as "[ErrorDetail(string='message', code='invalid')]"
+    # Extract the actual message string from ErrorDetail list
+    detail_str = str(detail)
+    if isinstance(detail, list) and len(detail) > 0:
+        # Extract first error from list
+        detail_str = str(detail[0])
+
+    # If it's still an ErrorDetail representation, extract the message
+    if detail_str.startswith('[ErrorDetail(') or detail_str.startswith('ErrorDetail('):
+        # Try to extract the actual message using string manipulation
+        # Format: "ErrorDetail(string='message', code='code')"
+        import re
+        match = re.search(r"string=['\"](.+?)['\"]", detail_str)
+        if match:
+            detail_str = match.group(1)
+
     error_data = {
-        'detail': str(detail),
+        'detail': detail_str,
         'error_code': error_code,
         'status_code': response.status_code
     }

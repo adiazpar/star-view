@@ -187,7 +187,7 @@ def custom_login(request):
                 metadata={'reason': 'account_locked'}
             )
             raise exceptions.PermissionDenied(
-                'Account temporarily locked due to too many failed login attempts. Please try again in 1 hour.'
+                'Account locked due to too many login attempts. Please try again later.'
             )
 
         # Try to get user by username or email
@@ -211,7 +211,8 @@ def custom_login(request):
                 message=f'Login failed - user not found: {username_or_email}',
                 metadata={'reason': 'user_not_found'}
             )
-            raise exceptions.AuthenticationFailed(generic_error)
+            # Use 400 instead of 401 to prevent browser's HTTP auth dialog
+            raise exceptions.ValidationError(generic_error)
 
         # Authenticate with username (django-axes intercepts this call)
         # Phase 4: Account Lockout - AxesBackendPermissionDenied raised if account is locked
@@ -229,7 +230,7 @@ def custom_login(request):
                 metadata={'reason': 'account_locked_by_axes'}
             )
             raise exceptions.PermissionDenied(
-                'Account temporarily locked due to too many failed login attempts. Please try again in 1 hour.'
+                'Account locked due to too many login attempts. Please try again later.'
             )
 
         if authenticated_user is not None:
@@ -268,7 +269,7 @@ def custom_login(request):
                 metadata={'reason': 'exceeded_failure_limit'}
             )
             raise exceptions.PermissionDenied(
-                'Account temporarily locked due to too many failed login attempts. Please try again in 1 hour.'
+                'Account locked due to too many login attempts. Please try again later.'
             )
 
         # Audit log: Failed login - invalid password
@@ -282,7 +283,8 @@ def custom_login(request):
         )
 
         # Invalid password - use same generic error (prevents user enumeration)
-        raise exceptions.AuthenticationFailed(generic_error)
+        # Use 400 instead of 401 to prevent browser's HTTP auth dialog
+        raise exceptions.ValidationError(generic_error)
 
 
 # ----------------------------------------------------------------------------- #

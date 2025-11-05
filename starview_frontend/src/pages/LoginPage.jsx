@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import authApi from '../services/auth';
+import './LoginPage.css';
 
 function LoginPage() {
   const navigate = useNavigate();
@@ -11,6 +12,8 @@ function LoginPage() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   // Get the redirect URL from query params (e.g., /login?next=/profile)
   const nextUrl = searchParams.get('next') || '/';
@@ -41,15 +44,10 @@ function LoginPage() {
       const redirectUrl = response.data.redirect_url || nextUrl;
       window.location.href = redirectUrl;
     } catch (err) {
-      // Handle different error scenarios
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else if (err.response?.status === 401) {
-        setError('Invalid username or password.');
-      } else if (err.response?.status === 403) {
-        setError('Account temporarily locked. Please try again later.');
-      } else if (err.response?.status === 429) {
-        setError('Too many login attempts. Please try again later.');
+      // Backend always returns 'detail' field for all API errors
+      // Only fallback to generic message if no response (network error)
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
       } else {
         setError('Unable to login. Please check your connection and try again.');
       }
@@ -58,33 +56,47 @@ function LoginPage() {
     }
   };
 
+  const handleSocialLogin = (provider) => {
+    // Social login functionality coming soon
+    alert(`${provider} login coming soon!`);
+  };
+
   return (
-    <div className="page-container pt-8 pb-8">
-      {/* Centered container with max width */}
-      <div style={{ maxWidth: '480px', margin: '0 auto', padding: '0 16px' }}>
-        <div className="card">
+    <div className="login-container">
+      {/* Hero Panel (Desktop Only) */}
+      <div className="login-hero">
+        <div className="login-hero-overlay">
+          <h1 className="login-hero-title">Discover The Universe</h1>
+          <p className="login-hero-subtitle">
+            Explore breathtaking stargazing locations, share your cosmic discoveries,
+            and connect with fellow astronomy enthusiasts around the world.
+          </p>
+        </div>
+      </div>
+
+      {/* Form Panel */}
+      <div className="login-form-panel">
+        <div className="login-form-content">
           {/* Header */}
-          <div className="card-header text-center">
-            <h1 className="card-title" style={{ fontSize: '28px', marginBottom: '8px' }}>
-              Welcome Back
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0' }}>
-              Sign in to your Starview account
+          <div className="login-form-header">
+            <h2 className="login-form-title">Your Gateway To The Stars</h2>
+            <p className="login-form-subtitle">
+              Ready to embark on your next stargazing adventure? Log in now and start your next journey.
             </p>
           </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="card-body">
-            {/* Error Message */}
-            {error && (
-              <div className="alert alert-error" style={{ marginBottom: '16px' }}>
-                <i className="alert-icon fa-solid fa-circle-exclamation"></i>
-                <div className="alert-content">
-                  <p className="alert-message">{error}</p>
-                </div>
+          {/* Error Message */}
+          {error && (
+            <div className="alert alert-error">
+              <i className="alert-icon fa-solid fa-circle-exclamation"></i>
+              <div className="alert-content">
+                <p className="alert-title">{error}</p>
               </div>
-            )}
+            </div>
+          )}
 
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="login-form">
             {/* Username/Email Field */}
             <div className="form-group">
               <label htmlFor="username" className="form-label">
@@ -109,69 +121,114 @@ function LoginPage() {
               <label htmlFor="password" className="form-label">
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                className="form-input"
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                autoComplete="current-password"
-                disabled={loading}
-              />
+              <div className="login-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  className="form-input has-toggle"
+                  placeholder="Enter your password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  autoComplete="current-password"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="login-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
             </div>
 
-            {/* Forgot Password Link */}
-            <div className="text-right" style={{ marginBottom: '16px' }}>
-              <Link
-                to="/password-reset"
-                style={{
-                  color: 'var(--text-secondary)',
-                  textDecoration: 'none',
-                  fontSize: '14px'
-                }}
-              >
-                Forgot password?
+            {/* Form Options */}
+            <div className="login-form-options">
+              <div className="login-remember-me">
+                <input
+                  type="checkbox"
+                  id="remember"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  disabled={loading}
+                />
+                <label htmlFor="remember">Remember me</label>
+              </div>
+              <Link to="/password-reset" className="login-forgot-password">
+                Forgot your password?
               </Link>
             </div>
 
             {/* Submit Button */}
             <button
               type="submit"
-              className="btn btn-primary btn-lg"
+              className="btn btn-primary login-btn-submit"
               disabled={loading}
-              style={{ width: '100%', justifyContent: 'center' }}
             >
               {loading ? (
                 <>
-                  <i className="fa-solid fa-spinner fa-spin"></i>
+                  <i className="fa-solid fa-spinner login-spinner"></i>
                   <span>Signing in...</span>
                 </>
               ) : (
                 <>
-                  <i className="fa-solid fa-arrow-right-to-bracket"></i>
                   <span>Sign In</span>
                 </>
               )}
             </button>
           </form>
 
-          {/* Footer */}
-          <div className="card-footer text-center">
-            <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '0' }}>
-              Don't have an account?{' '}
-              <Link
-                to="/register"
-                style={{
-                  color: 'var(--accent)',
-                  textDecoration: 'none',
-                  fontWeight: '500'
-                }}
-              >
-                Sign up
-              </Link>
+          {/* Divider */}
+          <div className="login-divider">
+            <div className="login-divider-line"></div>
+            <span className="login-divider-text">Or</span>
+            <div className="login-divider-line"></div>
+          </div>
+
+          {/* Social Login Buttons */}
+          <div className="login-social-buttons">
+            <button
+              type="button"
+              className="btn btn-secondary login-btn-social login-btn-google"
+              onClick={() => handleSocialLogin('Google')}
+              disabled
+            >
+              <i className="login-social-icon fa-brands fa-google"></i>
+              <span>Sign in with Google</span>
+              <span className="login-coming-soon">Soon</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-secondary login-btn-social login-btn-apple"
+              onClick={() => handleSocialLogin('Apple')}
+              disabled
+            >
+              <i className="login-social-icon fa-brands fa-apple"></i>
+              <span>Sign in with Apple</span>
+              <span className="login-coming-soon">Soon</span>
+            </button>
+
+            <button
+              type="button"
+              className="btn btn-secondary login-btn-social login-btn-facebook"
+              onClick={() => handleSocialLogin('Facebook')}
+              disabled
+            >
+              <i className="login-social-icon fa-brands fa-facebook"></i>
+              <span>Sign in with Facebook</span>
+              <span className="login-coming-soon">Soon</span>
+            </button>
+          </div>
+
+          {/* Signup Link */}
+          <div className="login-signup-link">
+            <p className="login-signup-text">
+              New to Starview? <Link to="/register">Create an Account</Link>
             </p>
           </div>
         </div>
