@@ -58,6 +58,15 @@ echo "Running database migrations..."
 python3 manage.py makemigrations
 python3 manage.py migrate --no-input
 
+# Set up Google OAuth (if credentials are provided)
+if [ -n "$GOOGLE_OAUTH_CLIENT_ID" ] && [ -n "$GOOGLE_OAUTH_CLIENT_SECRET" ]; then
+    echo "Setting up Google OAuth..."
+    python manage.py setup_google_oauth
+else
+    echo "Skipping Google OAuth setup (credentials not set)"
+    echo "Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in Render dashboard"
+fi
+
 # Create superuser if environment variables are set
 # This uses Django's built-in command that reads from environment variables:
 # - DJANGO_SUPERUSER_USERNAME
