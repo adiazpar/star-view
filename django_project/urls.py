@@ -27,6 +27,7 @@ from .views import ReactAppView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('accounts/', include('allauth.urls')),  # django-allauth URLs (must be before starview_app.urls)
     path('', include('starview_app.urls')),
 ]
 

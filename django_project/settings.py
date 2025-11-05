@@ -35,6 +35,16 @@ SITE_ID = 1
 SITE_NAME = "Starview"
 
 # =============================================================================
+# SESSION CONFIGURATION
+# =============================================================================
+
+# Use Redis for session storage (better performance than database sessions)
+# Sessions are cached in Redis and expire automatically
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'  # Use default Redis cache
+SESSION_COOKIE_AGE = 1209600  # 2 weeks (in seconds)
+
+# =============================================================================
 # SECURITY SETTINGS
 # =============================================================================
 
@@ -107,6 +117,7 @@ CONTENT_SECURITY_POLICY = {
             "https://*.mapbox.com",                     # Mapbox tile servers
             "https://events.mapbox.com",                # Mapbox analytics
             "https://*.fontawesome.com",                # Font Awesome API (all subdomains)
+            "https://accounts.google.com",              # Google OAuth
         ),
         'frame-ancestors': ("'none'",),                 # Prevent framing (same as X-Frame-Options: DENY)
         'base-uri': ("'self'",),                        # Restrict <base> tag URLs
@@ -155,6 +166,12 @@ INSTALLED_APPS = [
     'axes',                     # Account lockout policy (Phase 4)
     'debug_toolbar',            # Development only
 
+    # django-allauth for social authentication
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+
     # Project apps
     'starview_app',
 ]
@@ -174,6 +191,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'allauth.account.middleware.AccountMiddleware',                         # Allauth account middleware (MUST be after AuthenticationMiddleware)
     'axes.middleware.AxesMiddleware',                                       # Account lockout (MUST be after AuthenticationMiddleware)
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -400,6 +418,56 @@ REST_FRAMEWORK = {
 
     # Exception handling (Phase 4: Standardized error responses)
     'EXCEPTION_HANDLER': 'starview_app.utils.exception_handler.custom_exception_handler',
+}
+
+# =============================================================================
+# AUTHENTICATION CONFIGURATION
+# =============================================================================
+
+# Authentication backends (add allauth backend while keeping Django's default)
+AUTHENTICATION_BACKENDS = [
+    # Django's default authentication backend
+    'django.contrib.auth.backends.ModelBackend',
+    # Allauth-specific authentication backend for social logins
+    'allauth.account.auth_backends.AuthenticationBackend',
+    # Axes backend for account lockout (renamed in version 5.0+)
+    'axes.backends.AxesStandaloneBackend',
+]
+
+# django-allauth settings (updated to new syntax)
+ACCOUNT_EMAIL_VERIFICATION = 'optional' # Email verification optional (can be 'mandatory', 'optional', or 'none')
+SOCIALACCOUNT_AUTO_SIGNUP = True        # Automatically create account on social login
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'  # Email verification for social accounts
+SOCIALACCOUNT_LOGIN_ON_GET = True       # Skip confirmation page and go directly to OAuth provider
+
+# Login methods (replaces deprecated ACCOUNT_AUTHENTICATION_METHOD)
+ACCOUNT_LOGIN_METHODS = {'username', 'email'}  # Allow login with username or email
+
+# Signup fields (replaces deprecated ACCOUNT_EMAIL_REQUIRED and ACCOUNT_USERNAME_REQUIRED)
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+
+# Auto-connect social accounts to existing users with matching email
+# If a user already exists with the same email, link the social account instead of creating a new user
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Allow login via email match
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Automatically connect matching emails
+
+# After successful social login, redirect to home
+# For both development (serving React build) and production
+# Use relative URLs so they work in any environment
+LOGIN_REDIRECT_URL = '/'
+ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# Google OAuth specific settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        },
+    }
 }
 
 # =============================================================================

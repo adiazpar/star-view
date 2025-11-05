@@ -374,11 +374,11 @@
 }
 
 .login-btn-google {
-  background-color: #EA4335;
+  background-color: hsl(5, 81%, 56%);
 }
 
-.login-btn-facebook:hover:not(:disabled) {
-  background-color: var(--info);
+.login-btn-google:hover {
+  background-color: hsl(5, 89%, 64%);
 }
 
 /* Social button icons */

@@ -62,8 +62,15 @@ function LoginPage() {
   };
 
   const handleSocialLogin = (provider) => {
-    // Social login functionality coming soon
-    alert(`${provider} login coming soon!`);
+    if (provider === 'Google') {
+      // Redirect to Django allauth Google OAuth endpoint
+      // Use relative URL to go through Vite proxy in development
+      // In production, this will be handled by the backend directly
+      window.location.href = '/accounts/google/login/?process=login';
+    } else {
+      // Other social logins coming soon
+      alert(`${provider} login coming soon!`);
+    }
   };
 
   return (
@@ -208,11 +215,9 @@ function LoginPage() {
               type="button"
               className="btn btn-secondary login-btn-social login-btn-google"
               onClick={() => handleSocialLogin('Google')}
-              disabled
             >
               <i className="login-social-icon fa-brands fa-google"></i>
               <span>Sign in with Google</span>
-              <span className="login-coming-soon">Soon</span>
             </button>
 
             <button
