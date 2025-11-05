@@ -377,7 +377,7 @@
   background-color: hsl(5, 81%, 56%);
 }
 
-.login-btn-google:hover {
+.login-btn-google:hover:not(:disabled) {
   background-color: hsl(5, 89%, 64%);
 }
 

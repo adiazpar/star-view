@@ -416,7 +416,7 @@ REST_FRAMEWORK = {
         'report': '10/hour',            # Content reports
     },
 
-    # Exception handling (Phase 4: Standardized error responses)
+    # Exception handling:
     'EXCEPTION_HANDLER': 'starview_app.utils.exception_handler.custom_exception_handler',
 }
 
@@ -434,16 +434,16 @@ AUTHENTICATION_BACKENDS = [
     'axes.backends.AxesStandaloneBackend',
 ]
 
-# django-allauth settings (updated to new syntax)
+# django-allauth settings:
 ACCOUNT_EMAIL_VERIFICATION = 'optional' # Email verification optional (can be 'mandatory', 'optional', or 'none')
 SOCIALACCOUNT_AUTO_SIGNUP = True        # Automatically create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'  # Email verification for social accounts
 SOCIALACCOUNT_LOGIN_ON_GET = True       # Skip confirmation page and go directly to OAuth provider
 
-# Login methods (replaces deprecated ACCOUNT_AUTHENTICATION_METHOD)
+# Login methods:
 ACCOUNT_LOGIN_METHODS = {'username', 'email'}  # Allow login with username or email
 
-# Signup fields (replaces deprecated ACCOUNT_EMAIL_REQUIRED and ACCOUNT_USERNAME_REQUIRED)
+# Signup fields:
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 
 # Auto-connect social accounts to existing users with matching email
@@ -471,7 +471,7 @@ SOCIALACCOUNT_PROVIDERS = {
 }
 
 # =============================================================================
-# CORS CONFIGURATION (Phase 2)
+# CORS CONFIGURATION
 # =============================================================================
 
 # CORS allowed origins (comma-separated in .env)
