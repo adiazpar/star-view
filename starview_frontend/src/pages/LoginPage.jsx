@@ -13,7 +13,11 @@ function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  // Initialize rememberMe from localStorage
+  const [rememberMe, setRememberMe] = useState(() => {
+    const saved = localStorage.getItem('rememberMe');
+    return saved === 'true';
+  });
 
   // Get the redirect URL from query params (e.g., /login?next=/profile)
   const nextUrl = searchParams.get('next') || '/';
@@ -37,7 +41,8 @@ function LoginPage() {
       const response = await authApi.login({
         username: formData.username,
         password: formData.password,
-        next: nextUrl
+        next: nextUrl,
+        remember_me: rememberMe
       });
 
       // Login successful - redirect to specified URL
@@ -65,6 +70,9 @@ function LoginPage() {
     <div className="login-container">
       {/* Hero Panel (Desktop Only) */}
       <div className="login-hero">
+        <div className="login-hero-attribution">
+          Designed by Freepik
+        </div>
         <div className="login-hero-overlay">
           <h1 className="login-hero-title">Discover The Universe</h1>
           <p className="login-hero-subtitle">
@@ -153,7 +161,12 @@ function LoginPage() {
                   type="checkbox"
                   id="remember"
                   checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setRememberMe(checked);
+                    // Persist checkbox state to localStorage
+                    localStorage.setItem('rememberMe', checked.toString());
+                  }}
                   disabled={loading}
                 />
                 <label htmlFor="remember">Remember me</label>
@@ -172,11 +185,11 @@ function LoginPage() {
               {loading ? (
                 <>
                   <i className="fa-solid fa-spinner login-spinner"></i>
-                  <span>Signing in...</span>
+                  <span>Logging in...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Login</span>
                 </>
               )}
             </button>

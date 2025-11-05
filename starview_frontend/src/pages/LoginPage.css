@@ -25,7 +25,6 @@
     flex-direction: row;
     gap: var(--space-md);
     padding: var(--space-md);
-    overflow: hidden;
     /* Account for navbar height (64px + 1px border = 65px) */
     height: calc(100vh - 65px);
   }
@@ -48,7 +47,7 @@
 .login-hero {
   position: relative;
   width: 50%;
-  background-image: url('/images/blackhole.jpg');
+  background-image: url('/images/blackhole-dark.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -57,7 +56,23 @@
   justify-content: flex-end;
   border-radius: 20px;
   overflow: hidden;
-  border: 1px solid var(--border);
+}
+
+/* Light mode hero background */
+[data-theme="light"] .login-hero {
+  background-image: url('/images/blackhole-light.jpg');
+}
+
+/* Hero image attribution */
+.login-hero-attribution {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 16px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 300;
+  z-index: 1;
 }
 
 /* Desktop */
@@ -71,23 +86,21 @@
 
 .login-hero-overlay {
   width: 100%;
-  margin: 0 auto;
-  padding: 48px 32px;
+  padding: 32px;
   background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
 }
 
 .login-hero-title {
-  color: var(--text-primary);
+  color: white;
   font-size: var(--text-4xl);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  margin: 0 0 var(--space-sm) 0;
-  line-height: var(--leading-tight);
+  margin-bottom: var(--space-sm);
 }
 
 .login-hero-subtitle {
-  color: var(--text-muted);
+  color: rgb(196, 196, 196);
   font-size: var(--text-base);
   font-weight: 300;
   line-height: var(--leading-normal);
@@ -370,6 +383,7 @@
 
 /* Social button icons */
 .login-social-icon {
+  color: white;
   width: 20px;
   height: 20px;
   font-size: 20px;

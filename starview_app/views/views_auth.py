@@ -236,6 +236,15 @@ def custom_login(request):
         if authenticated_user is not None:
             login(request, authenticated_user)
 
+            # Handle "Remember Me" functionality
+            remember_me = request.data.get('remember_me', False)
+            if remember_me:
+                # Keep session for 30 days (2,592,000 seconds)
+                request.session.set_expiry(2592000)
+            else:
+                # Session expires when browser closes (default behavior)
+                request.session.set_expiry(0)
+
             # Audit log: Successful login
             log_auth_event(
                 request=request,
@@ -243,7 +252,7 @@ def custom_login(request):
                 user=authenticated_user,
                 success=True,
                 message=f'User logged in successfully: {authenticated_user.username}',
-                metadata={'auth_method': 'password'}
+                metadata={'auth_method': 'password', 'remember_me': remember_me}
             )
 
             # Determine redirect URL

@@ -37,6 +37,7 @@ export const authApi = {
    * @param {string} credentials.username - Username or email
    * @param {string} credentials.password - Password
    * @param {string} [credentials.next] - Optional redirect URL after login
+   * @param {boolean} [credentials.remember_me] - Keep user logged in for 30 days
    * @returns {Promise} - { detail: string, redirect_url: string }
    */
   login: (credentials) => {
