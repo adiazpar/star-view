@@ -8,6 +8,7 @@ function Navbar() {
   const { isAuthenticated, user, loading, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [backdropVisible, setBackdropVisible] = useState(false);
+  const [backdropClosing, setBackdropClosing] = useState(false);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -20,15 +21,20 @@ function Navbar() {
   // Handle backdrop visibility with delay for fade-out animation
   useEffect(() => {
     if (mobileMenuOpen) {
+      // Show backdrop immediately when opening
       setBackdropVisible(true);
-    } else {
-      // Delay hiding backdrop to allow fade-out animation
+      setBackdropClosing(false);
+    } else if (backdropVisible) {
+      // Start closing animation
+      setBackdropClosing(true);
+      // When closing, wait for animation to finish before hiding
       const timer = setTimeout(() => {
         setBackdropVisible(false);
+        setBackdropClosing(false);
       }, 300); // Match animation duration
       return () => clearTimeout(timer);
     }
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, backdropVisible]);
 
   return (
     <nav className="navbar">
@@ -131,7 +137,7 @@ function Navbar() {
         {/* Mobile Menu Backdrop */}
         {backdropVisible && (
           <div
-            className={`navbar-mobile-backdrop ${!mobileMenuOpen ? 'closing' : ''}`}
+            className={`navbar-mobile-backdrop ${backdropClosing ? 'closing' : ''}`}
             onClick={closeMobileMenu}
           ></div>
         )}

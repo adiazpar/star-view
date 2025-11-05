@@ -132,11 +132,11 @@
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(2px);
   z-index: var(--z-navbar);
-  animation: fadeIn 0.3s ease-in-out;
+  animation: fadeIn 0.3s ease-in-out forwards;
 }
 
 .navbar-mobile-backdrop.closing {
-  animation: fadeOut 0.3s ease-in-out;
+  animation: fadeOut 0.3s ease-in-out forwards;
 }
 
 @keyframes fadeIn {

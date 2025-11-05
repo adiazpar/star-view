@@ -47,6 +47,13 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,nyx.local').spli
 # Production: https://eventhorizon.com,https://www.eventhorizon.com
 CSRF_TRUSTED_ORIGINS = [origin for origin in os.getenv('CSRF_TRUSTED_ORIGINS', '').split(',') if origin]
 
+# Add localhost origins for development
+if DEBUG:
+    CSRF_TRUSTED_ORIGINS += [
+        'http://localhost:5173',  # React dev server
+        'http://127.0.0.1:5173',  # React dev server (alternative)
+    ]
+
 # Security headers (always enabled)
 SECURE_BROWSER_XSS_FILTER = True        # Browser XSS filtering
 X_FRAME_OPTIONS = 'DENY'                # Prevent clickjacking
