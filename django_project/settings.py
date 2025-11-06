@@ -321,9 +321,8 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Include both Django static files AND React production build
+# Include React production build as static files
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),           # Django static files
     os.path.join(BASE_DIR, 'starview_frontend/dist'),    # React production build
 ]
 
