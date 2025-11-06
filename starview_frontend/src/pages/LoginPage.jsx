@@ -233,12 +233,12 @@ function LoginPage() {
 
             <button
               type="button"
-              className="btn btn-secondary login-btn-social login-btn-facebook"
-              onClick={() => handleSocialLogin('Facebook')}
+              className="btn btn-secondary login-btn-social login-btn-microsoft"
+              onClick={() => handleSocialLogin('Microsoft')}
               disabled
             >
-              <i className="login-social-icon fa-brands fa-facebook"></i>
-              <span>Sign in with Facebook</span>
+              <i className="login-social-icon fa-brands fa-microsoft"></i>
+              <span>Sign in with Microsoft</span>
               <span className="login-coming-soon">Soon</span>
             </button>
           </div>
