@@ -67,6 +67,34 @@ else
     echo "Set GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET in Render dashboard"
 fi
 
+# Sync existing users with EmailAddress table (one-time migration)
+echo "Syncing existing users with EmailAddress table..."
+python manage.py shell << EOF
+from django.contrib.auth import get_user_model
+from allauth.account.models import EmailAddress, SocialAccount
+
+User = get_user_model()
+synced = 0
+
+for user in User.objects.all():
+    if user.email:
+        # Check if user has a social account (Google, etc.) - those emails are already verified
+        has_social_account = SocialAccount.objects.filter(user=user).exists()
+
+        email_address, created = EmailAddress.objects.get_or_create(
+            user=user,
+            email=user.email.lower(),
+            defaults={
+                'verified': has_social_account,  # Only auto-verify social login users
+                'primary': True,
+            }
+        )
+        if created:
+            synced += 1
+
+print(f"Synced {synced} user(s) with EmailAddress table")
+EOF
+
 # Create superuser if environment variables are set
 # This uses Django's built-in command that reads from environment variables:
 # - DJANGO_SUPERUSER_USERNAME

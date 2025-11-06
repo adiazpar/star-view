@@ -435,9 +435,15 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # django-allauth settings:
-ACCOUNT_EMAIL_VERIFICATION = 'optional' # Email verification optional (can be 'mandatory', 'optional', or 'none')
+# Development: Optional email verification for easier testing
+# Production: Mandatory email verification to prevent fake accounts
+if DEBUG:
+    ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Testing: No email verification required
+else:
+    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Production: Must verify email to login
+
 SOCIALACCOUNT_AUTO_SIGNUP = True        # Automatically create account on social login
-SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'  # Email verification for social accounts
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'  # Email verification for social accounts (already verified by OAuth provider)
 SOCIALACCOUNT_LOGIN_ON_GET = True       # Skip confirmation page and go directly to OAuth provider
 
 # Login methods:
@@ -456,6 +462,11 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Automatically connect 
 # Use relative URLs so they work in any environment
 LOGIN_REDIRECT_URL = '/'
 ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+
+# Email verification settings
+ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Starview] '  # Email subject prefix
+ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3  # Verification link expires in 3 days
+ACCOUNT_EMAIL_CONFIRMATION_COOLDOWN = 180  # Resend verification email every 3 minutes (180 seconds)
 
 # Google OAuth specific settings
 SOCIALACCOUNT_PROVIDERS = {

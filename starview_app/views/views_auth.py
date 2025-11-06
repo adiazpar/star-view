@@ -126,7 +126,40 @@ def register(request):
             password=pass1
         )
 
-        # Auto-login the newly registered user
+        # Create EmailAddress entry for django-allauth compatibility
+        from allauth.account.models import EmailAddress
+        from django.conf import settings
+
+        EmailAddress.objects.create(
+            user=user,
+            email=email.lower(),
+            verified=settings.DEBUG,  # Auto-verify in DEBUG mode, require verification in production
+            primary=True
+        )
+
+        # Send verification email if in production (mandatory verification)
+        if not settings.DEBUG:
+            from allauth.account.utils import send_email_confirmation
+            send_email_confirmation(request, user)
+
+            # In production, don't auto-login - user must verify email first
+            # Audit log: Successful registration
+            log_auth_event(
+                request=request,
+                event_type='registration_success',
+                user=user,
+                success=True,
+                message=f'New user registered (email verification required): {user.username}',
+                metadata={'email': user.email, 'verified': False}
+            )
+
+            return Response({
+                'detail': 'Account created! Please check your email to verify your account before logging in.',
+                'email_sent': True,
+                'requires_verification': True
+            }, status=status.HTTP_201_CREATED)
+
+        # In development (DEBUG=True), auto-login the newly registered user
         # Set backend attribute (required when multiple auth backends are configured)
         from django.contrib.auth import get_backends
         backend = get_backends()[0]  # Use first backend (ModelBackend)

@@ -61,4 +61,9 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f'✅ Associated Google app with site: {site.domain}'))
 
         self.stdout.write(self.style.SUCCESS('\n🎉 Google OAuth setup complete!'))
-        self.stdout.write('Google Login URL: http://127.0.0.1:8000/accounts/google/login/')
+
+        # Show correct URL based on site domain
+        if site.domain in ['127.0.0.1:8000', 'localhost:8000', 'example.com']:
+            self.stdout.write('Google Login URL: http://127.0.0.1:8000/accounts/google/login/')
+        else:
+            self.stdout.write(f'Google Login URL: https://{site.domain}/accounts/google/login/')
