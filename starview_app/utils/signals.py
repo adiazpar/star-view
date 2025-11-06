@@ -10,6 +10,9 @@
 # 3. Review deletion → Coordinates cleanup of all associated photos                                     #
 # 4. Location deletion → Coordinates cleanup of all reviews and photos via CASCADE                      #
 #                                                                                                       #
+# Email Verification Signals (email_confirmed):                                                         #
+# - Email confirmed → Deletes EmailConfirmation token to prevent database bloat                         #
+#                                                                                                       #
 # Cleanup happens in phases:                                                                            #
 # - pre_delete: Delete files before database deletion (while paths are still accessible)                #
 # - post_delete: Clean up empty directories after CASCADE deletions complete                            #
@@ -37,6 +40,10 @@ from starview_app.models import UserProfile
 from starview_app.models import ReviewPhoto
 from starview_app.models import Review
 from starview_app.models import Location
+
+# Import allauth signals and models:
+from allauth.account.signals import email_confirmed
+from allauth.account.models import EmailConfirmation
 
 
 
@@ -197,3 +204,28 @@ def create_or_update_user_profile(sender, instance, created, **kwargs):
         UserProfile.objects.create(user=instance)
     else:
         UserProfile.objects.get_or_create(user=instance)  # Create profile for existing users if missing
+
+
+# ----------------------------------------------------------------------------- #
+# Delete EmailConfirmation after successful email verification.                 #
+#                                                                               #
+# This prevents database bloat from unused confirmation tokens.                 #
+# After a user clicks the verification link and confirms their email,           #
+# the confirmation token is no longer needed and can be safely deleted.         #
+#                                                                               #
+# Signal: allauth.account.signals.email_confirmed                               #
+# Triggered: When user successfully confirms their email address                #
+# Args:                                                                         #
+#   - request: HTTP request object                                              #
+#   - email_address: EmailAddress instance that was confirmed                   #
+# ----------------------------------------------------------------------------- #
+@receiver(email_confirmed)
+def delete_email_confirmation_on_confirm(sender, request, email_address, **kwargs):
+    
+    # Delete all confirmation tokens for this email address
+    # Normally there's only one, but just in case there are multiple (edge case)
+    deleted_count, _ = EmailConfirmation.objects.filter(email_address=email_address).delete()
+
+    # Log the cleanup (useful for debugging)
+    if deleted_count > 0:
+        print(f"[Signal] Deleted {deleted_count} EmailConfirmation(s) for {email_address.email}")
