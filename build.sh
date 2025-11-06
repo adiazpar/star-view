@@ -71,7 +71,8 @@ fi
 echo "Syncing existing users with EmailAddress table..."
 python manage.py shell << EOF
 from django.contrib.auth import get_user_model
-from allauth.account.models import EmailAddress, SocialAccount
+from allauth.account.models import EmailAddress
+from allauth.socialaccount.models import SocialAccount
 
 User = get_user_model()
 synced = 0

@@ -1,0 +1,246 @@
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { authApi } from '../services/auth';
+import './RegisterPage.css';
+
+function RegisterPage() {
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    password1: '',
+    password2: ''
+  });
+
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword2, setShowPassword2] = useState(false);
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+    // Clear error when user starts typing
+    if (error) setError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await authApi.register({
+        username: formData.username,
+        email: formData.email,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        password1: formData.password1,
+        password2: formData.password2
+      });
+
+      // Check if email verification is required (production)
+      if (response.data.requires_verification) {
+        // Show success message and redirect to login
+        alert(response.data.detail);
+        navigate('/login');
+      } else {
+        // Development mode - auto-logged in, redirect to home
+        navigate(response.data.redirect_url || '/');
+      }
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="register-container">
+      {/* Hero Panel (Desktop Only) */}
+      <div className="register-hero">
+        <div className="register-hero-attribution">
+          Designed by Freepik
+        </div>
+        <div className="register-hero-overlay">
+          <h1 className="register-hero-title">Join Starview</h1>
+          <p className="register-hero-subtitle">
+            Create an account to share your stargazing discoveries, save favorite
+            locations, and connect with astronomy enthusiasts around the world.
+          </p>
+        </div>
+      </div>
+
+      {/* Registration Form Panel */}
+      <div className="register-form-panel">
+        <div className="register-form-content">
+          {/* Header */}
+          <div className="register-form-header">
+            <h2 className="register-form-title">Create Account</h2>
+            <p className="register-form-subtitle">Ready to embark on a cosmic adventure?</p>
+          </div>
+
+          {/* Error Message */}
+          {error && (
+            <div className="alert alert-error">
+              <i className="alert-icon fa-solid fa-circle-exclamation"></i>
+              <div className="alert-content">
+                <p className="alert-title">{error}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Registration Form */}
+          <form onSubmit={handleSubmit} className="register-form">
+            {/* Name Fields Row */}
+            <div className="register-name-row">
+              <div className="form-group">
+                <label htmlFor="firstName" className="form-label">First Name</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  name="firstName"
+                  className="form-input"
+                  placeholder="First name"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                  autoComplete="given-name"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="lastName" className="form-label">Last Name</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  className="form-input"
+                  placeholder="Last name"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                  autoComplete="family-name"
+                />
+              </div>
+            </div>
+
+            {/* Username Field */}
+            <div className="form-group">
+              <label htmlFor="username" className="form-label">Username</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                className="form-input"
+                placeholder="Choose a username"
+                value={formData.username}
+                onChange={handleChange}
+                disabled={loading}
+                required
+                autoComplete="username"
+              />
+            </div>
+
+            {/* Email Field */}
+            <div className="form-group">
+              <label htmlFor="email" className="form-label">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                className="form-input"
+                placeholder="your@email.com"
+                value={formData.email}
+                onChange={handleChange}
+                disabled={loading}
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            {/* Password Field */}
+            <div className="form-group">
+              <label htmlFor="password1" className="form-label">Password</label>
+              <div className="register-input-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password1"
+                  name="password1"
+                  className="form-input has-toggle"
+                  placeholder="Create a password"
+                  value={formData.password1}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="register-password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password Field */}
+            <div className="form-group">
+              <label htmlFor="password2" className="form-label">Confirm Password</label>
+              <div className="register-input-wrapper">
+                <input
+                  type={showPassword2 ? 'text' : 'password'}
+                  id="password2"
+                  name="password2"
+                  className="form-input has-toggle"
+                  placeholder="Confirm your password"
+                  value={formData.password2}
+                  onChange={handleChange}
+                  disabled={loading}
+                  required
+                  autoComplete="new-password"
+                />
+                <button
+                  type="button"
+                  className="register-password-toggle"
+                  onClick={() => setShowPassword2(!showPassword2)}
+                  aria-label={showPassword2 ? "Hide password" : "Show password"}
+                  tabIndex={-1}
+                >
+                  <i className={`fa-solid ${showPassword2 ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="btn btn-primary register-btn-submit"
+              disabled={loading}
+            >
+              {loading ? 'Creating Account...' : 'Create Account'}
+            </button>
+          </form>
+
+          {/* Login Link */}
+          <div className="register-login-link">
+            <p className="register-login-text">
+              Already have an account? <Link to="/login">Sign In</Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default RegisterPage;

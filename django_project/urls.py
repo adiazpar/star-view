@@ -56,9 +56,10 @@ urlpatterns += [
     ),
 ]
 
-# Catch-all: serve React app for any non-API/admin routes
+# Catch-all: serve React app for any non-API/admin/accounts routes
 # IMPORTANT: This must be the LAST pattern in urlpatterns
+# Excludes: /admin/, /api/, /accounts/ (django-allauth)
 # It matches any URL that wasn't caught by previous patterns
 urlpatterns += [
-    re_path(r'^.*$', ReactAppView.as_view(), name='react_app'),
+    re_path(r'^(?!admin/|api/|accounts/).*$', ReactAppView.as_view(), name='react_app'),
 ]

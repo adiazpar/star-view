@@ -1,0 +1,395 @@
+/**
+ * LoginPage.css
+ *
+ * Dedicated styles for the login page redesign featuring:
+ * - Split-screen layout (desktop)
+ * - Light theme form styling
+ * - Social login buttons
+ * - Responsive mobile card design
+ *
+ * Uses light theme CSS variables from variables.css
+ */
+
+/* ============================================================================
+   CONTAINER & LAYOUT
+   ============================================================================ */
+
+.register-container {
+  display: flex;
+  background-color: var(--bg-primary);
+}
+
+/* Split-screen layout for desktop */
+@media (min-width: 768px) {
+  .register-container {
+    flex-direction: row;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    /* Account for navbar height (64px + 1px border = 65px) */
+    height: calc(100vh - 65px);
+  }
+}
+
+/* Stacked layout for mobile */
+@media (max-width: 767px) {
+  .register-container {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+}
+
+/* ============================================================================
+   HERO PANEL (Desktop Only)
+   ============================================================================ */
+
+.register-hero {
+  position: relative;
+  width: 50%;
+  background-image: url('/images/blackhole-dark.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Light mode hero background */
+[data-theme="light"] .register-hero {
+  background-image: url('/images/blackhole-light.jpg');
+}
+
+/* Hero image attribution */
+.register-hero-attribution {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 16px;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 300;
+  z-index: 1;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .register-hero {
+    position: sticky;
+    top: 0;
+    height: 100%;
+  }
+}
+
+.register-hero-overlay {
+  width: 100%;
+  padding: 32px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%);
+}
+
+.register-hero-title {
+  color: white;
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-sm);
+}
+
+.register-hero-subtitle {
+  color: rgb(196, 196, 196);
+  font-size: var(--text-base);
+  font-weight: 300;
+  line-height: var(--leading-normal);
+  margin: 0;
+  max-width: 500px;
+}
+
+/* Hide hero on mobile */
+@media (max-width: 767px) {
+  .register-hero {
+    display: none;
+  }
+}
+
+/* ============================================================================
+   FORM PANEL
+   ============================================================================ */
+
+.register-form-panel {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  
+  border-radius: 20px;
+  padding: 40px 40px;
+}
+
+@media (min-width: 768px) {
+  .register-form-panel {
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+  .register-form-content {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 767px) {
+  .register-form-panel {
+    width: 100%;
+    max-width: 480px;
+  }
+}
+
+/* ============================================================================
+   FORM CONTENT
+   ============================================================================ */
+
+.register-form-content {
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.register-form-content::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
+
+.register-form-header {
+  margin-bottom: var(--space-md);
+}
+
+.register-form-title {
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: var(--leading-tight);
+  margin: 0 0 var(--space-sm) 0;
+}
+
+@media (max-width: 767px) {
+  .register-form-title {
+    font-size: var(--text-xl);
+  }
+}
+
+.register-form-subtitle {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 300;
+  line-height: var(--leading-normal);
+  margin: 0;
+}
+
+/* ============================================================================
+   FORM ELEMENTS
+   ============================================================================ */
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* Override form-group spacing for login page */
+.register-form .form-group {
+  margin-bottom: 0;
+}
+
+/* Input wrapper for password toggle */
+.register-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Password visibility toggle */
+.register-password-toggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: var(--space-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: var(--text-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.register-password-toggle:hover {
+  color: var(--text-primary);
+}
+
+/* ============================================================================
+   FORM OPTIONS (Remember Me & Forgot Password)
+   ============================================================================ */
+
+.register-form-options {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.register-remember-me {
+  display: flex;
+  align-items: center;
+}
+
+.register-remember-me input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.register-remember-me label {
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 300;
+  cursor: pointer;
+  user-select: none;
+  padding-left: var(--space-sm)
+}
+
+.register-forgot-password {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 300;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.register-forgot-password:hover {
+  color: var(--accent-light);
+}
+
+/* ============================================================================
+   BUTTONS
+   ============================================================================ */
+
+/* Submit button customizations */
+.register-btn-submit {
+  width: 100%;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ============================================================================
+   DIVIDER (OR)
+   ============================================================================ */
+
+.register-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin: var(--space-md) 0;
+}
+
+.register-divider-line {
+  flex: 1;
+  height: 1px;
+  background-color: var(--border);
+}
+
+.register-divider-text {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ============================================================================
+   SIGNUP LINK
+   ============================================================================ */
+
+.register-login-link {
+  text-align: center;
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.register-login-text {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 300;
+  margin: 0;
+}
+
+.register-login-text a {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.register-login-text a:hover {
+  color: var(--accent-light);
+}
+
+/* ============================================================================
+   ERROR ALERT
+   ============================================================================ */
+
+/* Customize alert for login page */
+.register-form-content .alert {
+  margin-bottom: var(--space-md);
+}
+
+.register-form-content .alert-title {
+  margin-bottom: 0;
+}
+
+/* ============================================================================
+   LOADING STATE
+   ============================================================================ */
+
+.register-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   REGISTER-SPECIFIC STYLES
+   ============================================================================ */
+
+/* Name fields row (first name + last name side by side) */
+.register-name-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+/* Mobile: Stack name fields vertically */
+@media (max-width: 767px) {
+  .register-name-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+}

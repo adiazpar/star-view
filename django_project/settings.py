@@ -97,6 +97,7 @@ CONTENT_SECURITY_POLICY = {
             "https://api.mapbox.com",                   # Mapbox styles
             "https://cdn.jsdelivr.net",                 # CDN styles
             "https://rsms.me",                          # Inter font CSS
+            "https://kit.fontawesome.com",              # Font Awesome kit styles
         ),
         'img-src': (
             "'self'",
@@ -435,12 +436,10 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # django-allauth settings:
-# Development: Optional email verification for easier testing
-# Production: Mandatory email verification to prevent fake accounts
-if DEBUG:
-    ACCOUNT_EMAIL_VERIFICATION = 'optional'  # Testing: No email verification required
-else:
-    ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Production: Must verify email to login
+# Email verification is always mandatory (even in development)
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Must verify email to login
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Confirm email on GET request (one-click verification)
+ACCOUNT_EMAIL_CONFIRMATION_HMAC = False  # Use database-based confirmations (easier to debug)
 
 SOCIALACCOUNT_AUTO_SIGNUP = True        # Automatically create account on social login
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'optional'  # Email verification for social accounts (already verified by OAuth provider)
@@ -466,7 +465,16 @@ ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 # Email verification settings
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Starview] '  # Email subject prefix
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 3  # Verification link expires in 3 days
-ACCOUNT_EMAIL_CONFIRMATION_COOLDOWN = 180  # Resend verification email every 3 minutes (180 seconds)
+
+# Rate limiting for email confirmation (new format in django-allauth 65.x+)
+ACCOUNT_RATE_LIMITS = {
+    'confirm_email': '1/3m',  # 1 confirmation email per 3 minutes
+}
+
+# Protocol for email verification links
+# Development: Use http:// for local testing
+# Production: Use https:// for secure links
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https' if not DEBUG else 'http'
 
 # Google OAuth specific settings
 SOCIALACCOUNT_PROVIDERS = {

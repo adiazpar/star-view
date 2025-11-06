@@ -34,6 +34,7 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.urls import reverse_lazy
 from django.db.models import Q
+from django.db import transaction
 
 # DRF imports:
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -120,29 +121,29 @@ def register(request):
         if not password_valid:
             raise exceptions.ValidationError(validation_error)
 
-        # Create user after all validation passes
-        user = User.objects.create_user(
-            **user_data,
-            password=pass1
-        )
+        # Wrap user creation and email sending in a transaction
+        # If email sending fails, user creation will be rolled back
+        from allauth.account.models import EmailAddress, EmailConfirmation
 
-        # Create EmailAddress entry for django-allauth compatibility
-        from allauth.account.models import EmailAddress
-        from django.conf import settings
+        with transaction.atomic():
+            # Create user after all validation passes
+            user = User.objects.create_user(
+                **user_data,
+                password=pass1
+            )
 
-        EmailAddress.objects.create(
-            user=user,
-            email=email.lower(),
-            verified=settings.DEBUG,  # Auto-verify in DEBUG mode, require verification in production
-            primary=True
-        )
+            # Create EmailAddress entry for django-allauth (always unverified)
+            email_address = EmailAddress.objects.create(
+                user=user,
+                email=email.lower(),
+                verified=False,  # Always require email verification
+                primary=True
+            )
 
-        # Send verification email if in production (mandatory verification)
-        if not settings.DEBUG:
-            from allauth.account.utils import send_email_confirmation
-            send_email_confirmation(request, user)
+            # Always send verification email (mandatory verification)
+            confirmation = EmailConfirmation.create(email_address)
+            confirmation.send(request, signup=True)
 
-            # In production, don't auto-login - user must verify email first
             # Audit log: Successful registration
             log_auth_event(
                 request=request,
@@ -158,29 +159,6 @@ def register(request):
                 'email_sent': True,
                 'requires_verification': True
             }, status=status.HTTP_201_CREATED)
-
-        # In development (DEBUG=True), auto-login the newly registered user
-        # Set backend attribute (required when multiple auth backends are configured)
-        from django.contrib.auth import get_backends
-        backend = get_backends()[0]  # Use first backend (ModelBackend)
-        user.backend = f'{backend.__module__}.{backend.__class__.__name__}'
-        login(request, user)
-
-        # Audit log: Successful registration
-        log_auth_event(
-            request=request,
-            event_type='registration_success',
-            user=user,
-            success=True,
-            message=f'New user registered: {user.username}',
-            metadata={'email': user.email}
-        )
-
-        # Registration successful
-        return Response({
-            'detail': 'Account created successfully! Redirecting...',
-            'redirect_url': '/'
-        }, status=status.HTTP_201_CREATED)
 
 
 # ----------------------------------------------------------------------------- #
@@ -267,6 +245,37 @@ def custom_login(request):
             )
 
         if authenticated_user is not None:
+            # Check email verification requirement (always enforced)
+            from allauth.account.models import EmailAddress
+            try:
+                email_address = EmailAddress.objects.get(user=authenticated_user, primary=True)
+                if not email_address.verified:
+                    # Audit log: Login blocked - email not verified
+                    log_auth_event(
+                        request=request,
+                        event_type='login_failed',
+                        user=authenticated_user,
+                        success=False,
+                        message=f'Login blocked - email not verified: {authenticated_user.username}',
+                        metadata={'reason': 'email_not_verified'}
+                    )
+                    raise exceptions.PermissionDenied(
+                        'Please verify your email address before logging in. Check your inbox for the verification link.'
+                    )
+            except EmailAddress.DoesNotExist:
+                # No EmailAddress entry - treat as unverified
+                log_auth_event(
+                    request=request,
+                    event_type='login_failed',
+                    user=authenticated_user,
+                    success=False,
+                    message=f'Login blocked - no email address: {authenticated_user.username}',
+                    metadata={'reason': 'no_email_address'}
+                )
+                raise exceptions.PermissionDenied(
+                    'Please verify your email address before logging in.'
+                )
+
             login(request, authenticated_user)
 
             # Handle "Remember Me" functionality
