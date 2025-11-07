@@ -1,0 +1,75 @@
+/* Email Confirm Error Page */
+
+.email-confirm-error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-primary);
+
+  height: calc(100vh - 65px);
+  padding: var(--space-xl);
+}
+
+.email-confirm-error-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-xl);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.email-confirm-error-icon {
+  font-size: 80px;
+  color: var(--warning);
+  margin-bottom: var(--space-lg);
+  animation: scaleIn 0.5s;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.email-confirm-error-title {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin-bottom: var(--space-md);
+}
+
+.email-confirm-error-message {
+  font-size: var(--text-sm);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  line-height: var(--leading-normal);
+  color: var(--text-muted);
+  margin-bottom: var(--space-xl);
+}
+
+.email-confirm-error-actions {
+  margin-bottom: var(--space-xl);
+}
+
+.email-confirm-error-actions .btn {
+  display: inline-flex;
+  min-width: 200px;
+  font-weight: 500;
+}
+
+.email-confirm-error-help {
+  font-size: var(--text-sm);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  margin: 0;
+}

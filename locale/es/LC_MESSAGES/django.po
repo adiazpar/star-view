@@ -1,0 +1,136 @@
+# Starview Spanish Translations
+# Copyright (C) 2025 Starview
+# This file is distributed under the same license as the Starview package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Starview 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-11-07 01:48+0000\n"
+"PO-Revision-Date: 2025-11-07 01:50+0000\n"
+"Last-Translator: Starview Team\n"
+"Language-Team: Spanish\n"
+"Language: es\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:8
+#: starview_app/templates/account/email/email_confirmation_signup_subject.txt:3
+msgid "Verify Your Starview Account"
+msgstr "Verifica Tu Cuenta de Starview"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:185
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:234
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:25
+msgid "Find Your Perfect Night Sky"
+msgstr "Encuentra Tu Cielo Nocturno Perfecto"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:190
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:3
+msgid "Hello"
+msgstr "Hola"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:194
+msgid ""
+"Welcome to <strong>Starview</strong>! We're excited to have you join our "
+"community of stargazers and astronomy enthusiasts."
+msgstr ""
+"¡Bienvenido a <strong>Starview</strong>! Estamos emocionados de que te unas a nuestra "
+"comunidad de observadores de estrellas y entusiastas de la astronomía."
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:198
+msgid ""
+"To complete your registration and start exploring the best stargazing "
+"locations, please verify your email address by clicking the button below:"
+msgstr ""
+"Para completar tu registro y comenzar a explorar los mejores lugares para observar las estrellas, "
+"por favor verifica tu dirección de correo electrónico haciendo clic en el botón de abajo:"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:202
+msgid "Verify Email Address"
+msgstr "Verificar Dirección de Correo"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:206
+msgid "Important"
+msgstr "Importante"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:207
+msgid "This verification link will expire in 3 days for security purposes."
+msgstr "Este enlace de verificación expirará en 3 días por razones de seguridad."
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:211
+msgid "What You Can Do on Starview:"
+msgstr "Lo Que Puedes Hacer en Starview:"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:213
+msgid "Discover amazing stargazing locations worldwide"
+msgstr "Descubre increíbles lugares para observar estrellas en todo el mundo"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:214
+msgid "Share your own reviews and astrophotography"
+msgstr "Comparte tus propias reseñas y astrofotografía"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:215
+msgid "Save your favorite spots for future visits"
+msgstr "Guarda tus lugares favoritos para futuras visitas"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:216
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:17
+msgid "Connect with fellow astronomy lovers"
+msgstr "Conéctate con otros amantes de la astronomía"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:223
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:19
+msgid ""
+"If you didn't create an account on Starview, you can safely ignore this "
+"email."
+msgstr ""
+"Si no creaste una cuenta en Starview, puedes ignorar este correo electrónico de forma segura."
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:227
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:21
+msgid "Happy stargazing!"
+msgstr "¡Feliz observación de estrellas!"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:228
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:22
+msgid "The Starview Team"
+msgstr "El Equipo de Starview"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:5
+msgid ""
+"Welcome to Starview! We're excited to have you join our community of "
+"stargazers and astronomy enthusiasts."
+msgstr ""
+"¡Bienvenido a Starview! Estamos emocionados de que te unas a nuestra comunidad de "
+"observadores de estrellas y entusiastas de la astronomía."
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:7
+msgid ""
+"To complete your registration and start exploring the best stargazing "
+"locations, please verify your email address by clicking the link below:"
+msgstr ""
+"Para completar tu registro y comenzar a explorar los mejores lugares para observar las estrellas, "
+"por favor verifica tu dirección de correo electrónico haciendo clic en el enlace de abajo:"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:11
+msgid "This verification link will expire in 3 days."
+msgstr "Este enlace de verificación expirará en 3 días."
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:13
+msgid "Once verified, you'll be able to:"
+msgstr "Una vez verificado, podrás:"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:14
+msgid "Discover amazing stargazing locations"
+msgstr "Descubrir increíbles lugares para observar estrellas"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:15
+msgid "Share your own reviews and photos"
+msgstr "Compartir tus propias reseñas y fotos"
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:16
+msgid "Save your favorite spots"
+msgstr "Guardar tus lugares favoritos"

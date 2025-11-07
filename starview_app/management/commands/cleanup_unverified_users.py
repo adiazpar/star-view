@@ -53,6 +53,10 @@ class Command(BaseCommand):
         # Part 1: Delete unverified users
         # ========================================
 
+        self.stdout.write('\n' + '='*60)
+        self.stdout.write('Cleaning up unverified users...')
+        self.stdout.write('='*60)
+
         # Find all unverified email addresses for users registered before cutoff date
         unverified_emails = EmailAddress.objects.filter(
             verified=False,

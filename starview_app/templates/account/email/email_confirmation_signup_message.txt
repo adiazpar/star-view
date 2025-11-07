@@ -1,0 +1,27 @@
+{% load i18n %}
+{% autoescape off %}
+{% trans "Hello" %}{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+{% blocktrans %}Welcome to Starview! We're excited to have you join our community of stargazers and astronomy enthusiasts.{% endblocktrans %}
+
+{% trans "To complete your registration and start exploring the best stargazing locations, please verify your email address by clicking the link below:" %}
+
+{{ activate_url }}
+
+{% trans "This verification link will expire in 3 days." %}
+
+{% trans "Once verified, you'll be able to:" %}
+• {% trans "Discover amazing stargazing locations" %}
+• {% trans "Share your own reviews and photos" %}
+• {% trans "Save your favorite spots" %}
+• {% trans "Connect with fellow astronomy lovers" %}
+
+{% trans "If you didn't create an account on Starview, you can safely ignore this email." %}
+
+{% trans "Happy stargazing!" %}
+{% trans "The Starview Team" %}
+
+---
+Starview - {% trans "Find Your Perfect Night Sky" %}
+{{ current_site.domain }}
+{% endautoescape %}

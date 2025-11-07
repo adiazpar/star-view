@@ -24,9 +24,12 @@ from django.conf.urls.static import static
 import os
 
 from .views import ReactAppView
+from starview_app.utils.adapters import CustomConfirmEmailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Custom email confirmation view (must be before allauth.urls to override)
+    path('accounts/confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
     path('accounts/', include('allauth.urls')),  # django-allauth URLs (must be before starview_app.urls)
     path('', include('starview_app.urls')),
 ]

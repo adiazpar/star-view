@@ -158,6 +158,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
 
+    # Project apps (MUST be before allauth to override templates)
+    'starview_app',
+
     # Third-party apps
     'rest_framework',
     'django_crontab',
@@ -172,9 +175,6 @@ INSTALLED_APPS = [
     'allauth.account',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
-
-    # Project apps
-    'starview_app',
 ]
 
 # =============================================================================
@@ -189,6 +189,7 @@ MIDDLEWARE = [
     'debug_toolbar.middleware.DebugToolbarMiddleware',                      # Debug Toolbar (development)
     'corsheaders.middleware.CorsMiddleware',                                # CORS (before CommonMiddleware)
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'starview_app.utils.middleware.BrowserLanguageMiddleware',              # Language detection (MUST be after SessionMiddleware)
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -313,6 +314,17 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+# Supported languages
+LANGUAGES = [
+    ('en', 'English'),
+    ('es', 'Español'),
+]
+
+# Path to translation files
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
+
 # =============================================================================
 # STATIC & MEDIA FILES
 # =============================================================================
@@ -435,6 +447,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # django-allauth settings:
+# Custom adapter for React frontend integration
+ACCOUNT_ADAPTER = 'starview_app.utils.adapters.CustomAccountAdapter'
+
 # Email verification is always mandatory (even in development)
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Must verify email to login
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True  # Confirm email on GET request (one-click verification)
