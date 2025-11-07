@@ -113,7 +113,6 @@ function Navbar() {
                   logout();
                 }}
                 className="navbar-mobile-link"
-                style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
               >
                 <i className="fa-solid fa-arrow-right-from-bracket"></i>
                 Logout

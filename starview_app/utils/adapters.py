@@ -48,13 +48,17 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     # ----------------------------------------------------------------------------- #
     def get_email_verification_redirect_url(self, email_address):
         import secrets
+        from django.conf import settings
 
         # Generate a one-time success token
         success_token = secrets.token_urlsafe(16)
 
-        # Redirect to React email verified success page with token
-        # React will show the success page, and the token prevents direct access
-        return f'/email-verified?success={success_token}'
+        # In development, redirect to React dev server
+        # In production, use relative URL (Django serves React build)
+        if settings.DEBUG:
+            return f'http://localhost:5173/email-verified?success={success_token}'
+        else:
+            return f'/email-verified?success={success_token}'
 
 
     # ----------------------------------------------------------------------------- #
@@ -120,13 +124,18 @@ class CustomAccountAdapter(DefaultAccountAdapter):
 class CustomConfirmEmailView(ConfirmEmailView):
 
     def get(self, *args, **kwargs):
+        from django.conf import settings
+
         try:
             self.object = self.get_object()
 
             # Check if email can be confirmed
             if not self.object or not self.object.email_address.can_set_verified():
                 # Email already confirmed by this or another account
-                return HttpResponseRedirect('/email-confirm-error?error=already_confirmed')
+                error_url = '/email-confirm-error?error=already_confirmed'
+                if settings.DEBUG:
+                    error_url = f'http://localhost:5173{error_url}'
+                return HttpResponseRedirect(error_url)
 
             # Valid confirmation - continue with normal flow
             # This will auto-confirm if ACCOUNT_CONFIRM_EMAIL_ON_GET is True
@@ -135,4 +144,7 @@ class CustomConfirmEmailView(ConfirmEmailView):
 
         except Http404:
             # Expired or invalid confirmation key
-            return HttpResponseRedirect('/email-confirm-error?error=expired')
+            error_url = '/email-confirm-error?error=expired'
+            if settings.DEBUG:
+                error_url = f'http://localhost:5173{error_url}'
+            return HttpResponseRedirect(error_url)

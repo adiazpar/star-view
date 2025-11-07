@@ -113,6 +113,11 @@
   gap: 8px;
 }
 
+/* Reset default button styles so buttons match links */
+button.navbar-mobile-link {
+  font-family: inherit;
+}
+
 .navbar-mobile-link:hover {
   color: var(--text-primary);
   background-color: var(--bg-hover);

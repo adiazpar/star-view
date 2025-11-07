@@ -234,7 +234,7 @@
                     <strong>Starview</strong> - {% trans "Find Your Perfect Night Sky" %}
                 </p>
                 <p class="footer-text">
-                    <a href="https://{{ current_site.domain }}" class="footer-link">{{ current_site.domain }}</a>
+                    <a href="{% if request.is_secure %}https{% else %}http{% endif %}://{{ current_site.domain }}" class="footer-link">{{ current_site.domain }}</a>
                 </p>
             </div>
         </div>
