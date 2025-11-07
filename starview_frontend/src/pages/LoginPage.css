@@ -46,7 +46,7 @@
 
 .login-hero {
   position: relative;
-  width: 50%;
+  width: 60%;
   background-image: url('/images/blackhole-dark.jpg');
   background-size: cover;
   background-position: center;
@@ -54,7 +54,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  border-radius: 20px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -120,14 +120,13 @@
    ============================================================================ */
 
 .login-form-panel {
-  width: 50%;
+  width: 40%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background-color: var(--bg-secondary);
   
-  border-radius: 20px;
+  border-radius: var(--radius);
   padding: 40px 40px;
 }
 
@@ -137,15 +136,11 @@
     align-items: center;
     justify-content: center;
   }
-  .login-form-content {
-    max-width: 480px;
-  }
 }
 
 @media (max-width: 767px) {
   .login-form-panel {
     width: 100%;
-    max-width: 480px;
   }
 }
 
@@ -323,45 +318,20 @@
 
 .login-social-buttons {
   display: flex;
+  flex-direction: row;
   gap: var(--space-sm);
-}
-
-/* Desktop: horizontal layout */
-@media (min-width: 768px) {
-  .login-social-buttons {
-    flex-direction: row;
-  }
-}
-
-/* Mobile: vertical layout */
-@media (max-width: 767px) {
-  .login-social-buttons {
-    flex-direction: column;
-  }
 }
 
 .login-btn-social {
   flex: 1;
   position: relative;
+  padding: 12px;
+  min-width: 48px;
 }
 
-/* Hide text on desktop for compact buttons */
-@media (min-width: 768px) {
-  .login-btn-social span:not(.login-coming-soon) {
-    display: none;
-  }
-
-  .login-btn-social {
-    padding: 12px;
-    min-width: 48px;
-  }
-}
-
-/* Mobile: full width with text */
-@media (max-width: 767px) {
-  .login-btn-social {
-    width: 100%;
-  }
+/* Hide text labels, show icons only */
+.login-btn-social span:not(.login-coming-soon) {
+  display: none;
 }
 
 /* Social button color customizations */
@@ -393,19 +363,9 @@
   font-size: 20px;
 }
 
-/* Coming soon badge */
+/* Hide coming soon badge */
 .login-coming-soon {
-  position: absolute;
-  top: -8px;
-  right: -8px;
-  background-color: var(--warning);
-  color: var(--bg-primary);
-  font-size: var(--text-xs);
-  font-weight: 700;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: var(--radius);
-  letter-spacing: 0.05em;
+  display: none;
 }
 
 /* ============================================================================
