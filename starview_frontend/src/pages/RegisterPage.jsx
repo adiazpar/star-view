@@ -20,11 +20,53 @@ function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
+  // Password validation state
+  const [passwordValidation, setPasswordValidation] = useState({
+    minLength: false,
+    hasUppercase: false,
+    hasNumber: false,
+    hasSpecial: false
+  });
+
+  // Confirm password validation state
+  const [passwordMatch, setPasswordMatch] = useState(false);
+
+  // Validate password in real-time
+  const validatePassword = (password) => {
+    setPasswordValidation({
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasNumber: /\d/.test(password),
+      hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(password)
     });
+  };
+
+  // Validate password match
+  const validatePasswordMatch = (password1, password2) => {
+    setPasswordMatch(password2.length > 0 && password1 === password2);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    const newFormData = {
+      ...formData,
+      [name]: value
+    };
+
+    setFormData(newFormData);
+
+    // Validate password as user types
+    if (name === 'password1') {
+      validatePassword(value);
+      validatePasswordMatch(value, newFormData.password2);
+    }
+
+    // Validate password match as user types
+    if (name === 'password2') {
+      validatePasswordMatch(newFormData.password1, value);
+    }
+
     // Clear error when user starts typing
     if (error) setError('');
   };
@@ -191,6 +233,28 @@ function RegisterPage() {
                   <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                 </button>
               </div>
+
+              {/* Password Requirements */}
+              <div className="register-password-requirements">
+                <ul>
+                  <li className={passwordValidation.minLength ? 'valid' : ''}>
+                    <i className={`fa-solid ${passwordValidation.minLength ? 'fa-check' : 'fa-xmark'}`}></i>
+                    At least 8 characters long
+                  </li>
+                  <li className={passwordValidation.hasUppercase ? 'valid' : ''}>
+                    <i className={`fa-solid ${passwordValidation.hasUppercase ? 'fa-check' : 'fa-xmark'}`}></i>
+                    At least 1 uppercase letter
+                  </li>
+                  <li className={passwordValidation.hasNumber ? 'valid' : ''}>
+                    <i className={`fa-solid ${passwordValidation.hasNumber ? 'fa-check' : 'fa-xmark'}`}></i>
+                    At least 1 number
+                  </li>
+                  <li className={passwordValidation.hasSpecial ? 'valid' : ''}>
+                    <i className={`fa-solid ${passwordValidation.hasSpecial ? 'fa-check' : 'fa-xmark'}`}></i>
+                    At least 1 special character (!@#$%^&*(),.?":{}|&lt;&gt;)
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Confirm Password Field */}
@@ -218,6 +282,16 @@ function RegisterPage() {
                 >
                   <i className={`fa-solid ${showPassword2 ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                 </button>
+              </div>
+
+              {/* Password Match Requirement */}
+              <div className="register-password-requirements">
+                <ul>
+                  <li className={passwordMatch ? 'valid' : ''}>
+                    <i className={`fa-solid ${passwordMatch ? 'fa-check' : 'fa-xmark'}`}></i>
+                    Passwords match
+                  </li>
+                </ul>
               </div>
             </div>
 

@@ -2,13 +2,14 @@
 # This validators.py file provides reusable validation utilities for data integrity and security.       #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Centralized validation functions for file uploads, geographic coordinates, and input sanitization.    #
-# These validators are used across views, serializers, and models to ensure consistent validation       #
-# logic throughout the application.                                                                     #
+# Centralized validation functions for file uploads, geographic coordinates, password strength,         #
+# and input sanitization. These validators are used across views, serializers, and models to ensure     #
+# consistent validation logic throughout the application.                                               #
 #                                                                                                       #
 # Key Features:                                                                                         #
 # - File upload validation: size limits, MIME types, extensions, malicious content detection            #
 # - Geographic validation: latitude/longitude bounds, elevation ranges                                  #
+# - Password validation: uppercase, number, special character requirements                              #
 # - XSS prevention: HTML sanitization with bleach (strips dangerous tags, allows safe formatting)       #
 # - Reusable across models, serializers, and views                                                      #
 # - Raises Django ValidationError for consistent error handling                                         #
@@ -20,10 +21,12 @@
 # ----------------------------------------------------------------------------------------------------- #
 
 import os
+import re
 import mimetypes
 import bleach
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.utils.translation import gettext as _
 
 
 # ----------------------------------------------------------------------------------------------------- #
@@ -273,3 +276,78 @@ def sanitize_plain_text(value):
     )
 
     return sanitized
+
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                                                                                       #
+#                                    PASSWORD STRENGTH VALIDATION                                       #
+#                                                                                                       #
+# ----------------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# Validate password contains at least one uppercase letter.                     #
+#                                                                               #
+# Enforces password complexity by requiring uppercase letters. This increases   #
+# password entropy and makes brute-force attacks more difficult.                #
+#                                                                               #
+# Args:     password: Password string to validate                               #
+#           user: User object (optional, for compatibility with Django)         #
+# Raises:   ValidationError if no uppercase letter found                        #
+# ----------------------------------------------------------------------------- #
+class UppercaseValidator:
+    def validate(self, password, user=None):
+        if not re.search(r'[A-Z]', password):
+            raise ValidationError(
+                _("Password must contain at least 1 uppercase letter."),
+                code='password_no_upper',
+            )
+
+    def get_help_text(self):
+        return _("Your password must contain at least 1 uppercase letter.")
+
+
+# ----------------------------------------------------------------------------- #
+# Validate password contains at least one number.                               #
+#                                                                               #
+# Enforces password complexity by requiring digits. Combining letters and       #
+# numbers significantly increases the password search space for attackers.      #
+#                                                                               #
+# Args:     password: Password string to validate                               #
+#           user: User object (optional, for compatibility with Django)         #
+# Raises:   ValidationError if no digit found                                   #
+# ----------------------------------------------------------------------------- #
+class NumberValidator:
+    def validate(self, password, user=None):
+        if not re.search(r'\d', password):
+            raise ValidationError(
+                _("Password must contain at least 1 number."),
+                code='password_no_number',
+            )
+
+    def get_help_text(self):
+        return _("Your password must contain at least 1 number.")
+
+
+# ----------------------------------------------------------------------------- #
+# Validate password contains at least one special character.                    #
+#                                                                               #
+# Enforces password complexity by requiring special characters. This provides   #
+# additional entropy and protects against dictionary attacks and common         #
+# password patterns.                                                            #
+#                                                                               #
+# Special characters: !@#$%^&*(),.?":{}|<>                                      #
+#                                                                               #
+# Args:     password: Password string to validate                               #
+#           user: User object (optional, for compatibility with Django)         #
+# Raises:   ValidationError if no special character found                       #
+# ----------------------------------------------------------------------------- #
+class SpecialCharacterValidator:
+    def validate(self, password, user=None):
+        if not re.search(r'[!@#$%^&*(),.?":{}|<>]', password):
+            raise ValidationError(
+                _("Password must contain at least 1 special character (!@#$%^&*(),.?\":{}|<>)."),
+                code='password_no_special',
+            )
+
+    def get_help_text(self):
+        return _("Your password must contain at least 1 special character (!@#$%^&*(),.?\":{}|<>).")
