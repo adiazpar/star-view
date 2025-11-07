@@ -124,7 +124,7 @@ class CustomConfirmEmailView(ConfirmEmailView):
             self.object = self.get_object()
 
             # Check if email can be confirmed
-            if not self.object or not self.object.email_address.can_confirm():
+            if not self.object or not self.object.email_address.can_set_verified():
                 # Email already confirmed by this or another account
                 return HttpResponseRedirect('/email-confirm-error?error=already_confirmed')
 

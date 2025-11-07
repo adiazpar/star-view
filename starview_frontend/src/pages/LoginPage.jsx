@@ -228,6 +228,7 @@ function LoginPage() {
             >
               <i className="login-social-icon fa-brands fa-apple"></i>
               <span>Sign in with Apple</span>
+              <span className="login-coming-soon">Soon</span>
             </button>
 
             <button
@@ -238,6 +239,7 @@ function LoginPage() {
             >
               <i className="login-social-icon fa-brands fa-microsoft"></i>
               <span>Sign in with Microsoft</span>
+              <span className="login-coming-soon">Soon</span>
             </button>
           </div>
 

@@ -107,17 +107,17 @@ function Navbar() {
                 <i className="fa-regular fa-user"></i>
                 Profile
               </Link>
-              <Link
-                to="/"
-                className="navbar-mobile-link"
-                onClick={(e) => {
+              <button
+                onClick={() => {
                   closeMobileMenu();
                   logout();
                 }}
+                className="navbar-mobile-link"
+                style={{ border: 'none', background: 'none', width: '100%', textAlign: 'left' }}
               >
                 <i className="fa-solid fa-arrow-right-from-bracket"></i>
                 Logout
-              </Link>
+              </button>
             </>
           ) : (
             // Not authenticated: Show Register and Login
