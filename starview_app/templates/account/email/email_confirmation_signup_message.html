@@ -181,7 +181,7 @@
     <div class="email-wrapper">
         <div class="email-container">
             <div class="header">
-                <h1>STARVIEW</h1>
+                <img src="{% if request.is_secure %}https{% else %}http{% endif %}://{{ current_site.domain }}/images/logo-light.png" alt="Starview" style="max-width: 300px; height: auto; margin: 0 auto; display: block;">
                 <p style="margin-top: 16px;">{% trans "Find Your Perfect Night Sky" %}</p>
             </div>
 
