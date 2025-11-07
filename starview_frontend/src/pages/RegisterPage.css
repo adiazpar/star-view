@@ -46,7 +46,7 @@
 
 .register-hero {
   position: relative;
-  width: 50%;
+  width: 60%;
   background-image: url('/images/blackhole-dark.jpg');
   background-size: cover;
   background-position: center;
@@ -54,7 +54,7 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  border-radius: 20px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 
@@ -120,14 +120,13 @@
    ============================================================================ */
 
 .register-form-panel {
-  width: 50%;
+  width: 40%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
+  background-color: var(--bg-secondary);
   
-  border-radius: 20px;
+  border-radius: var(--radius);
   padding: 40px 40px;
 }
 
@@ -137,15 +136,11 @@
     align-items: center;
     justify-content: center;
   }
-  .register-form-content {
-    max-width: 480px;
-  }
 }
 
 @media (max-width: 767px) {
   .register-form-panel {
     width: 100%;
-    max-width: 480px;
   }
 }
 
@@ -390,6 +385,5 @@
 @media (max-width: 767px) {
   .register-name-row {
     grid-template-columns: 1fr;
-    gap: 0;
   }
 }
