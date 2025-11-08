@@ -49,7 +49,10 @@
   color: var(--text-primary);
 }
 .navbar-link.active {
-  color: var(--text-primary);
+  color: var(--accent-hover);
+}
+.navbar-link.active:hover {
+  color: var(--accent-light);
 }
 
 .navbar-link.login-btn {
@@ -60,6 +63,21 @@
   justify-content: center;
   gap: 8px;
   border-left: var(--text-muted) 0.25px solid;
+}
+
+/* Theme Toggle Button */
+.navbar-theme-toggle {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 8px;
+  transition: color var(--transition);
+}
+
+.navbar-theme-toggle:hover {
+  color: var(--text-primary);
 }
 
 /* Hamburger Button */
@@ -106,7 +124,6 @@
   font-size: var(--text-sm);
   padding: 20px 32px;
   border-bottom: 1px solid var(--border);
-  transition: all var(--transition) ease;
 
   display: flex;
   align-items: center;
@@ -124,7 +141,12 @@ button.navbar-mobile-link {
 }
 
 .navbar-mobile-link.active {
-  color: var(--text-primary);
+  color: var(--accent);
+}
+
+.navbar-mobile-link.active:hover {
+  color: var(--accent-light);
+  background-color: var(--bg-hover);
 }
 
 /* Mobile Menu Backdrop */
@@ -165,6 +187,10 @@ button.navbar-mobile-link {
 /* Media Query for Mobile */
 @media (max-width: 800px) {
   .navbar-nav {
+    display: none;
+  }
+
+  .navbar-theme-toggle {
     display: none;
   }
 
