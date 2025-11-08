@@ -42,10 +42,8 @@ from .views_auth import (
     custom_logout,
     auth_status,
     resend_verification_email,
-    CustomPasswordResetView,
-    CustomPasswordResetDoneView,
-    CustomPasswordResetConfirmView,
-    CustomPasswordResetCompleteView,
+    request_password_reset,
+    confirm_password_reset,
 )
 
 # Health check views:
@@ -74,10 +72,8 @@ __all__ = [
     'custom_logout',
     'auth_status',
     'resend_verification_email',
-    'CustomPasswordResetView',
-    'CustomPasswordResetDoneView',
-    'CustomPasswordResetConfirmView',
-    'CustomPasswordResetCompleteView',
+    'request_password_reset',
+    'confirm_password_reset',
 
     # Health check views
     'health_check',

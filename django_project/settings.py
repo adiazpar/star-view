@@ -365,6 +365,10 @@ AWS_SES_REGION_NAME = os.getenv('AWS_SES_REGION_NAME', 'us-east-1')
 AWS_SES_REGION_ENDPOINT = f'email.{AWS_SES_REGION_NAME}.amazonaws.com'
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@starview.app')
 
+# Password Reset Configuration
+# Token expires in 1 hour (3600 seconds) for security
+PASSWORD_RESET_TIMEOUT = 3600
+
 # AWS SES optimization settings
 USE_SES_V2 = True                   # Use newer SESv2 API
 AWS_SES_AUTO_THROTTLE = 0.5         # Send at 50% of rate limit (safety factor)
@@ -423,6 +427,7 @@ REST_FRAMEWORK = {
         'anon': '100/hour',             # Anonymous users
         'user': '1000/hour',            # Authenticated users
         'login': '5/minute',            # Login attempts (brute force prevention)
+        'password_reset': '3/hour',     # Password reset requests (prevents email bombing)
         'content_creation': '20/hour',  # Create locations/reviews/comments
         'vote': '60/hour',              # Upvotes/downvotes
         'report': '10/hour',            # Content reports

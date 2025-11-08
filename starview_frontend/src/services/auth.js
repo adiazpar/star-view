@@ -54,11 +54,35 @@ export const authApi = {
 
   /**
    * Request password reset email
-   * @param {string} email - User's email address
-   * @returns {Promise}
+   * @param {Object} data - Password reset request data
+   * @param {string} data.email - User's email address
+   * @returns {Promise} - { detail: string, email_sent: boolean }
    */
-  requestPasswordReset: (email) => {
-    return api.post('/password-reset/', { email });
+  requestPasswordReset: (data) => {
+    return api.post('/auth/password-reset/', data);
+  },
+
+  /**
+   * Confirm password reset with token
+   * @param {string} uidb64 - Base64-encoded user ID
+   * @param {string} token - Password reset token
+   * @param {Object} data - New password data
+   * @param {string} data.password1 - New password
+   * @param {string} data.password2 - Password confirmation
+   * @returns {Promise} - { detail: string, success: boolean }
+   */
+  confirmPasswordReset: (uidb64, token, data) => {
+    return api.post(`/auth/password-reset-confirm/${uidb64}/${token}/`, data);
+  },
+
+  /**
+   * Resend email verification link
+   * @param {Object} data - Email data
+   * @param {string} data.email - User's email address
+   * @returns {Promise} - { detail: string, email_sent: boolean }
+   */
+  resendVerificationEmail: (data) => {
+    return api.post('/auth/resend-verification/', data);
   },
 };
 

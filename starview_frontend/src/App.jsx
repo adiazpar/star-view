@@ -6,6 +6,8 @@ import RegisterPage from './pages/RegisterPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import EmailVerifiedPage from './pages/EmailVerifiedPage';
 import EmailConfirmErrorPage from './pages/EmailConfirmErrorPage';
+import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
+import PasswordResetConfirmPage from './pages/PasswordResetConfirmPage';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
         <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/email-verified" element={<EmailVerifiedPage />} />
         <Route path="/email-confirm-error" element={<EmailConfirmErrorPage />} />
+        <Route path="/password-reset" element={<PasswordResetRequestPage />} />
+        <Route path="/password-reset-confirm/:uidb64/:token" element={<PasswordResetConfirmPage />} />
       </Routes>
     </BrowserRouter>
   );

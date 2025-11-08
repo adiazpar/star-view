@@ -41,7 +41,6 @@ import sys
 # Applied to:                                                                   #
 # - /login/                                                                     #
 # - /register/                                                                  #
-# - /password-reset/                                                            #
 #                                                                               #
 # Note: Automatically disabled during testing to allow test suites to run.      #
 # ----------------------------------------------------------------------------- #
@@ -51,6 +50,41 @@ class LoginRateThrottle(AnonRateThrottle):
     def allow_request(self, request, view):
         # Disable throttling during tests
         # Check multiple conditions to catch all test scenarios
+        if (
+            'test' in sys.argv or
+            hasattr(settings, 'TESTING') or
+            getattr(settings, 'TESTING', False) or
+            'unittest' in sys.modules or
+            'pytest' in sys.modules or
+            'django.test' in sys.modules
+        ):
+            return True
+        return super().allow_request(request, view)
+
+
+# ----------------------------------------------------------------------------- #
+# PasswordResetThrottle                                                         #
+#                                                                               #
+# Prevents email bombing while allowing legitimate password reset retries.      #
+# Rate: 3 requests per hour (prevents abuse, allows retries)                    #
+#                                                                               #
+# Applied to:                                                                   #
+# - /api/auth/password-reset/ (request reset email)                             #
+# - /api/auth/password-reset-confirm/ (confirm reset with token)                #
+#                                                                               #
+# Why 3/hour:                                                                   #
+# - Most users need 1 reset attempt                                             #
+# - Allows 2-3 retries if email doesn't arrive or link expires                  #
+# - Prevents automated email bombing attacks                                    #
+# - Better UX than 5/minute (which blocks after quick retries)                  #
+#                                                                               #
+# Note: Automatically disabled during testing to allow test suites to run.      #
+# ----------------------------------------------------------------------------- #
+class PasswordResetThrottle(AnonRateThrottle):
+    scope = 'password_reset'
+
+    def allow_request(self, request, view):
+        # Disable throttling during tests
         if (
             'test' in sys.argv or
             hasattr(settings, 'TESTING') or

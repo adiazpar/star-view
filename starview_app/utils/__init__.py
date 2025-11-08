@@ -39,6 +39,7 @@ from .validators import (
 # Import all throttle classes
 from .throttles import (
     LoginRateThrottle,
+    PasswordResetThrottle,
     ContentCreationThrottle,
     VoteThrottle,
     ReportThrottle,
@@ -86,6 +87,7 @@ __all__ = [
 
     # Throttles
     'LoginRateThrottle',
+    'PasswordResetThrottle',
     'ContentCreationThrottle',
     'VoteThrottle',
     'ReportThrottle',

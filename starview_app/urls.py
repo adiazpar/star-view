@@ -38,10 +38,8 @@ from .views import (
     custom_logout,
     auth_status,
     resend_verification_email,
-    CustomPasswordResetView,
-    CustomPasswordResetDoneView,
-    CustomPasswordResetConfirmView,
-    CustomPasswordResetCompleteView,
+    request_password_reset,
+    confirm_password_reset,
     # Health check views
     health_check,
 )
@@ -70,12 +68,8 @@ urlpatterns = [
     path('api/auth/logout/', custom_logout, name='logout'),
     path('api/auth/status/', auth_status, name='auth_status'),
     path('api/auth/resend-verification/', resend_verification_email, name='resend_verification'),
-
-    # Password Reset Views (still use templates for email flow):
-    path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),
-    path('password-reset/done/', CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
-    path('password-reset-confirm/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
-    path('password-reset-complete/', CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    path('api/auth/password-reset/', request_password_reset, name='password_reset_request'),
+    path('api/auth/password-reset-confirm/<uidb64>/<token>/', confirm_password_reset, name='password_reset_confirm'),
 
     # Django Rest Framework API endpoints:
     path('api/', include(router.urls)),

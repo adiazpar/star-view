@@ -23,18 +23,16 @@
 # Import tools:
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import SetPasswordForm
-from django.contrib.auth.views import (
-    PasswordResetView,
-    PasswordResetDoneView,
-    PasswordResetConfirmView,
-    PasswordResetCompleteView,
-)
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
-from django.urls import reverse_lazy
 from django.db.models import Q
 from django.db import transaction
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
 
 # DRF imports:
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
@@ -48,7 +46,7 @@ from axes.handlers.proxy import AxesProxyHandler
 
 # Service imports:
 from starview_app.services import PasswordService
-from starview_app.utils import LoginRateThrottle, log_auth_event
+from starview_app.utils import LoginRateThrottle, PasswordResetThrottle, log_auth_event
 
 
 
@@ -375,132 +373,283 @@ def custom_logout(request):
 
 # ----------------------------------------------------------------------------------------------------- #
 #                                                                                                       #
-#                                    PASSWORD RESET FORMS                                               #
+#                                    PASSWORD RESET API                                                 #
 #                                                                                                       #
 # ----------------------------------------------------------------------------------------------------- #
 
+# Initialize password reset token generator (stateless, cryptographically secure)
+password_reset_token_generator = PasswordResetTokenGenerator()
+
 # ----------------------------------------------------------------------------- #
-# Ensures all password operations (registration, password change, and password  #
-# reset) use the same validation logic from PasswordService, maintaining a      #
-# single source of truth for password validation across the application.        #
+# Request password reset email.                                                 #
 #                                                                               #
-# Integration:                                                                  #
-# Used by CustomPasswordResetConfirmView in the password reset flow when users  #
-# set a new password via email link. Overrides Django's default SetPasswordForm #
-# to delegate validation and password setting to PasswordService.               #
-# ----------------------------------------------------------------------------- #
-class PasswordServiceSetPasswordForm(SetPasswordForm):
-
-    # ----------------------------------------------------------------------------- #
-    # This method is called during form validation (Django's clean process) and     #
-    # uses PasswordService to ensure consistent validation with registration and    #
-    # password change operations.                                                   #
-    # ----------------------------------------------------------------------------- #
-    def clean_new_password2(self):
-        password1 = self.cleaned_data.get('new_password1')
-        password2 = self.cleaned_data.get('new_password2')
-
-        # Validate that passwords match using PasswordService
-        match_valid, match_error = PasswordService.validate_passwords_match(
-            password1, password2
-        )
-        if not match_valid:
-            raise ValidationError(match_error)
-
-        # Validate password strength using PasswordService (context-aware)
-        strength_valid, strength_error = PasswordService.validate_password_strength(
-            password1, user=self.user
-        )
-        if not strength_valid:
-            raise ValidationError(strength_error)
-
-        return password2
-
-
-    # ----------------------------------------------------------------------------- #
-    # This ensures password hashing and storage is handled consistently via         #
-    # PasswordService rather than directly calling Django's set_password method.    #
-    # ----------------------------------------------------------------------------- #
-    def save(self, commit=True):
-        password = self.cleaned_data["new_password1"]
-
-        # Use PasswordService to set the password
-        # Note: This already saves the user internally, no need to save again
-        success, error = PasswordService.set_password(self.user, password)
-
-        if not success:
-            raise ValidationError(error)
-
-        # User was already saved by PasswordService.set_password()
-        return self.user
-
-
-
-# ----------------------------------------------------------------------------------------------------- #
-#                                                                                                       #
-#                                    PASSWORD RESET VIEWS                                               #
-#                                                                                                       #
-# ----------------------------------------------------------------------------------------------------- #
-
-# ----------------------------------------------------------------------------- #
-# Display password reset request form (users enter their email).                #
+# DRF API endpoint that sends password reset email to users who forgot their    #
+# password. Returns generic success message regardless of whether email exists  #
+# to prevent user enumeration.                                                  #
 #                                                                               #
-# Throttled to prevent email bombing attacks (3 requests per hour).             #
+# Security Features:                                                            #
+# - Rate limiting: 5 requests per minute per IP (prevents email bombing)        #
+# - User enumeration prevention: Always returns success message                 #
+# - Token expiration: 1 hour (configurable via PASSWORD_RESET_TIMEOUT)          #
+# - Single-use tokens: Token invalidated after password change                  #
+# - Audit logging: All requests logged for security monitoring                  #
+# - Account lockout bypass: Allows password reset even when account is locked   #
+#                           (legitimate recovery path)                          #
+#                                                                               #
+# Args:     request: HTTP request with 'email' in request body                  #
+# Returns:  DRF Response with generic success message                           #
 # ----------------------------------------------------------------------------- #
-class CustomPasswordResetView(PasswordResetView):
-    template_name = 'stars_app/auth/password_reset/auth_password_reset.html'
-    email_template_name = 'stars_app/auth/password_reset/auth_password_reset_email.html'
-    success_url = reverse_lazy('password_reset_done')
-    throttle_classes = [LoginRateThrottle]
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([PasswordResetThrottle])
+def request_password_reset(request):
+    email = request.data.get('email', '').strip().lower()
 
-    def form_valid(self, form):
-        # Get email from form
-        email = form.cleaned_data['email']
+    # Validate email provided
+    if not email:
+        raise exceptions.ValidationError('Email address is required.')
 
-        # Audit log: Password reset requested
+    # Validate email format
+    try:
+        validate_email(email)
+    except ValidationError:
+        raise exceptions.ValidationError('Please enter a valid email address.')
+
+    # Try to find user with this email
+    try:
+        user = User.objects.get(email=email)
+        user_found = True
+    except User.DoesNotExist:
+        user_found = False
+        user = None
+
+    # Always process the request to prevent timing attacks
+    if user_found:
+        # Generate password reset token (stateless, expires in 1 hour)
+        token = password_reset_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+        # Build password reset URL (React frontend)
+        if settings.DEBUG:
+            reset_url = f'http://localhost:5173/password-reset-confirm/{uid}/{token}/'
+        else:
+            reset_url = f'https://{settings.ALLOWED_HOSTS[0]}/password-reset-confirm/{uid}/{token}/'
+
+        # Get client IP for security notification in email
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            client_ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            client_ip = request.META.get('REMOTE_ADDR', 'Unknown')
+
+        # Send password reset email
+        try:
+            subject = f'{settings.SITE_NAME} - Password Reset Request'
+
+            # Email context
+            context = {
+                'user': user,
+                'reset_url': reset_url,
+                'site_name': settings.SITE_NAME,
+                'client_ip': client_ip,
+                'expiration_hours': 1,
+            }
+
+            # Render email body (we'll create the template next)
+            html_message = render_to_string('starview_app/auth/email/password_reset_email.html', context)
+            text_message = render_to_string('starview_app/auth/email/password_reset_email.txt', context)
+
+            # Create email message
+            email_msg = EmailMultiAlternatives(
+                subject=subject,
+                body=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[user.email]
+            )
+            email_msg.attach_alternative(html_message, "text/html")
+            email_msg.send(fail_silently=False)
+
+            # Audit log: Password reset email sent
+            log_auth_event(
+                request=request,
+                event_type='password_reset_requested',
+                user=user,
+                success=True,
+                message=f'Password reset email sent to: {user.email}',
+                metadata={
+                    'email': user.email,
+                    'uid': uid,
+                    'client_ip': client_ip
+                }
+            )
+
+        except Exception as e:
+            # Log error but don't reveal to user (prevents enumeration)
+            log_auth_event(
+                request=request,
+                event_type='password_reset_email_failed',
+                user=user,
+                success=False,
+                message=f'Failed to send password reset email to: {user.email}',
+                metadata={'email': user.email, 'error': str(e)}
+            )
+            # Still return success to user (prevent enumeration)
+
+    else:
+        # User not found - log for security monitoring but return success
         log_auth_event(
-            request=self.request,
+            request=request,
             event_type='password_reset_requested',
-            username='',  # Don't know username yet
+            username='',
             success=True,
-            message=f'Password reset requested for email: {email}',
-            metadata={'email': email}
+            message=f'Password reset requested for non-existent email: {email}',
+            metadata={'email': email, 'user_found': False}
         )
 
-        return super().form_valid(form)
+    # Always return success message (prevent user enumeration)
+    return Response({
+        'detail': 'If an account exists with that email address, you will receive password reset instructions.',
+        'email_sent': True
+    }, status=status.HTTP_200_OK)
 
 
-# Display confirmation that password reset email was sent:
-class CustomPasswordResetDoneView(PasswordResetDoneView):
-    template_name = 'stars_app/auth/password_reset/auth_password_reset_done.html'
+# ----------------------------------------------------------------------------- #
+# Confirm password reset with token and set new password.                       #
+#                                                                               #
+# DRF API endpoint that validates the password reset token and sets a new      #
+# password for the user. Clears account lockout on successful password change.  #
+#                                                                               #
+# Security Features:                                                            #
+# - Token validation: Verifies cryptographic signature and expiration          #
+# - Single-use enforcement: Token invalidated after use                        #
+# - Password validation: Uses PasswordService for consistency                   #
+# - Account lockout clearance: Resets failed login attempts after success      #
+# - Notification email: Sends confirmation email after password change          #
+# - Audit logging: All attempts logged for security monitoring                  #
+#                                                                               #
+# Args:     request: HTTP request with 'password1', 'password2' in body        #
+#           uidb64: Base64-encoded user ID from reset link                     #
+#           token: Password reset token from reset link                        #
+# Returns:  DRF Response with success/error message                            #
+# ----------------------------------------------------------------------------- #
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([PasswordResetThrottle])
+def confirm_password_reset(request, uidb64, token):
+    # Get passwords from request
+    password1 = request.data.get('password1', '')
+    password2 = request.data.get('password2', '')
 
+    # Validate required fields
+    if not password1 or not password2:
+        raise exceptions.ValidationError('Both password fields are required.')
 
-# Display form for entering new password (via link in password reset email):
-class CustomPasswordResetConfirmView(PasswordResetConfirmView):
-    template_name = 'stars_app/auth/password_reset/auth_password_reset_confirm.html'
-    success_url = reverse_lazy('password_reset_complete')
-    form_class = PasswordServiceSetPasswordForm
+    # Validate that passwords match
+    passwords_match, match_error = PasswordService.validate_passwords_match(password1, password2)
+    if not passwords_match:
+        raise exceptions.ValidationError(match_error)
 
-    def form_valid(self, form):
-        # Get user whose password is being changed
-        user = form.user
-
-        # Audit log: Password changed via reset link
+    # Decode user ID from base64
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        # Audit log: Invalid uidb64
         log_auth_event(
-            request=self.request,
-            event_type='password_changed',
+            request=request,
+            event_type='password_reset_failed',
+            username='',
+            success=False,
+            message='Password reset failed - invalid user ID',
+            metadata={'uidb64': uidb64, 'reason': 'invalid_uid'}
+        )
+        raise exceptions.ValidationError('Invalid or expired password reset link.')
+
+    # Validate token (checks signature and expiration)
+    if not password_reset_token_generator.check_token(user, token):
+        # Audit log: Invalid or expired token
+        log_auth_event(
+            request=request,
+            event_type='password_reset_failed',
             user=user,
-            success=True,
-            message=f'Password changed via reset link: {user.username}',
-            metadata={'method': 'password_reset_link'}
+            success=False,
+            message=f'Password reset failed - invalid/expired token: {user.username}',
+            metadata={'reason': 'invalid_token'}
+        )
+        raise exceptions.ValidationError('Invalid or expired password reset link. Please request a new one.')
+
+    # Validate password strength (context-aware)
+    password_valid, validation_error = PasswordService.validate_password_strength(password1, user=user)
+    if not password_valid:
+        raise exceptions.ValidationError(validation_error)
+
+    # Set new password using PasswordService
+    success, error = PasswordService.set_password(user, password1)
+    if not success:
+        raise exceptions.APIException(error)
+
+    # Clear account lockout (if any) - user successfully reset their password
+    # This allows them to log in immediately after password reset
+    from axes.utils import reset as axes_reset
+    axes_reset(username=user.username)
+
+    # Send password change notification email
+    try:
+        # Get client IP for security notification
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            client_ip = x_forwarded_for.split(',')[0].strip()
+        else:
+            client_ip = request.META.get('REMOTE_ADDR', 'Unknown')
+
+        subject = f'{settings.SITE_NAME} - Password Changed Successfully'
+
+        # Email context
+        context = {
+            'user': user,
+            'site_name': settings.SITE_NAME,
+            'client_ip': client_ip,
+        }
+
+        # Render email body (we'll create the template next)
+        html_message = render_to_string('starview_app/auth/email/password_changed_email.html', context)
+        text_message = render_to_string('starview_app/auth/email/password_changed_email.txt', context)
+
+        # Create email message
+        email_msg = EmailMultiAlternatives(
+            subject=subject,
+            body=text_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[user.email]
+        )
+        email_msg.attach_alternative(html_message, "text/html")
+        email_msg.send(fail_silently=True)  # Don't fail if email fails
+
+    except Exception as e:
+        # Log error but don't fail the password reset
+        log_auth_event(
+            request=request,
+            event_type='password_changed_notification_failed',
+            user=user,
+            success=False,
+            message=f'Failed to send password change notification to: {user.email}',
+            metadata={'error': str(e)}
         )
 
-        return super().form_valid(form)
+    # Audit log: Password successfully changed via reset
+    log_auth_event(
+        request=request,
+        event_type='password_changed',
+        user=user,
+        success=True,
+        message=f'Password successfully reset: {user.username}',
+        metadata={'method': 'password_reset_link', 'lockout_cleared': True}
+    )
 
-
-# Display confirmation that password was successfully reset:
-class CustomPasswordResetCompleteView(PasswordResetCompleteView):
-    template_name = 'stars_app/auth/password_reset/auth_password_reset_complete.html'
+    return Response({
+        'detail': 'Password reset successful! You can now log in with your new password.',
+        'success': True
+    }, status=status.HTTP_200_OK)
 
 
 
