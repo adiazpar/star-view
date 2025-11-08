@@ -1,15 +1,15 @@
 /**
- * EmailConfirmErrorPage.css
+ * VerifyEmailPage.css
  *
- * Centered card layout for email verification errors
- * Matches VerifyEmailPage styling patterns
+ * Centered card layout for email verification flow
+ * Matches login/register styling patterns
  */
 
 /* ============================================================================
    CONTAINER & LAYOUT
    ============================================================================ */
 
-.email-confirm-error-container {
+.verify-email-container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,7 +22,7 @@
    CARD
    ============================================================================ */
 
-.email-confirm-error-card {
+.verify-email-card {
   width: 100%;
   max-width: 480px;
   padding: 40px;
@@ -35,20 +35,24 @@
    ICON
    ============================================================================ */
 
-.email-confirm-error-icon {
+.verify-email-icon {
   margin-bottom: var(--space-lg);
 }
 
-.email-confirm-error-icon i {
+.verify-email-icon i {
   font-size: 48px;
-  color: var(--warning);
+  color: var(--info);
 }
 
 /* ============================================================================
    HEADER
    ============================================================================ */
 
-.email-confirm-error-title {
+.verify-email-header {
+  margin-bottom: var(--space-lg);
+}
+
+.verify-email-title {
   color: var(--text-primary);
   font-size: var(--text-2xl);
   font-weight: 700;
@@ -57,23 +61,54 @@
   margin-bottom: var(--space-md);
 }
 
-.email-confirm-error-message {
+.verify-email-subtitle {
   color: var(--text-muted);
   font-size: var(--text-sm);
   font-weight: 300;
-  line-height: var(--leading-normal);
-  margin-bottom: var(--space-lg);
 }
 
 /* ============================================================================
-   ACTIONS
+   FORM
    ============================================================================ */
 
-.email-confirm-error-actions {
+.verify-email-form {
   margin-bottom: var(--space-lg);
 }
 
-.email-confirm-error-actions .btn {
+.verify-email-form .form-label {
+  text-align: center;
+  margin-bottom: 0;
+}
+
+/* Email Display (read-only) */
+.verify-email-display {
+  margin-bottom: var(--space-lg);
+}
+
+.verify-email-address {
+  text-align: center;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Alerts */
+.verify-email-form .alert {
+  margin-bottom: var(--space-md);
+  text-align: left;
+}
+
+.verify-email-form .alert-title {
+  margin-bottom: 0;
+}
+
+.verify-email-form .alert-message {
+  margin-top: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+/* Button */
+.verify-email-btn {
   width: 100%;
   font-size: var(--text-sm);
   font-weight: 500;
@@ -83,11 +118,27 @@
    FOOTER
    ============================================================================ */
 
-.email-confirm-error-help {
+.verify-email-footer {
   padding-top: var(--space-md);
   border-top: 1px solid var(--border);
+}
+
+.verify-email-help-text {
   color: var(--text-muted);
   font-size: var(--text-xs);
   font-weight: 300;
-  margin: 0;
+  margin: 0 0 4px 0;
+}
+
+.verify-email-back-link {
+  display: inline-block;
+  margin-top: var(--space-sm);
+  color: var(--accent);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.verify-email-back-link:hover {
+  color: var(--accent-light);
 }

@@ -50,8 +50,21 @@ function LoginPage() {
       window.location.href = redirectUrl;
     } catch (err) {
       // Backend always returns 'detail' field for all API errors
-      // Only fallback to generic message if no response (network error)
-      if (err.response?.data?.detail) {
+      // Check if error is due to unverified email
+      const errorData = err.response?.data || {};
+      const errorMessage = typeof errorData.detail === 'string' ? errorData.detail : errorData.detail?.detail || '';
+
+      if (errorMessage.toLowerCase().includes('verify') || errorMessage.toLowerCase().includes('verification')) {
+        // Use email from error response if available, otherwise use username
+        const email = errorData.email || formData.username;
+        navigate(`/verify-email?email=${encodeURIComponent(email)}&from=login`);
+        return;
+      }
+
+      // Display other errors normally
+      if (errorMessage) {
+        setError(errorMessage);
+      } else if (err.response?.data?.detail) {
         setError(err.response.data.detail);
       } else {
         setError('Unable to login. Please check your connection and try again.');

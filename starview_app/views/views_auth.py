@@ -259,9 +259,12 @@ def custom_login(request):
                         message=f'Login blocked - email not verified: {authenticated_user.username}',
                         metadata={'reason': 'email_not_verified'}
                     )
-                    raise exceptions.PermissionDenied(
-                        'Please verify your email address before logging in. Check your inbox for the verification link.'
-                    )
+                    # Return error with email so frontend can display it
+                    return Response({
+                        'detail': 'Please verify your email address before logging in. Check your inbox for the verification link.',
+                        'email': authenticated_user.email,
+                        'requires_verification': True
+                    }, status=status.HTTP_403_FORBIDDEN)
             except EmailAddress.DoesNotExist:
                 # No EmailAddress entry - treat as unverified
                 log_auth_event(
@@ -499,6 +502,98 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'stars_app/auth/password_reset/auth_password_reset_complete.html'
 
+
+
+# ----------------------------------------------------------------------------------------------------- #
+#                                                                                                       #
+#                                    EMAIL VERIFICATION                                                 #
+#                                                                                                       #
+# ----------------------------------------------------------------------------------------------------- #
+
+# ----------------------------------------------------------------------------- #
+# Resend email verification link to user.                                       #
+#                                                                               #
+# DRF API endpoint that sends a new verification email to unverified users.     #
+# Rate-limited to prevent email spam (max 1 per minute per email).              #
+#                                                                               #
+# Args:     request: HTTP request object with email in request body             #
+# Returns:  DRF Response with success/error message                             #
+# ----------------------------------------------------------------------------- #
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([LoginRateThrottle])
+def resend_verification_email(request):
+    email = request.data.get('email', '').strip().lower()
+
+    # Validate email provided
+    if not email:
+        raise exceptions.ValidationError('Email address is required.')
+
+    # Validate email format
+    try:
+        validate_email(email)
+    except ValidationError:
+        raise exceptions.ValidationError('Please enter a valid email address.')
+
+    # Check if user with this email exists
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Don't reveal if email exists or not (prevent user enumeration)
+        # Return success message regardless
+        return Response({
+            'detail': 'If an account with that email exists and is unverified, a verification email has been sent.'
+        }, status=status.HTTP_200_OK)
+
+    # Check if email is already verified
+    from allauth.account.models import EmailAddress, EmailConfirmation
+    try:
+        email_address = EmailAddress.objects.get(user=user, email=email)
+        if email_address.verified:
+            # Email already verified
+            raise exceptions.ValidationError('This email address is already verified. You can log in now.')
+    except EmailAddress.DoesNotExist:
+        # No EmailAddress entry - shouldn't happen, but handle gracefully
+        raise exceptions.ValidationError('No account found with this email address.')
+
+    # Send new verification email
+    try:
+        # Delete all existing confirmations for this email address
+        # This ensures only the latest verification link works
+        old_confirmations = EmailConfirmation.objects.filter(email_address=email_address)
+        deleted_count = old_confirmations.count()
+        old_confirmations.delete()
+
+        # Create new confirmation and send email
+        confirmation = EmailConfirmation.create(email_address)
+        confirmation.send(request)
+
+        # Audit log: Verification email resent
+        log_auth_event(
+            request=request,
+            event_type='verification_email_resent',
+            user=user,
+            success=True,
+            message=f'Verification email resent to: {email}',
+            metadata={'email': email, 'old_confirmations_deleted': deleted_count}
+        )
+
+        return Response({
+            'detail': 'Verification email sent! Please check your inbox.',
+            'email_sent': True
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        # Audit log: Failed to send verification email
+        log_auth_event(
+            request=request,
+            event_type='verification_email_failed',
+            user=user,
+            success=False,
+            message=f'Failed to send verification email to: {email}',
+            metadata={'email': email, 'error': str(e)}
+        )
+        raise exceptions.APIException('Failed to send verification email. Please try again later.')
 
 
 # ----------------------------------------------------------------------------------------------------- #

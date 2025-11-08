@@ -37,6 +37,7 @@ from .views import (
     custom_login,
     custom_logout,
     auth_status,
+    resend_verification_email,
     CustomPasswordResetView,
     CustomPasswordResetDoneView,
     CustomPasswordResetConfirmView,
@@ -68,6 +69,7 @@ urlpatterns = [
     path('api/auth/login/', custom_login, name='login'),
     path('api/auth/logout/', custom_logout, name='logout'),
     path('api/auth/status/', auth_status, name='auth_status'),
+    path('api/auth/resend-verification/', resend_verification_email, name='resend_verification'),
 
     # Password Reset Views (still use templates for email flow):
     path('password-reset/', CustomPasswordResetView.as_view(), name='password_reset'),

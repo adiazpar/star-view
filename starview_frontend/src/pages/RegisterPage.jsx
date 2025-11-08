@@ -88,9 +88,8 @@ function RegisterPage() {
 
       // Check if email verification is required (production)
       if (response.data.requires_verification) {
-        // Show success message and redirect to login
-        alert(response.data.detail);
-        navigate('/login');
+        // Redirect to verify-email page with email address
+        navigate(`/verify-email?email=${encodeURIComponent(formData.email)}&from=register`);
       } else {
         // Development mode - auto-logged in, redirect to home
         navigate(response.data.redirect_url || '/');
