@@ -60,27 +60,55 @@ from allauth.account.models import EmailConfirmation
 # Returns:    bool: True if deleted successfully, False otherwise               #
 # ----------------------------------------------------------------------------- #
 def safe_delete_file(file_path):
+    """
+    Safely delete a file from local filesystem or cloud storage (R2/S3).
+
+    Handles both:
+    - Local filesystem paths (legacy/development)
+    - Django storage backend paths (R2/S3 production)
+    """
     if not file_path:
         return False
 
     try:
-        # Convert to Path object for better handling:
-        path = Path(file_path)
+        # For local filesystem paths (absolute paths starting with /)
+        if isinstance(file_path, str) and file_path.startswith('/'):
+            path = Path(file_path)
 
-        # Check if file exists and is within media directory (security check):
-        if path.exists() and str(path).startswith(str(settings.MEDIA_ROOT)):
-            # File gets deleted:
-            path.unlink()
+            # Check if file exists and is within media directory (security check):
+            if path.exists() and str(path).startswith(str(settings.MEDIA_ROOT)):
+                # File gets deleted:
+                path.unlink()
+                return True
+            elif not path.exists():
+                # File already deleted or doesn't exist:
+                return True
+            else:
+                # File outside of media directory, so it doesn't get deleted:
+                return False
+
+        # For Django FileField/ImageField objects (R2/S3 storage)
+        # These have a 'storage' attribute and 'name' attribute
+        elif hasattr(file_path, 'storage') and hasattr(file_path, 'name'):
+            if file_path.name and file_path.storage.exists(file_path.name):
+                file_path.storage.delete(file_path.name)
+                return True
             return True
-        elif not path.exists():
-            # File already deleted or doesn't exist:
-            return True
+
+        # For storage path strings (R2/S3 relative paths like 'profile_pics/xxx.jpg')
         else:
-            # File outside of media directory, so it doesn't get deleted:
-            return False
+            from django.core.files.storage import default_storage
+            file_str = str(file_path)
+            if default_storage.exists(file_str):
+                default_storage.delete(file_str)
+                return True
+            return True
 
-    except Exception:
-        # There was an error deleting the file:
+    except Exception as e:
+        # Log the error but don't crash (file deletion is not critical)
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Error deleting file {file_path}: {str(e)}")
         return False
 
 

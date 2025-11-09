@@ -99,8 +99,9 @@ class UserProfileViewSet(viewsets.ViewSet):
         user_profile = request.user.userprofile
 
         # Delete old profile picture if it exists (None means using default, so nothing to delete)
-        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
-            safe_delete_file(user_profile.profile_picture.path)
+        # Pass the FileField object directly (works with both local and R2/S3 storage)
+        if user_profile.profile_picture:
+            safe_delete_file(user_profile.profile_picture)
 
         # Save the new profile picture
         user_profile.profile_picture = profile_picture
@@ -124,8 +125,9 @@ class UserProfileViewSet(viewsets.ViewSet):
         user_profile = request.user.userprofile
 
         # Delete the current profile picture if it exists (None means using default)
-        if user_profile.profile_picture and hasattr(user_profile.profile_picture, 'path'):
-            safe_delete_file(user_profile.profile_picture.path)
+        # Pass the FileField object directly (works with both local and R2/S3 storage)
+        if user_profile.profile_picture:
+            safe_delete_file(user_profile.profile_picture)
 
         # Reset to default (model returns default URL when profile_picture is None)
         user_profile.profile_picture = None
