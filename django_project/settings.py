@@ -104,7 +104,8 @@ CONTENT_SECURITY_POLICY = {
             "data:",                                    # Data URIs for inline images
             "https://*.mapbox.com",                     # Mapbox tile images (uses subdomains)
             "https://api.mapbox.com",                   # Mapbox API images
-            "https://*.r2.dev",                         # Cloudflare R2 public URLs (media storage)
+            "https://*.r2.dev",                         # Cloudflare R2 dev URLs (development/testing)
+            "https://media.starview.app",               # R2 custom domain (production)
         ),
         'font-src': (
             "'self'",
