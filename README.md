@@ -97,7 +97,16 @@ Starview is a specialized, community-driven platform built specifically for the 
 - **Gunicorn 23.0.0** - WSGI server
 - **Whitenoise 6.9.0** - Static file serving with compression
 - **AWS SES** - Transactional email delivery (custom domain: noreply@starview.app)
+- **Cloudflare R2** - Object storage for media files (custom domain: media.starview.app)
+- **django-storages 1.14.6** - S3-compatible storage backend for R2
 - **Render.com** - Hosting platform with automated deployments
+
+**Media Storage**
+- **Cloudflare R2** - Persistent object storage for user-uploaded media (profile pictures, review photos)
+- **68x cheaper than AWS S3** - Zero egress fees ($0.15/month vs $10.23/month for typical usage)
+- **Custom domain** - Professional URLs via media.starview.app with CDN caching
+- **Automatic cleanup** - Signal handlers delete orphaned files when content is removed
+- **Security** - UUID filenames prevent enumeration, CSP headers control image loading
 
 **Email System**
 - **Mandatory email verification** - All new users must verify their email address
@@ -340,9 +349,16 @@ CELERY_ENABLED=False  # True to enable async tasks
 MAPBOX_TOKEN=your_mapbox_token
 TILE_SERVER_URL=http://your-tile-server:3001
 
-# Email (AWS SES)
-AWS_ACCESS_KEY_ID=your_aws_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret
+# Media Storage (Cloudflare R2)
+AWS_ACCESS_KEY_ID=your_r2_access_key
+AWS_SECRET_ACCESS_KEY=your_r2_secret_key
+AWS_STORAGE_BUCKET_NAME=starview-media
+CLOUDFLARE_ACCOUNT_ID=your_cloudflare_account_id
+R2_PUBLIC_URL=https://pub-xxxxx.r2.dev  # Dev: R2.dev URL, Prod: https://media.starview.app
+
+# Email (AWS SES - separate credentials from R2)
+AWS_SES_ACCESS_KEY_ID=your_ses_access_key
+AWS_SES_SECRET_ACCESS_KEY=your_ses_secret_key
 AWS_SES_REGION_NAME=us-east-2
 DEFAULT_FROM_EMAIL=noreply@yourdomain.com
 
@@ -392,7 +408,14 @@ djvenv/bin/python test_health_check.py
 - Web Service (Gunicorn)
 - PostgreSQL Database (automated backups)
 - Redis Cache
+- Cloudflare R2 (media storage with custom domain)
 - Custom domain with SSL/TLS
+
+**Infrastructure:**
+- **Ephemeral filesystem** - Render deletes local files on restart/deployment
+- **Persistent storage** - R2 provides permanent media file storage
+- **Static files** - Served by WhiteNoise (local, compressed)
+- **Media files** - Served by R2 CDN (profile pictures, review photos)
 
 **Security:**
 - A+ grade on securityheaders.com
