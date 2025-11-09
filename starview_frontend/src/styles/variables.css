@@ -79,6 +79,7 @@
 
 /* Light Theme */
 [data-theme="light"] {
+  /* Colors - Light Theme */
   --bg-primary: #ffffff;
   --bg-secondary: #f3f4f6;
   --bg-elevated: #ffffff;
@@ -87,6 +88,12 @@
   --text-primary: #111827;
   --text-secondary: #4b5563;
   --text-muted: #6b7280;
+
+  /* Colors - Semantic */
+  --accent:       hsl(30, 83%, 53%);
+  --accent-hover: hsl(30, 91%, 60%);
+  --accent-light: hsl(30, 94%, 68%);
+  --accent-bg:    hsla(30, 91%, 60%, 0.102);
 
   --border: #d1d5db;
 

@@ -230,7 +230,6 @@ function LoginPage() {
               onClick={() => handleSocialLogin('Google')}
             >
               <i className="login-social-icon fa-brands fa-google"></i>
-              <span>Sign in with Google</span>
             </button>
 
             <button
@@ -240,8 +239,6 @@ function LoginPage() {
               disabled
             >
               <i className="login-social-icon fa-brands fa-apple"></i>
-              <span>Sign in with Apple</span>
-              <span className="login-coming-soon">Soon</span>
             </button>
 
             <button
@@ -251,8 +248,6 @@ function LoginPage() {
               disabled
             >
               <i className="login-social-icon fa-brands fa-microsoft"></i>
-              <span>Sign in with Microsoft</span>
-              <span className="login-coming-soon">Soon</span>
             </button>
           </div>
 

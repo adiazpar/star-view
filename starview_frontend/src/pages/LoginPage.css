@@ -373,11 +373,6 @@
   min-width: 48px;
 }
 
-/* Hide text labels, show icons only */
-.login-btn-social span:not(.login-coming-soon) {
-  display: none;
-}
-
 /* Social button color customizations */
 .login-btn-microsoft {
   background-color: #00A4EF;
