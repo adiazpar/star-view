@@ -86,17 +86,25 @@ Starview is a specialized, community-driven platform built specifically for the 
 
 **Security & Performance**
 - **django-axes 8.0.0** - Account lockout protection (defends against brute force)
+- **django-allauth 65.3.0** - Email verification and social authentication (Google OAuth)
 - **django-csp 4.0** - Content Security Policy headers
 - **bleach 6.2.0** - HTML sanitization (XSS prevention)
-- **Comprehensive rate limiting** - 5 throttle classes (login, content creation, voting, reporting)
+- **Comprehensive rate limiting** - 6 throttle classes (login, password reset, content creation, voting, reporting)
 - **99.3% query optimization** - N+1 elimination with strategic prefetching
 - **Redis caching** - 10-60x faster response times
 
 **Production Infrastructure**
 - **Gunicorn 23.0.0** - WSGI server
 - **Whitenoise 6.9.0** - Static file serving with compression
-- **AWS SES** - Transactional email (custom domain: noreply@starview.app)
+- **AWS SES** - Transactional email delivery (custom domain: noreply@starview.app)
 - **Render.com** - Hosting platform with automated deployments
+
+**Email System**
+- **Mandatory email verification** - All new users must verify their email address
+- **Professional branded templates** - HTML and plain text versions for all email types
+- **Password reset emails** - Secure one-time links with 1-hour expiration
+- **Security notifications** - Alerts when passwords are changed
+- **Resend verification** - Users can request new verification emails if needed
 
 **External Services**
 - **Mapbox API** - Geocoding and elevation data for location enrichment
@@ -132,17 +140,31 @@ Starview is a specialized, community-driven platform built specifically for the 
 
 **Grade: A+ (98/100)**
 
-**Implementation Highlights:**
+**Authentication & Access Control:**
+- Email verification required for all new accounts
+- Secure password requirements (uppercase, number, special character)
+- Password reset with one-time tokens (1-hour expiration)
+- Account lockout after 5 failed login attempts (1-hour duration)
+- Google OAuth integration for easy sign-in
+- "Remember Me" option for extended sessions (30 days vs browser close)
+- Session security with Redis-backed storage
+
+**Data Protection:**
 - HTTPS enforced (HSTS enabled with 1-year max-age)
-- Security headers (CSP, X-Frame-Options, X-Content-Type-Options)
+- Security headers (CSP, X-Frame-Options, X-Content-Type-Options, Permissions-Policy)
 - CSRF protection with trusted origins
-- Account lockout (5 failed attempts = 1-hour lockout, username-based)
 - XSS prevention (HTML sanitization with whitelisted tags)
 - File upload validation (extension, MIME type, image verification)
 - Coordinate validation (realistic latitude/longitude ranges)
-- API timeouts (10-second limit on external calls)
-- Rate limiting on all sensitive endpoints
-- Audit logging (database + rotating file storage, JSON format)
+
+**Rate Limiting & Monitoring:**
+- Login attempts: 5 per minute
+- Password reset: 3 per hour (prevents email abuse)
+- Content creation: 20 per hour
+- Voting: 60 per hour
+- Reporting: 10 per hour
+- Comprehensive audit logging (all security events tracked with IP addresses)
+- Automatic cleanup of unverified accounts after 7 days
 
 **Test Coverage:**
 - 80+ security and performance tests
@@ -184,19 +206,32 @@ Starview is a specialized, community-driven platform built specifically for the 
 - Pagination and filtering
 - Consistent error responses
 
-**Endpoints:**
-- `/api/locations/` - CRUD operations
-- `/api/locations/{id}/reviews/` - Nested reviews
-- `/api/locations/{id}/reviews/{id}/comments/` - Nested comments
-- `/api/favorite-locations/` - User favorites
+**Core Endpoints:**
+- `/api/locations/` - Browse and create stargazing locations
+- `/api/locations/{id}/reviews/` - Location reviews
+- `/api/locations/{id}/reviews/{id}/comments/` - Review comments
+- `/api/favorite-locations/` - User favorites management
 - `/api/profile/` - User profile management
-- `/health/` - Load balancer monitoring (database, cache, Celery status)
+- `/health/` - System health monitoring
 
-**Authentication:**
-- Django session-based authentication
-- Custom login/registration with audit logging
-- Password reset flow with email verification
-- Generic error messages (prevents user enumeration)
+**Authentication Endpoints:**
+- `/api/auth/register/` - Create new account (sends verification email)
+- `/api/auth/login/` - Sign in (requires verified email)
+- `/api/auth/logout/` - Sign out
+- `/api/auth/status/` - Check authentication status
+- `/api/auth/resend-verification/` - Request new verification email
+- `/api/auth/password-reset/` - Request password reset link
+- `/api/auth/password-reset-confirm/` - Complete password reset
+- `/accounts/google/login/` - Sign in with Google
+
+**Authentication Features:**
+- Session-based authentication with Redis storage
+- Email verification required for new accounts
+- Google OAuth for quick sign-in
+- Secure password reset with one-time links
+- "Remember Me" functionality
+- Account lockout protection
+- Comprehensive security logging
 
 ---
 
@@ -310,26 +345,41 @@ AWS_ACCESS_KEY_ID=your_aws_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret
 AWS_SES_REGION_NAME=us-east-2
 DEFAULT_FROM_EMAIL=noreply@yourdomain.com
+
+# Google OAuth (optional)
+GOOGLE_OAUTH_CLIENT_ID=your_google_client_id
+GOOGLE_OAUTH_CLIENT_SECRET=your_google_client_secret
+```
+
+### Management Commands
+
+```bash
+# Set up Google OAuth from environment variables
+python manage.py setup_google_oauth
+
+# Clean up unverified users after 7 days
+python manage.py cleanup_unverified_users --days=7
 ```
 
 ### Running Tests
 
 ```bash
 # Security tests (Phase 1)
-python .claude/backend/tests/phase1/test_rate_limiting.py
-python .claude/backend/tests/phase1/test_file_upload.py
-python .claude/backend/tests/phase1/test_xss_sanitization.py
+djvenv/bin/python test_rate_limiting.py
+djvenv/bin/python test_password_reset.py
+djvenv/bin/python test_file_upload.py
+djvenv/bin/python test_xss_sanitization.py
 
 # Performance tests (Phase 2)
-python .claude/backend/tests/phase2/test_query_optimization.py
-python .claude/backend/tests/phase2/test_redis_caching.py
+djvenv/bin/python test_query_optimization.py
+djvenv/bin/python test_redis_caching.py
 
 # Infrastructure tests (Phase 4)
-python .claude/backend/tests/phase4/test_account_lockout.py
-python .claude/backend/tests/phase4/test_celery_tasks.py
+djvenv/bin/python test_account_lockout.py
+djvenv/bin/python test_celery_tasks.py
 
 # Health check tests (Phase 5)
-python .claude/backend/tests/phase5/test_health_check.py
+djvenv/bin/python test_health_check.py
 ```
 
 ---
@@ -372,25 +422,6 @@ python .claude/backend/tests/phase5/test_health_check.py
 **Frontend:** Not started
 - Architecture planning in progress
 - Tech stack selection pending
-
----
-
-## Documentation
-
-**For Developers:**
-- `.claude/README.md` - Documentation navigation guide
-- `.claude/backend/ARCHITECTURE.md` - Complete backend architecture (631 lines)
-- `.claude/backend/SECURITY_SUMMARY.md` - Security audit results (489 lines)
-- `.claude/backend/PROGRESS.md` - Implementation timeline and testing
-- `.claude/backend/CELERY_GUIDE.md` - Async task processing guide
-- `.claude/frontend/API_GUIDE.md` - Complete API reference for frontend integration
-- `.claude/documentation-style.md` - Code documentation standards
-
-**Key Features:**
-- Token-optimized for AI agents (56% reduction from original docs)
-- Single source of truth (no redundancy)
-- Organized by topic (backend/frontend)
-- Comprehensive test coverage documentation
 
 ---
 
