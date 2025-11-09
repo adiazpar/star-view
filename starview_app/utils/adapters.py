@@ -188,11 +188,11 @@ class CustomConfirmEmailView(ConfirmEmailView):
             # and then redirect via get_email_verification_redirect_url
             response = super().get(*args, **kwargs)
 
-            # After confirmation completes, handle email change logic
-            if is_email_change:
-                # Refresh the email_address object to get updated verified status
-                email_address.refresh_from_db()
+            # After confirmation completes, handle email change logic or send welcome email
+            # Refresh the email_address object to get updated verified status
+            email_address.refresh_from_db()
 
+            if is_email_change:
                 if email_address.verified:
                     # Set new email as primary
                     email_address.set_as_primary()
@@ -205,6 +205,33 @@ class CustomConfirmEmailView(ConfirmEmailView):
                     EmailAddress.objects.filter(
                         user=user
                     ).exclude(id=email_address.id).delete()
+            else:
+                # This is a new user completing email verification for the first time
+                # Send welcome email
+                if email_address.verified:
+                    from django.template.loader import render_to_string
+                    from django.core.mail import EmailMultiAlternatives
+                    from django.contrib.sites.shortcuts import get_current_site
+
+                    # Get site information
+                    current_site = get_current_site(self.request)
+
+                    # Build email context
+                    context = {
+                        'user': user,
+                        'site_name': current_site.name,
+                    }
+
+                    # Render email templates
+                    subject = render_to_string('account/email/welcome_subject.txt', context).strip()
+                    text_content = render_to_string('account/email/welcome_message.txt', context)
+                    html_content = render_to_string('account/email/welcome_message.html', context)
+
+                    # Send email
+                    from_email = settings.DEFAULT_FROM_EMAIL
+                    msg = EmailMultiAlternatives(subject, text_content, from_email, [user.email])
+                    msg.attach_alternative(html_content, "text/html")
+                    msg.send()
 
             return response
 
@@ -287,6 +314,48 @@ class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
             username = f"user{unique_id}"
 
         user.username = username
+
+        return user
+
+    def save_user(self, request, sociallogin, form=None):
+        """
+        Save OAuth user and send welcome email for new signups.
+
+        This is called after a user signs up via social auth.
+        We check if the user is new and send a welcome email.
+        """
+        # Check if this is a new user (not yet saved)
+        is_new_user = not sociallogin.user.pk
+
+        # Call parent to save the user
+        user = super().save_user(request, sociallogin, form)
+
+        # Send welcome email for new users only
+        if is_new_user:
+            from django.template.loader import render_to_string
+            from django.core.mail import EmailMultiAlternatives
+            from django.contrib.sites.shortcuts import get_current_site
+            from django.conf import settings
+
+            # Get site information
+            current_site = get_current_site(request)
+
+            # Build email context
+            context = {
+                'user': user,
+                'site_name': current_site.name,
+            }
+
+            # Render email templates
+            subject = render_to_string('account/email/welcome_subject.txt', context).strip()
+            text_content = render_to_string('account/email/welcome_message.txt', context)
+            html_content = render_to_string('account/email/welcome_message.html', context)
+
+            # Send email
+            from_email = settings.DEFAULT_FROM_EMAIL
+            msg = EmailMultiAlternatives(subject, text_content, from_email, [user.email])
+            msg.attach_alternative(html_content, "text/html")
+            msg.send()
 
         return user
 

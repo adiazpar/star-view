@@ -480,13 +480,16 @@ def request_password_reset(request):
 
         # Send password reset email
         try:
-            subject = f'{settings.SITE_NAME} - Password Reset Request'
+            from django.contrib.sites.shortcuts import get_current_site
+
+            current_site = get_current_site(request)
+            subject = f'{current_site.name} - Password Reset Request'
 
             # Email context
             context = {
                 'user': user,
                 'reset_url': reset_url,
-                'site_name': settings.SITE_NAME,
+                'site_name': current_site.name,
                 'client_ip': client_ip,
                 'expiration_hours': 1,
             }
@@ -631,6 +634,8 @@ def confirm_password_reset(request, uidb64, token):
 
     # Send password change notification email
     try:
+        from django.contrib.sites.shortcuts import get_current_site
+
         # Get client IP for security notification
         x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
         if x_forwarded_for:
@@ -638,12 +643,13 @@ def confirm_password_reset(request, uidb64, token):
         else:
             client_ip = request.META.get('REMOTE_ADDR', 'Unknown')
 
-        subject = f'{settings.SITE_NAME} - Password Changed Successfully'
+        current_site = get_current_site(request)
+        subject = f'{current_site.name} - Password Changed Successfully'
 
         # Email context
         context = {
             'user': user,
-            'site_name': settings.SITE_NAME,
+            'site_name': current_site.name,
             'client_ip': client_ip,
         }
 

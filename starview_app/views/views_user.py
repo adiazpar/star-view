@@ -279,12 +279,15 @@ class UserProfileViewSet(viewsets.ViewSet):
         # Send notification to old email address
         old_email = request.user.email
         if old_email:
-            subject = 'Email Address Change Request - Starview'
+            from django.contrib.sites.shortcuts import get_current_site
+
+            current_site = get_current_site(request)
+            subject = f'Email Address Change Request - {current_site.name}'
             context = {
                 'user': request.user,
                 'old_email': old_email,
                 'new_email': new_email,
-                'site_name': 'Starview',
+                'site_name': current_site.name,
             }
 
             html_content = render_to_string('starview_app/auth/email/email_change_notification.html', context)

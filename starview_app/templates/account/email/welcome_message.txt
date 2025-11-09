@@ -1,0 +1,19 @@
+{% load i18n %}{% autoescape off %}{% blocktrans with site_name=site_name %}Welcome to {{ site_name }}{% endblocktrans %}
+
+{% trans "Hello" %}{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+{% blocktrans with site_name=site_name %}Thank you for joining {{ site_name }}! We're excited to have you as part of our community of stargazers and astronomy enthusiasts.{% endblocktrans %}
+
+{% trans "Your account is now fully set up and ready to use. You can start exploring stargazing locations, sharing your own reviews, and connecting with fellow astronomy lovers." %}
+
+{% trans "Your Username:" %} {{ user.username }}
+
+{% trans "Thank you for choosing Starview. We hope you discover amazing night skies!" %}
+
+{% trans "Clear skies," %}
+{% blocktrans with site_name=site_name %}The {{ site_name }} Team{% endblocktrans %}
+
+---
+{{ site_name }} - {% trans "Find Your Perfect Night Sky" %}
+{% trans "This is an automated email. Please do not reply." %}
+{% endautoescape %}

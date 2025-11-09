@@ -402,3 +402,62 @@ msgstr "Contactando al soporte si notas actividad sospechosa"
 #: starview_app/templates/starview_app/auth/email/email_change_notification.html:194
 msgid "If you initiated this change, please check your new email inbox and click the verification link to complete the process."
 msgstr "Si iniciaste este cambio, por favor revisa la bandeja de entrada de tu nuevo correo electrónico y haz clic en el enlace de verificación para completar el proceso."
+
+#: starview_app/templates/account/email/welcome_message.html:7
+#: starview_app/templates/account/email/welcome_message.html:107
+#: starview_app/templates/account/email/welcome_subject.txt:1
+msgid "Welcome to Starview"
+msgstr "Bienvenido a Starview"
+
+#: starview_app/templates/account/email/welcome_message.html:129
+#: starview_app/templates/account/email/welcome_subject.txt:1
+#, python-format
+msgid "Welcome to %(site_name)s!"
+msgstr "¡Bienvenido a %(site_name)s!"
+
+#: starview_app/templates/account/email/welcome_message.html:140
+#: starview_app/templates/account/email/welcome_message.txt:7
+#, python-format
+msgid "Thank you for joining <strong>%(site_name)s</strong>! We're excited to have you as part of our community of stargazers and astronomy enthusiasts."
+msgstr "¡Gracias por unirte a <strong>%(site_name)s</strong>! Estamos emocionados de tenerte como parte de nuestra comunidad de observadores de estrellas y entusiastas de la astronomía."
+
+#: starview_app/templates/account/email/welcome_message.html:144
+#: starview_app/templates/account/email/welcome_message.txt:9
+msgid "Your account is now fully set up and ready to use. You can start exploring stargazing locations, sharing your own reviews, and connecting with fellow astronomy lovers."
+msgstr "Tu cuenta ya está completamente configurada y lista para usar. Puedes comenzar a explorar lugares para observar estrellas, compartir tus propias reseñas y conectarte con otros amantes de la astronomía."
+
+#: starview_app/templates/account/email/welcome_message.html:148
+#: starview_app/templates/account/email/welcome_message.txt:11
+msgid "Your Username:"
+msgstr "Tu Nombre de Usuario:"
+
+#: starview_app/templates/account/email/welcome_message.html:154
+#: starview_app/templates/account/email/welcome_message.txt:13
+msgid "Thank you for choosing Starview. We hope you discover amazing night skies!"
+msgstr "Gracias por elegir Starview. ¡Esperamos que descubras cielos nocturnos increíbles!"
+
+#: starview_app/templates/account/email/welcome_message.html:155
+#: starview_app/templates/account/email/welcome_message.txt:15
+msgid "Clear skies,"
+msgstr "Cielos despejados,"
+
+#: starview_app/templates/account/email/welcome_message.html:167
+#: starview_app/templates/account/email/welcome_message.txt:20
+msgid "This is an automated email. Please do not reply."
+msgstr "Este es un correo electrónico automatizado. Por favor no respondas."
+
+#: starview_app/templates/account/email/email_confirmation_signup_message.html:185
+msgid "Email Verification"
+msgstr "Verificación de Correo Electrónico"
+
+#: starview_app/templates/account/email/welcome_message.html:117
+msgid "Welcome"
+msgstr "Bienvenido"
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:194
+msgid "Password Reset"
+msgstr "Restablecimiento de Contraseña"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:169
+msgid "Security Alert"
+msgstr "Alerta de Seguridad"
