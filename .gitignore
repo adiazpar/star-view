@@ -236,6 +236,7 @@ fabric.properties
 
 # Event Horizon specific
 staticfiles/
+media/
 
 # ============================================
 # Frontend (Node.js / React / Vite)
