@@ -56,6 +56,9 @@ pip-delete-this-directory.txt
 *.log
 local_settings.py
 
+# Audit log archives (sensitive security data)
+audit_archives/
+
 # Flask stuff:
 instance/
 .webassets-cache

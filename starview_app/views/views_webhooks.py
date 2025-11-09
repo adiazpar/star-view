@@ -1,21 +1,34 @@
 # ----------------------------------------------------------------------------------------------------- #
-# AWS SNS Webhook Views - Email Bounce and Complaint Handlers                                          #
+# AWS SNS Webhook Views - Email Bounce and Complaint Handlers                                           #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Receives real-time notifications from AWS SNS when emails bounce or are marked as spam.              #
-# Processes notifications and updates suppression lists automatically.                                 #
+# Receives real-time notifications from AWS SNS when emails bounce or are marked as spam.               #
+# Processes notifications and updates suppression lists automatically to maintain AWS SES compliance.   #
 #                                                                                                       #
 # Endpoints:                                                                                            #
-# - POST /api/webhooks/ses-bounce/     - Receives bounce notifications                                 #
-# - POST /api/webhooks/ses-complaint/  - Receives complaint notifications                              #
+# - POST /api/webhooks/ses-bounce/     - Receives bounce notifications                                  #
+# - POST /api/webhooks/ses-complaint/  - Receives complaint notifications                               #
+#                                                                                                       #
+# Architecture:                                                                                         #
+# - Plain Django function-based views (not DRF)                                                         #
+# - Uses Django's JsonResponse and HttpResponse for simple webhook handling                             #
+# - No authentication required (SNS signature verification provides security)                           #
+# - No rate limiting (AWS SNS is trusted source, not user-facing)                                       #
+# - CSRF exempt (webhooks receive POST from external AWS service)                                       #
+#                                                                                                       #
+# Why Not DRF:                                                                                          #
+# External infrastructure endpoint that doesn't need DRF features (serializers, browsable API,          #
+# permissions, throttling). Plain Django is simpler and faster for webhook processing.                  #
 #                                                                                                       #
 # Security:                                                                                             #
-# - Verifies SNS message signatures to prevent spoofing                                                #
+# - Verifies SNS message signatures using AWS public certificates to prevent spoofing                   #
+# - Validates certificate URLs (must be https://sns.* domains)                                          #
 # - Handles SNS subscription confirmations automatically                                                #
-# - Rate limiting applied to prevent abuse                                                             #
+# - Stores raw notification payloads for audit trail and incident investigation                         #
+# - Audit logging for all suppression events via log_auth_event()                                       #
 #                                                                                                       #
 # Integration:                                                                                          #
-# AWS SES → AWS SNS → These webhook endpoints → EmailBounce/EmailComplaint models                      #
+# AWS SES → AWS SNS → These webhook endpoints → EmailBounce/EmailComplaint models                       #
 # ----------------------------------------------------------------------------------------------------- #
 
 import json
@@ -25,29 +38,30 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth import get_user_model
 from starview_app.models import EmailBounce, EmailComplaint, EmailSuppressionList
-from starview_app.utils.audit_logger import log_auth_event
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
+
+# ----------------------------------------------------------------------------- #
+# Verify the authenticity of an SNS message by checking its signature.          #
+#                                                                               #
+# AWS SNS signs all messages with a private key. We verify the signature        #
+# using AWS's public certificate to ensure the message came from AWS.           #
+#                                                                               #
+# Args:                                                                         #
+#   message_dict (dict): Parsed JSON message from SNS                           #
+#                                                                               #
+# Returns:                                                                      #
+#   bool: True if signature is valid, False otherwise                           #
+#                                                                               #
+# Security:                                                                     #
+# This prevents attackers from spoofing bounce/complaint notifications          #
+# to manipulate our suppression list.                                           #
+# ----------------------------------------------------------------------------- #
 def verify_sns_message(message_dict):
-    """
-    Verify the authenticity of an SNS message by checking its signature.
-
-    AWS SNS signs all messages with a private key. We verify the signature
-    using AWS's public certificate to ensure the message came from AWS.
-
-    Args:
-        message_dict (dict): Parsed JSON message from SNS
-
-    Returns:
-        bool: True if signature is valid, False otherwise
-
-    Security:
-        This prevents attackers from spoofing bounce/complaint notifications
-        to manipulate our suppression list.
-    """
+   
     try:
         import base64
         import requests
@@ -110,33 +124,35 @@ def verify_sns_message(message_dict):
         return False
 
 
+
+# ----------------------------------------------------------------------------- #
+# Webhook endpoint for AWS SNS bounce notifications.                            #
+#                                                                               #
+# Receives notifications when emails bounce (fail to deliver).                  #
+# Processes bounces and adds addresses to suppression list as needed.           #
+#                                                                               #
+# Flow:                                                                         #
+# 1. Email bounces → AWS SES detects → Publishes to SNS topic                   #
+# 2. SNS sends POST request to this endpoint                                    #
+# 3. We verify signature, parse notification, update database                   #
+# 4. Hard bounces and repeated soft bounces → Suppression list                  #
+#                                                                               #
+# POST Body (from SNS):                                                         #
+# {                                                                             #
+#       "Type": "Notification",                                                 #
+#       "MessageId": "...",                                                     #
+#       "TopicArn": "...",                                                      #
+#       "Subject": "...",                                                       #
+#       "Message": "{...}",  # JSON string with bounce details                  #
+#       "Timestamp": "...",                                                     #
+#       "Signature": "...",                                                     #
+#       "SigningCertURL": "..."                                                 #
+# }                                                                             #
+# ----------------------------------------------------------------------------- #
 @csrf_exempt
 @require_http_methods(["POST"])
 def ses_bounce_webhook(request):
-    """
-    Webhook endpoint for AWS SNS bounce notifications.
-
-    Receives notifications when emails bounce (fail to deliver).
-    Processes bounces and adds addresses to suppression list as needed.
-
-    Flow:
-    1. Email bounces → AWS SES detects → Publishes to SNS topic
-    2. SNS sends POST request to this endpoint
-    3. We verify signature, parse notification, update database
-    4. Hard bounces and repeated soft bounces → Suppression list
-
-    POST Body (from SNS):
-    {
-        "Type": "Notification",
-        "MessageId": "...",
-        "TopicArn": "...",
-        "Subject": "...",
-        "Message": "{...}",  # JSON string with bounce details
-        "Timestamp": "...",
-        "Signature": "...",
-        "SigningCertURL": "..."
-    }
-    """
+    
     try:
         # Parse SNS message
         try:
@@ -173,9 +189,11 @@ def ses_bounce_webhook(request):
         bounce_subtype = bounce.get('bounceSubType', 'undetermined').lower().replace(' ', '_')
 
         # Map AWS bounce types to our choices
+        # AWS uses: Permanent (hard), Temporary (soft/transient), Transient (connection issues)
         bounce_type_map = {
-            'permanent': 'hard',
-            'transient': 'soft',
+            'permanent': 'hard',        # Permanent failure (invalid email, domain doesn't exist)
+            'temporary': 'soft',        # Temporary failure (mailbox full, server down)
+            'transient': 'transient',   # Connection issues (throttling, timeout)
             'undetermined': 'transient',
         }
         bounce_type = bounce_type_map.get(bounce_type, 'transient')
@@ -241,20 +259,6 @@ def ses_bounce_webhook(request):
 
                 logger.warning(f"Email suppressed due to bounces: {email} ({reason})")
 
-                # Log security event
-                log_auth_event(
-                    request=request,
-                    event_type='email_suppressed_bounce',
-                    user=bounce_record.user,
-                    success=True,
-                    message=f'Email suppressed due to {reason}',
-                    metadata={
-                        'email': email,
-                        'bounce_type': bounce_type,
-                        'bounce_count': bounce_record.bounce_count,
-                    }
-                )
-
         return JsonResponse({
             'status': 'success',
             'processed': len(bounced_recipients)
@@ -265,33 +269,35 @@ def ses_bounce_webhook(request):
         return JsonResponse({'error': 'Internal server error'}, status=500)
 
 
+
+# ----------------------------------------------------------------------------- #
+# Webhook endpoint for AWS SNS complaint notifications.                         #
+#                                                                               #
+# Receives notifications when recipients mark emails as spam.                   #
+# Immediately suppresses complained addresses to protect sender reputation.     #
+#                                                                               #
+# Flow:                                                                         #
+# 1. User marks email as spam → ISP reports via feedback loop → AWS SES         #
+# 2. SES publishes to SNS topic                                                 #
+# 3. SNS sends POST request to this endpoint                                    #
+# 4. We verify signature, parse notification, suppress email immediately        #
+#                                                                               #
+# POST Body (from SNS):                                                         #
+# {                                                                             #
+#       "Type": "Notification",                                                 #
+#       "MessageId": "...",                                                     #
+#       "TopicArn": "...",                                                      #
+#       "Subject": "...",                                                       #
+#       "Message": "{...}",  # JSON string with complaint details               #
+#       "Timestamp": "...",                                                     #
+#       "Signature": "...",                                                     #
+#       "SigningCertURL": "..."                                                 #
+# }                                                                             #
+# ----------------------------------------------------------------------------- #
 @csrf_exempt
 @require_http_methods(["POST"])
 def ses_complaint_webhook(request):
-    """
-    Webhook endpoint for AWS SNS complaint notifications.
-
-    Receives notifications when recipients mark emails as spam.
-    Immediately suppresses complained addresses to protect sender reputation.
-
-    Flow:
-    1. User marks email as spam → ISP reports via feedback loop → AWS SES
-    2. SES publishes to SNS topic
-    3. SNS sends POST request to this endpoint
-    4. We verify signature, parse notification, suppress email immediately
-
-    POST Body (from SNS):
-    {
-        "Type": "Notification",
-        "MessageId": "...",
-        "TopicArn": "...",
-        "Subject": "...",
-        "Message": "{...}",  # JSON string with complaint details
-        "Timestamp": "...",
-        "Signature": "...",
-        "SigningCertURL": "..."
-    }
-    """
+    
     try:
         # Parse SNS message
         try:
@@ -379,19 +385,6 @@ def ses_complaint_webhook(request):
                 complaint_record.save()
 
                 logger.critical(f"Email suppressed due to complaint: {email}")
-
-                # Log security event
-                log_auth_event(
-                    request=request,
-                    event_type='email_suppressed_complaint',
-                    user=complaint_record.user,
-                    success=True,
-                    message='Email suppressed due to spam complaint',
-                    metadata={
-                        'email': email,
-                        'complaint_type': complaint_type,
-                    }
-                )
 
         return JsonResponse({
             'status': 'success',

@@ -265,15 +265,7 @@ def custom_login(request):
             authenticated_user = authenticate(request, username=user_obj.username, password=password)
         except AxesBackendPermissionDenied:
             # Account is locked out due to too many failed attempts
-            # Audit log: Login attempt while locked (triggered by axes)
-            log_auth_event(
-                request=request,
-                event_type='login_locked',
-                username=user_obj.username,
-                success=False,
-                message=f'Login attempt blocked - account locked: {user_obj.username}',
-                metadata={'reason': 'account_locked_by_axes'}
-            )
+            # Axes already tracks this in its own models
             raise exceptions.PermissionDenied(
                 'Account locked due to too many login attempts. Please try again later.'
             )

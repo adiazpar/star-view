@@ -1,27 +1,28 @@
 # ----------------------------------------------------------------------------------------------------- #
-# Django Management Command - Email Suppression List Cleanup                                           #
+# Django Management Command - Email Suppression List Cleanup                                            #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Provides maintenance utilities for email bounce/complaint tracking and suppression list.             #
+# Provides maintenance utilities for email bounce/complaint tracking and suppression list.              #
 #                                                                                                       #
 # Features:                                                                                             #
-# - Remove old soft bounce records after recovery period                                               #
-# - Deactivate suppressions for soft bounces that have stabilized                                      #
-# - Clean up stale bounce records (no activity for 90+ days)                                           #
-# - Generate email health reports                                                                      #
+# - Remove old soft bounce records after recovery period                                                #
+# - Deactivate suppressions for soft bounces that have stabilized                                       #
+# - Clean up stale bounce records (no activity for 90+ days)                                            #
+# - Generate email health reports                                                                       #
 #                                                                                                       #
 # Usage:                                                                                                #
-#   python manage.py cleanup_email_suppressions [options]                                              #
+#   python manage.py cleanup_email_suppressions [options]                                               #
 #                                                                                                       #
 # Options:                                                                                              #
-#   --soft-bounce-days N    Days to keep soft bounce suppressions (default: 30)                        #
-#   --stale-days N          Days of inactivity before marking bounce as stale (default: 90)            #
-#   --dry-run               Show what would be cleaned without making changes                          #
-#   --report                Generate email health report                                               #
+#   --soft-bounce-days N    Days to keep soft bounce suppressions (default: 30)                         #
+#   --stale-days N          Days of inactivity before marking bounce as stale (default: 90)             #
+#   --dry-run               Show what would be cleaned without making changes                           #
+#   --report                Generate email health report                                                #
 # ----------------------------------------------------------------------------------------------------- #
 
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db.models import Count
 from datetime import timedelta
 from starview_app.models import EmailBounce, EmailComplaint, EmailSuppressionList
 from starview_app.utils.email_utils import get_email_statistics
@@ -54,6 +55,7 @@ class Command(BaseCommand):
             help='Generate email health report',
         )
 
+
     def handle(self, *args, **options):
         self.dry_run = options['dry_run']
         self.soft_bounce_days = options['soft_bounce_days']
@@ -73,13 +75,11 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS('\nCleanup completed successfully'))
 
-    def cleanup_soft_bounces(self):
-        """
-        Deactivate soft bounce suppressions after recovery period.
 
-        Soft bounces are temporary (mailbox full, server down, etc.).
-        After N days without new bounces, give the address another chance.
-        """
+    # Deactivate soft bounce suppressions after recovery period.
+    # Soft bounces are temporary (mailbox full, server down, etc.).
+    # After N days without new bounces, give the address another chance.
+    def cleanup_soft_bounces(self):
         self.stdout.write('\n' + '=' * 80)
         self.stdout.write('SOFT BOUNCE CLEANUP')
         self.stdout.write('=' * 80)
@@ -114,17 +114,15 @@ class Command(BaseCommand):
                     bounce.save()
 
             if not self.dry_run:
-                self.stdout.write(self.style.SUCCESS(f'\n✓ Deactivated {count} soft bounce suppressions'))
+                self.stdout.write(self.style.SUCCESS(f'\nDeactivated {count} soft bounce suppressions'))
             else:
                 self.stdout.write(self.style.WARNING(f'\n[DRY RUN] Would deactivate {count} soft bounce suppressions'))
 
-    def cleanup_stale_bounces(self):
-        """
-        Remove bounce records with no recent activity.
 
-        After 90+ days of no bounces, consider the record stale and clean it up.
-        Keep hard bounces and complaints indefinitely.
-        """
+    # Remove bounce records with no recent activity.
+    # After 90+ days of no bounces, consider the record stale and clean it up.
+    # Keep hard bounces and complaints indefinitely.
+    def cleanup_stale_bounces(self):
         self.stdout.write('\n' + '=' * 80)
         self.stdout.write('STALE BOUNCE CLEANUP')
         self.stdout.write('=' * 80)
@@ -150,16 +148,14 @@ class Command(BaseCommand):
 
             if not self.dry_run:
                 stale_bounces.delete()
-                self.stdout.write(self.style.SUCCESS(f'\n✓ Deleted {count} stale bounce records'))
+                self.stdout.write(self.style.SUCCESS(f'\nDeleted {count} stale bounce records'))
             else:
                 self.stdout.write(self.style.WARNING(f'\n[DRY RUN] Would delete {count} stale bounce records'))
 
-    def cleanup_transient_bounces(self):
-        """
-        Remove transient bounce records older than 7 days.
 
-        Transient bounces are temporary connection issues, not worth keeping.
-        """
+    # Remove transient bounce records older than 7 days.
+    # Transient bounces are temporary connection issues, not worth keeping.
+    def cleanup_transient_bounces(self):
         self.stdout.write('\n' + '=' * 80)
         self.stdout.write('TRANSIENT BOUNCE CLEANUP')
         self.stdout.write('=' * 80)
@@ -177,12 +173,13 @@ class Command(BaseCommand):
         if count > 0:
             if not self.dry_run:
                 transient_bounces.delete()
-                self.stdout.write(self.style.SUCCESS(f'✓ Deleted {count} transient bounce records'))
+                self.stdout.write(self.style.SUCCESS(f'Deleted {count} transient bounce records'))
             else:
                 self.stdout.write(self.style.WARNING(f'[DRY RUN] Would delete {count} transient bounce records'))
 
+
+    # Generate email health report with statistics
     def generate_report(self):
-        """Generate email health report with statistics."""
         self.stdout.write('\n' + '=' * 80)
         self.stdout.write('EMAIL HEALTH REPORT')
         self.stdout.write('=' * 80)
@@ -229,25 +226,22 @@ class Command(BaseCommand):
         warnings = []
 
         if stats['hard_bounces'] > 100:
-            warnings.append('⚠️  High number of hard bounces - review email collection process')
+            warnings.append('WARNING: High number of hard bounces - review email collection process')
 
         if stats['total_complaints'] > 10:
-            warnings.append('⚠️  Complaints detected - review email content and frequency')
+            warnings.append('WARNING: Complaints detected - review email content and frequency')
 
         if recent_bounces > 50:
-            warnings.append('⚠️  High recent bounce rate - check email service health')
+            warnings.append('WARNING: High recent bounce rate - check email service health')
 
         if stats['soft_bounces'] > 200:
-            warnings.append('⚠️  High soft bounce count - some mailboxes may be full')
+            warnings.append('WARNING: High soft bounce count - some mailboxes may be full')
 
         if warnings:
             self.stdout.write('')
             for warning in warnings:
                 self.stdout.write(self.style.WARNING(warning))
         else:
-            self.stdout.write(self.style.SUCCESS('\n✓ Email deliverability is healthy'))
+            self.stdout.write(self.style.SUCCESS('\nEmail deliverability is healthy'))
 
         self.stdout.write('\n' + '=' * 80)
-
-
-from django.db.models import Count

@@ -8,10 +8,18 @@
 # instance.                                                                                             #
 #                                                                                                       #
 # Architecture:                                                                                         #
+# - Plain Django function-based view (not DRF)                                                          #
+# - Uses Django's JsonResponse for simple JSON responses                                                #
+# - No authentication required (public endpoint for load balancer health checks)                        #
+# - No rate limiting (called frequently by infrastructure, not users)                                   #
 # - Returns 200 OK when all services are healthy (load balancer continues routing traffic)              #
 # - Returns 503 Service Unavailable when any critical service fails (load balancer removes instance)    #
 # - Checks are performed in order of criticality: database → cache → Celery                             #
 # - Non-blocking: All checks complete in <100ms to avoid timeout issues                                 #
+#                                                                                                       #
+# Why Not DRF:                                                                                          #
+# Infrastructure monitoring endpoint that doesn't need DRF features. Called by load balancers and       #
+# monitoring services, not users. Plain Django is simpler and faster for health checks.                 #
 #                                                                                                       #
 # Health Checks Performed:                                                                              #
 # 1. Database (PostgreSQL): Verifies connection pool and query execution                                #
