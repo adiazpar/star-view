@@ -24,12 +24,14 @@ from django.conf.urls.static import static
 import os
 
 from .views import ReactAppView
-from starview_app.utils.adapters import CustomConfirmEmailView
+from starview_app.utils.adapters import CustomConfirmEmailView, CustomConnectionsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     # Custom email confirmation view (must be before allauth.urls to override)
     path('accounts/confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
+    # Custom social account connections view (must be before allauth.urls to override)
+    path('accounts/3rdparty/', CustomConnectionsView.as_view(), name='socialaccount_connections'),
     path('accounts/', include('allauth.urls')),  # django-allauth URLs (must be before starview_app.urls)
     path('', include('starview_app.urls')),
 ]

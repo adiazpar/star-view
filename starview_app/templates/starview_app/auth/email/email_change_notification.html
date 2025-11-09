@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% trans "Password Changed Successfully" %} - Starview</title>
+    <title>{% trans "Email Change Request" %} - Starview</title>
     <style>
         /* Starview Email Design System - Matches App Variables */
         body {
@@ -62,28 +62,30 @@
             color: #d1d5db;
             margin-bottom: 24px;
         }
-        .success-box {
-            background-color: rgba(34, 197, 94, 0.1);
-            border-left: 4px solid #22c55e;
+        .info-box {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-left: 4px solid #3b82f6;
             border-radius: 4px;
             padding: 16px;
             margin: 24px 0;
         }
-        .success-box-title {
+        .info-box-title {
             font-size: 14px;
             font-weight: 600;
-            color: #22c55e;
+            color: #3b82f6;
             margin-bottom: 8px;
         }
-        .success-box-text {
+        .info-box p {
+            margin: 6px 0;
             font-size: 14px;
             color: #9ca3af;
-            margin: 0;
-            line-height: 1.5;
+        }
+        .info-box strong {
+            color: #d1d5db;
         }
         .warning-box {
-            background-color: rgba(239, 68, 68, 0.1);
-            border-left: 4px solid #ef4444;
+            background-color: rgba(251, 191, 36, 0.1);
+            border-left: 4px solid #fbbf24;
             border-radius: 4px;
             padding: 16px;
             margin: 24px 0;
@@ -91,7 +93,7 @@
         .warning-box-title {
             font-size: 14px;
             font-weight: 600;
-            color: #ef4444;
+            color: #fbbf24;
             margin-bottom: 8px;
         }
         .warning-box-text {
@@ -100,26 +102,14 @@
             margin: 0;
             line-height: 1.5;
         }
-        .security-details {
-            background-color: #374151;
-            border: 1px solid #4b5563;
-            border-radius: 4px;
-            padding: 16px;
-            margin: 24px 0;
-        }
-        .security-details h4 {
-            margin: 0 0 12px 0;
-            color: #f9fafb;
-            font-size: 14px;
-            font-weight: 600;
-        }
-        .security-details p {
-            margin: 6px 0;
-            font-size: 13px;
+        .warning-box ul {
+            margin: 12px 0 0 0;
+            padding-left: 20px;
             color: #9ca3af;
+            font-size: 14px;
         }
-        .security-details strong {
-            color: #d1d5db;
+        .warning-box li {
+            margin: 6px 0;
         }
         .divider {
             height: 1px;
@@ -165,7 +155,7 @@
     <div class="email-wrapper">
         <div class="email-container">
             <div class="header">
-                <h1>{% trans "Password Changed" %}</h1>
+                <h1>{% trans "Email Change Request" %}</h1>
                 <p>{{ site_name }}</p>
             </div>
 
@@ -174,33 +164,34 @@
                     {% trans "Hello" %}{% if user.first_name %} {{ user.first_name }}{% endif %},
                 </div>
 
-                <div class="success-box">
-                    <div class="success-box-title">{% trans "Password Successfully Changed" %}</div>
-                    <div class="success-box-text">
-                        {% blocktrans with site_name=site_name %}Your {{ site_name }} password has been successfully changed. You can now log in using your new password.{% endblocktrans %}
+                <div class="message">
+                    {% blocktrans with site_name=site_name %}A request has been made to change the email address associated with your <strong>{{ site_name }}</strong> account.{% endblocktrans %}
+                </div>
+
+                <div class="info-box">
+                    <div class="info-box-title">{% trans "Email Address Change Details" %}</div>
+                    <p><strong>{% trans "Current email:" %}</strong> {{ old_email }}</p>
+                    <p><strong>{% trans "New email:" %}</strong> {{ new_email }}</p>
+                </div>
+
+                <div class="message">
+                    {% blocktrans with new_email=new_email %}A verification email has been sent to <strong>{{ new_email }}</strong>. Your email address will <strong>not change</strong> until the new address is verified by clicking the link in that email.{% endblocktrans %}
+                </div>
+
+                <div class="warning-box">
+                    <div class="warning-box-title">{% trans "Didn't make this request?" %}</div>
+                    <div class="warning-box-text">
+                        {% trans "If you did NOT request this change, please secure your account immediately by:" %}
+                        <ul>
+                            <li>{% trans "Changing your password" %}</li>
+                            <li>{% trans "Reviewing recent account activity" %}</li>
+                            <li>{% trans "Contacting support if you notice suspicious activity" %}</li>
+                        </ul>
                     </div>
                 </div>
 
                 <div class="message">
-                    {% blocktrans with site_name=site_name user_email=user.email %}This email confirms that the password for your <strong>{{ site_name }}</strong> account (<strong>{{ user_email }}</strong>) was recently changed.{% endblocktrans %}
-                </div>
-
-                <div class="security-details">
-                    <h4>{% trans "Security Information" %}</h4>
-                    <p><strong>{% trans "Change IP:" %}</strong> {{ client_ip }}</p>
-                    <p><strong>{% trans "Account:" %}</strong> {{ user.username }}</p>
-                    <p><strong>{% trans "Email:" %}</strong> {{ user.email }}</p>
-                </div>
-
-                <div class="warning-box">
-                    <div class="warning-box-title">{% trans "Didn't make this change?" %}</div>
-                    <div class="warning-box-text">
-                        {% trans "If you did NOT change your password, your account may have been compromised. Please take immediate action:" %}
-                        <br><br>
-                        {% trans '1. Reset your password immediately using the "Forgot Password" link' %}<br>
-                        {% trans "2. Review your account activity for any unauthorized changes" %}<br>
-                        {% trans "3. Contact our support team if you need assistance" %}
-                    </div>
+                    {% trans "If you initiated this change, please check your new email inbox and click the verification link to complete the process." %}
                 </div>
 
                 <div class="divider"></div>

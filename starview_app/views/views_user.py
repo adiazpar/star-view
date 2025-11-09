@@ -167,15 +167,75 @@ class UserProfileViewSet(viewsets.ViewSet):
 
 
     # ----------------------------------------------------------------------------- #
-    # Update user's email address. Validates format and checks for duplicates.      #
+    # Update user's username.                                                       #
+    #                                                                               #
+    # Validates username format and uniqueness before updating.                     #
+    # Username requirements:                                                        #
+    # - 3-30 characters                                                             #
+    # - Alphanumeric, underscores, and hyphens only                                 #
+    # - Must be unique across all users                                             #
+    #                                                                               #
+    # HTTP Method: PATCH                                                            #
+    # Endpoint: /api/profile/update-username/                                       #
+    # Body: JSON with new_username                                                  #
+    # Returns: DRF Response with success status and updated username                #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['patch'], url_path='update-username')
+    def update_username(self, request):
+        import re
+        new_username = request.data.get('new_username', '').strip().lower()
+
+        # Validate required field
+        if not new_username:
+            raise exceptions.ValidationError('Username is required.')
+
+        # Validate length
+        if len(new_username) < 3:
+            raise exceptions.ValidationError('Username must be at least 3 characters.')
+        if len(new_username) > 30:
+            raise exceptions.ValidationError('Username must be 30 characters or less.')
+
+        # Validate format (alphanumeric, underscore, hyphen only)
+        if not re.match(r'^[a-z0-9_-]+$', new_username):
+            raise exceptions.ValidationError('Username can only contain letters, numbers, underscores, and hyphens.')
+
+        # Check if username is already taken
+        if User.objects.filter(username=new_username).exclude(id=request.user.id).exists():
+            raise exceptions.ValidationError('This username is already taken.')
+
+        # Update username
+        user = request.user
+        user.username = new_username
+        user.save()
+
+        return Response({
+            'detail': 'Username updated successfully.',
+            'username': new_username
+        }, status=status.HTTP_200_OK)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Update user's email address with verification flow.                           #
+    #                                                                               #
+    # Security: Requires verification of new email before change takes effect.      #
+    # Process:                                                                      #
+    # 1. Validate new email format and uniqueness                                   #
+    # 2. Send notification to current email address                                 #
+    # 3. Create unverified EmailAddress record for new email                        #
+    # 4. Send verification link to new email address                                #
+    # 5. User clicks link to confirm and complete email change                      #
     #                                                                               #
     # HTTP Method: PATCH                                                            #
     # Endpoint: /api/profile/update-email/                                          #
     # Body: JSON with new_email                                                     #
-    # Returns: DRF Response with success status and new email                       #
+    # Returns: DRF Response with verification instructions                          #
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['patch'], url_path='update-email')
     def update_email(self, request):
+        from allauth.account.models import EmailAddress
+        from django.core.mail import EmailMultiAlternatives
+        from django.template.loader import render_to_string
+
         new_email = request.data.get('new_email', '').strip()
 
         # Validate the new email
@@ -188,16 +248,80 @@ class UserProfileViewSet(viewsets.ViewSet):
         except ValidationError:
             raise exceptions.ValidationError('Please enter a valid email address.')
 
-        # Check if email is already taken
+        # Check if this is the same as current email
+        if request.user.email.lower() == new_email.lower():
+            raise exceptions.ValidationError('This is already your current email address.')
+
+        # Check if email is already taken by another user
         if User.objects.filter(email=new_email.lower()).exclude(id=request.user.id).exists():
             raise exceptions.ValidationError('This email address is already registered.')
 
-        # Update the email
-        request.user.email = new_email.lower()
-        request.user.save()
+        # Check if email is already in use by a social account (from ANY user including self)
+        from allauth.socialaccount.models import SocialAccount
+        for social_account in SocialAccount.objects.all():
+            social_email = social_account.extra_data.get('email', '').lower()
+            if social_email == new_email.lower():
+                # Block the change - this email is used by a social account
+                raise exceptions.ValidationError('This email address is already registered.')
+
+        # Check if email has a pending verification (unverified EmailAddress record)
+        # This prevents race conditions where multiple users try to claim the same email
+        pending_email = EmailAddress.objects.filter(
+            email=new_email.lower(),
+            verified=False
+        ).exclude(user=request.user).first()
+
+        if pending_email:
+            raise exceptions.ValidationError('This email address is already registered.')
+
+        # Send notification to old email address
+        old_email = request.user.email
+        if old_email:
+            subject = 'Email Address Change Request - Starview'
+            context = {
+                'user': request.user,
+                'old_email': old_email,
+                'new_email': new_email,
+                'site_name': 'Starview',
+            }
+
+            html_content = render_to_string('starview_app/auth/email/email_change_notification.html', context)
+            text_content = render_to_string('starview_app/auth/email/email_change_notification.txt', context)
+
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=text_content,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[old_email]
+            )
+            email.attach_alternative(html_content, "text/html")
+            email.send(fail_silently=True)
+
+        # Get or create EmailAddress record for new email (unverified)
+        email_address, created = EmailAddress.objects.get_or_create(
+            user=request.user,
+            email=new_email.lower(),
+            defaults={'verified': False, 'primary': False}
+        )
+
+        # If email already exists and is verified, make it primary immediately
+        if not created and email_address.verified:
+            email_address.set_as_primary()
+            # Update User model email
+            request.user.email = new_email.lower()
+            request.user.save()
+            return Response({
+                'detail': 'Email updated successfully.',
+                'new_email': new_email,
+                'verification_required': False
+            }, status=status.HTTP_200_OK)
+
+        # Email is unverified, send verification email
+        email_address.send_confirmation(request)
 
         return Response({
-            'detail': 'Email updated successfully.',
+            'detail': f'Verification email sent to {new_email}. Please check your inbox and click the verification link to complete the email change.',
+            'verification_required': True,
             'new_email': new_email
         }, status=status.HTTP_200_OK)
 
@@ -205,9 +329,13 @@ class UserProfileViewSet(viewsets.ViewSet):
     # ----------------------------------------------------------------------------- #
     # Update user's password. Verifies current password and validates new password. #
     #                                                                               #
+    # Handles two scenarios:                                                        #
+    # 1. User has existing password → Requires current_password for verification   #
+    # 2. User has no password (OAuth signup) → Sets first password without current #
+    #                                                                               #
     # HTTP Method: PATCH                                                            #
     # Endpoint: /api/profile/update-password/                                       #
-    # Body: JSON with current_password and new_password                             #
+    # Body: JSON with new_password and optional current_password                    #
     # Returns: DRF Response with success status or validation error                 #
     # ----------------------------------------------------------------------------- #
     @action(detail=False, methods=['patch'], url_path='update-password')
@@ -215,16 +343,28 @@ class UserProfileViewSet(viewsets.ViewSet):
         current_password = request.data.get('current_password')
         new_password = request.data.get('new_password')
 
-        # Validate inputs
-        if not current_password or not new_password:
-            raise exceptions.ValidationError('Both current and new passwords are required.')
+        # Validate new password is provided
+        if not new_password:
+            raise exceptions.ValidationError('New password is required.')
 
-        # Use PasswordService to validate and change password
-        success, error_message = PasswordService.change_password(
-            user=request.user,
-            current_password=current_password,
-            new_password=new_password
-        )
+        # Check if user has a usable password (not OAuth-only account)
+        if request.user.has_usable_password():
+            # User has existing password - require current password for verification
+            if not current_password:
+                raise exceptions.ValidationError('Current password is required.')
+
+            # Use PasswordService to validate and change password
+            success, error_message = PasswordService.change_password(
+                user=request.user,
+                current_password=current_password,
+                new_password=new_password
+            )
+        else:
+            # User has no password (OAuth signup) - set first password
+            success, error_message = PasswordService.set_password(
+                user=request.user,
+                new_password=new_password
+            )
 
         if not success:
             raise exceptions.ValidationError(error_message)
@@ -234,4 +374,80 @@ class UserProfileViewSet(viewsets.ViewSet):
 
         return Response({
             'detail': 'Password updated successfully.'
+        }, status=status.HTTP_200_OK)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Get user's connected social accounts (Google OAuth, etc.)                     #
+    #                                                                               #
+    # Returns list of social accounts linked to the user with provider info,        #
+    # email from the provider, and connection date.                                 #
+    #                                                                               #
+    # HTTP Method: GET                                                              #
+    # Endpoint: /api/profile/social-accounts/                                       #
+    # Returns: DRF Response with array of social account data                       #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['get'], url_path='social-accounts')
+    def social_accounts(self, request):
+        from allauth.socialaccount.models import SocialAccount
+
+        accounts = SocialAccount.objects.filter(user=request.user)
+
+        account_data = []
+        for account in accounts:
+            # Get email from provider's extra data
+            provider_email = account.extra_data.get('email', 'N/A')
+
+            # Get provider display name
+            provider_name = account.provider.title()
+
+            account_data.append({
+                'id': account.id,
+                'provider': account.provider,
+                'provider_name': provider_name,
+                'email': provider_email,
+                'connected_at': account.date_joined,
+                'uid': account.uid,
+            })
+
+        return Response({
+            'social_accounts': account_data,
+            'count': len(account_data)
+        }, status=status.HTTP_200_OK)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Disconnect a social account from user's profile                               #
+    #                                                                               #
+    # Removes the link between user and a specific OAuth provider. User must have   #
+    # alternative login method (password) before disconnecting social account.      #
+    #                                                                               #
+    # HTTP Method: DELETE                                                           #
+    # Endpoint: /api/profile/disconnect-social/{account_id}/                        #
+    # Returns: DRF Response with success status                                     #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['delete'], url_path='disconnect-social/(?P<account_id>[^/.]+)')
+    def disconnect_social(self, request, account_id=None):
+        from allauth.socialaccount.models import SocialAccount
+
+        try:
+            account = SocialAccount.objects.get(id=account_id, user=request.user)
+        except SocialAccount.DoesNotExist:
+            raise exceptions.NotFound('Social account not found.')
+
+        # Check if user has a password (can't disconnect if no alternative login method)
+        if not request.user.has_usable_password():
+            raise exceptions.ValidationError(
+                'Cannot disconnect social account. Please set a password first to ensure you can still login.'
+            )
+
+        # Store provider name for response
+        provider_name = account.provider.title()
+
+        # Delete the social account
+        account.delete()
+
+        return Response({
+            'detail': f'{provider_name} account disconnected successfully.',
+            'provider': account.provider
         }, status=status.HTTP_200_OK)

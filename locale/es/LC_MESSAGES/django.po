@@ -165,8 +165,8 @@ msgid "Password Changed"
 msgstr "Contraseña Cambiada"
 
 #: starview_app/templates/starview_app/auth/email/password_changed_email.html:178
-msgid "✓ Password Successfully Changed"
-msgstr "✓ Contraseña Cambiada Exitosamente"
+msgid "Password Successfully Changed"
+msgstr "Contraseña Cambiada Exitosamente"
 
 #: starview_app/templates/starview_app/auth/email/password_changed_email.html:180
 #, python-format
@@ -350,3 +350,55 @@ msgstr ""
 
 #~ msgid "Save your favorite spots"
 #~ msgstr "Guardar tus lugares favoritos"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:7
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:158
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:159
+msgid "Email Change Request"
+msgstr "Solicitud de Cambio de Correo Electrónico"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:168
+#, python-format
+msgid "A request has been made to change the email address associated with your <strong>%(site_name)s</strong> account."
+msgstr "Se ha realizado una solicitud para cambiar la dirección de correo electrónico asociada con tu cuenta de <strong>%(site_name)s</strong>."
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:172
+msgid "Email Address Change Details"
+msgstr "Detalles del Cambio de Correo Electrónico"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:173
+msgid "Current email:"
+msgstr "Correo actual:"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:174
+msgid "New email:"
+msgstr "Nuevo correo:"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:178
+#, python-format
+msgid "A verification email has been sent to <strong>%(new_email)s</strong>. Your email address will <strong>not change</strong> until the new address is verified by clicking the link in that email."
+msgstr "Se ha enviado un correo electrónico de verificación a <strong>%(new_email)s</strong>. Tu dirección de correo electrónico <strong>no cambiará</strong> hasta que la nueva dirección sea verificada al hacer clic en el enlace de ese correo."
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:182
+msgid "Didn't make this request?"
+msgstr "¿No hiciste esta solicitud?"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:184
+msgid "If you did NOT request this change, please secure your account immediately by:"
+msgstr "Si NO solicitaste este cambio, por favor asegura tu cuenta inmediatamente:"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:186
+msgid "Changing your password"
+msgstr "Cambiando tu contraseña"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:187
+msgid "Reviewing recent account activity"
+msgstr "Revisando la actividad reciente de la cuenta"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:188
+msgid "Contacting support if you notice suspicious activity"
+msgstr "Contactando al soporte si notas actividad sospechosa"
+
+#: starview_app/templates/starview_app/auth/email/email_change_notification.html:194
+msgid "If you initiated this change, please check your new email inbox and click the verification link to complete the process."
+msgstr "Si iniciaste este cambio, por favor revisa la bandeja de entrada de tu nuevo correo electrónico y haz clic en el enlace de verificación para completar el proceso."

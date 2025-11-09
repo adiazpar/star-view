@@ -452,8 +452,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 # django-allauth settings:
-# Custom adapter for React frontend integration
+# Custom adapters for React frontend integration and validation
 ACCOUNT_ADAPTER = 'starview_app.utils.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'starview_app.utils.adapters.CustomSocialAccountAdapter'
 
 # Email verification is always mandatory (even in development)
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'  # Must verify email to login
@@ -471,15 +472,20 @@ ACCOUNT_LOGIN_METHODS = {'username', 'email'}  # Allow login with username or em
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 
 # Auto-connect social accounts to existing users with matching email
-# If a user already exists with the same email, link the social account instead of creating a new user
-SOCIALACCOUNT_EMAIL_AUTHENTICATION = True  # Allow login via email match
-SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Automatically connect matching emails
+# DISABLED: This causes issues where social accounts get transferred to new users
+# Users must manually connect social accounts from their profile page
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = False  # Don't allow automatic email matching
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = False  # Don't auto-connect
 
 # After successful social login, redirect to home
-# For both development (serving React build) and production
-# Use relative URLs so they work in any environment
-LOGIN_REDIRECT_URL = '/'
-ACCOUNT_LOGOUT_REDIRECT_URL = '/'
+# Development: Redirect to Vite dev server (localhost:5173)
+# Production: Redirect to root (Django serves React build)
+if DEBUG:
+    LOGIN_REDIRECT_URL = 'http://localhost:5173/'
+    ACCOUNT_LOGOUT_REDIRECT_URL = 'http://localhost:5173/'
+else:
+    LOGIN_REDIRECT_URL = '/'
+    ACCOUNT_LOGOUT_REDIRECT_URL = '/'
 
 # Email verification settings
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[Starview] '  # Email subject prefix

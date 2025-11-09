@@ -1,0 +1,30 @@
+EMAIL CHANGE REQUEST - {{ site_name }}
+
+Hello{% if user.first_name %} {{ user.first_name }}{% endif %},
+
+A request has been made to change the email address associated with your {{ site_name }} account.
+
+EMAIL ADDRESS CHANGE DETAILS:
+Current email: {{ old_email }}
+New email: {{ new_email }}
+
+A verification email has been sent to {{ new_email }}. Your email address will not change until the new address is verified by clicking the link in that email.
+
+DIDN'T MAKE THIS REQUEST?
+If you did NOT request this change, please secure your account immediately by:
+
+- Changing your password
+- Reviewing recent account activity
+- Contacting support if you notice suspicious activity
+
+If you initiated this change, please check your new email inbox and click the verification link to complete the process.
+
+---
+
+Best,
+The {{ site_name }} Team
+
+---
+
+{{ site_name }} - Find Your Perfect Night Sky
+This is an automated security email. Please do not reply.

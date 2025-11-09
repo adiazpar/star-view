@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import authApi from '../services/auth';
+import Alert from '../components/Alert';
 import './LoginPage.css';
 
 function LoginPage() {
@@ -115,12 +116,11 @@ function LoginPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="alert alert-error">
-              <i className="alert-icon fa-solid fa-circle-exclamation"></i>
-              <div className="alert-content">
-                <p className="alert-title">{error}</p>
-              </div>
-            </div>
+            <Alert
+              type="error"
+              message={error}
+              onClose={() => setError('')}
+            />
           )}
 
           {/* Login Form */}

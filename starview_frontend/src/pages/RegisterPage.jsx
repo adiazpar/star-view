@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { authApi } from '../services/auth';
+import Alert from '../components/Alert';
 import './RegisterPage.css';
 
 function RegisterPage() {
@@ -127,12 +128,11 @@ function RegisterPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="alert alert-error">
-              <i className="alert-icon fa-solid fa-circle-exclamation"></i>
-              <div className="alert-content">
-                <p className="alert-title">{error}</p>
-              </div>
-            </div>
+            <Alert
+              type="error"
+              message={error}
+              onClose={() => setError('')}
+            />
           )}
 
           {/* Registration Form */}
@@ -174,19 +174,21 @@ function RegisterPage() {
 
             {/* Username Field */}
             <div className="form-group">
-              <label htmlFor="username" className="form-label">Username</label>
+              <label htmlFor="username" className="form-label">Username (Optional)</label>
               <input
                 type="text"
                 id="username"
                 name="username"
                 className="form-input"
-                placeholder="Choose a username"
+                placeholder="Choose a username (or leave blank)"
                 value={formData.username}
                 onChange={handleChange}
                 disabled={loading}
-                required
                 autoComplete="username"
               />
+              <p className="register-username-hint">
+                <i className="fa-solid fa-circle-info"></i> Leave blank to auto-generate a unique username (e.g., user7a3f9b2). You can change it later from your profile.
+              </p>
             </div>
 
             {/* Email Field */}

@@ -97,16 +97,6 @@
   text-align: left;
 }
 
-.verify-email-form .alert-title {
-  margin-bottom: 0;
-}
-
-.verify-email-form .alert-message {
-  margin-top: 4px;
-  font-size: var(--text-xs);
-  color: var(--text-secondary);
-}
-
 /* Button */
 .verify-email-btn {
   width: 100%;

@@ -80,13 +80,37 @@ def register(request):
         pass1 = request.data.get('password1', '')
         pass2 = request.data.get('password2', '')
 
-        # Validate required fields
-        if not all([username, email, first_name, last_name, pass1, pass2]):
+        # Validate required fields (username is now optional)
+        if not all([email, first_name, last_name, pass1, pass2]):
             raise exceptions.ValidationError('All fields are required.')
 
-        # Validate username uniqueness
-        if User.objects.filter(username=username.lower()).exists():
-            raise exceptions.ValidationError('This username is already taken.')
+        # Generate unique username if not provided
+        if not username:
+            import uuid
+            # Use same pattern as OAuth: user#######
+            unique_id = uuid.uuid4().hex[:7]
+            username = f"user{unique_id}"
+
+            # Ensure uniqueness (extremely unlikely to collide, but safe)
+            while User.objects.filter(username=username).exists():
+                unique_id = uuid.uuid4().hex[:7]
+                username = f"user{unique_id}"
+        else:
+            # If username provided, validate it
+            import re
+            username = username.lower()
+
+            # Validate format (3-30 chars, alphanumeric + underscore + hyphen)
+            if len(username) < 3:
+                raise exceptions.ValidationError('Username must be at least 3 characters.')
+            if len(username) > 30:
+                raise exceptions.ValidationError('Username must be 30 characters or less.')
+            if not re.match(r'^[a-z0-9_-]+$', username):
+                raise exceptions.ValidationError('Username can only contain letters, numbers, underscores, and hyphens.')
+
+            # Validate username uniqueness
+            if User.objects.filter(username=username).exists():
+                raise exceptions.ValidationError('This username is already taken.')
 
         # Validate email format using Django's built-in validator
         try:
@@ -98,6 +122,18 @@ def register(request):
         if User.objects.filter(email=email.lower()).exists():
             raise exceptions.ValidationError('This email address is already registered.')
 
+        # Check if email is associated with a social account on another user
+        # This prevents hijacking social accounts by creating regular accounts with the same email
+        from allauth.socialaccount.models import SocialAccount
+
+        # Check if this email is used in any social account's extra_data
+        # Social providers (Google, etc.) store the email in extra_data['email']
+        # Use generic error message to prevent revealing whether it's a social or regular account
+        for social_account in SocialAccount.objects.all():
+            social_email = social_account.extra_data.get('email', '').lower()
+            if social_email == email.lower():
+                raise exceptions.ValidationError('This email address is already registered.')
+
         # Validate that passwords match
         passwords_match, match_error = PasswordService.validate_passwords_match(pass1, pass2)
         if not passwords_match:
@@ -105,7 +141,7 @@ def register(request):
 
         # Prepare user data (DRY - used for both validation and creation)
         user_data = {
-            'username': username.lower(),
+            'username': username,
             'email': email.lower(),
             'first_name': first_name,
             'last_name': last_name
@@ -759,11 +795,15 @@ def resend_verification_email(request):
 # based on authentication state without making unnecessary authenticated        #
 # requests to other endpoints.                                                  #
 #                                                                               #
+# Note: Throttling is disabled for this endpoint because it's a lightweight     #
+# check that needs to be called frequently (on page load, after auth changes).  #
+#                                                                               #
 # Args:     request: HTTP request object                                        #
 # Returns:  DRF Response with authentication status and user data               #
 # ----------------------------------------------------------------------------- #
 @api_view(['GET'])
 @permission_classes([AllowAny])
+@throttle_classes([])  # Disable throttling for auth status checks
 def auth_status(request):
     if request.user.is_authenticated:
         return Response({
@@ -774,7 +814,9 @@ def auth_status(request):
                 'email': request.user.email,
                 'first_name': request.user.first_name,
                 'last_name': request.user.last_name,
-                'profile_picture_url': request.user.userprofile.get_profile_picture_url
+                'date_joined': request.user.date_joined,
+                'profile_picture_url': request.user.userprofile.get_profile_picture_url,
+                'has_usable_password': request.user.has_usable_password()
             }
         }, status=status.HTTP_200_OK)
     else:

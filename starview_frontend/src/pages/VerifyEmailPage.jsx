@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../context/AuthContext';
+import Alert from '../components/Alert';
 import './VerifyEmailPage.css';
 
 function VerifyEmailPage() {
@@ -120,13 +121,10 @@ function VerifyEmailPage() {
                 <div className="verify-email-address">{email}</div>
               </div>
 
-              <div className="alert alert-success">
-                <i className="alert-icon fa-solid fa-circle-check"></i>
-                <div className="alert-content">
-                  <p className="alert-title">Email Already Verified</p>
-                  <p className="alert-message">Your email is already verified. You can log in now!</p>
-                </div>
-              </div>
+              <Alert
+                type="success"
+                message="Email Already Verified - Your email is already verified. You can log in now!"
+              />
 
               {/* Login Button */}
               <Link to="/login" className="btn btn-primary verify-email-btn">
@@ -161,22 +159,20 @@ function VerifyEmailPage() {
 
               {/* Success Message */}
               {success && (
-                <div className="alert alert-success">
-                  <i className="alert-icon fa-solid fa-circle-check"></i>
-                  <div className="alert-content">
-                    <p className="alert-title">{success}</p>
-                  </div>
-                </div>
+                <Alert
+                  type="success"
+                  message={success}
+                  onClose={() => setSuccess('')}
+                />
               )}
 
               {/* Error Message */}
               {error && (
-                <div className="alert alert-error">
-                  <i className="alert-icon fa-solid fa-circle-exclamation"></i>
-                  <div className="alert-content">
-                    <p className="alert-title">{error}</p>
-                  </div>
-                </div>
+                <Alert
+                  type="error"
+                  message={error}
+                  onClose={() => setError('')}
+                />
               )}
 
               {/* Resend Button */}

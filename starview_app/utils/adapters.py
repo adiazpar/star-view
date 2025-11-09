@@ -18,9 +18,13 @@
 
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.views import ConfirmEmailView
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+from allauth.socialaccount.views import ConnectionsView
 from django.urls import reverse
 from django.http import HttpResponseRedirect
 from django.http import Http404
+from django.views.generic import View
+from django.contrib.auth.models import User
 
 
 # ----------------------------------------------------------------------------- #
@@ -73,11 +77,30 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     #   - str: URL to redirect to after login                                       #
     # ----------------------------------------------------------------------------- #
     def get_login_redirect_url(self, request):
+        from django.conf import settings
+
+        # Check if this is a social account connection (not initial login)
+        process = request.GET.get('process')
+        if process == 'connect':
+            # After connecting social account, redirect to profile
+            if settings.DEBUG:
+                return 'http://localhost:5173/profile'
+            else:
+                return '/profile'
+
         # Default to home page, but respect 'next' parameter if provided
         next_url = request.GET.get('next')
         if next_url:
+            # In development, prepend Vite URL if relative path
+            if settings.DEBUG and next_url.startswith('/'):
+                return f'http://localhost:5173{next_url}'
             return next_url
-        return '/'
+
+        # Default redirect to home
+        if settings.DEBUG:
+            return 'http://localhost:5173/'
+        else:
+            return '/'
 
 
     # ----------------------------------------------------------------------------- #
@@ -92,6 +115,9 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     #   - str: URL to redirect to after logout                                      #
     # ----------------------------------------------------------------------------- #
     def get_logout_redirect_url(self, request):
+        from django.conf import settings
+        if settings.DEBUG:
+            return 'http://localhost:5173/'
         return '/'
 
 
@@ -107,6 +133,9 @@ class CustomAccountAdapter(DefaultAccountAdapter):
     #   - str: URL to redirect to after signup                                      #
     # ----------------------------------------------------------------------------- #
     def get_signup_redirect_url(self, request):
+        from django.conf import settings
+        if settings.DEBUG:
+            return 'http://localhost:5173/'
         return '/'
 
 
@@ -115,6 +144,12 @@ class CustomAccountAdapter(DefaultAccountAdapter):
 #                                                                               #
 # This view intercepts the email confirmation flow and redirects to the React   #
 # frontend instead of rendering Django templates.                               #
+#                                                                               #
+# Enhanced to handle email change verification:                                 #
+# - Detects if this is an email change (user already has verified emails)       #
+# - Updates User.email to the new verified email                                #
+# - Sets new email as primary                                                   #
+# - Removes old email addresses                                                 #
 #                                                                               #
 # Scenarios:                                                                    #
 # - Expired/invalid link: Redirects to React error page                         #
@@ -125,6 +160,7 @@ class CustomConfirmEmailView(ConfirmEmailView):
 
     def get(self, *args, **kwargs):
         from django.conf import settings
+        from allauth.account.models import EmailAddress
 
         try:
             self.object = self.get_object()
@@ -137,10 +173,40 @@ class CustomConfirmEmailView(ConfirmEmailView):
                     error_url = f'http://localhost:5173{error_url}'
                 return HttpResponseRedirect(error_url)
 
+            # Get the email address being confirmed
+            email_address = self.object.email_address
+            user = email_address.user
+
+            # Check if this is an email change (user already has other verified emails)
+            is_email_change = EmailAddress.objects.filter(
+                user=user,
+                verified=True
+            ).exclude(id=email_address.id).exists()
+
             # Valid confirmation - continue with normal flow
             # This will auto-confirm if ACCOUNT_CONFIRM_EMAIL_ON_GET is True
             # and then redirect via get_email_verification_redirect_url
-            return super().get(*args, **kwargs)
+            response = super().get(*args, **kwargs)
+
+            # After confirmation completes, handle email change logic
+            if is_email_change:
+                # Refresh the email_address object to get updated verified status
+                email_address.refresh_from_db()
+
+                if email_address.verified:
+                    # Set new email as primary
+                    email_address.set_as_primary()
+
+                    # Update the User model's email field
+                    user.email = email_address.email
+                    user.save()
+
+                    # Remove all other email addresses for this user
+                    EmailAddress.objects.filter(
+                        user=user
+                    ).exclude(id=email_address.id).delete()
+
+            return response
 
         except Http404:
             # Expired or invalid confirmation key
@@ -148,3 +214,157 @@ class CustomConfirmEmailView(ConfirmEmailView):
             if settings.DEBUG:
                 error_url = f'http://localhost:5173{error_url}'
             return HttpResponseRedirect(error_url)
+
+
+# ----------------------------------------------------------------------------- #
+# Custom social account connections view that redirects to React profile page.  #
+#                                                                               #
+# This view intercepts the social account connections success page              #
+# (accounts/3rdparty/) and redirects to the React profile page instead of       #
+# showing the Django template.                                                  #
+# ----------------------------------------------------------------------------- #
+class CustomConnectionsView(View):
+
+    def get(self, request, *args, **kwargs):
+        from django.conf import settings
+
+        # Redirect to React profile page with success message
+        profile_url = '/profile?social_connected=true'
+        if settings.DEBUG:
+            profile_url = f'http://localhost:5173{profile_url}'
+
+        return HttpResponseRedirect(profile_url)
+
+    def post(self, request, *args, **kwargs):
+        # Handle disconnect POST requests by delegating to default view
+        # then redirecting back to profile
+        from django.conf import settings
+
+        # Process the disconnect
+        view = ConnectionsView.as_view()
+        response = view(request, *args, **kwargs)
+
+        # After disconnect, redirect to profile
+        profile_url = '/profile?social_disconnected=true'
+        if settings.DEBUG:
+            profile_url = f'http://localhost:5173{profile_url}'
+
+        return HttpResponseRedirect(profile_url)
+
+
+# ----------------------------------------------------------------------------- #
+# Custom social account adapter for additional validation.                     #
+#                                                                               #
+# This adapter adds extra security checks to prevent email conflicts when      #
+# connecting social accounts, and generates user-friendly usernames from       #
+# email addresses for OAuth signups.                                            #
+# ----------------------------------------------------------------------------- #
+class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
+
+    def populate_user(self, request, sociallogin, data):
+        """
+        Populate user instance with data from social provider.
+
+        Generates a guaranteed unique username using UUID pattern.
+        Format: user####### (e.g., user7a3f9b2)
+
+        This prevents any possible collision with existing password-based users.
+        Users can change their username later from their profile settings.
+        """
+        user = super().populate_user(request, sociallogin, data)
+
+        # Generate unique username with UUID
+        import uuid
+
+        # Use first 7 characters of UUID hex for a clean look
+        # Pattern: user####### (e.g., user7a3f9b2)
+        unique_id = uuid.uuid4().hex[:7]
+        username = f"user{unique_id}"
+
+        # Double-check uniqueness (extremely unlikely to collide, but safe)
+        while User.objects.filter(username=username).exists():
+            unique_id = uuid.uuid4().hex[:7]
+            username = f"user{unique_id}"
+
+        user.username = username
+
+        return user
+
+    def pre_social_login(self, request, sociallogin):
+        """
+        Invoked just after a user successfully authenticates via a social provider,
+        but before the login is actually processed (before the SocialAccount is saved).
+
+        This handles two scenarios:
+        1. User is logged in and trying to CONNECT a social account (from Profile page)
+        2. User is NOT logged in and trying to LOGIN with social account
+        """
+        from django.conf import settings
+        from allauth.socialaccount.models import SocialAccount
+
+        # Get the provider and UID from the social account being linked
+        provider = sociallogin.account.provider
+        uid = sociallogin.account.uid
+
+        # Check if this social account (provider + UID) is already connected to another user
+        existing_social = SocialAccount.objects.filter(provider=provider, uid=uid).first()
+
+        # SCENARIO 1: User is logged in (trying to CONNECT from Profile page)
+        if request.user.is_authenticated:
+            # Check if this exact social account is already connected to a DIFFERENT user
+            if existing_social and existing_social.user.id != request.user.id:
+                # Block the connection - this social account is already connected to another user
+                from allauth.exceptions import ImmediateHttpResponse
+
+                # Redirect to profile page with error
+                error_url = '/profile?error=social_already_connected'
+                if settings.DEBUG:
+                    error_url = f'http://localhost:5173{error_url}'
+
+                raise ImmediateHttpResponse(HttpResponseRedirect(error_url))
+
+            # Also check if the EMAIL from the social account belongs to a DIFFERENT user
+            social_email = sociallogin.account.extra_data.get('email', '').lower()
+            if social_email:
+                existing_user = User.objects.filter(email=social_email).exclude(id=request.user.id).first()
+                if existing_user:
+                    # Block the connection - this email is already registered to another user
+                    from allauth.exceptions import ImmediateHttpResponse
+
+                    # Redirect to profile page with error
+                    error_url = '/profile?error=email_conflict'
+                    if settings.DEBUG:
+                        error_url = f'http://localhost:5173{error_url}'
+
+                    raise ImmediateHttpResponse(HttpResponseRedirect(error_url))
+
+        # SCENARIO 2: User is NOT logged in (trying to LOGIN with social account)
+        else:
+            # Check if this exact social account (provider + UID) already exists
+            # If it does, django-allauth will automatically log them in
+            if existing_social:
+                # User already has this social account linked - allow login
+                return
+
+            # Get email from social account
+            social_email = sociallogin.account.extra_data.get('email', '').lower()
+            if social_email:
+                existing_user = User.objects.filter(email=social_email).first()
+
+                # Only block if:
+                # 1. User exists with this email
+                # 2. User has a password (not OAuth-only)
+                # 3. This social account is NOT already linked to them
+                if existing_user and existing_user.has_usable_password():
+                    # User has a password-based account - they should login with password first
+                    # then connect their social account from profile settings
+                    from allauth.exceptions import ImmediateHttpResponse
+
+                    account_exists_url = '/social-account-exists'
+                    if settings.DEBUG:
+                        account_exists_url = f'http://localhost:5173{account_exists_url}'
+
+                    raise ImmediateHttpResponse(HttpResponseRedirect(account_exists_url))
+
+                # If user exists but has NO password (OAuth-only), allow login
+                # Django-allauth will automatically link the social account or log them in

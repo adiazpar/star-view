@@ -53,9 +53,8 @@ class PasswordService:
             validate_password(password, user=user)
             return True, None
         except ValidationError as e:
-            # Join all error messages into a single string
-            error_message = " ".join(e.messages)
-            return False, error_message
+            # Return simplified generic error message
+            return False, "Please enter a valid password that meets all requirements."
 
 
     # ----------------------------------------------------------------------------- #

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import authApi from '../services/auth';
+import Alert from '../components/Alert';
 import './PasswordResetRequestPage.css';
 
 function PasswordResetRequestPage() {
@@ -59,12 +60,11 @@ function PasswordResetRequestPage() {
         ) : (
           <form onSubmit={handleSubmit} className="password-reset-form">
             {error && (
-              <div className="alert alert-error">
-                <i className="alert-icon fa-solid fa-circle-exclamation"></i>
-                <div className="alert-content">
-                  <p className="alert-title">{error}</p>
-                </div>
-              </div>
+              <Alert
+                type="error"
+                message={error}
+                onClose={() => setError('')}
+              />
             )}
 
             <div className="form-group">

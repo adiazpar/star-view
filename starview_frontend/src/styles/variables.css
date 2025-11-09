@@ -2,10 +2,10 @@
 
 :root {
   /* Colors - Dark Theme (Default) */
-  --bg-primary: #111827;
-  --bg-secondary: #1f2937;
-  --bg-elevated: #374151;
-  --bg-hover: #4b5563;
+  --bg-primary:   hsl(221, 39%, 11%);
+  --bg-secondary: hsl(215, 28%, 17%);
+  --bg-elevated:  hsl(221, 39%, 11%);
+  --bg-hover:     #4b5563;
 
   --text-primary: #f9fafb;
   --text-secondary: #d1d5db;
@@ -17,7 +17,7 @@
   --accent-light: #60a5fa;
   --accent-bg:    #3b82f61a;
 
-  --border: #4b5563;
+  --border: #2f353e;
   --border-focus: #3b82f6;
 
   --success: #22c55e;
