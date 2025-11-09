@@ -47,6 +47,17 @@ if settings.DEBUG:
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
+# Serve media files explicitly (works in production too)
+# NOTE: In production, consider using AWS S3 or Cloudflare R2 for persistent storage
+# Render's filesystem is ephemeral and files will be lost on restart
+urlpatterns += [
+    re_path(
+        r'^media/(?P<path>.*)$',
+        static_serve,
+        {'document_root': settings.MEDIA_ROOT},
+    ),
+]
+
 # Serve React build assets (always, even in production)
 urlpatterns += [
     re_path(
