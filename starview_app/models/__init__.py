@@ -38,5 +38,8 @@ from .model_vote import Vote
 # Audit/Security models:
 from .model_audit_log import AuditLog
 
+# Email event models:
+from .email_events import EmailBounce, EmailComplaint, EmailSuppressionList
+
 # Import signals to ensure they're registered:
 from starview_app.utils import signals

@@ -25,9 +25,13 @@ import os
 
 from .views import ReactAppView
 from starview_app.utils.adapters import CustomConfirmEmailView, CustomConnectionsView
+from starview_app.views.views_webhooks import ses_bounce_webhook, ses_complaint_webhook
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # AWS SNS webhook endpoints (must be accessible without CSRF)
+    path('api/webhooks/ses-bounce/', ses_bounce_webhook, name='ses_bounce_webhook'),
+    path('api/webhooks/ses-complaint/', ses_complaint_webhook, name='ses_complaint_webhook'),
     # Custom email confirmation view (must be before allauth.urls to override)
     path('accounts/confirm-email/<str:key>/', CustomConfirmEmailView.as_view(), name='account_confirm_email'),
     # Custom social account connections view (must be before allauth.urls to override)
