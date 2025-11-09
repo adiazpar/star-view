@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Starview 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-11-07 01:48+0000\n"
+"POT-Creation-Date: 2025-11-09 01:44+0000\n"
 "PO-Revision-Date: 2025-11-07 01:50+0000\n"
 "Last-Translator: Starview Team\n"
 "Language-Team: Spanish\n"
@@ -23,12 +23,16 @@ msgstr "Verifica Tu Cuenta de Starview"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:185
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:234
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:25
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:26
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:216
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:245
 msgid "Find Your Perfect Night Sky"
 msgstr "Encuentra Tu Cielo Nocturno Perfecto"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:190
 #: starview_app/templates/account/email/email_confirmation_signup_message.txt:3
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:174
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:199
 msgid "Hello"
 msgstr "Hola"
 
@@ -37,65 +41,73 @@ msgid ""
 "Welcome to <strong>Starview</strong>! We're excited to have you join our "
 "community of stargazers and astronomy enthusiasts."
 msgstr ""
-"¡Bienvenido a <strong>Starview</strong>! Estamos emocionados de que te unas a nuestra "
-"comunidad de observadores de estrellas y entusiastas de la astronomía."
+"¡Bienvenido a <strong>Starview</strong>! Estamos emocionados de que te unas "
+"a nuestra comunidad de observadores de estrellas y entusiastas de la "
+"astronomía."
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:198
 msgid ""
 "To complete your registration and start exploring the best stargazing "
 "locations, please verify your email address by clicking the button below:"
 msgstr ""
-"Para completar tu registro y comenzar a explorar los mejores lugares para observar las estrellas, "
-"por favor verifica tu dirección de correo electrónico haciendo clic en el botón de abajo:"
+"Para completar tu registro y comenzar a explorar los mejores lugares para "
+"observar las estrellas, por favor verifica tu dirección de correo "
+"electrónico haciendo clic en el botón de abajo:"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:202
 msgid "Verify Email Address"
 msgstr "Verificar Dirección de Correo"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:206
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:215
 msgid "Important"
 msgstr "Importante"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:207
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:12
 msgid "This verification link will expire in 3 days for security purposes."
-msgstr "Este enlace de verificación expirará en 3 días por razones de seguridad."
+msgstr ""
+"Este enlace de verificación expirará en 3 días por razones de seguridad."
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:211
 msgid "What You Can Do on Starview:"
 msgstr "Lo Que Puedes Hacer en Starview:"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:213
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:15
 msgid "Discover amazing stargazing locations worldwide"
 msgstr "Descubre increíbles lugares para observar estrellas en todo el mundo"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:214
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:16
 msgid "Share your own reviews and astrophotography"
 msgstr "Comparte tus propias reseñas y astrofotografía"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:215
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:17
 msgid "Save your favorite spots for future visits"
 msgstr "Guarda tus lugares favoritos para futuras visitas"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:216
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:17
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:18
 msgid "Connect with fellow astronomy lovers"
 msgstr "Conéctate con otros amantes de la astronomía"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:223
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:19
 msgid ""
 "If you didn't create an account on Starview, you can safely ignore this "
 "email."
 msgstr ""
-"Si no creaste una cuenta en Starview, puedes ignorar este correo electrónico de forma segura."
+"Si no creaste una cuenta en Starview, puedes ignorar este correo electrónico "
+"de forma segura."
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:227
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:21
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:22
 msgid "Happy stargazing!"
 msgstr "¡Feliz observación de estrellas!"
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.html:228
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:22
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:23
 msgid "The Starview Team"
 msgstr "El Equipo de Starview"
 
@@ -104,33 +116,237 @@ msgid ""
 "Welcome to Starview! We're excited to have you join our community of "
 "stargazers and astronomy enthusiasts."
 msgstr ""
-"¡Bienvenido a Starview! Estamos emocionados de que te unas a nuestra comunidad de "
-"observadores de estrellas y entusiastas de la astronomía."
+"¡Bienvenido a Starview! Estamos emocionados de que te unas a nuestra "
+"comunidad de observadores de estrellas y entusiastas de la astronomía."
 
 #: starview_app/templates/account/email/email_confirmation_signup_message.txt:7
+#, fuzzy
+#| msgid ""
+#| "To complete your registration and start exploring the best stargazing "
+#| "locations, please verify your email address by clicking the link below:"
 msgid ""
 "To complete your registration and start exploring the best stargazing "
-"locations, please verify your email address by clicking the link below:"
+"locations, please verify your email address by visiting the following link:"
 msgstr ""
-"Para completar tu registro y comenzar a explorar los mejores lugares para observar las estrellas, "
-"por favor verifica tu dirección de correo electrónico haciendo clic en el enlace de abajo:"
+"Para completar tu registro y comenzar a explorar los mejores lugares para "
+"observar las estrellas, por favor verifica tu dirección de correo "
+"electrónico haciendo clic en el enlace de abajo:"
 
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:11
-msgid "This verification link will expire in 3 days."
-msgstr "Este enlace de verificación expirará en 3 días."
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:9
+msgid "Verify your email:"
+msgstr "Verifica tu correo electrónico:"
 
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:13
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:14
 msgid "Once verified, you'll be able to:"
 msgstr "Una vez verificado, podrás:"
 
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:14
-msgid "Discover amazing stargazing locations"
-msgstr "Descubrir increíbles lugares para observar estrellas"
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:20
+#, fuzzy
+#| msgid ""
+#| "If you didn't create an account on Starview, you can safely ignore this "
+#| "email."
+msgid ""
+"If you didn't create an account on Starview, you can safely ignore this "
+"email. No further action is required."
+msgstr ""
+"Si no creaste una cuenta en Starview, puedes ignorar este correo electrónico "
+"de forma segura. No se requiere ninguna acción adicional."
 
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:15
-msgid "Share your own reviews and photos"
-msgstr "Compartir tus propias reseñas y fotos"
+#: starview_app/templates/account/email/email_confirmation_signup_message.txt:29
+msgid "This is an automated message. Please do not reply to this email."
+msgstr "Este es un mensaje automatizado. Por favor no respondas a este correo electrónico."
 
-#: starview_app/templates/account/email/email_confirmation_signup_message.txt:16
-msgid "Save your favorite spots"
-msgstr "Guardar tus lugares favoritos"
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:7
+msgid "Password Changed Successfully"
+msgstr "Contraseña Cambiada Exitosamente"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:168
+msgid "Password Changed"
+msgstr "Contraseña Cambiada"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:178
+msgid "✓ Password Successfully Changed"
+msgstr "✓ Contraseña Cambiada Exitosamente"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:180
+#, python-format
+msgid ""
+"Your %(site_name)s password has been successfully changed. You can now log "
+"in using your new password."
+msgstr ""
+"Tu contraseña de %(site_name)s ha sido cambiada exitosamente. Ahora puedes "
+"iniciar sesión usando tu nueva contraseña."
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:185
+#, python-format
+msgid ""
+"This email confirms that the password for your <strong>%(site_name)s</"
+"strong> account (<strong>%(user_email)s</strong>) was recently changed."
+msgstr ""
+"Este correo electrónico confirma que la contraseña de tu cuenta de "
+"<strong>%(site_name)s</strong> (<strong>%(user_email)s</strong>) fue "
+"cambiada recientemente."
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:189
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:220
+msgid "Security Information"
+msgstr "Información de Seguridad"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:190
+msgid "Change IP:"
+msgstr "IP del Cambio:"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:191
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:222
+msgid "Account:"
+msgstr "Cuenta:"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:192
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:223
+msgid "Email:"
+msgstr "Correo Electrónico:"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:196
+msgid "Didn't make this change?"
+msgstr "¿No hiciste este cambio?"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:198
+msgid ""
+"If you did NOT change your password, your account may have been compromised. "
+"Please take immediate action:"
+msgstr ""
+"Si NO cambiaste tu contraseña, tu cuenta puede haber sido comprometida. "
+"Por favor toma acción inmediata:"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:200
+msgid "1. Reset your password immediately using the \"Forgot Password\" link"
+msgstr "1. Restablece tu contraseña inmediatamente usando el enlace \"Olvidé mi Contraseña\""
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:201
+msgid "2. Review your account activity for any unauthorized changes"
+msgstr "2. Revisa la actividad de tu cuenta para detectar cambios no autorizados"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:202
+msgid "3. Contact our support team if you need assistance"
+msgstr "3. Contacta a nuestro equipo de soporte si necesitas ayuda"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:209
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:238
+msgid "Best,"
+msgstr "Saludos,"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:210
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:239
+#, fuzzy, python-format
+#| msgid "The Starview Team"
+msgid "The %(site_name)s Team"
+msgstr "El Equipo de Starview"
+
+#: starview_app/templates/starview_app/auth/email/password_changed_email.html:219
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:248
+msgid "This is an automated security email. Please do not reply."
+msgstr "Este es un correo electrónico de seguridad automatizado. Por favor no respondas."
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:7
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:193
+msgid "Password Reset Request"
+msgstr "Solicitud de Restablecimiento de Contraseña"
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:203
+#, python-format
+msgid ""
+"We received a request to reset the password for your <strong>%(site_name)s</"
+"strong> account (<strong>%(user_email)s</strong>)."
+msgstr ""
+"Recibimos una solicitud para restablecer la contraseña de tu cuenta de "
+"<strong>%(site_name)s</strong> (<strong>%(user_email)s</strong>)."
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:207
+msgid ""
+"If you requested this password reset, click the button below to set a new "
+"password:"
+msgstr ""
+"Si solicitaste este restablecimiento de contraseña, haz clic en el botón "
+"de abajo para establecer una nueva contraseña:"
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:211
+msgid "Reset My Password"
+msgstr "Restablecer Mi Contraseña"
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:216
+#, python-format
+msgid ""
+"This link will expire in %(hours)s hour for security purposes. If it "
+"expires, you'll need to request a new password reset."
+msgstr ""
+"Este enlace expirará en %(hours)s hora por razones de seguridad. Si expira, "
+"necesitarás solicitar un nuevo restablecimiento de contraseña."
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:221
+msgid "Request IP:"
+msgstr "IP de la Solicitud:"
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:227
+msgid "Didn't request this?"
+msgstr "¿No solicitaste esto?"
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:229
+msgid ""
+"If you didn't request a password reset, you can safely ignore this email. "
+"Your password will remain unchanged, and your account is secure."
+msgstr ""
+"Si no solicitaste un restablecimiento de contraseña, puedes ignorar este "
+"correo electrónico de forma segura. Tu contraseña permanecerá sin cambios "
+"y tu cuenta está segura."
+
+#: starview_app/templates/starview_app/auth/email/password_reset_email.html:231
+msgid ""
+"However, if you're concerned about unauthorized access attempts, we "
+"recommend reviewing your account security settings."
+msgstr ""
+"Sin embargo, si te preocupan los intentos de acceso no autorizados, "
+"recomendamos revisar la configuración de seguridad de tu cuenta."
+
+#: starview_app/utils/validators.py:301
+msgid "Password must contain at least 1 uppercase letter."
+msgstr "La contraseña debe contener al menos 1 letra mayúscula."
+
+#: starview_app/utils/validators.py:306
+msgid "Your password must contain at least 1 uppercase letter."
+msgstr "Tu contraseña debe contener al menos 1 letra mayúscula."
+
+#: starview_app/utils/validators.py:323
+msgid "Password must contain at least 1 number."
+msgstr "La contraseña debe contener al menos 1 número."
+
+#: starview_app/utils/validators.py:328
+msgid "Your password must contain at least 1 number."
+msgstr "Tu contraseña debe contener al menos 1 número."
+
+#: starview_app/utils/validators.py:348
+#, python-brace-format
+msgid ""
+"Password must contain at least 1 special character (!@#$%^&*(),.?\":{}|<>)."
+msgstr ""
+"La contraseña debe contener al menos 1 carácter especial (!@#$%^&*(),.?\":{}|<>)."
+
+#: starview_app/utils/validators.py:353
+#, python-brace-format
+msgid ""
+"Your password must contain at least 1 special character (!@#$%^&*(),.?\":{}|"
+"<>)."
+msgstr ""
+"Tu contraseña debe contener al menos 1 carácter especial (!@#$%^&*(),.?\":{}|"
+"<>)."
+
+#~ msgid "This verification link will expire in 3 days."
+#~ msgstr "Este enlace de verificación expirará en 3 días."
+
+#~ msgid "Discover amazing stargazing locations"
+#~ msgstr "Descubrir increíbles lugares para observar estrellas"
+
+#~ msgid "Share your own reviews and photos"
+#~ msgstr "Compartir tus propias reseñas y fotos"
+
+#~ msgid "Save your favorite spots"
+#~ msgstr "Guardar tus lugares favoritos"
