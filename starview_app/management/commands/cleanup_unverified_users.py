@@ -1,24 +1,23 @@
-"""
-Management command to delete users who haven't verified their email within a specified timeframe
-and clean up expired/orphaned email confirmations.
-
-Usage:
-    python manage.py cleanup_unverified_users --days=7
-
-Purpose:
-    1. Prevents email squatting and database bloat from unverified user accounts
-    2. Cleans up expired/orphaned email confirmation tokens
-    Should be run periodically via cron job (daily or weekly).
-
-What gets cleaned:
-    - Unverified users older than X days (default: 7)
-    - Expired email confirmations (older than ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS)
-    - Orphaned email confirmations (user deleted but confirmation remains)
-
-Arguments:
-    --days: Number of days after registration to delete unverified users (default: 7)
-    --dry-run: Preview what would be deleted without actually deleting
-"""
+# ----------------------------------------------------------------------------------------------------- #
+# This cleanup_unverified_users.py management command prevents email squatting and database bloat:      #
+#                                                                                                       #
+# Purpose:                                                                                              #
+# Django-allauth creates user accounts immediately upon registration, before email verification. This   #
+# command cleans up abandoned accounts that never verified their email, preventing malicious users      #
+# from "squatting" on email addresses and keeping the database lean.                                    #
+#                                                                                                       #
+# What It Cleans:                                                                                       #
+# 1. Unverified user accounts older than X days (prevents email squatting)                              #
+# 2. Expired email confirmation tokens (removes stale verification links)                               #
+# 3. Orphaned confirmations where the user was deleted but the token remains                            #
+#                                                                                                       #
+# Deployment:                                                                                           #
+# Should be run periodically via Render cron job (daily or weekly recommended).                         #
+# Use --report flag to email summaries to admins for monitoring.                                        #
+#                                                                                                       #
+# Usage:                                                                                                #
+#   python manage.py cleanup_unverified_users --days=7 --dry-run                                        #
+# ----------------------------------------------------------------------------------------------------- #
 
 from django.core.management.base import BaseCommand
 from django.utils import timezone
@@ -44,6 +43,17 @@ class Command(BaseCommand):
             help='Preview what would be deleted without actually deleting'
         )
 
+    # ----------------------------------------------------------------------------- #
+    # Execute the cleanup process for unverified users and email confirmations.     #
+    #                                                                               #
+    # This method runs two cleanup operations:                                      #
+    # 1. Delete users with unverified emails older than --days threshold            #
+    # 2. Delete expired/orphaned email confirmation tokens                          #
+    #                                                                               #
+    # Args:   *args: Unused positional arguments                                    #
+    #         **options: Command-line options (days, dry_run)                       #
+    # Returns: None (outputs results to stdout)                                     #
+    # ----------------------------------------------------------------------------- #
     def handle(self, *args, **options):
         days = options['days']
         dry_run = options['dry_run']
