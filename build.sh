@@ -55,7 +55,6 @@ python3 manage.py collectstatic --no-input
 
 # Run database migrations
 echo "Running database migrations..."
-python3 manage.py makemigrations
 python3 manage.py migrate --no-input
 
 # Set up Google OAuth (if credentials are provided)
