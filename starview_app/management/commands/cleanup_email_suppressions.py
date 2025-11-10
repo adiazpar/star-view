@@ -54,12 +54,18 @@ class Command(BaseCommand):
             action='store_true',
             help='Generate email health report',
         )
+        parser.add_argument(
+            '--email-report',
+            type=str,
+            help='Email address to send weekly report to',
+        )
 
 
     def handle(self, *args, **options):
         self.dry_run = options['dry_run']
         self.soft_bounce_days = options['soft_bounce_days']
         self.stale_days = options['stale_days']
+        self.email_report_to = options.get('email_report')
 
         if self.dry_run:
             self.stdout.write(self.style.WARNING('DRY RUN MODE - No changes will be made'))
@@ -68,12 +74,16 @@ class Command(BaseCommand):
             self.generate_report()
             return
 
-        # Run cleanup tasks
-        self.cleanup_soft_bounces()
-        self.cleanup_stale_bounces()
-        self.cleanup_transient_bounces()
+        # Run cleanup tasks and collect results
+        soft_bounce_results = self.cleanup_soft_bounces()
+        stale_bounce_results = self.cleanup_stale_bounces()
+        transient_bounce_results = self.cleanup_transient_bounces()
 
         self.stdout.write(self.style.SUCCESS('\nCleanup completed successfully'))
+
+        # Send email report if requested
+        if self.email_report_to and not self.dry_run:
+            self.send_email_report(soft_bounce_results, stale_bounce_results, transient_bounce_results)
 
 
     # Deactivate soft bounce suppressions after recovery period.
@@ -96,9 +106,15 @@ class Command(BaseCommand):
         count = old_soft_bounces.count()
         self.stdout.write(f'\nFound {count} soft bounce suppressions older than {self.soft_bounce_days} days')
 
+        emails_recovered = []
         if count > 0:
             for bounce in old_soft_bounces:
                 self.stdout.write(f'  - {bounce.email}: Last bounce {bounce.last_bounce_date.strftime("%Y-%m-%d")} ({bounce.bounce_count}x)')
+                emails_recovered.append({
+                    'email': bounce.email,
+                    'last_bounce': bounce.last_bounce_date,
+                    'bounce_count': bounce.bounce_count
+                })
 
                 if not self.dry_run:
                     # Deactivate suppression
@@ -117,6 +133,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f'\nDeactivated {count} soft bounce suppressions'))
             else:
                 self.stdout.write(self.style.WARNING(f'\n[DRY RUN] Would deactivate {count} soft bounce suppressions'))
+
+        return {'count': count, 'emails': emails_recovered}
 
 
     # Remove bounce records with no recent activity.
@@ -152,6 +170,8 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.WARNING(f'\n[DRY RUN] Would delete {count} stale bounce records'))
 
+        return {'count': count}
+
 
     # Remove transient bounce records older than 7 days.
     # Transient bounces are temporary connection issues, not worth keeping.
@@ -176,6 +196,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f'Deleted {count} transient bounce records'))
             else:
                 self.stdout.write(self.style.WARNING(f'[DRY RUN] Would delete {count} transient bounce records'))
+
+        return {'count': count}
 
 
     # Generate email health report with statistics
@@ -245,3 +267,120 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('\nEmail deliverability is healthy'))
 
         self.stdout.write('\n' + '=' * 80)
+
+
+    # Send email report with cleanup results and health statistics
+    def send_email_report(self, soft_bounce_results, stale_bounce_results, transient_bounce_results):
+        from django.core.mail import send_mail
+        from django.utils import timezone
+
+        # Get email statistics
+        stats = get_email_statistics()
+
+        # Build email subject
+        subject = f'Starview Email Cleanup Report - {timezone.now().strftime("%B %d, %Y")}'
+
+        # Build email body
+        message_lines = [
+            'EMAIL CLEANUP REPORT',
+            '=' * 80,
+            '',
+            f'Report Date: {timezone.now().strftime("%B %d, %Y at %I:%M %p")}',
+            '',
+            'CLEANUP SUMMARY',
+            '-' * 80,
+            f'Soft Bounces Recovered: {soft_bounce_results["count"]}',
+            f'Stale Bounces Deleted: {stale_bounce_results["count"]}',
+            f'Transient Bounces Deleted: {transient_bounce_results["count"]}',
+            '',
+        ]
+
+        # Add recovered emails detail if any
+        if soft_bounce_results['count'] > 0:
+            message_lines.extend([
+                'RECOVERED EMAILS (can now receive marketing emails):',
+                '-' * 80,
+            ])
+            for email_info in soft_bounce_results['emails'][:10]:  # Show first 10
+                message_lines.append(f"  - {email_info['email']} (last bounce: {email_info['last_bounce'].strftime('%Y-%m-%d')})")
+
+            if soft_bounce_results['count'] > 10:
+                message_lines.append(f"  ... and {soft_bounce_results['count'] - 10} more")
+            message_lines.append('')
+
+        # Add current statistics
+        message_lines.extend([
+            'CURRENT EMAIL HEALTH STATISTICS',
+            '-' * 80,
+            f'Total Bounces: {stats["total_bounces"]}',
+            f'  - Hard Bounces (permanent): {stats["hard_bounces"]}',
+            f'  - Soft Bounces (temporary): {stats["soft_bounces"]}',
+            '',
+            f'Total Complaints: {stats["total_complaints"]}',
+            f'Active Suppressions: {stats["suppressed_emails"]}',
+            '',
+        ])
+
+        # Add recent activity
+        seven_days_ago = timezone.now() - timedelta(days=7)
+        recent_bounces = EmailBounce.objects.filter(last_bounce_date__gte=seven_days_ago).count()
+        recent_complaints = EmailComplaint.objects.filter(complaint_date__gte=seven_days_ago).count()
+
+        message_lines.extend([
+            'RECENT ACTIVITY (Last 7 Days)',
+            '-' * 80,
+            f'New Bounces: {recent_bounces}',
+            f'New Complaints: {recent_complaints}',
+            '',
+        ])
+
+        # Add health warnings
+        warnings = []
+        if stats['hard_bounces'] > 100:
+            warnings.append('⚠ WARNING: High number of hard bounces - review email collection process')
+        if stats['total_complaints'] > 10:
+            warnings.append('⚠ WARNING: Complaints detected - review email content and frequency')
+        if recent_bounces > 50:
+            warnings.append('⚠ WARNING: High recent bounce rate - check email service health')
+        if stats['soft_bounces'] > 200:
+            warnings.append('⚠ WARNING: High soft bounce count - some mailboxes may be full')
+
+        if warnings:
+            message_lines.extend([
+                'HEALTH WARNINGS',
+                '-' * 80,
+            ])
+            message_lines.extend(warnings)
+            message_lines.append('')
+        else:
+            message_lines.extend([
+                'HEALTH STATUS',
+                '-' * 80,
+                '✓ Email deliverability is healthy',
+                '',
+            ])
+
+        # Add footer
+        message_lines.extend([
+            '=' * 80,
+            '',
+            'View detailed records: https://www.starview.app/admin/starview_app/emailbounce/',
+            'Monitor AWS SES reputation: AWS SES Console → Reputation dashboard',
+            '',
+            'This is an automated weekly report from Starview.',
+        ])
+
+        message = '\n'.join(message_lines)
+
+        # Send email (this is a transactional/monitoring email, not marketing)
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email='noreply@starview.app',
+                recipient_list=[self.email_report_to],
+                fail_silently=False,
+            )
+            self.stdout.write(self.style.SUCCESS(f'\nEmail report sent to {self.email_report_to}'))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f'\nFailed to send email report: {str(e)}'))
