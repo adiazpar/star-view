@@ -347,11 +347,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Media files (user uploads) - Cloudflare R2 Object Storage
 # Using django-storages with S3-compatible backend for R2
 # Credentials are stored in environment variables for security
+CLOUDFLARE_ACCOUNT_ID = os.getenv('CLOUDFLARE_ACCOUNT_ID')
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME', 'starview-media')
 AWS_S3_REGION_NAME = 'auto'  # Required by Cloudflare R2
-AWS_S3_ENDPOINT_URL = f"https://{os.getenv('CLOUDFLARE_ACCOUNT_ID')}.r2.cloudflarestorage.com"
+AWS_S3_ENDPOINT_URL = f"https://{CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com"
 AWS_S3_SIGNATURE_VERSION = 's3v4'  # R2 doesn't support SigV2
 AWS_S3_FILE_OVERWRITE = False  # Don't overwrite files with same name
 AWS_DEFAULT_ACL = None  # R2 doesn't use ACLs
