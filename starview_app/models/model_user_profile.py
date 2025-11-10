@@ -2,12 +2,13 @@
 # This model_user_profile.py file defines the UserProfile model:                                        #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Extends Django's built-in User model with profile pictures. Automatically created via post_save       #
-# signal in signals.py when a User is created.                                                          #
+# Extends Django's built-in User model with profile pictures, bio, and location. Automatically created  #
+# via post_save signal in signals.py when a User is created.                                            #
 #                                                                                                       #
 # Key Features:                                                                                         #
 # - One-to-One relationship with User model (extends user functionality)                                #
 # - Profile picture upload with default fallback                                                        #
+# - Public profile fields: bio and location for user profiles                                           #
 # - Automatic creation: Signal handler in signals.py creates UserProfile when User is created           #
 # ----------------------------------------------------------------------------------------------------- #
 
@@ -28,6 +29,18 @@ class UserProfile(models.Model):
 
     # Profile data:
     profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
+    bio = models.TextField(
+        max_length=500,
+        blank=True,
+        default='',
+        help_text="Short bio visible on public profile (max 500 characters)"
+    )
+    location = models.CharField(
+        max_length=100,
+        blank=True,
+        default='',
+        help_text="User's location (e.g., 'Seattle, WA')"
+    )
 
 
     # Returns profile picture URL or default if none set:

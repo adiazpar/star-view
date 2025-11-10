@@ -9,11 +9,12 @@
 # Key Features:                                                                                         #
 # - REST API routers: Automatic URL generation for CRUD operations on locations, reviews, favorites     #
 # - Nested resources: Hierarchical API structure (locations → reviews → comments)                       #
+# - User profiles: Public profile viewing (/users/{username}/) and private management (/users/me/*)    #
 # - Authentication routes: Registration, login, logout, password reset flows                            #
 # - Template views: Traditional Django views for navigation and location detail pages                   #
 #                                                                                                       #
 # Architecture:                                                                                         #
-# - Uses Django REST Framework's DefaultRouter for flat resources (locations, favorites)                #
+# - Uses Django REST Framework's DefaultRouter for flat resources (locations, favorites, users)         #
 # - Uses NestedDefaultRouter for hierarchical resources (reviews under locations, comments under        #
 #   reviews), creating intuitive API paths like /api/locations/{id}/reviews/{id}/comments/              #
 # - Static/media file serving is handled at the project level (django_project/urls.py)                  #
@@ -47,7 +48,7 @@ from .views import (
 router = DefaultRouter()
 router.register(r'locations', LocationViewSet, basename='locations')
 router.register(r'favorite-locations', FavoriteLocationViewSet, basename='favorite-locations')
-router.register(r'profile', UserProfileViewSet, basename='profile')
+router.register(r'users', UserProfileViewSet, basename='users')
 
 # Nested router for reviews
 locations_router = routers.NestedDefaultRouter(router, r'locations', lookup='location')

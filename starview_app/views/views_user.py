@@ -2,21 +2,23 @@
 # This views_user.py file handles user profile and account management views:                            #
 #                                                                                                       #
 # Purpose:                                                                                              #
-# Provides user-facing functionality for managing account settings, profiles, and authentication.       #
-# Separates user management views from authentication (login/register) and content views (locations).   #
+# Provides both public user profile viewing and authenticated profile management. Supports public       #
+# profile pages at /api/users/{username}/ and private profile management at /api/users/me/*.           #
 #                                                                                                       #
 # Key Features:                                                                                         #
-# - Account Management: Tabbed interface for profile and favorites                                      #
-# - Profile Updates: AJAX endpoints for profile pictures, names, email, and passwords                   #
+# - Public Profiles: View any user's public profile, reviews, and stats (no auth required)             #
+# - Account Management: Full profile and account settings for authenticated users                       #
+# - Profile Updates: AJAX endpoints for profile pictures, names, email, passwords, bio, location       #
 # - Password Security: Integrates with PasswordService for consistent validation across the app         #
 # - Error Handling: Uses DRF exceptions caught by the global exception handler                          #
 #                                                                                                       #
 # Architecture:                                                                                         #
-# - Function-based views for account page and AJAX update endpoints                                     #
+# - ModelViewSet with action-level permissions (public vs authenticated)                                #
 # - Uses PasswordService for all password operations (single source of truth)                           #
 # - Uses DRF exceptions for consistent error responses via exception handler                            #
 # - Uses safe_delete_file from signals for secure file deletion with MEDIA_ROOT validation              #
 # - Optimized database queries with select_related to prevent N+1 query problems                        #
+# - Two serializers: PublicUserSerializer (no email) vs PrivateProfileSerializer (full data)           #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Django imports:
@@ -25,6 +27,7 @@ from django.views.decorators.http import require_POST
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 
 # DRF imports:
 from rest_framework.decorators import api_view, permission_classes, action
@@ -34,8 +37,10 @@ from rest_framework.response import Response
 
 # Model imports:
 from django.contrib.auth.models import User
-from ..models import UserProfile
-from ..models import FavoriteLocation
+from ..models import UserProfile, Review, FavoriteLocation
+
+# Serializer imports:
+from ..serializers import PublicUserSerializer, PrivateProfileSerializer, ReviewSerializer
 
 # Service imports:
 from starview_app.services import PasswordService
@@ -52,20 +57,117 @@ from starview_app.utils.signals import safe_delete_file
 # ----------------------------------------------------------------------------------------------------- #
 
 # ----------------------------------------------------------------------------- #
-# REST API ViewSet for user profile management operations.                      #
+# REST API ViewSet for user profiles and account management.                    #
 #                                                                               #
-# This ViewSet provides a RESTful API for managing user profile data including  #
-# profile pictures, names, email, and passwords. All endpoints require          #
-# authentication and operate on the authenticated user's profile.               #
+# This ViewSet handles both:                                                    #
+# 1. Public profile viewing (GET /api/users/{username}/) - No auth required    #
+# 2. Private profile management (PATCH /api/users/me/*) - Auth required        #
+#                                                                               #
+# Public Actions (no authentication):                                           #
+# - retrieve(): View any user's public profile                                  #
+# - reviews(): View user's public reviews                                       #
+#                                                                               #
+# Private Actions (authentication required):                                    #
+# - me(): Get your own full profile data                                        #
+# - upload_picture(): Update profile picture                                    #
+# - update_name(), update_email(), etc.: Update account settings                #
 #                                                                               #
 # Architecture:                                                                 #
-# - All actions raise DRF exceptions for consistent error handling              #
+# - Uses get_permissions() for action-level permission control                  #
+# - All update actions operate on request.user (no username parameter)          #
+# - Uses PublicUserSerializer (no email) vs PrivateProfileSerializer           #
 # - Password operations use PasswordService for validation                      #
 # - File deletion uses safe_delete_file from signals module                     #
-# - Uses DRF's @action decorator for custom endpoints                           #
 # ----------------------------------------------------------------------------- #
-class UserProfileViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+class UserProfileViewSet(viewsets.ModelViewSet):
+    lookup_field = 'username'
+    lookup_value_regex = '[^/]+'  # Allow any characters except forward slash
+    queryset = User.objects.select_related('userprofile').all()
+
+    def get_permissions(self):
+        """
+        Public actions (retrieve, reviews) don't require authentication.
+        All other actions require user to be authenticated.
+        """
+        if self.action in ['retrieve', 'reviews']:
+            return []  # No authentication required
+        return [IsAuthenticated()]
+
+    def get_serializer_class(self):
+        """
+        Use different serializers based on action.
+        Public views get PublicUserSerializer (no email).
+        Private views get PrivateProfileSerializer (with email).
+        """
+        if self.action == 'retrieve':
+            return PublicUserSerializer
+        return PrivateProfileSerializer
+
+    # ========================================================================= #
+    #                          PUBLIC ACTIONS (No Auth)                         #
+    # ========================================================================= #
+
+    # ----------------------------------------------------------------------------- #
+    # Get public profile for any user by username.                                  #
+    #                                                                               #
+    # Returns public information only (no email, no sensitive data).                #
+    # Includes user stats: review count, locations reviewed, favorites, votes.      #
+    #                                                                               #
+    # HTTP Method: GET                                                              #
+    # Endpoint: /api/users/{username}/                                              #
+    # Authentication: Not required                                                  #
+    # Returns: PublicUserSerializer data                                            #
+    # ----------------------------------------------------------------------------- #
+    def retrieve(self, request, username=None):
+        user = get_object_or_404(User.objects.select_related('userprofile'), username=username)
+        serializer = PublicUserSerializer(user)
+        return Response(serializer.data)
+
+    # ----------------------------------------------------------------------------- #
+    # Get public reviews for any user by username.                                  #
+    #                                                                               #
+    # Returns paginated list of user's public reviews with location info.           #
+    #                                                                               #
+    # HTTP Method: GET                                                              #
+    # Endpoint: /api/users/{username}/reviews/                                      #
+    # Authentication: Not required                                                  #
+    # Returns: Paginated ReviewSerializer data                                      #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=True, methods=['get'], url_path='reviews')
+    def reviews(self, request, username=None):
+        user = get_object_or_404(User, username=username)
+        reviews = Review.objects.filter(user=user).select_related('location', 'user__userprofile').order_by('-created_at')
+
+        # Pagination
+        from rest_framework.pagination import PageNumberPagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
+        paginated_reviews = paginator.paginate_queryset(reviews, request)
+
+        serializer = ReviewSerializer(paginated_reviews, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
+
+
+    # ========================================================================= #
+    #                      PRIVATE ACTIONS (Auth Required)                      #
+    # ========================================================================= #
+
+    # ----------------------------------------------------------------------------- #
+    # Get authenticated user's full profile data.                                   #
+    #                                                                               #
+    # Returns complete profile including email, password status, and all settings.  #
+    # Only accessible by the authenticated user for their own profile.              #
+    #                                                                               #
+    # HTTP Method: GET                                                              #
+    # Endpoint: /api/users/me/                                                      #
+    # Authentication: Required                                                      #
+    # Returns: PrivateProfileSerializer data (includes email)                       #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['get'], url_path='me')
+    def me(self, request):
+        serializer = PrivateProfileSerializer(request.user)
+        return Response(serializer.data)
+
 
     # ----------------------------------------------------------------------------- #
     # Upload new profile picture. Automatically deletes old custom images           #
@@ -75,11 +177,12 @@ class UserProfileViewSet(viewsets.ViewSet):
     # processing to prevent malicious file uploads and DOS attacks.                 #
     #                                                                               #
     # HTTP Method: POST                                                             #
-    # Endpoint: /api/profile/upload-picture/                                        #
+    # Endpoint: /api/users/me/upload-picture/                                       #
+    # Authentication: Required                                                      #
     # Body: multipart/form-data with 'profile_picture' file                         #
     # Returns: DRF Response with success status and new image URL                   #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['post'], url_path='upload-picture')
+    @action(detail=False, methods=['post'], url_path='me/upload-picture')
     def upload_picture(self, request):
         from django.core.exceptions import ValidationError as DjangoValidationError
         from starview_app.utils import validate_file_size, validate_image_file
@@ -117,10 +220,11 @@ class UserProfileViewSet(viewsets.ViewSet):
     # Remove profile picture and reset to default.                                  #
     #                                                                               #
     # HTTP Method: DELETE                                                           #
-    # Endpoint: /api/profile/remove-picture/                                        #
+    # Endpoint: /api/users/me/remove-picture/                                       #
+    # Authentication: Required                                                      #
     # Returns: DRF Response with success status and default image URL               #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['delete'], url_path='remove-picture')
+    @action(detail=False, methods=['delete'], url_path='me/remove-picture')
     def remove_picture(self, request):
         user_profile = request.user.userprofile
 
@@ -143,11 +247,12 @@ class UserProfileViewSet(viewsets.ViewSet):
     # Update user's first and last name.                                            #
     #                                                                               #
     # HTTP Method: PATCH                                                            #
-    # Endpoint: /api/profile/update-name/                                           #
+    # Endpoint: /api/users/me/update-name/                                          #
+    # Authentication: Required                                                      #
     # Body: JSON with first_name and last_name                                      #
     # Returns: DRF Response with success status and updated names                   #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['patch'], url_path='update-name')
+    @action(detail=False, methods=['patch'], url_path='me/update-name')
     def update_name(self, request):
         first_name = request.data.get('first_name', '').strip()
         last_name = request.data.get('last_name', '').strip()
@@ -178,11 +283,12 @@ class UserProfileViewSet(viewsets.ViewSet):
     # - Must be unique across all users                                             #
     #                                                                               #
     # HTTP Method: PATCH                                                            #
-    # Endpoint: /api/profile/update-username/                                       #
+    # Endpoint: /api/users/me/update-username/                                      #
+    # Authentication: Required                                                      #
     # Body: JSON with new_username                                                  #
     # Returns: DRF Response with success status and updated username                #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['patch'], url_path='update-username')
+    @action(detail=False, methods=['patch'], url_path='me/update-username')
     def update_username(self, request):
         import re
         new_username = request.data.get('new_username', '').strip().lower()
@@ -228,11 +334,12 @@ class UserProfileViewSet(viewsets.ViewSet):
     # 5. User clicks link to confirm and complete email change                      #
     #                                                                               #
     # HTTP Method: PATCH                                                            #
-    # Endpoint: /api/profile/update-email/                                          #
+    # Endpoint: /api/users/me/update-email/                                         #
+    # Authentication: Required                                                      #
     # Body: JSON with new_email                                                     #
     # Returns: DRF Response with verification instructions                          #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['patch'], url_path='update-email')
+    @action(detail=False, methods=['patch'], url_path='me/update-email')
     def update_email(self, request):
         from allauth.account.models import EmailAddress
         from django.core.mail import EmailMultiAlternatives
@@ -339,11 +446,12 @@ class UserProfileViewSet(viewsets.ViewSet):
     # 2. User has no password (OAuth signup) → Sets first password without current #
     #                                                                               #
     # HTTP Method: PATCH                                                            #
-    # Endpoint: /api/profile/update-password/                                       #
+    # Endpoint: /api/users/me/update-password/                                      #
+    # Authentication: Required                                                      #
     # Body: JSON with new_password and optional current_password                    #
     # Returns: DRF Response with success status or validation error                 #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['patch'], url_path='update-password')
+    @action(detail=False, methods=['patch'], url_path='me/update-password')
     def update_password(self, request):
         current_password = request.data.get('current_password')
         new_password = request.data.get('new_password')
@@ -383,16 +491,77 @@ class UserProfileViewSet(viewsets.ViewSet):
 
 
     # ----------------------------------------------------------------------------- #
+    # Update user's bio text.                                                       #
+    #                                                                               #
+    # Bio appears on public profile and is limited to 500 characters.               #
+    #                                                                               #
+    # HTTP Method: PATCH                                                            #
+    # Endpoint: /api/users/me/update-bio/                                           #
+    # Authentication: Required                                                      #
+    # Body: JSON with bio (max 500 characters)                                      #
+    # Returns: DRF Response with success status and updated bio                     #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['patch'], url_path='me/update-bio')
+    def update_bio(self, request):
+        bio = request.data.get('bio', '').strip()
+
+        # Validate length
+        if len(bio) > 500:
+            raise exceptions.ValidationError('Bio must be 500 characters or less.')
+
+        # Update bio
+        profile = request.user.userprofile
+        profile.bio = bio
+        profile.save()
+
+        return Response({
+            'detail': 'Bio updated successfully.',
+            'bio': bio
+        }, status=status.HTTP_200_OK)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Update user's location text.                                                  #
+    #                                                                               #
+    # Location appears on public profile (e.g., "Seattle, WA").                     #
+    #                                                                               #
+    # HTTP Method: PATCH                                                            #
+    # Endpoint: /api/users/me/update-location/                                      #
+    # Authentication: Required                                                      #
+    # Body: JSON with location (max 100 characters)                                 #
+    # Returns: DRF Response with success status and updated location                #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=False, methods=['patch'], url_path='me/update-location')
+    def update_location(self, request):
+        location = request.data.get('location', '').strip()
+
+        # Validate length
+        if len(location) > 100:
+            raise exceptions.ValidationError('Location must be 100 characters or less.')
+
+        # Update location
+        profile = request.user.userprofile
+        profile.location = location
+        profile.save()
+
+        return Response({
+            'detail': 'Location updated successfully.',
+            'location': location
+        }, status=status.HTTP_200_OK)
+
+
+    # ----------------------------------------------------------------------------- #
     # Get user's connected social accounts (Google OAuth, etc.)                     #
     #                                                                               #
     # Returns list of social accounts linked to the user with provider info,        #
     # email from the provider, and connection date.                                 #
     #                                                                               #
     # HTTP Method: GET                                                              #
-    # Endpoint: /api/profile/social-accounts/                                       #
+    # Endpoint: /api/users/me/social-accounts/                                      #
+    # Authentication: Required                                                      #
     # Returns: DRF Response with array of social account data                       #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['get'], url_path='social-accounts')
+    @action(detail=False, methods=['get'], url_path='me/social-accounts')
     def social_accounts(self, request):
         from allauth.socialaccount.models import SocialAccount
 
@@ -428,10 +597,11 @@ class UserProfileViewSet(viewsets.ViewSet):
     # alternative login method (password) before disconnecting social account.      #
     #                                                                               #
     # HTTP Method: DELETE                                                           #
-    # Endpoint: /api/profile/disconnect-social/{account_id}/                        #
+    # Endpoint: /api/users/me/disconnect-social/{account_id}/                       #
+    # Authentication: Required                                                      #
     # Returns: DRF Response with success status                                     #
     # ----------------------------------------------------------------------------- #
-    @action(detail=False, methods=['delete'], url_path='disconnect-social/(?P<account_id>[^/.]+)')
+    @action(detail=False, methods=['delete'], url_path='me/disconnect-social/(?P<account_id>[^/.]+)')
     def disconnect_social(self, request, account_id=None):
         from allauth.socialaccount.models import SocialAccount
 

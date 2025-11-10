@@ -3,11 +3,21 @@
  *
  * All API calls related to user profile management.
  * Each function returns a Promise that resolves to the API response.
+ *
+ * Note: All authenticated profile management endpoints now use /users/me/* pattern
  */
 
 import api from './api';
 
 export const profileApi = {
+  /**
+   * Get authenticated user's full profile (includes email, private data)
+   * @returns {Promise} - Full user profile data
+   */
+  getMe: () => {
+    return api.get('/users/me/');
+  },
+
   /**
    * Upload profile picture
    * @param {File} file - Image file to upload
@@ -17,7 +27,7 @@ export const profileApi = {
     const formData = new FormData();
     formData.append('profile_picture', file);
 
-    return api.post('/profile/upload-picture/', formData, {
+    return api.post('/users/me/upload-picture/', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -29,7 +39,7 @@ export const profileApi = {
    * @returns {Promise} - { detail: string, default_image_url: string }
    */
   removeProfilePicture: () => {
-    return api.delete('/profile/remove-picture/');
+    return api.delete('/users/me/remove-picture/');
   },
 
   /**
@@ -40,7 +50,7 @@ export const profileApi = {
    * @returns {Promise} - { detail: string, first_name: string, last_name: string }
    */
   updateName: (data) => {
-    return api.patch('/profile/update-name/', data);
+    return api.patch('/users/me/update-name/', data);
   },
 
   /**
@@ -50,7 +60,7 @@ export const profileApi = {
    * @returns {Promise} - { detail: string, username: string }
    */
   updateUsername: (data) => {
-    return api.patch('/profile/update-username/', data);
+    return api.patch('/users/me/update-username/', data);
   },
 
   /**
@@ -60,18 +70,38 @@ export const profileApi = {
    * @returns {Promise} - { detail: string, new_email: string }
    */
   updateEmail: (data) => {
-    return api.patch('/profile/update-email/', data);
+    return api.patch('/users/me/update-email/', data);
   },
 
   /**
    * Update user's password
    * @param {Object} data - Password data
-   * @param {string} data.current_password - Current password
+   * @param {string} data.current_password - Current password (optional if no password set)
    * @param {string} data.new_password - New password
    * @returns {Promise} - { detail: string }
    */
   updatePassword: (data) => {
-    return api.patch('/profile/update-password/', data);
+    return api.patch('/users/me/update-password/', data);
+  },
+
+  /**
+   * Update user's bio
+   * @param {Object} data - Bio data
+   * @param {string} data.bio - Bio text (max 500 characters)
+   * @returns {Promise} - { detail: string, bio: string }
+   */
+  updateBio: (data) => {
+    return api.patch('/users/me/update-bio/', data);
+  },
+
+  /**
+   * Update user's location
+   * @param {Object} data - Location data
+   * @param {string} data.location - Location text (max 100 characters)
+   * @returns {Promise} - { detail: string, location: string }
+   */
+  updateLocation: (data) => {
+    return api.patch('/users/me/update-location/', data);
   },
 
   /**
@@ -96,7 +126,7 @@ export const profileApi = {
    * @returns {Promise} - { social_accounts: Array, count: number }
    */
   getSocialAccounts: () => {
-    return api.get('/profile/social-accounts/');
+    return api.get('/users/me/social-accounts/');
   },
 
   /**
@@ -105,7 +135,32 @@ export const profileApi = {
    * @returns {Promise} - { detail: string, provider: string }
    */
   disconnectSocialAccount: (accountId) => {
-    return api.delete(`/profile/disconnect-social/${accountId}/`);
+    return api.delete(`/users/me/disconnect-social/${accountId}/`);
+  },
+};
+
+// ============================================================================
+// PUBLIC USER PROFILE API (No authentication required)
+// ============================================================================
+
+export const publicUserApi = {
+  /**
+   * Get public profile for any user by username
+   * @param {string} username - Username to fetch
+   * @returns {Promise} - Public user profile data (no email)
+   */
+  getUser: (username) => {
+    return api.get(`/users/${username}/`);
+  },
+
+  /**
+   * Get public reviews for any user by username
+   * @param {string} username - Username to fetch reviews for
+   * @param {number} page - Page number for pagination
+   * @returns {Promise} - Paginated reviews
+   */
+  getUserReviews: (username, page = 1) => {
+    return api.get(`/users/${username}/reviews/?page=${page}`);
   },
 };
 

@@ -35,6 +35,8 @@ from .serializer_location import (
 from .serializer_user import (
     UserSerializer,
     UserProfileSerializer,
+    PublicUserSerializer,
+    PrivateProfileSerializer,
 )
 
 # Favorite location serializers:
@@ -68,6 +70,8 @@ __all__ = [
     # User serializers
     'UserSerializer',
     'UserProfileSerializer',
+    'PublicUserSerializer',
+    'PrivateProfileSerializer',
 
     # Favorite location serializers
     'FavoriteLocationSerializer',

@@ -58,7 +58,7 @@ function Navbar() {
           {isAuthenticated ? (
             // Authenticated: Show Profile and Logout
             <>
-              <NavLink to="/profile" className="navbar-link">Profile</NavLink>
+              <NavLink to={`/users/${user?.username}`} className="navbar-link">Profile</NavLink>
               <button onClick={logout} className="navbar-link login-btn">
                 <i className="fa-solid fa-arrow-right-from-bracket"></i>
                 Logout
@@ -112,7 +112,7 @@ function Navbar() {
           {isAuthenticated ? (
             // Authenticated: Show Profile and Logout
             <>
-              <NavLink to="/profile" className="navbar-mobile-link" onClick={closeMobileMenu}>
+              <NavLink to={`/users/${user?.username}`} className="navbar-mobile-link" onClick={closeMobileMenu}>
                 <i className="fa-regular fa-user"></i>
                 Profile
               </NavLink>

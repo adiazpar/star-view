@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import profileApi from '../services/profile';
 import Alert from '../components/Alert';
+import ProfileHeader from '../components/ProfileHeader';
 import './ProfilePage.css';
 
 function ProfilePage() {
@@ -12,17 +13,6 @@ function ProfilePage() {
   const [activeTab, setActiveTab] = useState('settings');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-
-  // Get profile picture URL (use default if none set)
-  const profilePictureUrl = user?.profile_picture_url || '/images/default_profile_pic.jpg';
-
-  // Format join date
-  const joinDate = user?.date_joined
-    ? new Date(user.date_joined).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long'
-      })
-    : '';
 
   // Check for social account connection success/errors
   useEffect(() => {
@@ -48,34 +38,8 @@ function ProfilePage() {
   return (
     <div className="profile-page">
       <div className="profile-container">
-        {/* Profile Header */}
-        <div className="profile-header">
-          <div className="profile-header-content">
-            {/* Profile Picture */}
-            <div className="profile-avatar-large">
-              <img
-                src={profilePictureUrl}
-                alt={`${user?.username}'s profile`}
-                className="profile-avatar-img"
-              />
-            </div>
-
-            {/* User Info */}
-            <div className="profile-header-info">
-              <h1 className="profile-username">{user?.username}</h1>
-              <p className="profile-name">
-                {user?.first_name && user?.last_name
-                  ? `${user.first_name} ${user.last_name}`
-                  : 'No name set'
-                }
-              </p>
-              <p className="profile-join-date">
-                <i className="fa-solid fa-calendar-days"></i>
-                Member since {joinDate}
-              </p>
-            </div>
-          </div>
-        </div>
+        {/* Profile Header - Using Shared Component */}
+        <ProfileHeader user={user} isOwnProfile={true} onEditPage={true} />
 
         {/* Success Message */}
         {successMessage && (
@@ -152,6 +116,10 @@ function ProfileSettings({ user, refreshAuth }) {
   const [emailError, setEmailError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [passwordError, setPasswordError] = useState('');
+  const [bioSuccess, setBioSuccess] = useState('');
+  const [bioError, setBioError] = useState('');
+  const [locationSuccess, setLocationSuccess] = useState('');
+  const [locationError, setLocationError] = useState('');
 
   const [profilePicture, setProfilePicture] = useState(user?.profile_picture_url || '/images/default_profile_pic.jpg');
 
@@ -164,6 +132,10 @@ function ProfileSettings({ user, refreshAuth }) {
 
   // Username state
   const [username, setUsername] = useState(user?.username || '');
+
+  // Bio and Location state
+  const [bio, setBio] = useState(user?.bio || '');
+  const [locationField, setLocationField] = useState(user?.location || '');
 
   // Update profile picture when user data changes (e.g., after page refresh or refreshAuth)
   useEffect(() => {
@@ -181,6 +153,8 @@ function ProfileSettings({ user, refreshAuth }) {
         email: user.email || '',
       });
       setUsername(user.username || '');
+      setBio(user.bio || '');
+      setLocationField(user.location || '');
     }
   }, [user]);
 
@@ -368,6 +342,48 @@ function ProfileSettings({ user, refreshAuth }) {
     } catch (err) {
       const errorMessage = err.response?.data?.detail || 'Failed to update password';
       setPasswordError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle bio update
+  const handleBioUpdate = async (e) => {
+    e.preventDefault();
+
+    // Clear previous messages
+    setBioSuccess('');
+    setBioError('');
+
+    setLoading(true);
+    try {
+      await profileApi.updateBio({ bio });
+      setBioSuccess('Bio updated successfully!');
+      await refreshAuth();
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || 'Failed to update bio';
+      setBioError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle location update
+  const handleLocationUpdate = async (e) => {
+    e.preventDefault();
+
+    // Clear previous messages
+    setLocationSuccess('');
+    setLocationError('');
+
+    setLoading(true);
+    try {
+      await profileApi.updateLocation({ location: locationField });
+      setLocationSuccess('Location updated successfully!');
+      await refreshAuth();
+    } catch (err) {
+      const errorMessage = err.response?.data?.detail || 'Failed to update location';
+      setLocationError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -728,6 +744,117 @@ function ProfileSettings({ user, refreshAuth }) {
                   <>
                     <i className="fa-solid fa-key"></i>
                     {user?.has_usable_password ? 'Change Password' : 'Set Password'}
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Bio Section */}
+        <div className="profile-form-section">
+          <h3>Bio</h3>
+
+          {/* Bio Success/Error Messages */}
+          {bioSuccess && (
+            <Alert
+              type="success"
+              message={bioSuccess}
+              onClose={() => setBioSuccess('')}
+            />
+          )}
+          {bioError && (
+            <Alert
+              type="error"
+              message={bioError}
+              onClose={() => setBioError('')}
+            />
+          )}
+
+          <form onSubmit={handleBioUpdate}>
+            <div className="form-group">
+              <label htmlFor="bio" className="form-label">About You</label>
+              <textarea
+                id="bio"
+                className="form-input"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                rows="4"
+                maxLength="500"
+                placeholder="Tell others about yourself..."
+                disabled={loading}
+                style={{ resize: 'vertical', minHeight: '100px' }}
+              />
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: '4px' }}>
+                <i className="fa-solid fa-circle-info"></i> {bio.length}/500 characters. This will be visible on your public profile.
+              </p>
+            </div>
+            <div className="profile-form-actions">
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-save"></i>
+                    Save Bio
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Location Section */}
+        <div className="profile-form-section">
+          <h3>Location</h3>
+
+          {/* Location Success/Error Messages */}
+          {locationSuccess && (
+            <Alert
+              type="success"
+              message={locationSuccess}
+              onClose={() => setLocationSuccess('')}
+            />
+          )}
+          {locationError && (
+            <Alert
+              type="error"
+              message={locationError}
+              onClose={() => setLocationError('')}
+            />
+          )}
+
+          <form onSubmit={handleLocationUpdate}>
+            <div className="form-group">
+              <label htmlFor="location" className="form-label">Location</label>
+              <input
+                type="text"
+                id="location"
+                className="form-input"
+                value={locationField}
+                onChange={(e) => setLocationField(e.target.value)}
+                maxLength="100"
+                placeholder="e.g., Seattle, WA"
+                disabled={loading}
+              />
+              <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: '4px' }}>
+                <i className="fa-solid fa-map-marker-alt"></i> Where are you based? This will be visible on your public profile.
+              </p>
+            </div>
+            <div className="profile-form-actions">
+              <button type="submit" className="btn btn-primary" disabled={loading}>
+                {loading ? (
+                  <>
+                    <i className="fa-solid fa-spinner fa-spin"></i>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <i className="fa-solid fa-save"></i>
+                    Save Location
                   </>
                 )}
               </button>

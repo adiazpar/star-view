@@ -814,6 +814,8 @@ def auth_status(request):
                 'last_name': request.user.last_name,
                 'date_joined': request.user.date_joined,
                 'profile_picture_url': request.user.userprofile.get_profile_picture_url,
+                'bio': request.user.userprofile.bio,
+                'location': request.user.userprofile.location,
                 'has_usable_password': request.user.has_usable_password()
             }
         }, status=status.HTTP_200_OK)
