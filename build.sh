@@ -57,6 +57,10 @@ python3 manage.py collectstatic --no-input
 echo "Running database migrations..."
 python3 manage.py migrate --no-input
 
+# Diagnose database configuration (for troubleshooting)
+echo "Running database diagnostics..."
+python3 manage.py diagnose_db
+
 # Set up Google OAuth (if credentials are provided)
 if [ -n "$GOOGLE_OAUTH_CLIENT_ID" ] && [ -n "$GOOGLE_OAUTH_CLIENT_SECRET" ]; then
     echo "Setting up Google OAuth..."
