@@ -3,12 +3,13 @@
 #                                                                                                       #
 # Purpose:                                                                                              #
 # Provides maintenance utilities for email bounce/complaint tracking and suppression list.              #
+# Designed to run as a weekly Render cronjob on the production server.                                  #
 #                                                                                                       #
 # Features:                                                                                             #
 # - Remove old soft bounce records after recovery period                                                #
 # - Deactivate suppressions for soft bounces that have stabilized                                       #
 # - Clean up stale bounce records (no activity for 90+ days)                                            #
-# - Generate email health reports                                                                       #
+# - Generate and email comprehensive health reports                                                     #
 #                                                                                                       #
 # Usage:                                                                                                #
 #   python manage.py cleanup_email_suppressions [options]                                               #
@@ -17,7 +18,13 @@
 #   --soft-bounce-days N    Days to keep soft bounce suppressions (default: 30)                         #
 #   --stale-days N          Days of inactivity before marking bounce as stale (default: 90)             #
 #   --dry-run               Show what would be cleaned without making changes                           #
-#   --report                Generate email health report                                                #
+#   --report                Generate email health report (stdout only)                                  #
+#   --email-report EMAIL    Email address to send weekly report to                                      #
+#                                                                                                       #
+# Render Cronjob Configuration:                                                                         #
+#   Build Command: ./build-cron.sh                                                                      #
+#   Start Command: python manage.py cleanup_email_suppressions --email-report user@example.com          #
+#   Schedule: 0 3 * * 0 (Every Sunday at 3 AM)                                                          #
 # ----------------------------------------------------------------------------------------------------- #
 
 from django.core.management.base import BaseCommand
