@@ -41,6 +41,10 @@ class UserProfile(models.Model):
         default='',
         help_text="User's location (e.g., 'Seattle, WA')"
     )
+    is_verified = models.BooleanField(
+        default=False,
+        help_text="Verified badge status for user profile"
+    )
 
 
     # Returns profile picture URL or default if none set:

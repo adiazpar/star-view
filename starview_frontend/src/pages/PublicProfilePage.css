@@ -3,7 +3,7 @@
 .public-profile-page {
   min-height: 100vh;
   background: var(--bg-primary);
-  padding: var(--space-xl) var(--space-md);
+  padding: var(--space-xl) 5%;
 }
 
 .public-profile-container {
@@ -135,9 +135,6 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .public-profile-page {
-    padding: var(--space-lg) var(--space-sm);
-  }
 
   .public-profile-reviews {
     padding: var(--space-lg);

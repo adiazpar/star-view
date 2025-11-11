@@ -96,6 +96,7 @@
   --accent-bg:    hsla(30, 91%, 60%, 0.102);
 
   --border: #d1d5db;
+  --border-focus: hsl(30, 91%, 60%);
 
   --star-empty: #d1d5db;
 
