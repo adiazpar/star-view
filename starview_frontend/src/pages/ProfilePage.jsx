@@ -780,13 +780,13 @@ function ProfileSettings({ user, refreshAuth }) {
                 value={bio}
                 onChange={(e) => setBio(e.target.value)}
                 rows="4"
-                maxLength="500"
+                maxLength="150"
                 placeholder="Tell others about yourself..."
                 disabled={loading}
                 style={{ resize: 'vertical', minHeight: '100px' }}
               />
               <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)', marginTop: '4px' }}>
-                <i className="fa-solid fa-circle-info"></i> {bio.length}/500 characters. This will be visible on your public profile.
+                <i className="fa-solid fa-circle-info"></i> {bio.length}/150 characters. This will be visible on your public profile.
               </p>
             </div>
             <div className="profile-form-actions">

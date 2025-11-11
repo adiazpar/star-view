@@ -30,10 +30,10 @@ class UserProfile(models.Model):
     # Profile data:
     profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True)
     bio = models.TextField(
-        max_length=500,
+        max_length=150,
         blank=True,
         default='',
-        help_text="Short bio visible on public profile (max 500 characters)"
+        help_text="Short bio visible on public profile (max 150 characters)"
     )
     location = models.CharField(
         max_length=100,
