@@ -9,7 +9,7 @@
 }
 
 .profile-container {
-  max-width: 1000px;
+  max-width: var(--container-max);
   margin: 0 auto;
 }
 

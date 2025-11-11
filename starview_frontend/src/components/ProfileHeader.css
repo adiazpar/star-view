@@ -116,22 +116,7 @@
 }
 
 .profile-actions .btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   flex: 1;
-
-  font-weight: 300;
-  font-size: var(--text-sm);
-  padding: var(--space-sm) var(--space-xl);
-  border-radius: var(--radius);
-  cursor: pointer;
-  text-decoration: none;
-  background-color: var(--accent);
-  color: white;
-}
-.profile-actions .btn:hover {
-  background-color: var(--accent-hover);
 }
 
 /* Responsive Design */

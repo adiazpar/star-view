@@ -203,17 +203,17 @@ button.navbar-mobile-link {
 
 /* ============================================ */
 /* BUTTONS */
-/*
+
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
-  padding: 10px 24px;
-  font-weight: var(--font-semibold);
+
+  font-weight: 300;
+  font-size: var(--text-sm);
+  padding: var(--space-sm) var(--space-xl);
   border-radius: var(--radius);
   cursor: pointer;
-  border: none;
   text-decoration: none;
   background-color: var(--accent);
   color: white;
@@ -222,7 +222,7 @@ button.navbar-mobile-link {
 .btn:hover {
   background-color: var(--accent-hover);
 }
-*/
+
 
 /* ============================================ */
 /* CARDS */
