@@ -120,7 +120,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
     # ----------------------------------------------------------------------------- #
     def retrieve(self, request, username=None):
         user = get_object_or_404(User.objects.select_related('userprofile'), username=username)
-        serializer = PublicUserSerializer(user)
+        serializer = PublicUserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
     # ----------------------------------------------------------------------------- #

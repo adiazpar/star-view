@@ -162,6 +162,53 @@ export const publicUserApi = {
   getUserReviews: (username, page = 1) => {
     return api.get(`/users/${username}/reviews/?page=${page}`);
   },
+
+  /**
+   * Check if authenticated user is following a specific user
+   * @param {string} username - Username to check
+   * @returns {Promise} - { is_following: boolean, username: string }
+   */
+  checkFollowStatus: (username) => {
+    return api.get(`/users/${username}/is-following/`);
+  },
+
+  /**
+   * Follow a user
+   * @param {string} username - Username to follow
+   * @returns {Promise} - { detail: string, is_following: boolean }
+   */
+  followUser: (username) => {
+    return api.post(`/users/${username}/follow/`);
+  },
+
+  /**
+   * Unfollow a user
+   * @param {string} username - Username to unfollow
+   * @returns {Promise} - { detail: string, is_following: boolean }
+   */
+  unfollowUser: (username) => {
+    return api.delete(`/users/${username}/follow/`);
+  },
+
+  /**
+   * Get list of users who follow the specified user
+   * @param {string} username - Username to get followers for
+   * @param {number} page - Page number for pagination
+   * @returns {Promise} - Paginated list of follower users
+   */
+  getFollowers: (username, page = 1) => {
+    return api.get(`/users/${username}/followers/?page=${page}`);
+  },
+
+  /**
+   * Get list of users that the specified user is following
+   * @param {string} username - Username to get following list for
+   * @param {number} page - Page number for pagination
+   * @returns {Promise} - Paginated list of users being followed
+   */
+  getFollowing: (username, page = 1) => {
+    return api.get(`/users/${username}/following/?page=${page}`);
+  },
 };
 
 export default profileApi;

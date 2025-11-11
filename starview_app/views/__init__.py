@@ -35,6 +35,14 @@ from .views_favorite import (
     FavoriteLocationViewSet,
 )
 
+# Follow views:
+from .views_follow import (
+    toggle_follow,
+    check_following,
+    get_followers,
+    get_following,
+)
+
 # Authentication views:
 from .views_auth import (
     register,
@@ -65,6 +73,12 @@ __all__ = [
 
     # Favorite location views
     'FavoriteLocationViewSet',
+
+    # Follow views
+    'toggle_follow',
+    'check_following',
+    'get_followers',
+    'get_following',
 
     # Authentication views
     'register',

@@ -109,10 +109,21 @@
   border-top: 1px solid var(--border);
   margin-bottom: var(--space-md);
 }
+.profile-bio span {
+  color: var(--text-primary);
+  display: flex;
+  margin-bottom: var(--space-xs);
+}
 
 .profile-actions {
   display: flex;
   gap: var(--space-md);
+}
+
+.profile-actions.no-bio {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
 }
 
 .profile-actions .btn {

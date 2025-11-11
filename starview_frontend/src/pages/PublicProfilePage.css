@@ -1,8 +1,8 @@
 /* PublicProfilePage Component Styles */
 
 .public-profile-page {
-  min-height: 100vh;
-  background: var(--bg-primary);
+  min-height: calc(100vh - 64px);
+  background-color: var(--bg-primary);
   padding: var(--space-xl) 5%;
 }
 

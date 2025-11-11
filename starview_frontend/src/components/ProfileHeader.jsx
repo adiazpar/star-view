@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { publicUserApi } from '../services/profile';
+import Alert from './Alert';
 import './ProfileHeader.css';
 
 /**
@@ -13,6 +16,14 @@ import './ProfileHeader.css';
  * - onEditPage: Boolean indicating if currently on the edit/settings page (shows "Back to Profile" instead of "Edit Profile")
  */
 function ProfileHeader({ user, isOwnProfile = false, onEditPage = false }) {
+  const { user: currentUser } = useAuth();
+  // Use the is_following value from the user object (from API)
+  const [isFollowing, setIsFollowing] = useState(user?.is_following || false);
+  const [isLoadingFollow, setIsLoadingFollow] = useState(false);
+  const [followerCount, setFollowerCount] = useState(user?.stats?.follower_count || 0);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
   // Get profile picture URL (use default if none set)
   const profilePictureUrl = user?.profile_picture_url || '/images/default_profile_pic.jpg';
 
@@ -24,8 +35,73 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false }) {
       })
     : '';
 
+  // Update follow status and follower count when user data changes
+  useEffect(() => {
+    if (user) {
+      setIsFollowing(user.is_following || false);
+      setFollowerCount(user.stats?.follower_count || 0);
+    }
+  }, [user?.is_following, user?.stats?.follower_count]);
+
+  // Handle follow/unfollow action
+  const handleFollowToggle = async () => {
+    if (!currentUser) {
+      // Redirect to login if not authenticated
+      window.location.href = '/login';
+      return;
+    }
+
+    // Clear any previous messages
+    setErrorMessage('');
+    setSuccessMessage('');
+    setIsLoadingFollow(true);
+
+    try {
+      if (isFollowing) {
+        // Unfollow
+        const response = await publicUserApi.unfollowUser(user.username);
+        setIsFollowing(false);
+        setFollowerCount(prev => prev - 1);
+        setSuccessMessage(response.data.detail || `You have unfollowed ${user.username}.`);
+      } else {
+        // Follow
+        const response = await publicUserApi.followUser(user.username);
+        setIsFollowing(true);
+        setFollowerCount(prev => prev + 1);
+        setSuccessMessage(response.data.detail || `You are now following ${user.username}.`);
+      }
+    } catch (error) {
+      console.error('Error toggling follow:', error);
+
+      // Extract error message from API response
+      const errorMsg = error.response?.data?.detail
+        || error.response?.data?.message
+        || 'Failed to update follow status. Please try again.';
+
+      setErrorMessage(errorMsg);
+    } finally {
+      setIsLoadingFollow(false);
+    }
+  };
+
   return (
     <div className="profile-header">
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <Alert
+          type="success"
+          message={successMessage}
+          onClose={() => setSuccessMessage('')}
+        />
+      )}
+      {errorMessage && (
+        <Alert
+          type="error"
+          message={errorMessage}
+          onClose={() => setErrorMessage('')}
+        />
+      )}
+
       <div className="profile-header-content">
         {/* Profile Picture */}
         <div className="profile-avatar-large">
@@ -73,27 +149,65 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false }) {
 
       {/* Bio - Below header content */}
       {user?.bio && (
-        <p className="profile-bio">{user.bio}</p>
+        <p className="profile-bio">
+          <span>About Me</span>
+          {user.bio}
+        </p>
       )}
 
-      {/* Action Buttons (only shown to profile owner) */}
-      {isOwnProfile && (
-        <div className="profile-actions">
+      {/* Action Buttons */}
+      {isOwnProfile ? (
+        // Own profile: Show edit buttons
+        <div className={`profile-actions ${!user?.bio ? 'no-bio' : ''}`}>
           {onEditPage ? (
             // On edit page: Show "Back to Profile" button
             <a href={`/users/${user?.username}`} className="btn">
-              Back to Profile
+              <i className="fa-solid fa-caret-left"></i>
+              Back
             </a>
           ) : (
             // On public profile: Show "Edit Profile" button
             <a href="/profile" className="btn">
+              <i className="fa-solid fa-gear"></i>
               Edit Profile
             </a>
           )}
           <a href="/profile" className="btn">
             Placeholder
           </a>
+          <a href="/profile" className="btn-icon">
+            <i className="fa-solid fa-ellipsis-vertical"></i>
+          </a>
         </div>
+      ) : (
+        // Other user's profile: Show follow button (if logged in)
+        currentUser && (
+          <div className={`profile-actions ${!user?.bio ? 'no-bio' : ''}`}>
+            <button
+              className='btn btn-primary'
+              onClick={handleFollowToggle}
+              disabled={isLoadingFollow}
+            >
+              {isLoadingFollow ? (
+                <>
+                  <i className="fa-solid fa-spinner fa-spin"></i>
+                  {isFollowing ? 'Unfollowing...' : 'Following...'}
+                </>
+              ) : (
+                <>
+                  <i className={`fa-solid ${isFollowing ? 'fa-minus' : 'fa-plus'}`}></i>
+                  {isFollowing ? 'Unfollow' : 'Follow'}
+                </>
+              )}
+            </button>
+            <a href="/profile" className="btn">
+              Placeholder
+            </a>
+            <a href="/profile" className="btn-icon">
+              <i className="fa-solid fa-ellipsis-vertical"></i>
+            </a>
+          </div>
+        )
       )}
     </div>
   );

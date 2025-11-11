@@ -25,6 +25,7 @@ from .model_location_favorite import FavoriteLocation
 
 # User models:
 from .model_user_profile import UserProfile
+from .model_follow import Follow
 
 # Review models:
 from .model_review import Review

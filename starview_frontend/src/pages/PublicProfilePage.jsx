@@ -77,10 +77,12 @@ function PublicProfilePage() {
       }
     };
 
-    if (profileUser) {
+    // Only fetch if profileUser exists - prevents extra calls
+    if (profileUser?.id) {
       fetchReviews();
     }
-  }, [username, profileUser, page]);
+    // Don't include profileUser in dependencies, only its ID to prevent re-fetching
+  }, [username, profileUser?.id, page]);
 
   // Loading state
   if (loading) {

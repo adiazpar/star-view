@@ -33,6 +33,11 @@ from .views import (
     ReviewViewSet,
     CommentViewSet,
     UserProfileViewSet,
+    # Follow views
+    toggle_follow,
+    check_following,
+    get_followers,
+    get_following,
     # Authentication views
     register,
     custom_login,
@@ -71,6 +76,12 @@ urlpatterns = [
     path('api/auth/resend-verification/', resend_verification_email, name='resend_verification'),
     path('api/auth/password-reset/', request_password_reset, name='password_reset_request'),
     path('api/auth/password-reset-confirm/<uidb64>/<token>/', confirm_password_reset, name='password_reset_confirm'),
+
+    # User follow API endpoints:
+    path('api/users/<str:username>/follow/', toggle_follow, name='toggle_follow'),
+    path('api/users/<str:username>/is-following/', check_following, name='check_following'),
+    path('api/users/<str:username>/followers/', get_followers, name='get_followers'),
+    path('api/users/<str:username>/following/', get_following, name='get_following'),
 
     # Django Rest Framework API endpoints:
     path('api/', include(router.urls)),

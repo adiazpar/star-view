@@ -209,18 +209,42 @@ button.navbar-mobile-link {
   align-items: center;
   justify-content: center;
 
-  font-weight: 300;
+  font-weight: 500;
   font-size: var(--text-sm);
+  gap: var(--space-xs);
   padding: var(--space-sm) var(--space-xl);
   border-radius: var(--radius);
   cursor: pointer;
   text-decoration: none;
-  background-color: var(--accent);
-  color: white;
+  
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent);
+  color: var(--text-primary);
 }
-
 .btn:hover {
   background-color: var(--accent-hover);
+  border-color: var(--accent-light);
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  font-weight: 500;
+  font-size: var(--text-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-decoration: none;
+
+  background-color: var(--accent-bg);
+  border: 1px solid var(--accent);
+  color: var(--text-primary);
+}
+.btn-icon:hover {
+  background-color: var(--accent-hover);
+  border-color: var(--accent-light);
 }
 
 

@@ -21,7 +21,7 @@ from django.utils.html import format_html
 
 # Import models:
 # Separated model imports for package organization (Review system, Location system, etc.):
-from .models import UserProfile, FavoriteLocation, Location
+from .models import UserProfile, FavoriteLocation, Location, Follow
 from .models import Review, ReviewComment, ReviewPhoto, Report, Vote
 from .models import EmailBounce, EmailComplaint, EmailSuppressionList
 from .models import AuditLog
@@ -799,6 +799,77 @@ class AuditLogAdmin(admin.ModelAdmin):
 
 
 
+# ----------------------------------------------------------------------------- #
+# Custom admin interface for Follow model.                                      #
+#                                                                               #
+# Admin interface for viewing and managing user follow relationships with:      #
+# - Filter by creation date                                                     #
+# - Search by follower or following username                                    #
+# - View follower/following relationships                                       #
+# - Bulk delete actions                                                         #
+# ----------------------------------------------------------------------------- #
+class FollowAdmin(admin.ModelAdmin):
+    list_display = [
+        'id',
+        'follower_link',
+        'arrow',
+        'following_link',
+        'created_at',
+    ]
+
+    list_filter = [
+        ('created_at', admin.DateFieldListFilter),
+    ]
+
+    search_fields = [
+        'follower__username',
+        'following__username',
+    ]
+
+    readonly_fields = [
+        'follower',
+        'following',
+        'created_at',
+    ]
+
+    fieldsets = (
+        ('Follow Relationship', {
+            'fields': ('follower', 'following', 'created_at'),
+            'description': 'User follow relationship'
+        }),
+    )
+
+    ordering = ['-created_at']
+    list_per_page = 50
+
+    # Disable add permission (users create follows through the app)
+    def has_add_permission(self, request):
+        return False
+
+    # Link to follower user admin page
+    def follower_link(self, obj):
+        return format_html(
+            '<a href="/admin/auth/user/{}/change/">{}</a>',
+            obj.follower.id,
+            obj.follower.username
+        )
+    follower_link.short_description = 'Follower'
+
+    # Arrow symbol between follower and following
+    def arrow(self, obj):
+        return '→'
+    arrow.short_description = ''
+
+    # Link to following user admin page
+    def following_link(self, obj):
+        return format_html(
+            '<a href="/admin/auth/user/{}/change/">{}</a>',
+            obj.following.id,
+            obj.following.username
+        )
+    following_link.short_description = 'Following'
+
+
 # ----------------------------------------------------------------------------------------------------- #
 #                                                                                                       #
 #                                          ADMIN SITE REGISTERS                                         #
@@ -812,6 +883,9 @@ admin.site.register(FavoriteLocation)
 admin.site.register(Review)
 admin.site.register(ReviewComment)
 admin.site.register(ReviewPhoto)
+
+# Register Follow model with custom admin interface
+admin.site.register(Follow, FollowAdmin)
 
 # Register generic models with custom admin interfaces
 admin.site.register(Vote, VoteAdmin)

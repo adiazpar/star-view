@@ -53,20 +53,39 @@ class PublicUserSerializer(serializers.ModelSerializer):
     location = serializers.CharField(source='userprofile.location', read_only=True)
     is_verified = serializers.BooleanField(source='userprofile.is_verified', read_only=True)
     stats = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'date_joined',
-                  'profile_picture_url', 'bio', 'location', 'is_verified', 'stats']
+                  'profile_picture_url', 'bio', 'location', 'is_verified', 'stats', 'is_following']
         read_only_fields = ['id', 'username', 'first_name', 'last_name', 'date_joined']
 
     def get_profile_picture_url(self, obj):
         """Get user's profile picture URL"""
         return obj.userprofile.get_profile_picture_url
 
+    def get_is_following(self, obj):
+        """Check if the requesting user is following this user"""
+        request = self.context.get('request')
+
+        # If no request context or user is not authenticated, return None
+        if not request or not request.user.is_authenticated:
+            return None
+
+        # Don't check for own profile
+        if request.user == obj:
+            return None
+
+        from starview_app.models import Follow
+        return Follow.objects.filter(
+            follower=request.user,
+            following=obj
+        ).exists()
+
     def get_stats(self, obj):
         """Get user's public statistics"""
-        from starview_app.models import Review, FavoriteLocation
+        from starview_app.models import Review, FavoriteLocation, Follow
         from django.db.models import Count, Sum
         from django.contrib.contenttypes.models import ContentType
 
@@ -87,11 +106,17 @@ class PublicUserSerializer(serializers.ModelSerializer):
             is_upvote=True  # Upvotes only
         ).count()
 
+        # Get follower/following counts
+        follower_count = Follow.objects.filter(following=obj).count()
+        following_count = Follow.objects.filter(follower=obj).count()
+
         return {
             'review_count': review_count,
             'locations_reviewed': locations_reviewed,
             'favorite_count': favorite_count,
-            'helpful_votes_received': helpful_votes
+            'helpful_votes_received': helpful_votes,
+            'follower_count': follower_count,
+            'following_count': following_count
         }
 
 
