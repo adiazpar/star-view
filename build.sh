@@ -112,8 +112,17 @@ if [ -n "$DJANGO_SUPERUSER_USERNAME" ] && [ -n "$DJANGO_SUPERUSER_EMAIL" ] && [ 
 
     if [ "$USER_EXISTS" = "False" ]; then
         echo "Creating superuser: $DJANGO_SUPERUSER_USERNAME"
-        python manage.py createsuperuser --no-input --username "$DJANGO_SUPERUSER_USERNAME" --email "$DJANGO_SUPERUSER_EMAIL"
-        echo "Superuser created successfully!"
+        # Create superuser with password using Django shell (--no-input doesn't support passwords)
+        python manage.py shell << EOF
+from django.contrib.auth import get_user_model
+User = get_user_model()
+user = User.objects.create_superuser(
+    username='$DJANGO_SUPERUSER_USERNAME',
+    email='$DJANGO_SUPERUSER_EMAIL',
+    password='$DJANGO_SUPERUSER_PASSWORD'
+)
+print(f"Superuser '{user.username}' created successfully!")
+EOF
     else
         echo "Superuser '$DJANGO_SUPERUSER_USERNAME' already exists, skipping creation"
     fi
@@ -121,6 +130,16 @@ else
     echo "Skipping superuser creation (environment variables not set)"
     echo "Set DJANGO_SUPERUSER_USERNAME, DJANGO_SUPERUSER_EMAIL, and DJANGO_SUPERUSER_PASSWORD in Render dashboard"
 fi
+
+# ================================================================================================
+# ONE-TIME COMMAND: Award Pioneer badges to first 100 users (REMOVE AFTER FIRST DEPLOYMENT)
+# ================================================================================================
+echo "Awarding Pioneer badges to first 100 users..."
+python manage.py award_pioneer_badges
+echo "Pioneer badge award completed!"
+# ================================================================================================
+# TODO: Remove the above section after successful deployment to production
+# ================================================================================================
 
 echo "===================================="
 echo "Build script completed successfully!"

@@ -47,6 +47,8 @@ class Vote(models.Model):
             models.Index(fields=['user', '-created_at']),
         ]
         unique_together = ('user', 'content_type', 'object_id')  # One vote per user per object
+        verbose_name = 'Vote'
+        verbose_name_plural = 'Votes'
 
 
     # Returns the model name of the voted object (e.g., 'review', 'reviewcomment'):

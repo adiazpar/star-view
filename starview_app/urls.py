@@ -38,6 +38,9 @@ from .views import (
     check_following,
     get_followers,
     get_following,
+    # Badge views
+    get_user_badges,
+    update_pinned_badges,
     # Authentication views
     register,
     custom_login,
@@ -82,6 +85,10 @@ urlpatterns = [
     path('api/users/<str:username>/is-following/', check_following, name='check_following'),
     path('api/users/<str:username>/followers/', get_followers, name='get_followers'),
     path('api/users/<str:username>/following/', get_following, name='get_following'),
+
+    # User badge API endpoints:
+    path('api/users/<str:username>/badges/', get_user_badges, name='get_user_badges'),
+    path('api/users/me/badges/pin/', update_pinned_badges, name='update_pinned_badges'),
 
     # Django Rest Framework API endpoints:
     path('api/', include(router.urls)),

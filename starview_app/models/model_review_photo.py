@@ -20,8 +20,12 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.core.validators import ValidationError
 import os
 import io
+import logging
 from uuid import uuid4
 from PIL import Image
+
+# Configure module logger
+logger = logging.getLogger(__name__)
 
 # Import models:
 from . import Review
@@ -65,6 +69,8 @@ class ReviewPhoto(models.Model):
             models.Index(fields=['review', 'order']),
             models.Index(fields=['created_at']),
         ]
+        verbose_name = 'Review Photo'
+        verbose_name_plural = 'Review Photos'
 
 
     # String representation for admin interface and debugging:
@@ -125,7 +131,13 @@ class ReviewPhoto(models.Model):
             self._create_thumbnail(img)
 
         except Exception as e:
-            print(f"Error processing review image: {e}")
+            logger.error(
+                "Error processing review image for review %d: %s",
+                self.review_id or 0,
+                str(e),
+                extra={'review_id': self.review_id, 'error': str(e)},
+                exc_info=True
+            )
 
 
     # Creates 300x300 thumbnail version of the image:
@@ -147,7 +159,13 @@ class ReviewPhoto(models.Model):
             self.thumbnail.save(thumb_name, thumb_file, save=False)
 
         except Exception as e:
-            print(f"Error creating review thumbnail: {e}")
+            logger.error(
+                "Error creating thumbnail for review %d: %s",
+                self.review_id or 0,
+                str(e),
+                extra={'review_id': self.review_id, 'error': str(e)},
+                exc_info=True
+            )
 
 
     # Returns the full URL for the image:

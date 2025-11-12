@@ -114,13 +114,13 @@ class EmailBounce(models.Model):
 
     class Meta:
         db_table = 'starview_email_bounce'
-        verbose_name = 'Email Bounce'
-        verbose_name_plural = 'Email Bounces'
         ordering = ['-last_bounce_date']
         indexes = [
             models.Index(fields=['email', '-last_bounce_date']),
             models.Index(fields=['bounce_type', 'suppressed']),
         ]
+        verbose_name = 'Email Bounce'
+        verbose_name_plural = 'Email Bounces'
 
     def __str__(self):
         return f"{self.email} - {self.bounce_type} ({self.bounce_count}x)"

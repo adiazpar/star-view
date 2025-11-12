@@ -16,6 +16,8 @@
 
 # Import tools:
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -24,7 +26,8 @@ from django.utils.html import format_html
 from .models import UserProfile, FavoriteLocation, Location, Follow
 from .models import Review, ReviewComment, ReviewPhoto, Report, Vote
 from .models import EmailBounce, EmailComplaint, EmailSuppressionList
-from .models import AuditLog
+from .models import AuditLog, LocationVisit
+from .models import Badge, UserBadge
 
 
 
@@ -870,6 +873,326 @@ class FollowAdmin(admin.ModelAdmin):
     following_link.short_description = 'Following'
 
 
+
+# ----------------------------------------------------------------------------- #
+# Custom admin interface for Badge model.                                       #
+#                                                                               #
+# Admin interface for managing badges with:                                     #
+# - Filter by category, tier, rarity                                            #
+# - Search by name, slug, description                                           #
+# - View badge details and award counts                                         #
+# - Color-coded badges by category                                              #
+# ----------------------------------------------------------------------------- #
+class BadgeAdmin(admin.ModelAdmin):
+    list_display = [
+        'name',
+        'category_badge',
+        'tier',
+        'criteria_display',
+        'is_rare',
+        'award_count',
+        'display_order',
+    ]
+
+    list_filter = [
+        'category',
+        'tier',
+        'is_rare',
+    ]
+
+    search_fields = [
+        'name',
+        'slug',
+        'description',
+    ]
+
+    readonly_fields = [
+        'slug',
+        'award_count',
+    ]
+
+    fieldsets = (
+        ('Badge Information', {
+            'fields': ('name', 'slug', 'description', 'category', 'tier')
+        }),
+        ('Criteria', {
+            'fields': ('criteria_type', 'criteria_value', 'criteria_secondary'),
+            'description': 'Requirements for earning this badge'
+        }),
+        ('Display', {
+            'fields': ('color', 'icon_path', 'display_order', 'is_rare')
+        }),
+        ('Statistics', {
+            'fields': ('award_count',),
+        }),
+    )
+
+    ordering = ['category', 'tier', 'display_order']
+    list_per_page = 50
+
+    # Colored badge for category
+    def category_badge(self, obj):
+        colors = {
+            'EXPLORATION': '#3498db',      # Blue
+            'CONTRIBUTION': '#2ecc71',     # Green
+            'QUALITY': '#9b59b6',          # Purple
+            'REVIEW': '#e74c3c',           # Red
+            'COMMUNITY': '#f39c12',        # Orange
+            'SPECIAL': '#1abc9c',          # Teal
+            'TENURE': '#34495e',           # Dark gray
+        }
+        color = colors.get(obj.category, 'gray')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 10px; border-radius: 3px;">{}</span>',
+            color,
+            obj.get_category_display()
+        )
+    category_badge.short_description = 'Category'
+
+    # Display criteria in readable format
+    def criteria_display(self, obj):
+        if obj.criteria_type == 'SPECIAL_CONDITION':
+            return f"Special: {obj.description}"
+        elif obj.criteria_secondary:
+            return f"{obj.get_criteria_type_display()}: {obj.criteria_value} (+ {obj.criteria_secondary}%)"
+        else:
+            return f"{obj.get_criteria_type_display()}: {obj.criteria_value}"
+    criteria_display.short_description = 'Criteria'
+
+    # Count of users who have this badge
+    def award_count(self, obj):
+        count = obj.userbadge_set.count() if obj.id else 0
+        return format_html(
+            '<strong>{}</strong> user(s)',
+            count
+        )
+    award_count.short_description = 'Times Awarded'
+
+
+
+# ----------------------------------------------------------------------------- #
+# Custom admin interface for UserBadge model.                                   #
+#                                                                               #
+# Admin interface for viewing user badge awards with:                           #
+# - Filter by badge, earned date                                                #
+# - Search by username                                                          #
+# - View badge details and earn date                                            #
+# - Links to user and badge detail pages                                        #
+# ----------------------------------------------------------------------------- #
+class UserBadgeAdmin(admin.ModelAdmin):
+    list_display = [
+        'user_link',
+        'badge_link',
+        'badge_category',
+        'earned_at',
+    ]
+
+    list_filter = [
+        'badge__category',
+        ('earned_at', admin.DateFieldListFilter),
+    ]
+
+    search_fields = [
+        'user__username',
+        'badge__name',
+    ]
+
+    readonly_fields = [
+        'user',
+        'badge',
+        'earned_at',
+    ]
+
+    fieldsets = (
+        ('Badge Award', {
+            'fields': ('user', 'badge', 'earned_at')
+        }),
+    )
+
+    ordering = ['-earned_at']
+    list_per_page = 50
+
+    # Disable add permission (badges awarded via BadgeService)
+    def has_add_permission(self, request):
+        return False
+
+    # Link to user admin page
+    def user_link(self, obj):
+        return format_html(
+            '<a href="/admin/auth/user/{}/change/">{}</a>',
+            obj.user.id,
+            obj.user.username
+        )
+    user_link.short_description = 'User'
+
+    # Link to badge admin page
+    def badge_link(self, obj):
+        return format_html(
+            '<a href="/admin/starview_app/badge/{}/change/">{}</a>',
+            obj.badge.id,
+            obj.badge.name
+        )
+    badge_link.short_description = 'Badge'
+
+    # Display badge category
+    def badge_category(self, obj):
+        return obj.badge.get_category_display()
+    badge_category.short_description = 'Category'
+
+
+
+# ----------------------------------------------------------------------------- #
+# Custom admin interface for LocationVisit model.                               #
+#                                                                               #
+# Admin interface for viewing location check-ins with:                          #
+# - Filter by visited date                                                      #
+# - Search by user or location name                                             #
+# - View visit details                                                          #
+# - Links to user and location detail pages                                     #
+# ----------------------------------------------------------------------------- #
+class LocationVisitAdmin(admin.ModelAdmin):
+    list_display = [
+        'user_link',
+        'location_link',
+        'visited_at',
+    ]
+
+    list_filter = [
+        ('visited_at', admin.DateFieldListFilter),
+    ]
+
+    search_fields = [
+        'user__username',
+        'location__name',
+    ]
+
+    readonly_fields = [
+        'user',
+        'location',
+        'visited_at',
+    ]
+
+    fieldsets = (
+        ('Visit Information', {
+            'fields': ('user', 'location', 'visited_at')
+        }),
+    )
+
+    ordering = ['-visited_at']
+    list_per_page = 50
+
+    # Disable add permission (visits created via app)
+    def has_add_permission(self, request):
+        return False
+
+    # Link to user admin page
+    def user_link(self, obj):
+        return format_html(
+            '<a href="/admin/auth/user/{}/change/">{}</a>',
+            obj.user.id,
+            obj.user.username
+        )
+    user_link.short_description = 'User'
+
+    # Link to location admin page
+    def location_link(self, obj):
+        return format_html(
+            '<a href="/admin/starview_app/location/{}/change/">{}</a>',
+            obj.location.id,
+            obj.location.name
+        )
+    location_link.short_description = 'Location'
+
+
+
+# ----------------------------------------------------------------------------- #
+# Custom admin interface for Django's User model.                               #
+#                                                                               #
+# Extends Django's built-in UserAdmin to add:                                   #
+# - Registration rank (position in signup order)                                #
+# - Pioneer badge eligibility indicator                                         #
+# - Link to user's badges                                                       #
+# ----------------------------------------------------------------------------- #
+class CustomUserAdmin(BaseUserAdmin):
+    # Add registration rank to list display
+    list_display = BaseUserAdmin.list_display + ('registration_rank', 'pioneer_eligible')
+
+    # Add readonly fields to the user detail page
+    readonly_fields = BaseUserAdmin.readonly_fields + ('registration_rank', 'pioneer_eligible', 'view_badges')
+
+    # Add new fieldset for badge information
+    fieldsets = BaseUserAdmin.fieldsets + (
+        ('Badge Information', {
+            'fields': ('registration_rank', 'pioneer_eligible', 'view_badges'),
+        }),
+    )
+
+    # Calculate and display user's registration rank
+    def registration_rank(self, obj):
+        if obj.date_joined:
+            rank = User.objects.filter(date_joined__lte=obj.date_joined).count()
+
+            # Color-code based on Pioneer eligibility
+            if rank <= 100:
+                return format_html(
+                    '<strong style="color: #2ecc71;">#{}</strong> 🎖️',
+                    rank
+                )
+            else:
+                return format_html('#{:,}', rank)
+        return '-'
+    registration_rank.short_description = 'Registration Rank'
+    registration_rank.admin_order_field = 'date_joined'  # Allow sorting by date_joined
+
+    # Show if user is eligible for Pioneer badge
+    def pioneer_eligible(self, obj):
+        if obj.date_joined:
+            rank = User.objects.filter(date_joined__lte=obj.date_joined).count()
+
+            if rank <= 100:
+                # Check if they actually have the badge
+                from .models import UserBadge, Badge
+                pioneer_badge = Badge.objects.filter(slug='pioneer').first()
+                if pioneer_badge:
+                    has_badge = UserBadge.objects.filter(user=obj, badge=pioneer_badge).exists()
+                    if has_badge:
+                        return format_html(
+                            '<span style="background-color: #2ecc71; color: white; padding: 3px 10px; border-radius: 3px;">✓ HAS BADGE</span>'
+                        )
+                    else:
+                        return format_html(
+                            '<span style="background-color: #f39c12; color: white; padding: 3px 10px; border-radius: 3px;">ELIGIBLE</span>'
+                        )
+                else:
+                    return format_html(
+                        '<span style="background-color: #f39c12; color: white; padding: 3px 10px; border-radius: 3px;">ELIGIBLE</span>'
+                    )
+            else:
+                return format_html(
+                    '<span style="background-color: gray; color: white; padding: 3px 10px; border-radius: 3px;">NOT ELIGIBLE</span>'
+                )
+        return '-'
+    pioneer_eligible.short_description = 'Pioneer Badge'
+
+    # Link to view user's badges
+    def view_badges(self, obj):
+        from .models import UserBadge
+        badge_count = UserBadge.objects.filter(user=obj).count()
+
+        if badge_count > 0:
+            url = f'/admin/starview_app/userbadge/?user__id__exact={obj.id}'
+            return format_html(
+                '<a href="{}" class="button">View {} Badge(s)</a>',
+                url,
+                badge_count
+            )
+        else:
+            return format_html(
+                '<span style="color: gray;">No badges yet</span>'
+            )
+    view_badges.short_description = 'User Badges'
+
+
 # ----------------------------------------------------------------------------------------------------- #
 #                                                                                                       #
 #                                          ADMIN SITE REGISTERS                                         #
@@ -898,3 +1221,13 @@ admin.site.register(EmailSuppressionList, EmailSuppressionListAdmin)
 
 # Register audit log model with custom admin interface (read-only)
 admin.site.register(AuditLog, AuditLogAdmin)
+
+# Register badge models with custom admin interfaces
+admin.site.register(Badge, BadgeAdmin)
+admin.site.register(UserBadge, UserBadgeAdmin)
+admin.site.register(LocationVisit, LocationVisitAdmin)
+
+# Re-register User model with custom admin (extends Django's default UserAdmin)
+# Must unregister first, then register with our custom admin
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)

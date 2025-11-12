@@ -105,6 +105,16 @@ export const profileApi = {
   },
 
   /**
+   * Update user's pinned badges (max 3 badges)
+   * @param {Object} data - Pinned badge data
+   * @param {number[]} data.pinned_badge_ids - Array of badge IDs to pin (max 3)
+   * @returns {Promise} - { detail: string, pinned_badge_ids: number[], pinned_badges: Array }
+   */
+  updatePinnedBadges: (data) => {
+    return api.patch('/users/me/badges/pin/', data);
+  },
+
+  /**
    * Get user's favorite locations
    * @returns {Promise} - Array of favorite locations
    */
@@ -208,6 +218,15 @@ export const publicUserApi = {
    */
   getFollowing: (username, page = 1) => {
     return api.get(`/users/${username}/following/?page=${page}`);
+  },
+
+  /**
+   * Get user's badge collection (earned, in-progress, locked)
+   * @param {string} username - Username to get badges for
+   * @returns {Promise} - { earned: Array, in_progress: Array, locked: Array, pinned_badge_ids: number[] }
+   */
+  getUserBadges: (username) => {
+    return api.get(`/users/${username}/badges/`);
   },
 };
 

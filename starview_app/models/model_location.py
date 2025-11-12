@@ -19,7 +19,11 @@
 # Import tools:
 from django.db import models
 from django.contrib.auth.models import User
+import logging
 from starview_app.services.location_service import LocationService
+
+# Configure module logger
+logger = logging.getLogger(__name__)
 
 # Import validators:
 from starview_app.utils import (
@@ -97,8 +101,6 @@ class Location(models.Model):
                     field in kwargs.get('update_fields', [])
                     for field in ['latitude', 'longitude']
             ):
-                print(f"Enriching location {self.name} (ID: {self.pk})")
-
                 # Import here to avoid circular imports
                 from django.conf import settings
 
@@ -111,15 +113,31 @@ class Location(models.Model):
                     # Async enrichment via Celery (requires worker running)
                     from starview_app.utils.tasks import enrich_location_data
                     enrich_location_data.delay(self.pk)
-                    print(f"  → Queued async enrichment task for location {self.pk}")
+                    logger.info(
+                        "Queued async enrichment task for location '%s' (ID: %d)",
+                        self.name,
+                        self.pk,
+                        extra={'location_id': self.pk, 'location_name': self.name, 'mode': 'async'}
+                    )
                 else:
                     # Sync enrichment (fallback when no worker available)
-                    print(f"  → Running sync enrichment (Celery disabled)")
+                    logger.info(
+                        "Running sync enrichment for location '%s' (ID: %d) - Celery disabled",
+                        self.name,
+                        self.pk,
+                        extra={'location_id': self.pk, 'location_name': self.name, 'mode': 'sync'}
+                    )
                     from starview_app.services.location_service import LocationService
                     LocationService.initialize_location_data(self)
 
         except Exception as e:
-            print(f"Error saving location: {e}")
+            logger.error(
+                "Error saving location '%s': %s",
+                self.name if self.name else 'Unknown',
+                str(e),
+                extra={'location_name': self.name, 'error': str(e)},
+                exc_info=True
+            )
             raise
 
 
@@ -135,3 +153,5 @@ class Location(models.Model):
             models.Index(fields=['added_by'], name='added_by_idx'),
         ]
         ordering = ['-created_at']
+        verbose_name = 'Location'
+        verbose_name_plural = 'Locations'

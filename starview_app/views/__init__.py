@@ -43,6 +43,12 @@ from .views_follow import (
     get_following,
 )
 
+# Badge views:
+from .views_badge import (
+    get_user_badges,
+    update_pinned_badges,
+)
+
 # Authentication views:
 from .views_auth import (
     register,
@@ -79,6 +85,10 @@ __all__ = [
     'check_following',
     'get_followers',
     'get_following',
+
+    # Badge views
+    'get_user_badges',
+    'update_pinned_badges',
 
     # Authentication views
     'register',

@@ -17,7 +17,11 @@
 # ----------------------------------------------------------------------------------------------------- #
 
 import os
+import logging
 from celery import Celery
+
+# Configure module logger
+logger = logging.getLogger(__name__)
 
 # Set Django settings module for Celery
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'django_project.settings')
@@ -37,4 +41,4 @@ app.autodiscover_tasks()
 # Optional: Task for debugging Celery setup
 @app.task(bind=True, ignore_result=True)
 def debug_task(self):
-    print(f'Request: {self.request!r}')
+    logger.debug('Celery debug task - Request: %r', self.request)

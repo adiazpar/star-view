@@ -90,6 +90,24 @@ export const locationsApi = {
   voteOnReview: (locationId, reviewId) => {
     return api.post(`/locations/${locationId}/reviews/${reviewId}/vote/`);
   },
+
+  /**
+   * Mark a location as visited (check-in)
+   * @param {number} locationId - Location ID
+   * @returns {Promise} - { detail: string, total_visits: number, newly_earned_badges: Array }
+   */
+  markVisited: (locationId) => {
+    return api.post(`/locations/${locationId}/mark-visited/`);
+  },
+
+  /**
+   * Unmark a location as visited (remove check-in)
+   * @param {number} locationId - Location ID
+   * @returns {Promise} - { detail: string, total_visits: number }
+   */
+  unmarkVisited: (locationId) => {
+    return api.delete(`/locations/${locationId}/unmark-visited/`);
+  },
 };
 
 export default locationsApi;

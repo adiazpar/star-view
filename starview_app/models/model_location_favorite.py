@@ -30,6 +30,8 @@ class FavoriteLocation(models.Model):
     class Meta:
         # Prevent users from favoriting the same location multiple times:
         unique_together = ['user', 'location']
+        verbose_name = 'Favorite Location'
+        verbose_name_plural = 'Favorite Locations'
 
 
     # Returns the display name (nickname if set, otherwise location name).

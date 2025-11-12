@@ -23,3 +23,7 @@ from .location_service import LocationService
 from .password_service import PasswordService
 from .report_service import ReportService
 from .vote_service import VoteService
+
+# Badge service not imported here to avoid circular dependency
+# (models import services, badge_service imports models)
+# Import directly when needed: from starview_app.services.badge_service import BadgeService

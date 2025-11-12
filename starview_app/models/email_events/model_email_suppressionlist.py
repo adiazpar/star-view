@@ -106,13 +106,13 @@ class EmailSuppressionList(models.Model):
 
     class Meta:
         db_table = 'starview_email_suppression'
-        verbose_name = 'Email Suppression'
-        verbose_name_plural = 'Email Suppression List'
         ordering = ['-added_date']
         indexes = [
             models.Index(fields=['email', 'is_active']),
             models.Index(fields=['reason', 'added_date']),
         ]
+        verbose_name = 'Email Suppression Entry'
+        verbose_name_plural = 'Email Suppression List'
 
     def __str__(self):
         return f"{self.email} - {self.reason}"

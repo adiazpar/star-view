@@ -81,6 +81,8 @@ class Report(models.Model):
             models.Index(fields=['status', '-created_at']),
             models.Index(fields=['report_type', '-created_at']),
         ]
+        verbose_name = 'Report'
+        verbose_name_plural = 'Reports'
 
 
     # Returns the model name of the reported object (e.g., 'location', 'review', 'reviewcomment'):

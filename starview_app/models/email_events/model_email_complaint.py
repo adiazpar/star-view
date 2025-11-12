@@ -102,13 +102,13 @@ class EmailComplaint(models.Model):
 
     class Meta:
         db_table = 'starview_email_complaint'
-        verbose_name = 'Email Complaint'
-        verbose_name_plural = 'Email Complaints'
         ordering = ['-complaint_date']
         indexes = [
             models.Index(fields=['email', '-complaint_date']),
             models.Index(fields=['reviewed', 'suppressed']),
         ]
+        verbose_name = 'Email Complaint'
+        verbose_name_plural = 'Email Complaints'
 
     def __str__(self):
         return f"{self.email} - {self.complaint_type} on {self.complaint_date.date()}"

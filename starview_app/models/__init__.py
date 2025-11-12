@@ -22,10 +22,15 @@
 # Location models:
 from .model_location import Location
 from .model_location_favorite import FavoriteLocation
+from .model_location_visit import LocationVisit
 
 # User models:
 from .model_user_profile import UserProfile
 from .model_follow import Follow
+
+# Badge models:
+from .model_badge import Badge
+from .model_user_badge import UserBadge
 
 # Review models:
 from .model_review import Review

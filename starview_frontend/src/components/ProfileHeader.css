@@ -117,7 +117,7 @@
 
 .profile-actions {
   display: flex;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 .profile-actions.no-bio {

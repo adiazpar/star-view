@@ -43,6 +43,8 @@ class Follow(models.Model):
         unique_together = ['follower', 'following']
         # Order by most recent follows first:
         ordering = ['-created_at']
+        verbose_name = 'Follow'
+        verbose_name_plural = 'Follows'
 
 
     # Validation to prevent users from following themselves:

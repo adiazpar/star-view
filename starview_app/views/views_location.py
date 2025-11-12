@@ -352,10 +352,99 @@ class LocationViewSet(viewsets.ModelViewSet):
     # ----------------------------------------------------------------------------- #
     @action(detail=True, methods=['GET'], serializer_class=LocationInfoPanelSerializer)
     def info_panel(self, request, pk=None):
-        
+
         location = self.get_object()
         serializer = self.get_serializer(location)
         return Response(serializer.data)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Mark a location as visited (check-in).                                        #
+    #                                                                               #
+    # Creates a LocationVisit record for the user.                                  #
+    # Triggers exploration badge checking via signal.                               #
+    #                                                                               #
+    # HTTP Method: POST                                                             #
+    # Endpoint: /api/locations/{id}/mark-visited/                                   #
+    # Authentication: Required                                                      #
+    # Returns: Success message, total visits, and newly earned badges               #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=True, methods=['POST'], permission_classes=[IsAuthenticated])
+    def mark_visited(self, request, pk=None):
+        from starview_app.models import LocationVisit, UserBadge
+        from django.utils import timezone
+        from datetime import timedelta
+
+        location = self.get_object()
+
+        # Check if already visited
+        visit, created = LocationVisit.objects.get_or_create(
+            user=request.user,
+            location=location
+        )
+
+        if not created:
+            return Response({
+                'detail': 'You have already marked this location as visited.',
+                'total_visits': LocationVisit.objects.filter(user=request.user).count(),
+                'newly_earned_badges': []
+            }, status=status.HTTP_200_OK)
+
+        # Get newly earned badges (check last 2 seconds)
+        newly_earned = UserBadge.objects.filter(
+            user=request.user,
+            earned_at__gte=timezone.now() - timedelta(seconds=2)
+        ).select_related('badge')
+
+        newly_earned_data = [{
+            'badge_id': ub.badge.id,
+            'name': ub.badge.name,
+            'slug': ub.badge.slug,
+            'description': ub.badge.description,
+            'icon_path': ub.badge.icon_path
+        } for ub in newly_earned]
+
+        return Response({
+            'detail': f'Location "{location.name}" marked as visited.',
+            'total_visits': LocationVisit.objects.filter(user=request.user).count(),
+            'newly_earned_badges': newly_earned_data
+        }, status=status.HTTP_201_CREATED)
+
+
+    # ----------------------------------------------------------------------------- #
+    # Unmark a location as visited (remove check-in).                               #
+    #                                                                               #
+    # Deletes the LocationVisit record for the user.                                #
+    # Note: May trigger badge revocation if implemented in Phase 2.                 #
+    #                                                                               #
+    # HTTP Method: DELETE                                                           #
+    # Endpoint: /api/locations/{id}/unmark-visited/                                 #
+    # Authentication: Required                                                      #
+    # Returns: Success message and updated total visits                             #
+    # ----------------------------------------------------------------------------- #
+    @action(detail=True, methods=['DELETE'], permission_classes=[IsAuthenticated])
+    def unmark_visited(self, request, pk=None):
+        from starview_app.models import LocationVisit
+
+        location = self.get_object()
+
+        try:
+            visit = LocationVisit.objects.get(
+                user=request.user,
+                location=location
+            )
+            visit.delete()
+
+            return Response({
+                'detail': f'Location "{location.name}" unmarked as visited.',
+                'total_visits': LocationVisit.objects.filter(user=request.user).count()
+            }, status=status.HTTP_200_OK)
+
+        except LocationVisit.DoesNotExist:
+            return Response({
+                'detail': 'You have not marked this location as visited.',
+                'total_visits': LocationVisit.objects.filter(user=request.user).count()
+            }, status=status.HTTP_200_OK)
 
 
 

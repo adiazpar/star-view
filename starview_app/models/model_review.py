@@ -54,6 +54,8 @@ class Review(models.Model):
             models.Index(fields=['location'], name='review_location_idx'),
             models.Index(fields=['user'], name='review_user_idx'),
         ]
+        verbose_name = 'Review'
+        verbose_name_plural = 'Reviews'
 
 
     # String representation for admin interface and debugging:
@@ -105,8 +107,22 @@ class Review(models.Model):
         return self.updated_at - self.created_at > timedelta(seconds=10)
 
 
+    # Validate review data before saving:
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        # Prevent users from reviewing their own locations
+        if self.location.added_by == self.user:
+            raise ValidationError(
+                "You cannot review your own location. "
+                "Reviews must be written by other users to maintain objectivity."
+            )
+
+
     # Override save to sanitize HTML and update location rating statistics:
     def save(self, *args, **kwargs):
+        # Run validation before saving
+        self.full_clean()
         # Sanitize comment to prevent XSS attacks
         if self.comment:
             self.comment = sanitize_html(self.comment)

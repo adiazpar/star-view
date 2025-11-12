@@ -213,7 +213,7 @@ button.navbar-mobile-link {
   font-weight: 500;
   font-size: var(--text-sm);
   gap: var(--space-xs);
-  padding: var(--space-sm) var(--space-xl);
+  padding: var(--space-sm);
   border-radius: var(--radius);
   cursor: pointer;
   text-decoration: none;

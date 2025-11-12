@@ -44,6 +44,8 @@ class ReviewComment(models.Model):
 
     class Meta:
         ordering = ['created_at']
+        verbose_name = 'Review Comment'
+        verbose_name_plural = 'Review Comments'
 
 
     # String representation for admin interface and debugging:

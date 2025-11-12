@@ -104,13 +104,13 @@ class AuditLog(models.Model):
 
     class Meta:
         ordering = ['-timestamp']
-        verbose_name = 'Audit Log'
-        verbose_name_plural = 'Audit Logs'
         indexes = [
             models.Index(fields=['-timestamp', 'event_type']),
             models.Index(fields=['user', '-timestamp']),
             models.Index(fields=['ip_address', '-timestamp']),
         ]
+        verbose_name = 'Audit Log'
+        verbose_name_plural = 'Audit Logs'
 
 
     # String representation for admin interface and debugging:

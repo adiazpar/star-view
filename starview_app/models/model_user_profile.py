@@ -16,6 +16,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.contrib.postgres.fields import ArrayField
 
 
 
@@ -46,6 +47,15 @@ class UserProfile(models.Model):
         help_text="Verified badge status for user profile"
     )
 
+    # Badge pinning (max 3 pinned badges displayed on profile header):
+    pinned_badge_ids = ArrayField(
+        models.IntegerField(),
+        size=3,
+        default=list,
+        blank=True,
+        help_text="Up to 3 badge IDs to display on profile header"
+    )
+
 
     # Returns profile picture URL or default if none set:
     @property
@@ -58,3 +68,7 @@ class UserProfile(models.Model):
     # String representation for admin interface and debugging:
     def __str__(self):
         return f'{self.user.username} Profile'
+
+    class Meta:
+        verbose_name = 'User Profile'
+        verbose_name_plural = 'User Profiles'
