@@ -226,7 +226,7 @@ function LoginPage() {
           <div className="login-social-buttons">
             <button
               type="button"
-              className="btn btn-secondary login-btn-social login-btn-google"
+              className="btn login-btn-social login-btn-google"
               onClick={() => handleSocialLogin('Google')}
             >
               <i className="login-social-icon fa-brands fa-google"></i>
@@ -234,7 +234,7 @@ function LoginPage() {
 
             <button
               type="button"
-              className="btn btn-secondary login-btn-social login-btn-apple"
+              className="btn login-btn-social login-btn-apple"
               onClick={() => handleSocialLogin('Apple')}
               disabled
             >
@@ -243,7 +243,7 @@ function LoginPage() {
 
             <button
               type="button"
-              className="btn btn-secondary login-btn-social login-btn-microsoft"
+              className="btn login-btn-social login-btn-microsoft"
               onClick={() => handleSocialLogin('Microsoft')}
               disabled
             >

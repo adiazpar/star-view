@@ -371,19 +371,23 @@
   position: relative;
   padding: 12px;
   min-width: 48px;
+  border: none;
 }
 
 /* Social button color customizations */
 .login-btn-microsoft {
-  background-color: #00A4EF;
+  background-color: hsl(199, 100%, 47%);
 }
 
-.login-btn-microsoft:hover:not(:disabled) {
-  background-color: #0078D4;
+.login-btn-microsoft:hover {
+  background-color: hsl(199, 108%, 55%);
 }
 
 .login-btn-apple {
-  background-color: black;
+  background-color: hsl(0, 0%, 1%);
+}
+.login-btn-apple:hover {
+  background-color: hsl(0, 8%, 8%);
 }
 
 .login-btn-google {
@@ -397,9 +401,7 @@
 /* Social button icons */
 .login-social-icon {
   color: white;
-  width: 20px;
-  height: 20px;
-  font-size: 20px;
+  font-size: var(--text-xl);
 }
 
 /* Hide coming soon badge */
