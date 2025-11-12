@@ -173,7 +173,7 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false }) {
             </a>
           )}
           <a href="/profile" className="btn">
-            <i className="fa-solid fa-award"></i>
+            <i className="fa-solid fa-ranking-star"></i>
             Show Badges
           </a>
           <a href="/profile" className="btn-icon">
