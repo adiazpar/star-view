@@ -5,8 +5,8 @@ from django.db import migrations
 
 def add_missing_badges(apps, schema_editor):
     """
-    Add the 4 missing badges that were not included in 0008_seed_initial_badges.py:
-    - QUALITY category (3 badges)
+    Add the 5 missing badges that were not included in 0008_seed_initial_badges.py:
+    - QUALITY category (4 badges)
     - TENURE category - Pioneer badge (1 badge)
 
     These badges exist in local dev but were missing from the original seeding migration.
@@ -33,10 +33,10 @@ def add_missing_badges(apps, schema_editor):
         {
             'name': 'Trusted Source',
             'slug': 'trusted-source',
-            'description': 'Reliable recommendations - add 5 locations with 4+ star ratings',
+            'description': 'Reliable recommendations - add 6 locations with 4+ star ratings',
             'category': 'QUALITY',
             'criteria_type': 'LOCATION_RATING',
-            'criteria_value': 5,
+            'criteria_value': 6,
             'tier': 2,
             'color': 'silver',
             'is_rare': False,
@@ -44,17 +44,30 @@ def add_missing_badges(apps, schema_editor):
             'display_order': 2,
         },
         {
-            'name': 'Elite Curator',
-            'slug': 'elite-curator',
-            'description': 'Master of quality - add 10 locations with 4+ star ratings',
+            'name': 'Stellar Curator',
+            'slug': 'stellar-curator',
+            'description': 'Curate the best - add 12 locations with 4+ star ratings',
             'category': 'QUALITY',
             'criteria_type': 'LOCATION_RATING',
-            'criteria_value': 10,
+            'criteria_value': 12,
+            'tier': 2,
+            'color': 'gold',
+            'is_rare': False,
+            'icon_path': '/badges/stellar-curator.png',
+            'display_order': 3,
+        },
+        {
+            'name': 'Elite Curator',
+            'slug': 'elite-curator',
+            'description': 'Master of quality - add 24 locations with 4+ star ratings',
+            'category': 'QUALITY',
+            'criteria_type': 'LOCATION_RATING',
+            'criteria_value': 24,
             'tier': 3,
             'color': 'platinum',
             'is_rare': True,
             'icon_path': '/badges/elite-curator.png',
-            'display_order': 3,
+            'display_order': 4,
         },
 
         # ===================================================================
@@ -89,11 +102,12 @@ def add_missing_badges(apps, schema_editor):
 
 
 def reverse_add_missing_badges(apps, schema_editor):
-    """Remove the 4 badges added by this migration (for rollback)"""
+    """Remove the 5 badges added by this migration (for rollback)"""
     Badge = apps.get_model('starview_app', 'Badge')
     Badge.objects.filter(slug__in=[
         'quality-contributor',
         'trusted-source',
+        'stellar-curator',
         'elite-curator',
         'pioneer',
     ]).delete()
