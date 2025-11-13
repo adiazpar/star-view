@@ -105,6 +105,15 @@ export const profileApi = {
   },
 
   /**
+   * Get my full badge collection (earned, in-progress, locked)
+   * For use on private /profile/badges page
+   * @returns {Promise} - { earned: Array, in_progress: Array, locked: Array }
+   */
+  getMyBadgeCollection: () => {
+    return api.get('/users/me/badges/collection/');
+  },
+
+  /**
    * Update user's pinned badges (max 3 badges)
    * @param {Object} data - Pinned badge data
    * @param {number[]} data.pinned_badge_ids - Array of badge IDs to pin (max 3)
@@ -221,9 +230,10 @@ export const publicUserApi = {
   },
 
   /**
-   * Get user's badge collection (earned, in-progress, locked)
+   * Get user's PUBLIC badge display (for profile pages)
+   * Returns only earned badges - same view for everyone (including profile owner)
    * @param {string} username - Username to get badges for
-   * @returns {Promise} - { earned: Array, in_progress: Array, locked: Array, pinned_badge_ids: number[] }
+   * @returns {Promise} - { earned: Array, pinned_badge_ids: number[] }
    */
   getUserBadges: (username) => {
     return api.get(`/users/${username}/badges/`);

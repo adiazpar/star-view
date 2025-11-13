@@ -461,6 +461,11 @@ class BadgeService:
     # Returns categorized badges: earned, in_progress, locked.                      #
     # Progress is calculated from source data, not stored.                          #
     #                                                                               #
+    # NEXT TIER LOGIC: Only shows the nearest unearned badge as "in-progress"       #
+    # within each badge progression (e.g., if you have 1 follower, only            #
+    # "Connector" shows as in-progress, not "Influencer" and "Community Leader").   #
+    # This reduces UI clutter and focuses users on achievable goals.                #
+    #                                                                               #
     # OPTIMIZATION #1: Uses select_related() to eliminate N+1 query anti-pattern.   #
     # BEFORE: 1 query for badge IDs + N queries for UserBadge objects = N+1         #
     # AFTER: 2 queries total (earned badges with related data + all badges)         #
@@ -503,8 +508,9 @@ class BadgeService:
         # Create lookup map for O(1) access (no additional queries)
         earned_badge_map = {ub.badge_id: ub for ub in earned_badges}
 
-        # Get all badges (1 query)
-        all_badges = Badge.objects.all()
+        # Get all badges ordered by category, tier, and display_order (1 query)
+        # This ensures badges display in logical progression (tier 1, 2, 3, etc.)
+        all_badges = Badge.objects.all().order_by('category', 'tier', 'display_order', 'criteria_type', 'criteria_value')
 
         result = {
             'earned': [],
@@ -512,29 +518,42 @@ class BadgeService:
             'locked': []
         }
 
+        # Group badges by (category, criteria_type) to find "next tier" logic
+        badge_groups = {}
         for badge in all_badges:
-            if badge.id in earned_badge_map:
-                # Badge earned - NO QUERY: Data already fetched via select_related
-                user_badge = earned_badge_map[badge.id]
-                result['earned'].append({
-                    'badge': badge,
-                    'earned_at': user_badge.earned_at,
-                })
-            else:
-                # Calculate progress
-                progress = BadgeService._calculate_progress(user, badge, stats)
+            key = (badge.category, badge.criteria_type)
+            if key not in badge_groups:
+                badge_groups[key] = []
+            badge_groups[key].append(badge)
 
-                if progress > 0 and progress < badge.criteria_value:
-                    # In progress
-                    result['in_progress'].append({
+        # Process each group to determine states
+        for (category, criteria_type), badges in badge_groups.items():
+            next_tier_found = False  # Track if we've found the "next tier" to unlock
+
+            for badge in badges:
+                if badge.id in earned_badge_map:
+                    # Badge earned
+                    user_badge = earned_badge_map[badge.id]
+                    result['earned'].append({
                         'badge': badge,
-                        'current_progress': progress,
-                        'criteria_value': badge.criteria_value,
-                        'percentage': int((progress / badge.criteria_value) * 100)
+                        'earned_at': user_badge.earned_at,
                     })
                 else:
-                    # Locked (0 progress or already earned)
-                    result['locked'].append({'badge': badge})
+                    # Calculate progress
+                    progress = BadgeService._calculate_progress(user, badge, stats)
+
+                    if progress > 0 and progress < badge.criteria_value and not next_tier_found:
+                        # In progress - only the FIRST unearned badge with progress
+                        result['in_progress'].append({
+                            'badge': badge,
+                            'current_progress': progress,
+                            'criteria_value': badge.criteria_value,
+                            'percentage': int((progress / badge.criteria_value) * 100)
+                        })
+                        next_tier_found = True  # Mark that we found the next tier
+                    else:
+                        # Locked (0 progress, or higher tier after in-progress badge)
+                        result['locked'].append({'badge': badge})
 
         # Cache result for 5 minutes (300 seconds)
         # This balances freshness (user sees updates within 5 min) with performance

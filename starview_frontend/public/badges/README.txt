@@ -127,7 +127,4 @@ Badge categories and their typical color schemes:
   - REVIEW: Purple/violet (wisdom/insight)
   - COMMUNITY: Orange/coral (connection/warmth)
   - SPECIAL: Pink/magenta (unique achievements)
-  - TENURE: Legendary rainbow/platinum (prestige)
-
-For questions about badge system implementation, see:
-  .claude/backend/docs/badge_system/README.md
+  - TENURE: Purple (prestige/longevity)

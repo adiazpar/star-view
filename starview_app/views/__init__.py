@@ -46,6 +46,7 @@ from .views_follow import (
 # Badge views:
 from .views_badge import (
     get_user_badges,
+    get_my_badge_collection,
     update_pinned_badges,
 )
 
@@ -88,6 +89,7 @@ __all__ = [
 
     # Badge views
     'get_user_badges',
+    'get_my_badge_collection',
     'update_pinned_badges',
 
     # Authentication views

@@ -40,6 +40,7 @@ from .views import (
     get_following,
     # Badge views
     get_user_badges,
+    get_my_badge_collection,
     update_pinned_badges,
     # Authentication views
     register,
@@ -88,6 +89,7 @@ urlpatterns = [
 
     # User badge API endpoints:
     path('api/users/<str:username>/badges/', get_user_badges, name='get_user_badges'),
+    path('api/users/me/badges/collection/', get_my_badge_collection, name='get_my_badge_collection'),
     path('api/users/me/badges/pin/', update_pinned_badges, name='update_pinned_badges'),
 
     # Django Rest Framework API endpoints:

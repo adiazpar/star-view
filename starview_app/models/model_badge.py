@@ -12,8 +12,8 @@
 # - Tiered progression system (1-5 tiers per category)                                                  #
 # - Criteria-based unlocking (visit count, review count, follower count, etc.)                          #
 # - Icon references for frontend display (/public/badges/{slug}.png)                                    #
-# - Color coding for visual distinction                                                                 #
-# - Rare badge flag for special/limited achievements                                                    #
+# - Frontend derives colors from tier + is_rare + category (not stored in database)                     #
+# - Rare badge flag for special/limited achievements (affects visual styling)                           #
 # ----------------------------------------------------------------------------------------------------- #
 
 # Import tools:
@@ -60,9 +60,8 @@ class Badge(models.Model):
     criteria_secondary = models.IntegerField(null=True, blank=True)  # For complex criteria (e.g., helpful ratio %)
 
     # Display Properties
-    tier = models.SmallIntegerField(default=1)  # 1-5 for progression badges
-    color = models.CharField(max_length=20, default='blue')  # CSS color or hex
-    is_rare = models.BooleanField(default=False)  # Special/limited badges
+    tier = models.SmallIntegerField(default=1)  # 1-5 for progression badges (determines visual color in frontend)
+    is_rare = models.BooleanField(default=False)  # Special/limited badges (affects color scheme)
     icon_path = models.CharField(max_length=255)  # e.g., '/badges/explorer.png'
 
     # Ordering

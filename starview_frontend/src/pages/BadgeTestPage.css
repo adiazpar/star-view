@@ -1,0 +1,174 @@
+/* ========================================================================
+   BadgeTestPage Styles
+   ======================================================================== */
+
+.badge-test-page {
+  min-height: 100vh;
+  padding: 40px 0;
+}
+
+.badge-test-page .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.badge-test-page h1 {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.badge-test-page .subtitle {
+  font-size: 16px;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+/* ========================================================================
+   Test Sections
+   ======================================================================== */
+
+.badge-test-section {
+  margin-bottom: 48px;
+  padding: 32px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.badge-test-section h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge-test-section h2 i {
+  color: var(--primary);
+}
+
+.badge-test-section > p {
+  color: var(--text-secondary);
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+/* ========================================================================
+   Badge Grid
+   ======================================================================== */
+
+.badge-test-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* ========================================================================
+   Pinned Badges Info
+   ======================================================================== */
+
+.pinned-badges-list {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+.pinned-badge-tag {
+  background: var(--accent);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pinned-badge-tag::before {
+  content: '\f08d';
+  font-family: 'Font Awesome 6 Free';
+  font-weight: 900;
+}
+
+/* ========================================================================
+   Badge Summary Stats
+   ======================================================================== */
+
+.badge-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+  margin-top: 16px;
+}
+
+.summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 20px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.summary-stat:hover {
+  border-color: var(--border-hover);
+  transform: translateY(-2px);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.subtitle.error {
+  color: var(--error);
+}
+
+/* ========================================================================
+   Responsive Design
+   ======================================================================== */
+
+@media (max-width: 768px) {
+  .badge-test-page {
+    padding: 24px 0;
+  }
+
+  .badge-test-page h1 {
+    font-size: 28px;
+  }
+
+  .badge-test-section {
+    padding: 20px;
+    margin-bottom: 32px;
+  }
+
+  .badge-test-section h2 {
+    font-size: 20px;
+  }
+
+  .badge-test-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+}

@@ -32,15 +32,15 @@ from starview_app.services.badge_service import BadgeService
 
 
 # ----------------------------------------------------------------------------- #
-# Get user's badge collection.                                                  #
+# Get user's PUBLIC badge display (for profile pages).                          #
 #                                                                               #
-# Returns all badges categorized as earned, in-progress, or locked.             #
-# Progress is calculated on-demand from source data.                            #
+# Returns ONLY earned badges - used for public profile display.                 #
+# This endpoint shows the same data regardless of who is viewing.               #
 #                                                                               #
 # HTTP Method: GET                                                              #
 # Endpoint: /api/users/{username}/badges/                                       #
 # Authentication: Not required (public)                                         #
-# Returns: {earned: [...], in_progress: [...], locked: [...]}                   #
+# Returns: {earned: [...], pinned_badge_ids: [...]}                             #
 # ----------------------------------------------------------------------------- #
 @api_view(['GET'])
 @permission_classes([AllowAny])
@@ -57,6 +57,47 @@ def get_user_badges(request, username):
     except UserProfile.DoesNotExist:
         pinned_badge_ids = []
 
+    # Serialize earned badges only (public display)
+    earned_badges = []
+    for item in badge_data['earned']:
+        badge = item['badge']
+        earned_badges.append({
+            'badge_id': badge.id,
+            'name': badge.name,
+            'slug': badge.slug,
+            'description': badge.description,
+            'category': badge.category,
+            'tier': badge.tier,
+            'is_rare': badge.is_rare,
+            'icon_path': badge.icon_path,
+            'earned_at': item['earned_at'].isoformat(),
+        })
+
+    return Response({
+        'earned': earned_badges,
+        'pinned_badge_ids': pinned_badge_ids,
+    }, status=status.HTTP_200_OK)
+
+
+# ----------------------------------------------------------------------------- #
+# Get user's FULL badge collection (for private badge collection page).         #
+#                                                                               #
+# Returns ALL badges: earned, in-progress, and locked.                          #
+# Only accessible by the authenticated user for their own profile.              #
+#                                                                               #
+# HTTP Method: GET                                                              #
+# Endpoint: /api/users/me/badges/collection/                                    #
+# Authentication: Required                                                      #
+# Returns: {earned: [...], in_progress: [...], locked: [...]}                   #
+# ----------------------------------------------------------------------------- #
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_my_badge_collection(request):
+    user = request.user
+
+    # Get badge progress from service
+    badge_data = BadgeService.get_user_badge_progress(user)
+
     # Serialize earned badges
     earned_badges = []
     for item in badge_data['earned']:
@@ -68,7 +109,6 @@ def get_user_badges(request, username):
             'description': badge.description,
             'category': badge.category,
             'tier': badge.tier,
-            'color': badge.color,
             'is_rare': badge.is_rare,
             'icon_path': badge.icon_path,
             'earned_at': item['earned_at'].isoformat(),
@@ -85,6 +125,7 @@ def get_user_badges(request, username):
             'description': badge.description,
             'category': badge.category,
             'tier': badge.tier,
+            'is_rare': badge.is_rare,
             'icon_path': badge.icon_path,
             'current_progress': item['current_progress'],
             'criteria_value': item['criteria_value'],
@@ -102,6 +143,7 @@ def get_user_badges(request, username):
             'description': badge.description,
             'category': badge.category,
             'tier': badge.tier,
+            'is_rare': badge.is_rare,
             'icon_path': badge.icon_path,
             'criteria_value': badge.criteria_value,
         })
@@ -110,7 +152,6 @@ def get_user_badges(request, username):
         'earned': earned_badges,
         'in_progress': in_progress_badges,
         'locked': locked_badges,
-        'pinned_badge_ids': pinned_badge_ids,
     }, status=status.HTTP_200_OK)
 
 

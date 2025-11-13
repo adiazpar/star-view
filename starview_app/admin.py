@@ -907,7 +907,6 @@ class BadgeAdmin(admin.ModelAdmin):
     ]
 
     readonly_fields = [
-        'slug',
         'award_count',
     ]
 
@@ -920,7 +919,7 @@ class BadgeAdmin(admin.ModelAdmin):
             'description': 'Requirements for earning this badge'
         }),
         ('Display', {
-            'fields': ('color', 'icon_path', 'display_order', 'is_rare')
+            'fields': ('icon_path', 'display_order', 'is_rare')
         }),
         ('Statistics', {
             'fields': ('award_count',),
