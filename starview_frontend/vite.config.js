@@ -1,9 +1,38 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { copyFileSync, mkdirSync, readdirSync, existsSync } from 'fs'
+import { join } from 'path'
+
+// Custom plugin to ensure public directory is copied
+const copyPublicPlugin = () => ({
+  name: 'copy-public',
+  closeBundle() {
+    const publicDir = 'public'
+    const outDir = 'dist'
+
+    // Copy badges folder
+    const badgesSource = join(publicDir, 'badges')
+    const badgesTarget = join(outDir, 'badges')
+
+    if (existsSync(badgesSource)) {
+      if (!existsSync(badgesTarget)) {
+        mkdirSync(badgesTarget, { recursive: true })
+      }
+
+      const files = readdirSync(badgesSource)
+      files.forEach(file => {
+        if (file.endsWith('.png') || file.endsWith('.jpg') || file.endsWith('.svg')) {
+          copyFileSync(join(badgesSource, file), join(badgesTarget, file))
+          console.log(`Copied ${file} to dist/badges/`)
+        }
+      })
+    }
+  }
+})
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), copyPublicPlugin()],
 
   // Development server configuration
   server: {
@@ -44,4 +73,7 @@ export default defineConfig({
     assetsDir: 'assets',
     sourcemap: false,
   },
+
+  // Explicitly set public directory
+  publicDir: 'public',
 })
