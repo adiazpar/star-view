@@ -17,6 +17,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.static import serve as static_serve
+from django.views.decorators.cache import cache_control
+from django.http import FileResponse
 
 from django.conf import settings
 from django.conf.urls.static import static
@@ -26,6 +28,18 @@ import os
 from .views import ReactAppView
 from starview_app.utils.adapters import CustomConfirmEmailView, CustomConnectionsView
 from starview_app.views.views_webhooks import ses_bounce_webhook, ses_complaint_webhook
+
+
+# Custom static file serving with cache headers
+def serve_static_with_cache(request, path, document_root):
+    """
+    Serve static files with proper cache-control headers.
+    Cache for 1 year (31536000 seconds) since these files are immutable.
+    """
+    response = static_serve(request, path, document_root)
+    # Cache for 1 year - badge icons rarely change
+    response['Cache-Control'] = 'public, max-age=31536000, immutable'
+    return response
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -63,16 +77,22 @@ urlpatterns += [
 ]
 
 # Serve React build assets (always, even in production)
+# Use custom serve function with cache headers for better performance
 urlpatterns += [
     re_path(
         r'^assets/(?P<path>.*)$',
-        static_serve,
+        serve_static_with_cache,
         {'document_root': os.path.join(settings.BASE_DIR, 'starview_frontend/dist/assets')},
     ),
     re_path(
         r'^images/(?P<path>.*)$',
-        static_serve,
+        serve_static_with_cache,
         {'document_root': os.path.join(settings.BASE_DIR, 'starview_frontend/dist/images')},
+    ),
+    re_path(
+        r'^badges/(?P<path>.*)$',
+        serve_static_with_cache,
+        {'document_root': os.path.join(settings.BASE_DIR, 'starview_frontend/dist/badges')},
     ),
 ]
 
