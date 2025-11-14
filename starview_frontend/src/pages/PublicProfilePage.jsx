@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { publicUserApi } from '../services/profile';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfileStats from '../components/ProfileStats';
+import BadgeSection from '../components/badges/BadgeSection';
 import Alert from '../components/Alert';
 import './PublicProfilePage.css';
 
@@ -11,7 +12,7 @@ import './PublicProfilePage.css';
  * PublicProfilePage Component
  *
  * Displays a public profile for any user by username.
- * Shows profile header, stats, and user's reviews.
+ * Shows profile header, badges (expandable), stats, and user's reviews.
  * If viewing your own profile, shows "Edit Profile" button.
  */
 function PublicProfilePage() {
@@ -20,25 +21,37 @@ function PublicProfilePage() {
   const { user: currentUser } = useAuth();
 
   const [profileUser, setProfileUser] = useState(null);
+  const [badges, setBadges] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [error, setError] = useState('');
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const [badgesVisible, setBadgesVisible] = useState(false);
 
   // Check if viewing own profile
   const isOwnProfile = currentUser?.username === username;
 
-  // Fetch user profile
+  // Toggle badges visibility
+  const handleToggleBadges = () => {
+    setBadgesVisible(!badgesVisible);
+  };
+
+  // Fetch user profile and badges
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
       setError('');
 
       try {
-        const response = await publicUserApi.getUser(username);
-        setProfileUser(response.data);
+        const [profileResponse, badgesResponse] = await Promise.all([
+          publicUserApi.getUser(username),
+          publicUserApi.getUserBadges(username)
+        ]);
+
+        setProfileUser(profileResponse.data);
+        setBadges(badgesResponse.data.earned || []);
       } catch (err) {
         console.error('Error fetching profile:', err);
         if (err.response?.status === 404) {
@@ -119,7 +132,15 @@ function PublicProfilePage() {
     <div className="public-profile-page">
       <div className="public-profile-container">
         {/* Profile Header */}
-        <ProfileHeader user={profileUser} isOwnProfile={isOwnProfile} />
+        <ProfileHeader
+          user={profileUser}
+          isOwnProfile={isOwnProfile}
+          onShowBadgesClick={handleToggleBadges}
+          badgesVisible={badgesVisible}
+        />
+
+        {/* Badge Section */}
+        <BadgeSection badges={badges} alwaysExpanded={true} isVisible={badgesVisible} />
 
         {/* Profile Stats */}
         {profileUser?.stats && <ProfileStats stats={profileUser.stats} />}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import BadgeCard from '../components/BadgeCard';
+import BadgeCard from '../components/badges/BadgeCard';
 import profileApi from '../services/profile';
 import './BadgeTestPage.css';
 
 /**
- * BadgeTestPage - Test page to preview BadgeCard component
- * Fetches REAL badge data from backend API to show actual badges
+ * BadgeTestPage - Test page to preview badge components
+ * Shows full badge cards for all earned, in-progress, and locked badges
  */
 function BadgeTestPage() {
   const [badgeData, setBadgeData] = useState(null);
@@ -14,22 +14,21 @@ function BadgeTestPage() {
 
   // Fetch real badge data from API
   useEffect(() => {
-    const fetchBadges = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
-        // Try to fetch authenticated user's full collection first
-        const response = await profileApi.getMyBadgeCollection();
-        setBadgeData(response.data);
+        const badgeResponse = await profileApi.getMyBadgeCollection();
+        setBadgeData(badgeResponse.data);
       } catch (err) {
         // If not authenticated or error, show error message
-        console.error('Error fetching badges:', err);
-        setError('Could not load badges. Make sure you are logged in.');
+        console.error('Error fetching data:', err);
+        setError('Could not load data. Make sure you are logged in.');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBadges();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -60,9 +59,9 @@ function BadgeTestPage() {
     <div className="badge-test-page">
       <div className="container">
         <h1>Badge System Preview</h1>
-        <p className="subtitle">Real badge data from backend API</p>
+        <p className="subtitle">Real badge data from backend API - Full badge cards</p>
 
-        {/* Earned Badges */}
+            {/* Earned Badges */}
         {earned && earned.length > 0 && (
           <section className="badge-test-section">
             <h2>

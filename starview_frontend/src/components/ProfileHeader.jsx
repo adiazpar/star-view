@@ -14,8 +14,10 @@ import './ProfileHeader.css';
  * - user: User object with profile data
  * - isOwnProfile: Boolean indicating if viewing own profile (shows action button)
  * - onEditPage: Boolean indicating if currently on the edit/settings page (shows "Back to Profile" instead of "Edit Profile")
+ * - onShowBadgesClick: Optional callback function for "Show Badges" button click
+ * - badgesVisible: Optional boolean to show if badges are currently visible
  */
-function ProfileHeader({ user, isOwnProfile = false, onEditPage = false }) {
+function ProfileHeader({ user, isOwnProfile = false, onEditPage = false, onShowBadgesClick, badgesVisible = false }) {
   const { user: currentUser } = useAuth();
   // Use the is_following value from the user object (from API)
   const [isFollowing, setIsFollowing] = useState(user?.is_following || false);
@@ -172,10 +174,12 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false }) {
               Edit Profile
             </a>
           )}
-          <a href="/profile" className="btn">
-            <i className="fa-solid fa-ranking-star"></i>
-            Show Badges
-          </a>
+          {onShowBadgesClick && (
+            <button onClick={onShowBadgesClick} className="btn">
+              <i className="fa-solid fa-ranking-star"></i>
+              {badgesVisible ? 'Hide' : 'Show'} Badges
+            </button>
+          )}
           <a href="/profile" className="btn-icon">
             <i className="fa-solid fa-ellipsis-vertical"></i>
           </a>
@@ -201,12 +205,15 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false }) {
                 </>
               )}
             </button>
-            <a href="/profile" className="btn">
-              Placeholder
-            </a>
-            <a href="/profile" className="btn-icon">
+            {onShowBadgesClick && (
+              <button onClick={onShowBadgesClick} className="btn">
+                <i className="fa-solid fa-ranking-star"></i>
+                {badgesVisible ? 'Hide' : 'Show'} Badges
+              </button>
+            )}
+            <button className="btn-icon">
               <i className="fa-solid fa-ellipsis-vertical"></i>
-            </a>
+            </button>
           </div>
         )
       )}

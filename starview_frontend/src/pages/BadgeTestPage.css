@@ -146,6 +146,183 @@
 }
 
 /* ========================================================================
+   Demo Box & Divider
+   ======================================================================== */
+
+.badge-test-demo-box {
+  background-color: var(--bg-primary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-top: 16px;
+}
+
+.badge-test-divider {
+  border: none;
+  border-top: 2px solid var(--border-color);
+  margin: 48px 0;
+}
+
+.badge-test-collection-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+}
+
+.badge-test-collection-title i {
+  color: var(--accent);
+}
+
+/* ========================================================================
+   View Mode Toggle
+   ======================================================================== */
+
+.badge-test-toggle {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.badge-test-toggle-btn {
+  padding: 14px 28px;
+  background-color: var(--bg-secondary);
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius);
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.badge-test-toggle-btn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+}
+
+.badge-test-toggle-btn.active {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.badge-test-toggle-btn i {
+  font-size: 18px;
+}
+
+/* ========================================================================
+   Profile Simulation
+   ======================================================================== */
+
+.badge-test-profile-simulation {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.badge-test-simulation-label {
+  background-color: var(--accent);
+  color: white;
+  padding: 12px 20px;
+  border-radius: var(--radius);
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.badge-test-stats-placeholder {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin: 24px 0;
+}
+
+@media (min-width: 768px) {
+  .badge-test-stats-placeholder {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.badge-test-stat-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge-test-stat-card i {
+  font-size: 32px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.badge-test-stat-card .stat-number {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.badge-test-stat-card .stat-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.badge-test-placeholder-section {
+  background-color: var(--bg-secondary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius);
+  padding: 60px 40px;
+  margin-top: 24px;
+  text-align: center;
+}
+
+.badge-test-placeholder-text {
+  color: var(--text-muted);
+  font-size: var(--text-base);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.badge-test-placeholder-text i {
+  font-size: 24px;
+  opacity: 0.5;
+}
+
+/* ========================================================================
+   Cards View
+   ======================================================================== */
+
+.badge-test-cards-view {
+  /* Container for full badge cards */
+}
+
+/* ========================================================================
    Responsive Design
    ======================================================================== */
 

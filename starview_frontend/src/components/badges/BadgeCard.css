@@ -14,10 +14,6 @@
   gap: 8px;
 }
 
-.badge-card:hover {
-  scale: 1.025;
-}
-
 /* ========================================================================
    Tier Colors (from badge.color field in database)
    ======================================================================== */
@@ -191,7 +187,9 @@
 }
 
 .badge-card-name {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
   font-weight: 700;
 }
 
