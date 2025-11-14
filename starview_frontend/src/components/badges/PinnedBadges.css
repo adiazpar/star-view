@@ -1,0 +1,49 @@
+/* ========================================================================
+   PinnedBadges Component Styles - Compact badge display for profile header
+   ======================================================================== */
+
+.pinned-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: var(--radius-full);
+}
+
+/* ========================================================================
+   Badge Button
+   ======================================================================== */
+
+.pinned-badge {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  padding: 0;
+}
+/* ========================================================================
+   Badge Icon
+   ======================================================================== */
+
+.pinned-badge-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ========================================================================
+   Responsive Design
+   ======================================================================== */
+
+@media (min-width: 768px) {
+  .pinned-badges {
+    gap: 6px;
+  }
+
+  .pinned-badge {
+    width: 28px;
+    height: 28px;
+  }
+}

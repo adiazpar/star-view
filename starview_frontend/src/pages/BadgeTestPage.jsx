@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import BadgeCard from '../components/badges/BadgeCard';
 import profileApi from '../services/profile';
+import usePinnedBadges from '../hooks/usePinnedBadges';
+import Alert from '../components/Alert';
 import './BadgeTestPage.css';
 
 /**
@@ -12,7 +14,18 @@ function BadgeTestPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch real badge data from API
+  // Use the pinned badges hook (auto-fetches on mount)
+  const {
+    pinnedBadgeIds,
+    isPinned,
+    togglePin,
+    isLoading: pinLoading,
+    error: pinError,
+    successMessage: pinSuccess,
+    clearMessages
+  } = usePinnedBadges(true); // autoFetch = true
+
+  // Fetch badge collection data from API
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -31,7 +44,7 @@ function BadgeTestPage() {
     fetchData();
   }, []);
 
-  if (loading) {
+  if (loading || pinLoading) {
     return (
       <div className="badge-test-page">
         <div className="container">
@@ -55,11 +68,34 @@ function BadgeTestPage() {
 
   const { earned, in_progress, locked } = badgeData;
 
+  // Handle pin/unpin from badge cards
+  const handlePinToggle = async (badgeId) => {
+    await togglePin(badgeId);
+  };
+
   return (
     <div className="badge-test-page">
       <div className="container">
         <h1>Badge System Preview</h1>
         <p className="subtitle">Real badge data from backend API - Full badge cards</p>
+
+        {/* Pin Status Messages */}
+        {pinError && (
+          <Alert type="error" message={pinError} onClose={clearMessages} />
+        )}
+        {pinSuccess && (
+          <Alert type="success" message={pinSuccess} onClose={clearMessages} />
+        )}
+
+        {/* Pinned Badges Summary */}
+        {pinnedBadgeIds.length > 0 && (
+          <div style={{ marginBottom: '24px', padding: '16px', backgroundColor: 'var(--bg-secondary)', borderRadius: 'var(--radius)' }}>
+            <h3 style={{ marginBottom: '8px' }}>📌 Pinned Badges ({pinnedBadgeIds.length}/3)</h3>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-muted)' }}>
+              Badge IDs: {pinnedBadgeIds.join(', ')}
+            </p>
+          </div>
+        )}
 
             {/* Earned Badges */}
         {earned && earned.length > 0 && (
@@ -84,7 +120,9 @@ function BadgeTestPage() {
                   }}
                   state="earned"
                   earnedAt={item.earned_at}
-                  canPin={false}
+                  isPinned={pinnedBadgeIds.includes(item.badge_id)}
+                  canPin={true}
+                  onPin={handlePinToggle}
                 />
               ))}
             </div>

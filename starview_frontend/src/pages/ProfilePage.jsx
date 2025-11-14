@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import profileApi from '../services/profile';
+import { mapBadgeIdsToBadges } from '../utils/badgeUtils';
 import Alert from '../components/Alert';
 import ProfileHeader from '../components/ProfileHeader';
 import './ProfilePage.css';
@@ -13,6 +14,33 @@ function ProfilePage() {
   const [activeTab, setActiveTab] = useState('settings');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [pinnedBadges, setPinnedBadges] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch pinned badges once on mount - simple approach
+  useEffect(() => {
+    const fetchPinnedBadges = async () => {
+      setLoading(true);
+      try {
+        const [profileResponse, badgesResponse] = await Promise.all([
+          profileApi.getMe(),
+          profileApi.getMyBadgeCollection()
+        ]);
+
+        const pinnedBadgeIds = profileResponse.data.pinned_badge_ids || [];
+        const earnedBadges = badgesResponse.data.earned || [];
+
+        const pinned = mapBadgeIdsToBadges(pinnedBadgeIds, earnedBadges);
+        setPinnedBadges(pinned);
+      } catch (err) {
+        console.error('Error fetching pinned badges:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPinnedBadges();
+  }, []);
 
   // Check for social account connection success/errors
   useEffect(() => {
@@ -35,11 +63,30 @@ function ProfilePage() {
     }
   }, [location.search, navigate]);
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="profile-page">
+        <div className="profile-container">
+          <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
+            <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '2rem' }}></i>
+            <p style={{ marginTop: '16px' }}>Loading profile...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="profile-page">
       <div className="profile-container">
         {/* Profile Header - Using Shared Component */}
-        <ProfileHeader user={user} isOwnProfile={true} onEditPage={true} />
+        <ProfileHeader
+          user={user}
+          isOwnProfile={true}
+          onEditPage={true}
+          pinnedBadges={pinnedBadges}
+        />
 
         {/* Success Message */}
         {successMessage && (

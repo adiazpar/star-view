@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { publicUserApi } from '../services/profile';
+import usePinnedBadges from '../hooks/usePinnedBadges';
+import { mapBadgeIdsToBadges } from '../utils/badgeUtils';
 import ProfileHeader from '../components/ProfileHeader';
 import ProfileStats from '../components/ProfileStats';
 import BadgeSection from '../components/badges/BadgeSection';
@@ -22,6 +24,7 @@ function PublicProfilePage() {
 
   const [profileUser, setProfileUser] = useState(null);
   const [badges, setBadges] = useState([]);
+  const [pinnedBadges, setPinnedBadges] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reviewsLoading, setReviewsLoading] = useState(false);
@@ -32,6 +35,9 @@ function PublicProfilePage() {
 
   // Check if viewing own profile
   const isOwnProfile = currentUser?.username === username;
+
+  // Use pinned badges hook (don't auto-fetch, we get data from API)
+  const { updatePinnedBadgeIds } = usePinnedBadges(false);
 
   // Toggle badges visibility
   const handleToggleBadges = () => {
@@ -51,7 +57,19 @@ function PublicProfilePage() {
         ]);
 
         setProfileUser(profileResponse.data);
-        setBadges(badgesResponse.data.earned || []);
+        const earnedBadges = badgesResponse.data.earned || [];
+        const pinnedBadgeIds = badgesResponse.data.pinned_badge_ids || [];
+
+        setBadges(earnedBadges);
+
+        // Map pinned badge IDs to full badge objects using utility function
+        const pinned = mapBadgeIdsToBadges(pinnedBadgeIds, earnedBadges);
+        setPinnedBadges(pinned);
+
+        // Update hook with pinned badge IDs (for own profile only)
+        if (isOwnProfile) {
+          updatePinnedBadgeIds(pinnedBadgeIds);
+        }
       } catch (err) {
         console.error('Error fetching profile:', err);
         if (err.response?.status === 404) {
@@ -65,7 +83,8 @@ function PublicProfilePage() {
     };
 
     fetchProfile();
-  }, [username]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]); // Only re-fetch when username changes
 
   // Fetch user reviews
   useEffect(() => {
@@ -137,6 +156,7 @@ function PublicProfilePage() {
           isOwnProfile={isOwnProfile}
           onShowBadgesClick={handleToggleBadges}
           badgesVisible={badgesVisible}
+          pinnedBadges={pinnedBadges}
         />
 
         {/* Badge Section */}

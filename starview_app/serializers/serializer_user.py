@@ -54,11 +54,13 @@ class PublicUserSerializer(serializers.ModelSerializer):
     is_verified = serializers.BooleanField(source='userprofile.is_verified', read_only=True)
     stats = serializers.SerializerMethodField()
     is_following = serializers.SerializerMethodField()
+    pinned_badge_ids = serializers.ListField(source='userprofile.pinned_badge_ids', read_only=True)
 
     class Meta:
         model = User
         fields = ['id', 'username', 'first_name', 'last_name', 'date_joined',
-                  'profile_picture_url', 'bio', 'location', 'is_verified', 'stats', 'is_following']
+                  'profile_picture_url', 'bio', 'location', 'is_verified', 'stats', 'is_following',
+                  'pinned_badge_ids']
         read_only_fields = ['id', 'username', 'first_name', 'last_name', 'date_joined']
 
     def get_profile_picture_url(self, obj):
@@ -132,11 +134,13 @@ class PrivateProfileSerializer(serializers.ModelSerializer):
     location = serializers.CharField(source='userprofile.location', read_only=True)
     is_verified = serializers.BooleanField(source='userprofile.is_verified', read_only=True)
     has_usable_password = serializers.BooleanField(read_only=True)
+    pinned_badge_ids = serializers.ListField(source='userprofile.pinned_badge_ids', read_only=True)
 
     class Meta:
         model = User
         fields = ['id', 'username', 'email', 'first_name', 'last_name', 'date_joined',
-                  'profile_picture_url', 'bio', 'location', 'is_verified', 'has_usable_password']
+                  'profile_picture_url', 'bio', 'location', 'is_verified', 'has_usable_password',
+                  'pinned_badge_ids']
         read_only_fields = ['id', 'username', 'date_joined', 'has_usable_password']
 
     def get_profile_picture_url(self, obj):

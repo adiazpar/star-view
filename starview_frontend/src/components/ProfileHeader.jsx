@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { publicUserApi } from '../services/profile';
 import Alert from './Alert';
+import PinnedBadges from './badges/PinnedBadges';
+import BadgeModal from './badges/BadgeModal';
 import './ProfileHeader.css';
 
 /**
@@ -16,8 +18,9 @@ import './ProfileHeader.css';
  * - onEditPage: Boolean indicating if currently on the edit/settings page (shows "Back to Profile" instead of "Edit Profile")
  * - onShowBadgesClick: Optional callback function for "Show Badges" button click
  * - badgesVisible: Optional boolean to show if badges are currently visible
+ * - pinnedBadges: Optional array of pinned badge objects to display
  */
-function ProfileHeader({ user, isOwnProfile = false, onEditPage = false, onShowBadgesClick, badgesVisible = false }) {
+function ProfileHeader({ user, isOwnProfile = false, onEditPage = false, onShowBadgesClick, badgesVisible = false, pinnedBadges = [] }) {
   const { user: currentUser } = useAuth();
   // Use the is_following value from the user object (from API)
   const [isFollowing, setIsFollowing] = useState(user?.is_following || false);
@@ -25,6 +28,7 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false, onShowB
   const [followerCount, setFollowerCount] = useState(user?.stats?.follower_count || 0);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [selectedBadge, setSelectedBadge] = useState(null);
 
   // Get profile picture URL (use default if none set)
   const profilePictureUrl = user?.profile_picture_url || '/images/default_profile_pic.jpg';
@@ -114,38 +118,52 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false, onShowB
           />
         </div>
 
-        {/* User Info */}
-        <div className="profile-header-info">
-          <div className="profile-name-username-row">
-            <div className="profile-name-container">
-              <div className="profile-name">
-                {user?.first_name && user?.last_name
-                  ? `${user.first_name} ${user.last_name}`
-                  : 'No name set'
-                }
+        {/* User Info and Badges Wrapper - No gap between them */}
+        <div className="profile-info-badges-wrapper">
+          {/* User Info */}
+          <div className="profile-header-info">
+            <div className="profile-name-username-row">
+              <div className="profile-name-container">
+                <div className="profile-name">
+                  {user?.first_name && user?.last_name
+                    ? `${user.first_name} ${user.last_name}`
+                    : 'No name set'
+                  }
+                </div>
+                <p className="profile-username">@{user?.username}</p>
               </div>
-              <p className="profile-username">@{user?.username}</p>
+              {/* Verification badge (only show if no pinned badges) */}
+              {(!pinnedBadges || pinnedBadges.length === 0) && user?.is_verified && (
+                <div className="verification-badge">
+                  <i className="fa-solid fa-circle-check"></i>
+                </div>
+              )}
             </div>
-            {user?.is_verified && (
-              <div className="verification-badge">
-                <i className="fa-solid fa-circle-check"></i>
-              </div>
-            )}
+
+            {/* Metadata Row */}
+            <div className="profile-metadata">
+              {user?.location && (
+                <span className="profile-metadata-item">
+                  <i className="fa-solid fa-map-marker-alt"></i>
+                  {user.location}
+                </span>
+              )}
+              <span className="profile-metadata-item">
+                <i className="fa-solid fa-calendar-days"></i>
+                Joined {joinDate}
+              </span>
+            </div>
           </div>
 
-          {/* Metadata Row */}
-          <div className="profile-metadata">
-            {user?.location && (
-              <span className="profile-metadata-item">
-                <i className="fa-solid fa-map-marker-alt"></i>
-                {user.location}
-              </span>
-            )}
-            <span className="profile-metadata-item">
-              <i className="fa-solid fa-calendar-days"></i>
-              Joined {joinDate}
-            </span>
-          </div>
+          {/* Pinned Badges - Separate container side by side */}
+          {pinnedBadges && pinnedBadges.length > 0 && (
+            <div className="profile-badges-container">
+              <PinnedBadges
+                pinnedBadges={pinnedBadges}
+                onBadgeClick={(badge) => setSelectedBadge(badge)}
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -216,6 +234,25 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false, onShowB
             </button>
           </div>
         )
+      )}
+
+      {/* Badge Detail Modal */}
+      {selectedBadge && (
+        <BadgeModal
+          badge={{
+            id: selectedBadge.badge_id,
+            name: selectedBadge.name,
+            slug: selectedBadge.slug,
+            icon_path: selectedBadge.icon_path,
+            tier: selectedBadge.tier,
+            is_rare: selectedBadge.is_rare,
+            category: selectedBadge.category,
+            description: selectedBadge.description
+          }}
+          state="earned"
+          earnedAt={selectedBadge.earned_at}
+          onClose={() => setSelectedBadge(null)}
+        />
       )}
     </div>
   );
