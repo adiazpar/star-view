@@ -33,37 +33,41 @@ function BadgeSection({ badges = [], alwaysExpanded = false, isVisible = true })
   return (
     <div className={`badge-section ${!isVisible ? 'collapsed' : ''}`}>
       <div className={`badge-section-content ${!isVisible ? 'collapsing' : ''}`}>
-        {badgeCount === 0 ? (
-          <p className="badge-section-empty">
-            <i className="fa-solid fa-trophy"></i>
-            No badges earned yet
-          </p>
-        ) : (
-          <>
-            <div className="badge-section-grid">
-              {badges.map((badge) => (
-                <BadgeCompact
-                  key={badge.badge_id}
-                  badge={{
-                    id: badge.badge_id,
-                    name: badge.name,
-                    slug: badge.slug,
-                    icon_path: badge.icon_path,
-                    tier: badge.tier,
-                    is_rare: badge.is_rare,
-                    category: badge.category,
-                    description: badge.description
-                  }}
-                  onClick={() => handleBadgeClick(badge)}
-                />
-              ))}
-            </div>
-            <p className="badge-section-hint">
-              <i class="fa-solid fa-caret-up"></i>
-              Click any badge to see details
-            </p>
-          </>
-        )}
+        <div className="badge-section-content-inner">
+          <div className="badge-section-content-padded">
+            {badgeCount === 0 ? (
+              <p className="badge-section-empty">
+                <i className="fa-solid fa-trophy"></i>
+                No badges earned yet
+              </p>
+            ) : (
+              <>
+                <div className="badge-section-grid">
+                  {badges.map((badge) => (
+                    <BadgeCompact
+                      key={badge.badge_id}
+                      badge={{
+                        id: badge.badge_id,
+                        name: badge.name,
+                        slug: badge.slug,
+                        icon_path: badge.icon_path,
+                        tier: badge.tier,
+                        is_rare: badge.is_rare,
+                        category: badge.category,
+                        description: badge.description
+                      }}
+                      onClick={() => handleBadgeClick(badge)}
+                    />
+                  ))}
+                </div>
+                <p className="badge-section-hint">
+                  <i className="fa-solid fa-caret-up"></i>
+                  Click any badge to see details
+                </p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Badge Detail Modal */}

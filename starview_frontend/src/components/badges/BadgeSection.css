@@ -5,7 +5,7 @@
 .badge-section {
   width: 100%;
   margin-bottom: var(--space-xl);
-  transition: margin-bottom 0.15s;
+  transition: margin-bottom 0.2s ease-in-out;
 }
 
 .badge-section.collapsed {
@@ -13,30 +13,33 @@
 }
 
 /* ========================================================================
-   Badge Content
+   Badge Content - Using CSS Grid for smooth height animation
    ======================================================================== */
 
 .badge-section-content {
-  margin-top: 16px;
-  padding: var(--space-md);
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius);
-  overflow: hidden;
-  max-height: 2000px;
-  transition: max-height 0.15s,
-              opacity 0.2s,
-              padding 0.15s,
-              margin 0.15s;
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.2s ease-in-out, opacity 0.2s ease-in-out;
   opacity: 1;
+  margin-top: 16px;
 }
 
 .badge-section-content.collapsing {
-  max-height: 0;
+  grid-template-rows: 0fr;
   opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
   margin-top: 0;
-  border-width: 0;
+}
+
+/* Inner wrapper to handle overflow during animation */
+.badge-section-content-inner {
+  overflow: hidden;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius);
+}
+
+/* Padding wrapper - keeps padding constant, hidden by overflow */
+.badge-section-content-padded {
+  padding: var(--space-md);
 }
 
 /* ========================================================================
