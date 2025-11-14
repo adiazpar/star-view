@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTheme } from '../hooks/useTheme';
 import profileApi from '../services/profile';
 import { mapBadgeIdsToBadges } from '../utils/badgeUtils';
 import Alert from '../components/Alert';
@@ -909,8 +910,112 @@ function ProfileSettings({ user, refreshAuth }) {
           </form>
         </div>
 
+        {/* Preferences Section */}
+        <PreferencesSection />
+
         {/* Connected Accounts Section */}
         <ConnectedAccountsSection />
+      </div>
+    </div>
+  );
+}
+
+// Preferences Section Component
+function PreferencesSection() {
+  const { theme, setThemeMode } = useTheme();
+  const [privateProfile, setPrivateProfile] = useState(false);
+  const [success, setSuccess] = useState('');
+
+  const handleThemeChange = (newTheme) => {
+    setThemeMode(newTheme);
+    setSuccess(`Theme changed to ${newTheme.charAt(0).toUpperCase() + newTheme.slice(1)} mode`);
+  };
+
+  const handlePrivateProfileToggle = () => {
+    // Placeholder - backend functionality not yet implemented
+    setPrivateProfile(!privateProfile);
+    setSuccess(`Private profile ${!privateProfile ? 'enabled' : 'disabled'} (placeholder - not yet functional)`);
+  };
+
+  return (
+    <div className="profile-form-section">
+      <h3>Preferences</h3>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', marginBottom: '24px' }}>
+        Customize your experience on Starview
+      </p>
+
+      {/* Success Message */}
+      {success && (
+        <Alert
+          type="success"
+          message={success}
+          onClose={() => setSuccess('')}
+        />
+      )}
+
+      {/* Theme Selection */}
+      <div style={{ marginBottom: '24px' }}>
+        <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>
+          <i className="fa-solid fa-palette"></i> Theme
+        </label>
+        <div className="theme-selector">
+          <button
+            className={`theme-option ${theme === 'light' ? 'active' : ''}`}
+            onClick={() => handleThemeChange('light')}
+            type="button"
+          >
+            <i className="fa-solid fa-sun"></i>
+            <span>Light</span>
+          </button>
+          <button
+            className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
+            onClick={() => handleThemeChange('dark')}
+            type="button"
+          >
+            <i className="fa-solid fa-moon"></i>
+            <span>Dark</span>
+          </button>
+          <button
+            className={`theme-option ${theme === 'auto' ? 'active' : ''}`}
+            onClick={() => handleThemeChange('auto')}
+            type="button"
+          >
+            <i className="fa-solid fa-circle-half-stroke"></i>
+            <span>Auto</span>
+          </button>
+        </div>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--text-muted)', marginTop: '8px' }}>
+          <i className="fa-solid fa-circle-info"></i> Auto mode follows your system preferences
+        </p>
+      </div>
+
+      {/* Private Profile Toggle */}
+      <div>
+        <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>
+          <i className="fa-solid fa-lock"></i> Privacy
+        </label>
+        <div className="preference-toggle-container">
+          <div className="preference-toggle-info">
+            <h4 style={{ fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
+              Private Profile
+            </h4>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--text-secondary)', margin: 0 }}>
+              When enabled, only you can view your profile and reviews
+            </p>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={privateProfile}
+              onChange={handlePrivateProfileToggle}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--warning)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <i className="fa-solid fa-triangle-exclamation"></i>
+          Note: Private profile functionality is not yet implemented on the backend
+        </p>
       </div>
     </div>
   );

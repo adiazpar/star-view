@@ -4,11 +4,29 @@ import { useTheme } from '../hooks/useTheme';
 import { useAuth } from '../context/AuthContext';
 
 function Navbar() {
-  const { theme, toggleTheme } = useTheme();
-  const { isAuthenticated, user, loading, logout } = useAuth();
+  const { theme } = useTheme();
+  const { isAuthenticated, user, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [backdropVisible, setBackdropVisible] = useState(false);
   const [backdropClosing, setBackdropClosing] = useState(false);
+  const [systemPrefersDark, setSystemPrefersDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+
+  // Listen for system theme changes (only needed for auto mode logo switching)
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e) => {
+      setSystemPrefersDark(e.matches);
+    };
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  // Determine which logo to show based on theme setting and system preference
+  const effectiveTheme = theme === 'auto'
+    ? (systemPrefersDark ? 'dark' : 'light')
+    : theme;
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -43,7 +61,7 @@ function Navbar() {
         {/* Logo */}
         <Link to="/" className="navbar-logo">
           <img
-            src={theme === 'dark' ? '/images/logo-dark.png' : '/images/logo-light.png'}
+            src={effectiveTheme === 'dark' ? '/images/logo-dark.png' : '/images/logo-light.png'}
             alt="Starview Logo"
             className="logo-size"
           />
@@ -75,15 +93,6 @@ function Navbar() {
             </>
           )}
         </div>
-
-        {/* Theme Toggle Button */}
-        <button
-          className="navbar-theme-toggle"
-          onClick={toggleTheme}
-          aria-label="Toggle theme"
-        >
-          <i className={theme === 'dark' ? "fa-solid fa-sun" : "fa-solid fa-moon"}></i>
-        </button>
 
         {/* Hamburger Button */}
         <button
