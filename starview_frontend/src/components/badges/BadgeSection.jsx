@@ -59,6 +59,7 @@ function BadgeSection({ badges = [], alwaysExpanded = false, isVisible = true })
               ))}
             </div>
             <p className="badge-section-hint">
+              <i class="fa-solid fa-caret-up"></i>
               Click any badge to see details
             </p>
           </>
