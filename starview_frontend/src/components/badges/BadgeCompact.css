@@ -14,12 +14,9 @@
   min-width: 100px;
   max-width: 140px;
   padding: var(--space-md);
-
-  transition: scale 0.2s;
 }
 
 .badge-compact:hover {
-  scale: 1.01;
 }
 
 /* Focus state for accessibility */

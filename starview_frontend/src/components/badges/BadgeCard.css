@@ -114,8 +114,8 @@
 
 .badge-card-icon-wrapper {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   margin: 0 auto;
 }
 
@@ -126,7 +126,6 @@
 }
 
 .badge-card:hover .badge-card-icon {
-  transform: scale(1.1);
 }
 
 .badge-card-locked:hover .badge-card-icon {
@@ -358,8 +357,8 @@
   }
 
   .badge-card-icon-wrapper {
-    width: 64px;
-    height: 64px;
+    width: 80px;
+    height: 80px;
   }
 
   .badge-card-name {
