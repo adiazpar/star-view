@@ -16,9 +16,6 @@
   padding: var(--space-md);
 }
 
-.badge-compact:hover {
-}
-
 /* Focus state for accessibility */
 .badge-compact:focus {
   outline: 1px solid var(--accent);

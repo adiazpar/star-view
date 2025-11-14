@@ -10,6 +10,7 @@
   justify-content: center;
 
   border-radius: var(--radius-full);
+  box-shadow: 0 0 8px hsla(0, 0%, 100%, 0.3);
 }
 
 /* ========================================================================

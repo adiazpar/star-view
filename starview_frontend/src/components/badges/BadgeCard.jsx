@@ -90,13 +90,6 @@ function BadgeCard({
           className={`badge-card-icon ${isLocked ? 'badge-card-icon-locked' : ''}`}
         />
 
-        {/* Pinned indicator */}
-        {isPinned && (
-          <div className="badge-card-pin-indicator">
-            <i className="fa-solid fa-thumbtack"></i>
-          </div>
-        )}
-
         {/* Earned checkmark */}
         {isEarned && (
           <div className="badge-card-earned-badge">

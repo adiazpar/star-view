@@ -125,13 +125,6 @@
   object-fit: contain;
 }
 
-.badge-card:hover .badge-card-icon {
-}
-
-.badge-card-locked:hover .badge-card-icon {
-  transform: scale(1);
-}
-
 /* Locked badge icon - grayscale */
 .badge-card-icon-locked {
   filter: grayscale(100%) opacity(0.4);
@@ -147,24 +140,6 @@
   align-items: center;
   justify-content: center;
   font-size: 12px;
-}
-
-/* Pinned indicator */
-.badge-card-pin-indicator {
-  position: absolute;
-  top: -4px;
-  left: -4px;
-  background: var(--accent);
-  color: white;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  border: 2px solid var(--card-bg);
-  transform: rotate(-45deg);
 }
 
 /* ========================================================================
@@ -291,6 +266,7 @@
   justify-content: center;
   gap: 6px;
   font-size: 12px;
+  font-weight: 400;
   margin-top: 4px;
 }
 
@@ -308,38 +284,27 @@
 
 .badge-card-pin-btn {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  padding: var(--space-sm);
+  top: 8px;
+  left: 8px;
+  color: var(--text-muted);
+  font-size: var(--text-lg);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
 }
 
 .badge-card-pin-btn:hover {
-  background: var(--bg-hover);
-  border-color: var(--border-hover);
   color: var(--text-primary);
-  transform: scale(1.1);
 }
 
 .badge-card-pin-btn-active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: white;
+  color: var(--accent);
 }
 
 .badge-card-pin-btn-active:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
+  color: var(--accent-light);
 }
 
 /* Rotate unpinned icon */
