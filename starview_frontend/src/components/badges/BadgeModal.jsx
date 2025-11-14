@@ -30,7 +30,6 @@ function BadgeModal({ badge, state, earnedAt, progress, onClose }) {
 
   // Prevent body scroll when modal is open
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = 'unset';
     };

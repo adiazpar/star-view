@@ -10,7 +10,7 @@
   justify-content: center;
 
   border-radius: var(--radius-full);
-  box-shadow: 0 0 8px hsla(0, 0%, 100%, 0.3);
+  border: 1px solid var(--text-primary);
 }
 
 /* ========================================================================
@@ -19,8 +19,8 @@
 
 .pinned-badge {
   position: relative;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   cursor: pointer;
   padding: 0;
 }
@@ -44,7 +44,7 @@
   }
 
   .pinned-badge {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
   }
 }

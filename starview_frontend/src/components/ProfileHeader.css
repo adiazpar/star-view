@@ -125,7 +125,7 @@
   margin-top: var(--space-md);
   padding-top: var(--space-md);
   border-top: 1px solid var(--border);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-lg);
 }
 .profile-bio span {
   color: var(--text-primary);
@@ -140,7 +140,7 @@
 
 .profile-actions.no-bio {
   margin-top: var(--space-md);
-  padding-top: var(--space-md);
+  padding-top: var(--space-lg);
   border-top: 1px solid var(--border);
 }
 
