@@ -13,7 +13,6 @@ import PasswordResetRequestPage from './pages/PasswordResetRequestPage';
 import PasswordResetConfirmPage from './pages/PasswordResetConfirmPage';
 import ProfilePage from './pages/ProfilePage';
 import PublicProfilePage from './pages/PublicProfilePage';
-import BadgeTestPage from './pages/BadgeTestPage';
 
 function App() {
   return (
@@ -32,7 +31,6 @@ function App() {
           <Route path="/password-reset-confirm/:uidb64/:token" element={<PasswordResetConfirmPage />} />
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/users/:username" element={<PublicProfilePage />} />
-          <Route path="/badge-test" element={<BadgeTestPage />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

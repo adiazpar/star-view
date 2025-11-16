@@ -105,7 +105,7 @@
 
 /* Pinned badge - special highlight */
 .badge-card-pinned {
-  background-color: var(--bg-secondary);
+  background-color: var(--bg-primary);
 }
 
 /* ========================================================================
@@ -160,7 +160,7 @@
   align-items: center;
 }
 
-.badge-card-name {
+.badge-card .badge-card-name {
   font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -326,8 +326,8 @@
     height: 80px;
   }
 
-  .badge-card-name {
-    font-size: var(--text-sm);
+  .badge-card .badge-card-name {
+    font-size: var(--text-xs);
   }
 
   .badge-card-description {

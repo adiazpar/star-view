@@ -85,7 +85,6 @@
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: var(--space-xs);
-  padding: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
