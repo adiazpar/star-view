@@ -63,7 +63,7 @@ function FavoritesTab() {
 
   return (
     <div className="profile-section">
-      <h2 className="profile-section-title">Favorite Locations</h2>
+      <h2 className="profile-section-title">My Locations</h2>
       <p className="profile-section-description">
         Your saved stargazing locations
       </p>

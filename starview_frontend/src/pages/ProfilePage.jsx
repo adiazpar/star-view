@@ -6,9 +6,7 @@ import { mapBadgeIdsToBadges } from '../utils/badgeUtils';
 import usePinnedBadges from '../hooks/usePinnedBadges';
 import Alert from '../components/Alert';
 import ProfileHeader from '../components/ProfileHeader';
-import ProfileSettings from '../components/profile/ProfileSettings';
-import PreferencesSection from '../components/profile/PreferencesSection';
-import ConnectedAccountsSection from '../components/profile/ConnectedAccountsSection';
+import SettingsTab from '../components/profile/SettingsTab';
 import BadgesTab from '../components/profile/BadgesTab';
 import MyReviewsTab from '../components/profile/MyReviewsTab';
 import FavoritesTab from '../components/profile/FavoritesTab';
@@ -170,7 +168,7 @@ function ProfilePage() {
             className={`profile-tab ${activeTab === 'favorites' ? 'active' : ''}`}
             onClick={() => setActiveTab('favorites')}
           >
-            <i className="fa-solid fa-heart"></i>
+            <i className="fa-solid fa-location-dot"></i>
             <span className="profile-tab-text">Favorites</span>
           </button>
         </div>
@@ -178,14 +176,12 @@ function ProfilePage() {
         {/* Tab Content */}
         <div className="profile-content">
           {activeTab === 'settings' && (
-            <div className="profile-section">
-              <ProfileSettings user={user} refreshAuth={refreshAuth} />
-              <PreferencesSection />
-              <ConnectedAccountsSection
-                socialAccounts={socialAccounts}
-                onRefresh={refreshSocialAccounts}
-              />
-            </div>
+            <SettingsTab
+              user={user}
+              refreshAuth={refreshAuth}
+              socialAccounts={socialAccounts}
+              onRefreshSocialAccounts={refreshSocialAccounts}
+            />
           )}
           {activeTab === 'badges' && (
             <BadgesTab
