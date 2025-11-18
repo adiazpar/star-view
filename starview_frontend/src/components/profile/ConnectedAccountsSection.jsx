@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import profileApi from '../../services/profile';
 import Alert from '../Alert';
 import CollapsibleSection from './CollapsibleSection';
@@ -8,37 +8,22 @@ import './ConnectedAccountsSection.css';
  * ConnectedAccountsSection - Manage social account connections
  *
  * Displays connected social accounts and allows disconnection
+ * Receives social accounts from parent to avoid redundant API calls
  */
-function ConnectedAccountsSection() {
-  const [socialAccounts, setSocialAccounts] = useState([]);
-  const [loading, setLoading] = useState(true);
+function ConnectedAccountsSection({ socialAccounts = [], onRefresh }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  useEffect(() => {
-    fetchSocialAccounts();
-  }, []);
-
-  const fetchSocialAccounts = async () => {
-    setLoading(true);
-    try {
-      const response = await profileApi.getSocialAccounts();
-      setSocialAccounts(response.data.social_accounts || []);
-    } catch (err) {
-      console.error('Error fetching social accounts:', err);
-      setError('Failed to load connected accounts');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDisconnect = async (accountId, providerName) => {
     if (!window.confirm(`Are you sure you want to disconnect your ${providerName} account?`)) return;
 
     try {
       const response = await profileApi.disconnectSocialAccount(accountId);
-      setSocialAccounts(socialAccounts.filter(acc => acc.id !== accountId));
       setSuccess(response.data.detail);
+      // Refresh the social accounts list from parent
+      if (onRefresh) {
+        await onRefresh();
+      }
     } catch (err) {
       const errorMessage = err.response?.data?.detail || 'Failed to disconnect account';
       setError(errorMessage);
@@ -83,11 +68,7 @@ function ConnectedAccountsSection() {
         />
       )}
 
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '24px', color: 'var(--text-secondary)' }}>
-          <i className="fa-solid fa-spinner fa-spin" style={{ fontSize: '1.5rem' }}></i>
-        </div>
-      ) : socialAccounts.length > 0 ? (
+      {socialAccounts.length > 0 ? (
         <div className="connected-accounts-list">
           {socialAccounts.map((account) => (
             <div key={account.id} className="connected-account-item">

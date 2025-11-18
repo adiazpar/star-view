@@ -88,7 +88,8 @@ def get_user_badges(request, username):
 # HTTP Method: GET                                                              #
 # Endpoint: /api/users/me/badges/collection/                                    #
 # Authentication: Required                                                      #
-# Returns: {earned: [...], in_progress: [...], locked: [...]}                   #
+# Returns: {earned: [...], in_progress: [...], locked: [...],                   #
+#           pinned_badge_ids: [...]}                                             #
 # ----------------------------------------------------------------------------- #
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -148,10 +149,18 @@ def get_my_badge_collection(request):
             'criteria_value': badge.criteria_value,
         })
 
+    # Get user's pinned badge IDs from profile
+    try:
+        user_profile = user.userprofile
+        pinned_badge_ids = user_profile.pinned_badge_ids or []
+    except:
+        pinned_badge_ids = []
+
     return Response({
         'earned': earned_badges,
         'in_progress': in_progress_badges,
         'locked': locked_badges,
+        'pinned_badge_ids': pinned_badge_ids,
     }, status=status.HTTP_200_OK)
 
 

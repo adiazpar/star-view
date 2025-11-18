@@ -22,7 +22,7 @@ export function usePinnedBadges(autoFetch = true) {
   const [pinnedBadgeIds, setPinnedBadgeIds] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(autoFetch); // Start as true if auto-fetching
-  const [isInitialized, setIsInitialized] = useState(!autoFetch); // Track if initial fetch completed
+  const [isInitialized, setIsInitialized] = useState(false); // Always start as false, will be set when data is loaded
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
 
@@ -132,6 +132,8 @@ export function usePinnedBadges(autoFetch = true) {
    */
   const updatePinnedBadgeIds = useCallback((newPinnedIds) => {
     setPinnedBadgeIds(newPinnedIds);
+    setIsInitialized(true); // Mark as initialized when manually updated
+    setIsFetching(false); // Stop fetching state
   }, []);
 
   return {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import profileApi from '../services/profile';
@@ -21,33 +21,63 @@ function ProfilePage() {
   const [activeTab, setActiveTab] = useState('settings');
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
-  const [pinnedBadges, setPinnedBadges] = useState([]);
+  const [badgeData, setBadgeData] = useState(null);
+  const [socialAccounts, setSocialAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Use the pinned badges hook at the top level
-  const pinnedBadgesHook = usePinnedBadges(true);
+  // Use the pinned badges hook in operation-only mode (no auto-fetch)
+  const pinnedBadgesHook = usePinnedBadges(false);
 
-  // Fetch pinned badges and map them to badge objects for the header
+  // Derive pinned badges from badgeData and pinnedBadgeIds (computed value, not state)
+  const pinnedBadges = useMemo(() => {
+    if (!badgeData || !pinnedBadgesHook.pinnedBadgeIds) return [];
+    const earnedBadges = badgeData.earned || [];
+    return mapBadgeIdsToBadges(pinnedBadgesHook.pinnedBadgeIds, earnedBadges);
+  }, [badgeData, pinnedBadgesHook.pinnedBadgeIds]);
+
+  // Fetch all profile data once on mount
   useEffect(() => {
-    const fetchPinnedBadges = async () => {
+    const fetchProfileData = async () => {
       setLoading(true);
       try {
-        const badgesResponse = await profileApi.getMyBadgeCollection();
-        const earnedBadges = badgesResponse.data.earned || [];
-        const pinned = mapBadgeIdsToBadges(pinnedBadgesHook.pinnedBadgeIds, earnedBadges);
-        setPinnedBadges(pinned);
+        // Fetch badges and social accounts in parallel
+        const [badgesResponse, socialResponse] = await Promise.all([
+          profileApi.getMyBadgeCollection(),
+          profileApi.getSocialAccounts()
+        ]);
+
+        // Store full badge data for BadgesTab
+        setBadgeData(badgesResponse.data);
+
+        // Extract pinned badge IDs from the badge response
+        const pinnedBadgeIds = badgesResponse.data.pinned_badge_ids || [];
+
+        // Initialize the hook with the pinned badge IDs (without fetching)
+        // The useMemo above will automatically compute pinnedBadges when this updates
+        pinnedBadgesHook.updatePinnedBadgeIds(pinnedBadgeIds);
+
+        // Store social accounts for ConnectedAccountsSection
+        setSocialAccounts(socialResponse.data.social_accounts || []);
       } catch (err) {
-        console.error('Error fetching pinned badges:', err);
+        console.error('Error fetching profile data:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    // Only fetch when pinnedBadgeIds changes
-    if (pinnedBadgesHook.pinnedBadgeIds.length >= 0) {
-      fetchPinnedBadges();
+    fetchProfileData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
+
+  // Refresh social accounts after connect/disconnect
+  const refreshSocialAccounts = async () => {
+    try {
+      const response = await profileApi.getSocialAccounts();
+      setSocialAccounts(response.data.social_accounts || []);
+    } catch (err) {
+      console.error('Error refreshing social accounts:', err);
     }
-  }, [pinnedBadgesHook.pinnedBadgeIds]);
+  };
 
   // Check for social account connection success/errors
   useEffect(() => {
@@ -151,11 +181,18 @@ function ProfilePage() {
             <div className="profile-section">
               <ProfileSettings user={user} refreshAuth={refreshAuth} />
               <PreferencesSection />
-              <ConnectedAccountsSection />
+              <ConnectedAccountsSection
+                socialAccounts={socialAccounts}
+                onRefresh={refreshSocialAccounts}
+              />
             </div>
           )}
           {activeTab === 'badges' && (
-            <BadgesTab user={user} pinnedBadgesHook={pinnedBadgesHook} />
+            <BadgesTab
+              user={user}
+              pinnedBadgesHook={pinnedBadgesHook}
+              badgeData={badgeData}
+            />
           )}
           {activeTab === 'reviews' && (
             <MyReviewsTab />

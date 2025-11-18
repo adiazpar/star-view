@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import profileApi from '../../services/profile';
+import { useState } from 'react';
 import Alert from '../Alert';
 import BadgeCard from '../badges/BadgeCard';
 import './BadgesTab.css';
@@ -9,10 +8,9 @@ import './BadgesTab.css';
  *
  * Shows earned, in-progress, and locked badges
  * Allows pinning/unpinning of earned badges
+ * Receives badge data from parent to avoid redundant API calls
  */
-function BadgesTab({ pinnedBadgesHook }) {
-  const [badgeData, setBadgeData] = useState(null);
-  const [loading, setLoading] = useState(true);
+function BadgesTab({ pinnedBadgesHook, badgeData }) {
   const [error, setError] = useState(null);
 
   // Destructure the pinned badges hook passed from parent
@@ -24,31 +22,13 @@ function BadgesTab({ pinnedBadgesHook }) {
     clearMessages
   } = pinnedBadgesHook;
 
-  // Fetch badge collection data
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const badgeResponse = await profileApi.getMyBadgeCollection();
-        setBadgeData(badgeResponse.data);
-      } catch (err) {
-        console.error('Error fetching badges:', err);
-        setError('Could not load badge data.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
-
   // Handle pin/unpin
   const handlePinToggle = async (badgeId) => {
     await togglePin(badgeId);
   };
 
-  // Only show loading for initial badge data fetch, not for pin operations
-  if (loading) {
+  // Show loading if badge data hasn't been passed yet
+  if (!badgeData) {
     return (
       <div className="profile-section">
         <div style={{ textAlign: 'center', padding: '48px', color: 'var(--text-secondary)' }}>
