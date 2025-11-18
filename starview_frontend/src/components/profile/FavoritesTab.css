@@ -1,0 +1,111 @@
+/* ============================================ */
+/* FAVORITES TAB */
+/* ============================================ */
+
+.profile-items-grid {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.profile-item-card {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  transition: all var(--transition);
+}
+
+.profile-item-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.favorite-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.favorite-card-content {
+  flex: 1;
+}
+
+.favorite-location-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.favorite-nickname {
+  font-size: var(--text-sm);
+  color: var(--accent);
+  margin-bottom: var(--space-xs);
+  font-style: italic;
+}
+
+.favorite-meta {
+  display: flex;
+  gap: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
+}
+
+.favorite-star-icon {
+  color: var(--star-filled);
+}
+
+.favorite-date {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin-top: var(--space-xs);
+}
+
+.favorite-actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.btn-sm {
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--text-sm);
+}
+
+.btn-icon-only {
+  padding: var(--space-xs) var(--space-sm);
+}
+
+.profile-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-muted);
+}
+
+.profile-empty-state i {
+  font-size: 48px;
+  margin: 0 auto var(--space-md) auto;
+  display: block;
+  opacity: 0.5;
+}
+
+.profile-empty-state p {
+  font-size: var(--text-lg);
+  margin: 0;
+}
+
+.profile-empty-state-description {
+  font-size: var(--text-sm);
+  margin-top: var(--space-xs);
+}
+
+.profile-loading-state {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-secondary);
+}
+
+.profile-loading-state i {
+  font-size: 2rem;
+}

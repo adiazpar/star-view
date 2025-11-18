@@ -1,0 +1,67 @@
+/* ============================================ */
+/* COLLAPSIBLE SECTIONS */
+/* ============================================ */
+
+.collapsible-section {
+  margin-bottom: var(--space-lg);
+}
+
+.collapsible-section:last-child {
+  margin-bottom: 0;
+}
+
+.collapsible-section-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.collapsible-section-header:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent);
+}
+
+.collapsible-section-header h3 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.collapsible-section-header i {
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  transition: transform var(--transition);
+}
+
+/* Collapsible Content - Using CSS Grid for smooth height animation */
+.collapsible-section-content {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  opacity: 1;
+  margin-top: var(--space-md);
+}
+
+.collapsible-section-content.collapsing {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
+}
+
+/* Inner wrapper to handle overflow during animation */
+.collapsible-section-content-inner {
+  overflow: hidden;
+}
+
+/* Padding wrapper - keeps padding constant, hidden by overflow */
+.collapsible-section-content-padded {
+  /* Content inside here will have its own padding */
+}
