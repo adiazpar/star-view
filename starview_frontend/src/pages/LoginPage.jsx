@@ -199,7 +199,7 @@ function LoginPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="btn btn-primary login-btn-submit"
+              className="btn login-btn-submit"
               disabled={loading}
             >
               {loading ? (

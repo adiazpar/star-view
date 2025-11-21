@@ -20,49 +20,48 @@ function PreferencesSection() {
 
   return (
     <CollapsibleSection title="Preferences" defaultExpanded={false}>
-      {/* Success Message */}
-      {success && (
-        <Alert
-          type="success"
-          message={success}
-          onClose={() => setSuccess('')}
-        />
-      )}
+      <div className="preferences-grid">
+        {/* Theme Section */}
+        <div className="profile-form-section">
+          <h3 className="profile-form-title">Theme</h3>
+          <p className="profile-form-description">Choose how Starview looks to you. Select a theme or sync with your system preferences.</p>
 
-      {/* Theme Selection */}
-      <div>
-        <label className="form-label preference-label">
-          <i className="fa-solid fa-palette"></i> Theme
-        </label>
-        <div className="theme-selector">
-          <button
-            className={`theme-option ${theme === 'light' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('light')}
-            type="button"
-          >
-            <i className="fa-solid fa-sun"></i>
-            <span>Light</span>
-          </button>
-          <button
-            className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('dark')}
-            type="button"
-          >
-            <i className="fa-solid fa-moon"></i>
-            <span>Dark</span>
-          </button>
-          <button
-            className={`theme-option ${theme === 'auto' ? 'active' : ''}`}
-            onClick={() => handleThemeChange('auto')}
-            type="button"
-          >
-            <i className="fa-solid fa-circle-half-stroke"></i>
-            <span>Auto</span>
-          </button>
+          {/* Success Message */}
+          {success && (
+            <Alert
+              type="success"
+              message={success}
+              onClose={() => setSuccess('')}
+            />
+          )}
+
+          <div className="theme-selector">
+            <button
+              className={`theme-option ${theme === 'light' ? 'active' : ''}`}
+              onClick={() => handleThemeChange('light')}
+              type="button"
+            >
+              <i className="fa-solid fa-sun"></i>
+              <span>Light</span>
+            </button>
+            <button
+              className={`theme-option ${theme === 'dark' ? 'active' : ''}`}
+              onClick={() => handleThemeChange('dark')}
+              type="button"
+            >
+              <i className="fa-solid fa-moon"></i>
+              <span>Dark</span>
+            </button>
+            <button
+              className={`theme-option ${theme === 'auto' ? 'active' : ''}`}
+              onClick={() => handleThemeChange('auto')}
+              type="button"
+            >
+              <i className="fa-solid fa-circle-half-stroke"></i>
+              <span>Auto</span>
+            </button>
+          </div>
         </div>
-        <p className="preference-hint">
-          <i className="fa-solid fa-circle-info"></i> Auto mode follows your system preferences
-        </p>
       </div>
     </CollapsibleSection>
   );

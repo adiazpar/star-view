@@ -59,7 +59,7 @@ function EmailConfirmErrorPage() {
 
         {/* Actions */}
         <div className="email-confirm-error-actions">
-          <Link to={content.actionLink} className="btn btn-primary">
+          <Link to={content.actionLink} className="btn">
             <span>{content.actionText}</span>
           </Link>
         </div>

@@ -331,7 +331,8 @@ function ProfileSettings({ user, refreshAuth }) {
         <div className="profile-settings-grid">
         {/* Profile Picture Section */}
         <div className="profile-picture-section">
-          <h3>Profile Picture</h3>
+          <h3 className="profile-form-title">Profile Picture</h3>
+          <p className="profile-form-description">Upload a photo to personalize your profile. This will be visible across the site.</p>
 
           {/* Profile Picture Success/Error Messages */}
           {pictureSuccess && (
@@ -355,7 +356,7 @@ function ProfileSettings({ user, refreshAuth }) {
             </div>
             <div className="profile-picture-actions">
               <div className="profile-picture-buttons">
-                <label htmlFor="profile-picture-input" className="btn btn-primary">
+                <label htmlFor="profile-picture-input" className="btn">
                   <i className="fa-solid fa-upload"></i>
                   Upload Photo
                 </label>
@@ -370,7 +371,7 @@ function ProfileSettings({ user, refreshAuth }) {
                 <button
                   type="button"
                   onClick={handlePictureRemove}
-                  className="btn btn-secondary"
+                  className="btn"
                   disabled={loading}
                 >
                   <i className="fa-solid fa-trash"></i>
@@ -386,7 +387,8 @@ function ProfileSettings({ user, refreshAuth }) {
 
         {/* Personal Information Section */}
         <div className="profile-form-section">
-          <h3>Personal Information</h3>
+          <h3 className="profile-form-title">Personal Information</h3>
+          <p className="profile-form-description">Your name helps others recognize you. This will be displayed on your public profile.</p>
 
           {/* Name Success/Error Messages */}
           {nameSuccess && (
@@ -404,37 +406,35 @@ function ProfileSettings({ user, refreshAuth }) {
             />
           )}
 
-          <form onSubmit={handlePersonalInfoUpdate}>
-            <div className="profile-form-grid">
-              <div className="profile-form-row">
-                <div className="form-group">
-                  <label htmlFor="first-name" className="form-label">First Name</label>
-                  <input
-                    type="text"
-                    id="first-name"
-                    className="form-input"
-                    value={personalInfo.first_name}
-                    onChange={(e) => setPersonalInfo({ ...personalInfo, first_name: e.target.value })}
-                    required
-                    disabled={loading}
-                  />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="last-name" className="form-label">Last Name</label>
-                  <input
-                    type="text"
-                    id="last-name"
-                    className="form-input"
-                    value={personalInfo.last_name}
-                    onChange={(e) => setPersonalInfo({ ...personalInfo, last_name: e.target.value })}
-                    required
-                    disabled={loading}
-                  />
-                </div>
+          <form onSubmit={handlePersonalInfoUpdate} className="profile-form">
+            <div className="profile-form-row">
+              <div className="form-group">
+                <label htmlFor="first-name" className="form-label">First Name</label>
+                <input
+                  type="text"
+                  id="first-name"
+                  className="form-input"
+                  value={personalInfo.first_name}
+                  onChange={(e) => setPersonalInfo({ ...personalInfo, first_name: e.target.value })}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="last-name" className="form-label">Last Name</label>
+                <input
+                  type="text"
+                  id="last-name"
+                  className="form-input"
+                  value={personalInfo.last_name}
+                  onChange={(e) => setPersonalInfo({ ...personalInfo, last_name: e.target.value })}
+                  required
+                  disabled={loading}
+                />
               </div>
             </div>
             <div className="profile-form-actions">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button type="submit" className="btn" disabled={loading}>
                 {loading ? (
                   <>
                     <i className="fa-solid fa-spinner fa-spin"></i>
@@ -453,7 +453,8 @@ function ProfileSettings({ user, refreshAuth }) {
 
         {/* Username Section */}
         <div className="profile-form-section">
-          <h3>Username</h3>
+          <h3 className="profile-form-title">Username</h3>
+          <p className="profile-form-description">3-30 characters. Letters, numbers, underscores, and hyphens only.</p>
 
           {/* Username Success/Error Messages */}
           {usernameSuccess && (
@@ -471,9 +472,8 @@ function ProfileSettings({ user, refreshAuth }) {
             />
           )}
 
-          <form onSubmit={handleUsernameUpdate}>
+          <form onSubmit={handleUsernameUpdate} className="profile-form">
             <div className="form-group">
-              <label htmlFor="username" className="form-label">Username</label>
               <input
                 type="text"
                 id="username"
@@ -483,13 +483,11 @@ function ProfileSettings({ user, refreshAuth }) {
                 required
                 disabled={loading}
                 placeholder="Enter username"
+                aria-label="Username"
               />
-              <p className="form-hint">
-                <i className="fa-solid fa-circle-info"></i> 3-30 characters. Letters, numbers, underscores, and hyphens only.
-              </p>
             </div>
             <div className="profile-form-actions">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button type="submit" className="btn" disabled={loading}>
                 {loading ? (
                   <>
                     <i className="fa-solid fa-spinner fa-spin"></i>
@@ -508,7 +506,8 @@ function ProfileSettings({ user, refreshAuth }) {
 
         {/* Email Section */}
         <div className="profile-form-section">
-          <h3>Email Address</h3>
+          <h3 className="profile-form-title">Email Address</h3>
+          <p className="profile-form-description">For security, you'll need to verify your new email address before the change takes effect.</p>
 
           {/* Email Success/Error Messages */}
           {emailSuccess && (
@@ -526,9 +525,8 @@ function ProfileSettings({ user, refreshAuth }) {
             />
           )}
 
-          <form onSubmit={handleEmailUpdate}>
+          <form onSubmit={handleEmailUpdate} className="profile-form">
             <div className="form-group">
-              <label htmlFor="email" className="form-label">Email</label>
               <input
                 type="email"
                 id="email"
@@ -537,13 +535,12 @@ function ProfileSettings({ user, refreshAuth }) {
                 onChange={(e) => setPersonalInfo({ ...personalInfo, email: e.target.value })}
                 required
                 disabled={loading}
+                placeholder="your.email@example.com"
+                aria-label="Email Address"
               />
-              <p className="form-hint">
-                <i className="fa-solid fa-shield-halved"></i> For security, you'll need to verify your new email address before the change takes effect
-              </p>
             </div>
             <div className="profile-form-actions">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button type="submit" className="btn" disabled={loading}>
                 {loading ? (
                   <>
                     <i className="fa-solid fa-spinner fa-spin"></i>
@@ -562,10 +559,16 @@ function ProfileSettings({ user, refreshAuth }) {
 
         {/* Password Section */}
         <div className="profile-form-section">
-          <h3>{user?.has_usable_password ? 'Change Password' : 'Set Password'}</h3>
+          <h3 className="profile-form-title">{user?.has_usable_password ? 'Change Password' : 'Set Password'}</h3>
+          <p className="profile-form-description">
+            {user?.has_usable_password
+              ? 'Update your password to keep your account secure.'
+              : 'Set a password to enable password-based login in addition to your social account.'
+            }
+          </p>
           {!user?.has_usable_password && (
             <p className="form-info">
-              <i className="fa-solid fa-info-circle"></i> Set a password to enable password-based login in addition to your social account.
+              <i className="fa-solid fa-info-circle"></i> You currently sign in with a social account only.
             </p>
           )}
 
@@ -585,7 +588,18 @@ function ProfileSettings({ user, refreshAuth }) {
             />
           )}
 
-          <form onSubmit={handlePasswordUpdate}>
+          <form onSubmit={handlePasswordUpdate} className="profile-form">
+            {/* Hidden username field for accessibility and password managers */}
+            <input
+              type="text"
+              name="username"
+              value={user?.username || ''}
+              autoComplete="username"
+              readOnly
+              style={{ display: 'none' }}
+              aria-hidden="true"
+            />
+
             {user?.has_usable_password && (
               <div className="form-group">
                 <label htmlFor="current-password" className="form-label">Current Password</label>
@@ -704,7 +718,7 @@ function ProfileSettings({ user, refreshAuth }) {
               </div>
             </div>
             <div className="profile-form-actions">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button type="submit" className="btn" disabled={loading}>
                 {loading ? (
                   <>
                     <i className="fa-solid fa-spinner fa-spin"></i>
@@ -723,7 +737,8 @@ function ProfileSettings({ user, refreshAuth }) {
 
         {/* Bio Section */}
         <div className="profile-form-section">
-          <h3>Bio</h3>
+          <h3 className="profile-form-title">Bio</h3>
+          <p className="profile-form-description">Tell others about yourself. This will be visible on your public profile.</p>
 
           {/* Bio Success/Error Messages */}
           {bioSuccess && (
@@ -741,25 +756,25 @@ function ProfileSettings({ user, refreshAuth }) {
             />
           )}
 
-          <form onSubmit={handleBioUpdate}>
+          <form onSubmit={handleBioUpdate} className="profile-form">
             <div className="form-group">
-              <label htmlFor="bio" className="form-label">About You</label>
-              <textarea
-                id="bio"
-                className="form-input bio-textarea"
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                rows="4"
-                maxLength="150"
-                placeholder="Tell others about yourself..."
-                disabled={loading}
-              />
-              <p className="form-hint">
-                <i className="fa-solid fa-circle-info"></i> {bio.length}/150 characters. This will be visible on your public profile.
-              </p>
+              <div className="bio-textarea-wrapper">
+                <textarea
+                  id="bio"
+                  className="form-textarea"
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  rows="4"
+                  maxLength="150"
+                  placeholder="Tell others about yourself..."
+                  disabled={loading}
+                  aria-label="Bio"
+                />
+                <span className="bio-character-count">{bio.length}/150</span>
+              </div>
             </div>
             <div className="profile-form-actions">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button type="submit" className="btn" disabled={loading}>
                 {loading ? (
                   <>
                     <i className="fa-solid fa-spinner fa-spin"></i>
@@ -778,7 +793,8 @@ function ProfileSettings({ user, refreshAuth }) {
 
         {/* Location Section */}
         <div className="profile-form-section">
-          <h3>Location</h3>
+          <h3 className="profile-form-title">Location</h3>
+          <p className="profile-form-description">Where are you based? This will be visible on your public profile.</p>
 
           {/* Location Success/Error Messages */}
           {locationSuccess && (
@@ -796,9 +812,8 @@ function ProfileSettings({ user, refreshAuth }) {
             />
           )}
 
-          <form onSubmit={handleLocationUpdate}>
+          <form onSubmit={handleLocationUpdate} className="profile-form">
             <div className="form-group">
-              <label htmlFor="location" className="form-label">Location</label>
               <input
                 type="text"
                 id="location"
@@ -808,13 +823,11 @@ function ProfileSettings({ user, refreshAuth }) {
                 maxLength="100"
                 placeholder="e.g., Seattle, WA"
                 disabled={loading}
+                aria-label="Location"
               />
-              <p className="form-hint">
-                <i className="fa-solid fa-map-marker-alt"></i> Where are you based? This will be visible on your public profile.
-              </p>
             </div>
             <div className="profile-form-actions">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button type="submit" className="btn" disabled={loading}>
                 {loading ? (
                   <>
                     <i className="fa-solid fa-spinner fa-spin"></i>

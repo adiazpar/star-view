@@ -180,8 +180,4 @@
   .profile-bio {
     font-size: var(--text-xs);
   }
-
-  .profile-actions .btn {
-    font-size: var(--text-xs);
-  }
 }

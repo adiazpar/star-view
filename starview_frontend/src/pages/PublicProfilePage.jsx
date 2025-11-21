@@ -137,7 +137,7 @@ function PublicProfilePage() {
         <div className="public-profile-container">
           <Alert type="error" message={error} />
           <div style={{ textAlign: 'center', marginTop: '24px' }}>
-            <button className="btn btn-primary" onClick={() => navigate('/')}>
+            <button className="btn" onClick={() => navigate('/')}>
               <i className="fa-solid fa-home"></i>
               Go Home
             </button>
@@ -233,7 +233,7 @@ function PublicProfilePage() {
               {hasMore && (
                 <div style={{ textAlign: 'center', marginTop: 'var(--spacing-lg)' }}>
                   <button
-                    className="btn btn-secondary"
+                    className="btn"
                     onClick={() => setPage(prev => prev + 1)}
                     disabled={reviewsLoading}
                   >

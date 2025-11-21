@@ -115,7 +115,7 @@ function PasswordResetConfirmPage() {
               <p className="success-description">
                 Your password has been successfully changed. You can now log in with your new password.
               </p>
-              <Link to="/login" className="btn btn-primary" style={{ marginTop: '24px', display: 'inline-block' }}>
+              <Link to="/login" className="btn" style={{ marginTop: '24px', display: 'inline-block' }}>
                 Go to Login
               </Link>
             </div>
@@ -217,7 +217,7 @@ function PasswordResetConfirmPage() {
 
             <button
               type="submit"
-              className="btn btn-primary password-reset-confirm-btn"
+              className="btn password-reset-confirm-btn"
               disabled={loading || !passwordValidation.minLength || !passwordValidation.hasUppercase || !passwordValidation.hasNumber || !passwordValidation.hasSpecial || !passwordMatch}
             >
               {loading ? (

@@ -127,7 +127,7 @@ function VerifyEmailPage() {
               />
 
               {/* Login Button */}
-              <Link to="/login" className="btn btn-primary verify-email-btn">
+              <Link to="/login" className="btn verify-email-btn">
                 Go to Login
               </Link>
             </>
@@ -178,7 +178,7 @@ function VerifyEmailPage() {
               {/* Resend Button */}
               <button
                 onClick={handleResendEmail}
-                className="btn btn-primary verify-email-btn"
+                className="btn verify-email-btn"
                 disabled={loading || !canResend}
               >
                 {loading ? (

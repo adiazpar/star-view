@@ -186,7 +186,7 @@ function RegisterPage() {
                 disabled={loading}
                 autoComplete="username"
               />
-              <p className="register-username-hint">
+              <p className="form-hint">
                 <i className="fa-solid fa-circle-info"></i> Leave blank to auto-generate a unique username (e.g., user7a3f9b2). You can change it later from your profile.
               </p>
             </div>
@@ -299,7 +299,7 @@ function RegisterPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              className="btn btn-primary register-btn-submit"
+              className="btn register-btn-submit"
               disabled={loading}
             >
               {loading ? 'Creating Account...' : 'Create Account'}

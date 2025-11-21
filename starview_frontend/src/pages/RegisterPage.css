@@ -232,11 +232,6 @@
   gap: var(--space-md);
 }
 
-/* Override form-group spacing for login page */
-.register-form .form-group {
-  margin-bottom: 0;
-}
-
 /* Input wrapper for password toggle */
 .register-input-wrapper {
   position: relative;
@@ -262,26 +257,6 @@
 
 .register-password-toggle:hover {
   color: var(--text-primary);
-}
-
-/* Username Hint */
-.register-username-hint {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  font-weight: 300;
-  margin-top: var(--space-sm);
-  margin-bottom: 0;
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 0 16px;
-}
-
-.register-username-hint i {
-  color: var(--text-muted);
-  font-size: var(--text-xs);
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 
 /* Password requirements list */

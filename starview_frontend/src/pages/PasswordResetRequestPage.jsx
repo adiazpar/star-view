@@ -49,7 +49,7 @@ function PasswordResetRequestPage() {
                 If an account exists with that email address, you will receive password reset instructions shortly.
               </p>
 
-              <Link to="/login" className="btn btn-primary" style={{ marginTop: '24px', display: 'inline-block' }}>
+              <Link to="/login" className="btn" style={{ marginTop: '24px', display: 'inline-block' }}>
                 Back to Login
               </Link>
 
@@ -89,7 +89,7 @@ function PasswordResetRequestPage() {
 
             <button
               type="submit"
-              className="btn btn-primary password-reset-btn"
+              className="btn password-reset-btn"
               disabled={loading}
             >
               {loading ? (

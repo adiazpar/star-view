@@ -17,11 +17,11 @@ function HomePage() {
             Share your experiences with fellow astronomy enthusiasts.
           </p>
           <div className="flex justify-center gap-4">
-            <Link to="/map" className="btn btn-primary btn-lg">
+            <Link to="/map" className="btn btn-lg">
               <i className="fa-solid fa-map"></i>
               <span className="icon-gap">Explore Map</span>
             </Link>
-            <Link to="/register" className="btn btn-secondary btn-lg">
+            <Link to="/register" className="btn btn-lg">
               <i className="fa-solid fa-user-plus"></i>
               <span className="icon-gap">Get Started</span>
             </Link>

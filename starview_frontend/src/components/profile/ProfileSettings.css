@@ -4,40 +4,32 @@
 
 .profile-settings-grid {
   display: grid;
-  gap: 32px;
+  gap: var(--space-lg);
 }
 
 /* Form Helpers */
-.form-hint {
-  font-size: var(--text-sm);
-  color: var(--text-muted);
-  margin-top: var(--space-xs);
-}
-
 .form-info {
   font-size: var(--text-sm);
   color: var(--text-secondary);
   margin-bottom: var(--space-md);
 }
 
-.bio-textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
 /* Profile Picture Upload */
 .profile-picture-section {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-bottom: 32px;
+  padding-bottom: var(--space-lg);
   border-bottom: 1px solid var(--border);
+}
+
+.profile-picture-section:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .profile-picture-upload {
   display: flex;
   align-items: center;
   gap: 24px;
+  margin-top: 16px;
 }
 
 .profile-picture-preview {
@@ -65,7 +57,7 @@
 }
 
 .profile-picture-help {
-  font-size: var(--text-sm);
+  font-size: var(--text-xs);
   color: var(--text-muted);
 }
 
@@ -74,39 +66,45 @@
   display: none;
 }
 
-/* Personal Information Form */
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
 .profile-form-section {
-  padding-bottom: 32px;
+  padding-bottom: var(--space-lg);
   border-bottom: 1px solid var(--border);
 }
 
 .profile-form-section:last-child {
-  border-bottom: none;
   padding-bottom: 0;
+  border-bottom: none;
 }
 
-.profile-form-section h3 {
-  font-size: var(--text-xl);
+.profile-form-title {
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 16px 0;
+  margin: 0 0 8px 0;
 }
 
-.profile-form-grid {
-  display: grid;
-  gap: 16px;
+.profile-form-description {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 0 0 16px 0;
+  font-weight: 300;
 }
 
 .profile-form-row {
   display: grid;
-  gap: 16px;
+  gap: var(--space-md);
   grid-template-columns: 1fr 1fr;
 }
 
 .profile-form-actions {
   display: flex;
   gap: 12px;
-  margin-top: 16px;
 }
 
 /* Password Form */
@@ -170,6 +168,26 @@
   color: var(--success);
 }
 
+/* Bio Textarea with Character Count */
+.bio-textarea-wrapper {
+  position: relative;
+}
+
+.bio-textarea-wrapper textarea {
+  padding-bottom: 32px;
+}
+
+.bio-character-count {
+  position: absolute;
+  bottom: var(--space-md);
+  right: var(--space-md);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: 300;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* ============================================ */
 /* RESPONSIVE */
 /* ============================================ */
@@ -178,10 +196,6 @@
   .profile-picture-upload {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .profile-form-row {
-    grid-template-columns: 1fr;
   }
 
   .profile-form-actions {

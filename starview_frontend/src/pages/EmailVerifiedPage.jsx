@@ -29,7 +29,7 @@ function EmailVerifiedPage() {
 
         {/* Actions */}
         <div className="email-verified-actions">
-          <Link to="/login" className="btn btn-primary">
+          <Link to="/login" className="btn">
             <span>Go to Login</span>
           </Link>
         </div>

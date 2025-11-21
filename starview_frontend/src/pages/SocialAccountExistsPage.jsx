@@ -17,11 +17,11 @@ function SocialAccountExistsPage() {
         </p>
 
         <div className="error-actions">
-          <Link to="/login" className="btn-primary">
+          <Link to="/login" className="btn">
             <i className="fa-solid fa-right-to-bracket"></i>
             Sign In With Password
           </Link>
-          <Link to="/password-reset" className="btn-secondary">
+          <Link to="/password-reset" className="btn">
             <i className="fa-solid fa-key"></i>
             Forgot Password?
           </Link>

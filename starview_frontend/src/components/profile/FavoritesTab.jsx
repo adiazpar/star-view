@@ -134,14 +134,14 @@ function FavoritesTab() {
 
                 <div className="favorite-actions">
                   <button
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-sm"
                     onClick={() => navigate(`/locations/${favorite.location?.id}`)}
                   >
                     <i className="fa-solid fa-eye"></i>
                     View
                   </button>
                   <button
-                    className="btn btn-secondary btn-sm btn-icon-only"
+                    className="btn btn-sm btn-icon-only"
                     onClick={() => handleRemoveFavorite(favorite.id, favorite.location?.name)}
                   >
                     <i className="fa-solid fa-trash"></i>

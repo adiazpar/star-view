@@ -207,7 +207,7 @@ function ProfileHeader({ user, isOwnProfile = false, onEditPage = false, onShowB
         currentUser && (
           <div className={`profile-actions ${!user?.bio ? 'no-bio' : ''}`}>
             <button
-              className='btn btn-primary'
+              className='btn'
               onClick={handleFollowToggle}
               disabled={isLoadingFollow}
             >
